@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+test('renderiza los placeholders de la estructura base', () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  expect(screen.getByText(/Catálogo de canchas/i)).toBeInTheDocument();
+  expect(screen.getByText(/Sistema de reservas/i)).toBeInTheDocument();
 });
