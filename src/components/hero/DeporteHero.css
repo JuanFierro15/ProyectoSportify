@@ -1,0 +1,80 @@
+/* Bloque 2.5: heros narrativos por deporte con pinned sections.
+   Layout base con Foundation; aquí solo lo que Foundation no cubre. */
+
+.deporte-hero {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  color: #fefefe;
+}
+
+/* Fondo: el video cubre toda la sección. */
+.deporte-hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.deporte-hero__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Overlay oscuro para que el texto resalte sobre el video. */
+.deporte-hero__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.35) 0%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+}
+
+.deporte-hero__contenido {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+.deporte-hero__eyebrow {
+  margin: 0 0 0.75rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--acento, #f6a94b);
+}
+
+.deporte-hero__titulo {
+  margin: 0 0 1rem;
+  font-size: clamp(2.5rem, 7vw, 5rem);
+  line-height: 1.05;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+}
+
+.deporte-hero__texto {
+  margin: 0 0 1.75rem;
+  max-width: 38rem;
+  font-size: clamp(1rem, 2.2vw, 1.4rem);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.4);
+}
+
+.deporte-hero__cta.button.large {
+  border: 0;
+  padding: 0.9rem 2.2rem;
+  font-weight: 700;
+  background: var(--acento, #f6a94b);
+  color: #1e1e1e;
+}
+
+.deporte-hero__cta.button.large:hover,
+.deporte-hero__cta.button.large:focus {
+  filter: brightness(0.92);
+  color: #1e1e1e;
+}
