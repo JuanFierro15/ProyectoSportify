@@ -21,6 +21,7 @@ function Hero() {
 
   useEffect(() => {
     const el = rootRef.current;
+    const media = el.querySelector('.hero-bg');
 
     const ctx = gsap.context(() => {
       // 1) Animación de entrada al cargar: fade + slide del título, subtítulo y
@@ -30,31 +31,47 @@ function Hero() {
         .from('.hero-subtitle', { opacity: 0, y: 30, duration: 0.8 }, '-=0.6')
         .from('.hero-cta', { opacity: 0, y: 24, duration: 0.7 }, '-=0.45');
 
-      // 2) Parallax del fondo al hacer scroll (ScrollTrigger con scrub).
-      gsap.to('.hero-bg', {
-        yPercent: 18,
+      // 2) El video de fondo NO se reproduce solo: su avance lo controla el
+      //    scroll. Se liga el `currentTime` del <video> al progreso de scroll
+      //    del hero, de modo que el video avanza al bajar y retrocede al subir.
+      //    (Para que el hero quede "clavado" mientras se recorre el video,
+      //    añadir  pin: true  y cambiar  end  a algo como  '+=150%'.)
+      gsap.to(media, {
+        currentTime: () => media.duration || 0,
         ease: 'none',
         scrollTrigger: {
           trigger: el,
           start: 'top top',
           end: 'bottom top',
-          scrub: true,
+          scrub: 0.3,
+          invalidateOnRefresh: true,
         },
       });
     }, rootRef);
 
-    return () => ctx.revert();
+    // Cuando el navegador ya conoce la duración del video, recalcular medidas.
+    const onMeta = () => ScrollTrigger.refresh();
+    media.addEventListener('loadedmetadata', onMeta);
+
+    return () => {
+      media.removeEventListener('loadedmetadata', onMeta);
+      ctx.revert();
+    };
   }, []);
 
   return (
     <section className="hero" id="hero-placeholder" ref={rootRef}>
-      {/* Fondo: placeholder por ahora. Reemplazar por el asset real, p. ej.:
-          <video className="hero-bg" src="/media/hero.mp4" autoPlay muted loop playsInline /> */}
+      {/* Fondo del hero: video en `public/media/hero.mp4`.
+          Sin `autoPlay` ni `loop`: su reproducción la controla el scroll (ver
+          el ScrollTrigger de arriba). Mantiene la clase `hero-bg` para el
+          `object-fit: cover` de Hero.css. */}
       <div className="hero-bg-wrap" aria-hidden="true">
-        <img
+        <video
           className="hero-bg"
-          alt=""
-          src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='1600'%20height='900'%3E%3Cdefs%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23ffd27a'/%3E%3Cstop%20offset='0.55'%20stop-color='%23f6a94b'/%3E%3Cstop%20offset='1'%20stop-color='%232b6cb0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width='1600'%20height='900'%20fill='url(%23g)'/%3E%3Ccircle%20cx='1290'%20cy='170'%20r='90'%20fill='%23fff6e0'%20opacity='0.85'/%3E%3Crect%20y='630'%20width='1600'%20height='270'%20fill='%23e8c98f'/%3E%3C/svg%3E"
+          src={`${process.env.PUBLIC_URL}/media/hero.mp4`}
+          muted
+          playsInline
+          preload="auto"
         />
       </div>
 
