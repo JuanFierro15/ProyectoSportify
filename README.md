@@ -8,7 +8,7 @@ pádel y fútbol, además de gestionar torneos, cumpleaños y eventos especiales
 
 - **React** (Create React App)
 - **Foundation** (`foundation-sites`) para la maquetación
-- **GSAP + ScrollTrigger** para animaciones (bloques posteriores)
+- **GSAP + ScrollTrigger** para animaciones
 - **Sin base de datos**: estado de React + `localStorage` + JSON semilla
 
 ## Scripts
@@ -26,7 +26,7 @@ npm test        # tests
 src/
 ├── components/
 │   ├── layout/     Navbar, Footer (Bloque 1)
-│   ├── hero/       Hero + animaciones (Bloque 2)
+│   ├── hero/       Hero + animaciones GSAP/ScrollTrigger (Bloque 2)
 │   ├── canchas/    Catálogo de canchas (Bloque 3)
 │   ├── reservas/   Sistema de reservas (Bloque 4)
 │   └── chatbot/    Chatbot (Bloque 6)
@@ -37,8 +37,8 @@ src/
 
 ## Avance por bloques
 
-1. **Estructura base con Foundation** (navbar, footer, grid, placeholders) ← actual
-2. Hero + animaciones GSAP/ScrollTrigger
+1. Estructura base con Foundation (navbar, footer, grid, placeholders)
+2. **Hero + animaciones GSAP/ScrollTrigger** (entrada fade+slide, parallax de fondo) ← actual
 3. Catálogo de canchas
 4. Sistema de reservas (horarios, validación de choques, `localStorage`)
 5. Modo evento especial (torneos, cumpleaños)

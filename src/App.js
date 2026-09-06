@@ -1,13 +1,17 @@
 import React from 'react';
 import Navbar from './components/layout/Navbar';
+import Hero from './components/hero/Hero';
 import Footer from './components/layout/Footer';
 import './App.css';
 
 /**
- * Esqueleto de la aplicación (Bloque 1).
- * Estructura: Navbar + contenedor grid de Foundation con placeholders + Footer.
- * Los placeholders se llenan en bloques posteriores:
- *  - #hero-placeholder     -> Bloque 2 (hero + GSAP)
+ * Esqueleto de la aplicación.
+ * Estructura: Navbar + Hero (Bloque 2) + contenedor grid de Foundation con
+ * placeholders + Footer.
+ * El Hero se monta a ancho completo (fuera de `main.grid-container`) porque su
+ * fondo con parallax necesita ocupar todo el viewport; conserva su
+ * `id="hero-placeholder"` para el enlace "Inicio" del navbar.
+ * Placeholders pendientes:
  *  - #canchas-placeholder  -> Bloque 3 (catálogo de canchas)
  *  - #reservas-placeholder -> Bloque 4 (sistema de reservas)
  */
@@ -16,14 +20,9 @@ function App() {
     <div className="App">
       <Navbar />
 
-      <main className="grid-container">
-        <div className="grid-x grid-padding-x">
-          <section className="cell" id="hero-placeholder">
-            <h1>Hero</h1>
-            <p>Placeholder del hero y las animaciones (Bloque 2).</p>
-          </section>
-        </div>
+      <Hero />
 
+      <main className="grid-container">
         <div className="grid-x grid-padding-x">
           <section className="cell" id="canchas-placeholder">
             <h2>Catálogo de canchas</h2>
