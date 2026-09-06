@@ -1,6 +1,5 @@
 import React from 'react';
 import Navbar from './components/layout/Navbar';
-import Hero from './components/hero/Hero';
 import DeporteHero from './components/hero/DeporteHero';
 import Footer from './components/layout/Footer';
 import './App.css';
@@ -11,11 +10,10 @@ const VIDEO_DEPORTE_PLACEHOLDER = `${process.env.PUBLIC_URL}/media/hero.mp4`;
 
 /**
  * Esqueleto de la aplicación.
- * Estructura: Navbar + Hero (Bloque 2) + heros por deporte con pinning
- * (Bloque 2.5) + contenedor grid de Foundation con placeholders + Footer.
- * El Hero se monta a ancho completo (fuera de `main.grid-container`) porque su
- * fondo necesita ocupar todo el viewport; conserva su `id="hero-placeholder"`
- * para el enlace "Inicio" del navbar.
+ * Estructura: Navbar + heros por deporte con pinning (Bloque 2.5) + contenedor
+ * grid de Foundation con placeholders + Footer.
+ * El contenedor de los heros lleva `id="hero-placeholder"` para que el enlace
+ * "Inicio" del navbar (sin tocar) siga funcionando.
  * Placeholders pendientes:
  *  - #canchas-placeholder  -> Bloque 3 (catálogo de canchas)
  *  - #reservas-placeholder -> Bloque 4 (sistema de reservas)
@@ -25,9 +23,7 @@ function App() {
     <div className="App">
       <Navbar />
 
-      <Hero />
-
-      <div id="deportes-hero-placeholder">
+      <div id="hero-placeholder">
         <DeporteHero
           nombre="Voley Playa"
           videoSrc={VIDEO_DEPORTE_PLACEHOLDER}

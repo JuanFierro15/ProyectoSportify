@@ -26,7 +26,7 @@ npm test        # tests
 src/
 ├── components/
 │   ├── layout/     Navbar, Footer (Bloque 1)
-│   ├── hero/       Hero + animaciones GSAP/ScrollTrigger (Bloque 2)
+│   ├── hero/       DeporteHero: heros por deporte con pinning GSAP/ScrollTrigger (Bloque 2.5)
 │   ├── canchas/    Catálogo de canchas (Bloque 3)
 │   ├── reservas/   Sistema de reservas (Bloque 4)
 │   └── chatbot/    Chatbot (Bloque 6)
@@ -38,7 +38,8 @@ src/
 ## Avance por bloques
 
 1. Estructura base con Foundation (navbar, footer, grid, placeholders)
-2. **Hero + animaciones GSAP/ScrollTrigger** (entrada fade+slide, parallax de fondo) ← actual
+2. Animaciones GSAP/ScrollTrigger
+   - 2.5 **Heros por deporte (voley playa, pádel, fútbol) con pinned sections** ← actual
 3. Catálogo de canchas
 4. Sistema de reservas (horarios, validación de choques, `localStorage`)
 5. Modo evento especial (torneos, cumpleaños)
