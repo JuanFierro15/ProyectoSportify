@@ -5,6 +5,9 @@ import Footer from './components/layout/Footer';
 import './App.css';
 
 // Videos de fondo de los heros por deporte (en public/media/).
+// Son versiones web ligeras: 1080p, keyframe por frame (para que el scrubbing
+// por scroll sea fluido) y +faststart. Los originales en alta calidad están
+// en public/media/fuente/ (fuera del repo).
 const BASE = process.env.PUBLIC_URL;
 const VIDEO_VOLEY = `${BASE}/media/hero_voleyplaya.mp4`;
 const VIDEO_PADEL = `${BASE}/media/hero_padel.mp4`;
