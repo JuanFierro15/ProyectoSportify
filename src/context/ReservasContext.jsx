@@ -9,13 +9,17 @@ import React, {
 import semilla from '../data/canchas.json';
 
 /**
- * ReservasContext (Bloque 4) — estado global de disponibilidad y reservas.
+ * ReservasContext — estado global de disponibilidad y reservas.
  *
  * - Fuente de verdad en runtime: este Context + almacenamiento local del
  *   navegador. `src/data/canchas.json` es solo la semilla inicial.
  * - Modelo de disponibilidad por día, para los próximos 7 días (hoy + 6).
  *   El estado guarda, por cancha y por fecha, la lista de horas ya reservadas
  *   (`ocupados`); todo lo demás está disponible.
+ * - `reservas` mezcla dos clases de registro, distinguidas por `tipo`:
+ *     - "individual": una cancha, una hora (Bloque 4).
+ *     - "evento": torneo o cumpleaños; varias canchas y/o varias horas
+ *       consecutivas, bloqueadas todo-o-nada (Bloque 5).
  * - Sin backend: todo vive en memoria y se espeja al almacenamiento local.
  *
  * Consumir con el hook `useReservas()`.
@@ -89,7 +93,12 @@ function crearEstadoInicial() {
               : [...semillaOcup[c.id][fecha]];
           });
         });
-        return { dias, canchas, ocupados, reservas: data.reservas, error: null };
+        // Registros viejos sin `tipo` -> se infieren.
+        const reservas = data.reservas.map((r) => ({
+          tipo: r.tipo || (Array.isArray(r.canchaIds) ? 'evento' : 'individual'),
+          ...r,
+        }));
+        return { dias, canchas, ocupados, reservas, error: null };
       }
     }
   } catch (e) {
@@ -120,6 +129,19 @@ function horaLibre(state, canchaId, fecha, hora) {
   return !ocup.includes(hora);
 }
 
+// ¿Esa hora de esa cancha/fecha está tomada por un evento (torneo/cumpleaños)?
+function horaDeEvento(state, canchaId, fecha, hora) {
+  return state.reservas.some(
+    (r) =>
+      r.tipo === 'evento' &&
+      r.fecha === fecha &&
+      Array.isArray(r.canchaIds) &&
+      r.canchaIds.includes(canchaId) &&
+      Array.isArray(r.horas) &&
+      r.horas.includes(hora)
+  );
+}
+
 function reducer(state, action) {
   switch (action.type) {
     case 'RESERVAR': {
@@ -146,6 +168,7 @@ function reducer(state, action) {
       const cancha = state.canchas.find((c) => c.id === canchaId);
       const reserva = {
         id: `${canchaId}__${fecha}__${hora}__${Date.now()}`,
+        tipo: 'individual',
         canchaId,
         canchaNombre: cancha ? cancha.nombre : canchaId,
         deporte: cancha ? cancha.deporte : null,
@@ -160,6 +183,70 @@ function reducer(state, action) {
         ...state,
         ocupados,
         reservas: [...state.reservas, reserva],
+        error: null,
+      };
+    }
+
+    case 'RESERVAR_EVENTO': {
+      const {
+        subtipo,
+        fecha,
+        canchaIds,
+        horas,
+        equipos,
+        canchasNecesarias,
+        invitados,
+        nombre,
+        telefono,
+      } = action.payload;
+
+      // Todo-o-nada: si alguna celda (cancha × hora) no está libre, no se
+      // reserva nada.
+      const hayConflicto = canchaIds.some((cid) =>
+        horas.some((h) => !horaLibre(state, cid, fecha, h))
+      );
+      if (hayConflicto) {
+        return {
+          ...state,
+          error:
+            'Alguna cancha u horario del evento ya no está disponible. No se reservó nada.',
+        };
+      }
+
+      const ocupados = { ...state.ocupados };
+      canchaIds.forEach((cid) => {
+        const previas = (ocupados[cid] && ocupados[cid][fecha]) || [];
+        ocupados[cid] = {
+          ...ocupados[cid],
+          [fecha]: [...previas, ...horas],
+        };
+      });
+
+      const canchaNombres = canchaIds.map((cid) => {
+        const c = state.canchas.find((x) => x.id === cid);
+        return c ? c.nombre : cid;
+      });
+
+      const evento = {
+        id: `evento__${fecha}__${Date.now()}`,
+        tipo: 'evento',
+        subtipo, // 'torneo' | 'cumpleanos'
+        fecha,
+        canchaIds: [...canchaIds],
+        canchaNombres,
+        horas: [...horas],
+        equipos: equipos != null ? equipos : null,
+        canchasNecesarias: canchasNecesarias != null ? canchasNecesarias : null,
+        invitados: invitados != null ? invitados : null,
+        nombre: nombre || null,
+        telefono: telefono || null,
+        creadaEn: new Date().toISOString(),
+      };
+
+      return {
+        ...state,
+        ocupados,
+        reservas: [...state.reservas, evento],
         error: null,
       };
     }
@@ -192,7 +279,7 @@ export function ReservasProvider({ children }) {
     [state]
   );
 
-  // Reserva: valida y, si sigue libre, despacha. Devuelve { ok, error? }.
+  // Reserva individual: valida y, si sigue libre, despacha. Devuelve { ok, error? }.
   const reservar = useCallback(
     (datos) => {
       if (!horaLibre(state, datos.canchaId, datos.fecha, datos.hora)) {
@@ -201,6 +288,36 @@ export function ReservasProvider({ children }) {
       dispatch({ type: 'RESERVAR', payload: datos });
       return { ok: true };
     },
+    [state]
+  );
+
+  // Evento (torneo / cumpleaños): valida TODAS las celdas antes de despachar.
+  // Devuelve { ok, error? }. Bloqueo todo-o-nada.
+  const reservarEvento = useCallback(
+    (datos) => {
+      const { canchaIds, fecha, horas } = datos;
+      if (!canchaIds || canchaIds.length === 0 || !horas || horas.length === 0) {
+        return { ok: false, error: 'Faltan datos del evento.' };
+      }
+      const hayConflicto = canchaIds.some((cid) =>
+        horas.some((h) => !horaLibre(state, cid, fecha, h))
+      );
+      if (hayConflicto) {
+        return {
+          ok: false,
+          error:
+            'Alguna cancha u horario del evento ya no está disponible. No se reservó nada.',
+        };
+      }
+      dispatch({ type: 'RESERVAR_EVENTO', payload: datos });
+      return { ok: true };
+    },
+    [state]
+  );
+
+  // ¿Esa hora está tomada por un evento? (para marcarlo en el catálogo).
+  const esHorarioDeEvento = useCallback(
+    (canchaId, fecha, hora) => horaDeEvento(state, canchaId, fecha, hora),
     [state]
   );
 
@@ -214,9 +331,21 @@ export function ReservasProvider({ children }) {
       error: state.error,
       disponibilidad,
       reservar,
+      reservarEvento,
+      esHorarioDeEvento,
       limpiarError,
     }),
-    [state.dias, state.canchas, state.reservas, state.error, disponibilidad, reservar, limpiarError]
+    [
+      state.dias,
+      state.canchas,
+      state.reservas,
+      state.error,
+      disponibilidad,
+      reservar,
+      reservarEvento,
+      esHorarioDeEvento,
+      limpiarError,
+    ]
   );
 
   return (

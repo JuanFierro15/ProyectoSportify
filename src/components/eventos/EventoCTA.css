@@ -1,0 +1,47 @@
+/* Banda de entrada al flujo de evento especial. Ancho completo (se monta
+   fuera de main.grid-container). */
+
+.evento-cta {
+  background: linear-gradient(120deg, #262626 0%, #1b1b1b 100%);
+  color: #fefefe;
+  padding: 3rem 0;
+  scroll-margin-top: 1rem;
+}
+
+.evento-cta__titulo {
+  margin: 0 0 0.4rem;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 700;
+}
+
+.evento-cta__bajada {
+  margin: 0;
+  color: #cfcfcf;
+  max-width: 34rem;
+}
+
+.evento-cta__accion {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.evento-cta__boton.button.large {
+  margin: 0;
+  background: #f6a94b;
+  color: #1e1e1e;
+  font-weight: 700;
+  padding: 0.9rem 1.8rem;
+}
+
+.evento-cta__boton.button.large:hover,
+.evento-cta__boton.button.large:focus {
+  background: #e8952f;
+  color: #1e1e1e;
+}
+
+@media screen and (max-width: 39.9375em) {
+  .evento-cta__accion {
+    justify-content: flex-start;
+    margin-top: 1rem;
+  }
+}

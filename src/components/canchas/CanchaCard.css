@@ -92,6 +92,25 @@
   text-decoration: line-through;
 }
 
+/* Ocupado por un evento (torneo/cumpleaños): mismo "no disponible" pero
+   diferenciado con un tinte índigo y un puntito, sin gritar. */
+.cancha-card__slot--evento {
+  position: relative;
+  background: #eceafc;
+  color: #6a5acd;
+}
+
+.cancha-card__slot--evento::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #6a5acd;
+}
+
 /* Leyenda visible de qué significa cada color. */
 .cancha-card__leyenda {
   display: flex;
@@ -123,6 +142,11 @@
 
 .cancha-card__leyenda-muestra--ocupado {
   background: #ededed;
+}
+
+.cancha-card__leyenda-muestra--evento {
+  background: #eceafc;
+  border-color: #c7bff2;
 }
 
 /* CTA siempre al fondo -> filas de cards con la misma altura. */

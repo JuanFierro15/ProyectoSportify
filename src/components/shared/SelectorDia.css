@@ -1,0 +1,60 @@
+/* Selector de día compartido: fila de 7 tarjetitas, con scroll horizontal si
+   no caben. */
+
+.selector-dia {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.selector-dia__opcion {
+  flex: 0 0 auto;
+  min-width: 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.5rem 0.35rem;
+  border: 1px solid #cacaca;
+  border-radius: 5px;
+  background: #fefefe;
+  cursor: pointer;
+  line-height: 1.1;
+}
+
+.selector-dia__opcion:hover {
+  border-color: #8a8a8a;
+}
+
+.selector-dia__opcion--sel {
+  border-color: #1779ba;
+  background: #1779ba;
+  color: #fefefe;
+}
+
+.selector-dia__opcion--lleno:not(.selector-dia__opcion--sel) {
+  opacity: 0.5;
+}
+
+.selector-dia__sem {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.selector-dia__num {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.selector-dia__mes {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.selector-dia__libres {
+  margin-top: 0.15rem;
+  font-size: 0.62rem;
+  opacity: 0.85;
+}

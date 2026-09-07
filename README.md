@@ -28,15 +28,20 @@ src/
 │   ├── layout/     Navbar, Footer (Bloque 1)
 │   ├── hero/       DeporteHero: heros por deporte con pinning GSAP/ScrollTrigger (Bloque 2.5)
 │   ├── canchas/    TransicionCatalogo + Catalogo + CanchaCard (Bloque 3 / pase de calidad)
-│   ├── reservas/   ReservaModal: modal de reserva con selector de 7 días (Bloque 4)
+│   ├── reservas/   ReservaModal: reserva de una cancha por hora (Bloque 4)
+│   ├── eventos/    EventoCTA + EventoModal: torneos y cumpleaños (Bloque 5)
+│   ├── shared/     SelectorDia: tira de 7 días, usada por ambos modales
 │   └── chatbot/    Chatbot (Bloque 6)
 ├── context/
-│   └── ReservasContext.jsx   Context + useReducer: disponibilidad por día (7 días)
-│                             y reservas, persistidas en el navegador (Bloque 4)
+│   └── ReservasContext.jsx   Context + useReducer: disponibilidad por día (7 días);
+│                             reservas "individual" y "evento" (bloqueo todo-o-nada),
+│                             persistidas en el navegador
 ├── data/
 │   ├── deportes.js    Nombre y colorAcento de cada deporte (fuente única)
 │   └── canchas.json   Semilla: horas base + ocupación por día de cada cancha
-├── App.js          <ReservasProvider> + Navbar + heros + transición + catálogo + Footer
+├── lib/
+│   └── fechas.js      Helpers de fecha compartidos (etiquetas, meses...)
+├── App.js          <ReservasProvider> + Navbar + heros + transición + catálogo + evento + Footer
 └── index.js        Punto de entrada (importa el CSS de Foundation)
 ```
 
@@ -47,6 +52,6 @@ src/
    - 2.5 **Heros por deporte (voley playa, pádel, fútbol) con pinned sections** ← actual
 3. Catálogo de canchas
 4. Sistema de reservas (horarios, validación de choques, `localStorage`)
-5. Modo evento especial (torneos, cumpleaños)
+5. **Modo evento especial: torneos y cumpleaños (varias canchas + franja consecutiva, bloqueo todo-o-nada)** ← actual
 6. Chatbot
 7. Panel de estado/admin (opcional)

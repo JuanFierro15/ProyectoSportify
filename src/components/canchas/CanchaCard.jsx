@@ -23,7 +23,7 @@ const formatoPrecio = new Intl.NumberFormat('es-CO', {
  */
 function CanchaCard({ cancha }) {
   const { deporte, nombre, precioHora } = cancha;
-  const { disponibilidad, dias } = useReservas();
+  const { disponibilidad, dias, esHorarioDeEvento } = useReservas();
   const [modalAbierto, setModalAbierto] = useState(false);
 
   const info = deportePorSlug(deporte);
@@ -34,9 +34,13 @@ function CanchaCard({ cancha }) {
   const numeroCancha = (cancha.id.match(/(\d+)$/) || [])[1];
   const tituloCard = numeroCancha ? `Cancha ${numeroCancha}` : nombre;
 
-  const horariosHoy = disponibilidad(cancha.id, dias[0]);
+  const horariosHoy = disponibilidad(cancha.id, dias[0]).map((h) => ({
+    ...h,
+    evento: !h.disponible && esHorarioDeEvento(cancha.id, dias[0], h.hora),
+  }));
   const libresHoy = horariosHoy.filter((h) => h.disponible).length;
   const totalHoras = horariosHoy.length;
+  const hayEventoHoy = horariosHoy.some((h) => h.evento);
 
   // Habilitar el botón si hay algún cupo en cualquiera de los 7 días.
   const hayCuposSemana = dias.some((d) =>
@@ -70,24 +74,29 @@ function CanchaCard({ cancha }) {
             className="cancha-card__grid"
             aria-label={`Horarios de hoy en ${tituloCard} de ${nombreDeporte}`}
           >
-            {horariosHoy.map((h) => (
-              <li
-                key={h.hora}
-                className={
-                  'cancha-card__slot ' +
-                  (h.disponible
-                    ? 'cancha-card__slot--libre'
-                    : 'cancha-card__slot--ocupado')
-                }
-                title={`${h.hora} · ${h.disponible ? 'disponible' : 'reservado'}`}
-              >
-                {h.hora.slice(0, 2)}
-                <span className="show-for-sr">
-                  {' '}
-                  {h.disponible ? 'disponible' : 'reservado'}
-                </span>
-              </li>
-            ))}
+            {horariosHoy.map((h) => {
+              const estado = h.disponible
+                ? 'disponible'
+                : h.evento
+                ? 'reservado para un evento'
+                : 'reservado';
+              return (
+                <li
+                  key={h.hora}
+                  className={
+                    'cancha-card__slot ' +
+                    (h.disponible
+                      ? 'cancha-card__slot--libre'
+                      : 'cancha-card__slot--ocupado') +
+                    (h.evento ? ' cancha-card__slot--evento' : '')
+                  }
+                  title={`${h.hora} · ${estado}`}
+                >
+                  {h.hora.slice(0, 2)}
+                  <span className="show-for-sr"> {estado}</span>
+                </li>
+              );
+            })}
           </ul>
 
           <p className="cancha-card__leyenda">
@@ -99,6 +108,12 @@ function CanchaCard({ cancha }) {
               <span className="cancha-card__leyenda-muestra cancha-card__leyenda-muestra--ocupado" />
               Reservado
             </span>
+            {hayEventoHoy && (
+              <span className="cancha-card__leyenda-item">
+                <span className="cancha-card__leyenda-muestra cancha-card__leyenda-muestra--evento" />
+                Evento
+              </span>
+            )}
           </p>
         </div>
       </div>

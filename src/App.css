@@ -13,14 +13,7 @@ main.grid-container {
   padding-bottom: 2rem;
 }
 
-/* Hero (Bloque 2) y catálogo (Bloque 3) traen sus propios estilos.
-   Sólo queda como placeholder el de reservas (Bloque 4). */
-#reservas-placeholder {
-  border: 1px dashed #cacaca;
-  border-radius: 4px;
-  padding: 2rem;
-  margin-bottom: 1.5rem;
-}
+/* Cada bloque (hero, catálogo, evento) trae sus propios estilos. */
 
 #main-footer {
   background: #1e1e1e;

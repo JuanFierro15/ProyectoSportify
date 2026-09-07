@@ -1,0 +1,198 @@
+/* Modal de evento especial. Usa las clases .reveal / .reveal-overlay de
+   Foundation; reutiliza SelectorDia para el día. */
+
+.evento-overlay {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 5vh 1rem;
+  overflow-y: auto;
+  background: rgba(10, 10, 10, 0.55);
+}
+
+.evento-modal {
+  display: block;
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  transform: none;
+  margin: 0;
+  width: 100%;
+  max-width: 40rem;
+  border-radius: 6px;
+}
+
+.evento-modal__titulo {
+  font-size: 1.35rem;
+  margin: 0 2rem 1rem 0;
+}
+
+.evento-modal__campo {
+  border: 0;
+  margin: 0 0 1.25rem;
+  padding: 0;
+}
+
+.evento-modal__campo legend {
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  padding: 0;
+}
+
+.evento-modal__ayuda {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: #6f6f6f;
+}
+
+/* Grilla de canchas seleccionables */
+.evento-modal__canchas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.5rem;
+}
+
+.evento-modal__cancha {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #cacaca;
+  border-left: 4px solid var(--acento, #1779ba);
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 400;
+}
+
+.evento-modal__cancha input {
+  margin: 0 0 0.25rem;
+}
+
+.evento-modal__cancha--sel {
+  background: #f4f8fb;
+  border-color: var(--acento, #1779ba);
+}
+
+.evento-modal__cancha-deporte {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--acento, #6f6f6f);
+}
+
+.evento-modal__cancha-nombre {
+  font-weight: 700;
+}
+
+/* Franja de disponibilidad combinada (solo lectura) */
+.evento-modal__strip {
+  list-style: none;
+  margin: 0 0 0.4rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.evento-modal__strip-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 25px;
+  height: 20px;
+  border-radius: 3px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid transparent;
+}
+
+.evento-modal__strip-slot--libre {
+  background: #dcf3e2;
+  border-color: #a9e0ba;
+  color: #1d7a3d;
+}
+
+.evento-modal__strip-slot--ocupado {
+  background: #ededed;
+  color: #9a9a9a;
+  text-decoration: line-through;
+}
+
+.evento-modal__leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  color: #6f6f6f;
+}
+
+.evento-modal__leyenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.evento-modal__punto {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+}
+
+.evento-modal__punto--libre {
+  background: #dcf3e2;
+  border-color: #a9e0ba;
+}
+
+.evento-modal__punto--ocupado {
+  background: #ededed;
+}
+
+.evento-modal__rango {
+  margin-bottom: 0.25rem;
+}
+
+.evento-modal__rango label {
+  font-weight: 600;
+}
+
+.evento-modal__aviso {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: #cc4b37;
+}
+
+.evento-modal__nota {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: #1d7a3d;
+  font-weight: 700;
+}
+
+.evento-modal__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.evento-modal__acciones .button {
+  margin: 0;
+}
+
+.evento-modal__ok {
+  margin-bottom: 0;
+}
+
+.evento-modal__ok-canchas {
+  font-weight: 700;
+}
+
+.evento-modal__ok .button {
+  margin: 0.5rem 0 0;
+}

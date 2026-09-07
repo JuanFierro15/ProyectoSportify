@@ -1,21 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useReservas } from '../../context/ReservasContext';
+import SelectorDia from '../shared/SelectorDia';
+import { fechaLarga } from '../../lib/fechas';
 import './ReservaModal.css';
-
-const DIA_SEMANA = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
-const MES_CORTO = [
-  'ene', 'feb', 'mar', 'abr', 'may', 'jun',
-  'jul', 'ago', 'sep', 'oct', 'nov', 'dic',
-];
-const MES_LARGO = [
-  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
-];
-
-function aDate(iso) {
-  return new Date(`${iso}T00:00:00`);
-}
 
 /**
  * ReservaModal — modal para reservar un horario de una cancha.
@@ -23,8 +11,8 @@ function aDate(iso) {
  * - Se abre desde el botón "Reservar" de CanchaCard.
  * - Contenedor con las clases de Reveal de Foundation (`reveal-overlay` +
  *   `reveal`), abierto/cerrado desde React (sin la JS de Foundation).
- * - Selector de día tipo calendario: los próximos 7 días, hecho a mano con
- *   botones de Foundation.
+ * - Selector de día: componente compartido `<SelectorDia>` (mismo que usa el
+ *   modal de evento).
  * - Lee la disponibilidad viva del ReservasContext por (cancha, fecha).
  * - Al confirmar revalida el horario y, si ya no está libre, muestra un aviso
  *   en vez de reservar.
@@ -85,19 +73,6 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
 
   if (!abierto || !canchaViva) return null;
 
-  const etiquetaDia = (iso) => {
-    if (iso === dias[0]) return 'Hoy';
-    if (iso === dias[1]) return 'Mañana';
-    return DIA_SEMANA[aDate(iso).getDay()];
-  };
-
-  const fechaLarga = (iso) => {
-    if (iso === dias[0]) return 'hoy';
-    if (iso === dias[1]) return 'mañana';
-    const d = aDate(iso);
-    return `el ${d.getDate()} de ${MES_LARGO[d.getMonth()]}`;
-  };
-
   const confirmar = () => {
     if (!horaSel) return;
     const res = reservar({
@@ -146,7 +121,7 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
           <div className="callout success reserva-modal__ok">
             <p>
               <strong>Reserva confirmada.</strong> {canchaViva.nombre},{' '}
-              {fechaLarga(confirmada.fecha)} a las {confirmada.hora}.
+              {fechaLarga(confirmada.fecha, dias)} a las {confirmada.hora}.
             </p>
             <button type="button" className="button" onClick={onCerrar}>
               Listo
@@ -162,49 +137,19 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
 
             <fieldset className="reserva-modal__campo">
               <legend>Día</legend>
-              <div
-                className="reserva-modal__dias"
-                role="group"
-                aria-label="Elegí el día"
-              >
-                {dias.map((iso) => {
-                  const d = aDate(iso);
-                  const sel = fechaSel === iso;
-                  const libres = disponibilidad(canchaViva.id, iso).filter(
-                    (h) => h.disponible
-                  ).length;
-                  return (
-                    <button
-                      key={iso}
-                      type="button"
-                      className={
-                        'reserva-modal__dia' +
-                        (sel ? ' reserva-modal__dia--sel' : '') +
-                        (libres === 0 ? ' reserva-modal__dia--lleno' : '')
-                      }
-                      aria-pressed={sel}
-                      onClick={() => {
-                        setFechaSel(iso);
-                        setHoraSel(null);
-                        setError(null);
-                      }}
-                    >
-                      <span className="reserva-modal__dia-sem">
-                        {etiquetaDia(iso)}
-                      </span>
-                      <span className="reserva-modal__dia-num">
-                        {d.getDate()}
-                      </span>
-                      <span className="reserva-modal__dia-mes">
-                        {MES_CORTO[d.getMonth()]}
-                      </span>
-                      <span className="reserva-modal__dia-libres">
-                        {libres === 0 ? 'completo' : `${libres} libres`}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+              <SelectorDia
+                dias={dias}
+                valor={fechaSel}
+                onChange={(iso) => {
+                  setFechaSel(iso);
+                  setHoraSel(null);
+                  setError(null);
+                }}
+                contarLibres={(iso) =>
+                  disponibilidad(canchaViva.id, iso).filter((h) => h.disponible)
+                    .length
+                }
+              />
             </fieldset>
 
             <fieldset className="reserva-modal__campo">

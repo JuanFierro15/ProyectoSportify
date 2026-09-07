@@ -40,64 +40,7 @@
   padding: 0;
 }
 
-/* Selector de día: fila de 7 tarjetitas, con scroll horizontal si no caben. */
-.reserva-modal__dias {
-  display: flex;
-  gap: 0.4rem;
-  overflow-x: auto;
-  padding-bottom: 0.25rem;
-}
-
-.reserva-modal__dia {
-  flex: 0 0 auto;
-  min-width: 4rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.1rem;
-  padding: 0.5rem 0.35rem;
-  border: 1px solid #cacaca;
-  border-radius: 5px;
-  background: #fefefe;
-  cursor: pointer;
-  line-height: 1.1;
-}
-
-.reserva-modal__dia:hover {
-  border-color: #8a8a8a;
-}
-
-.reserva-modal__dia--sel {
-  border-color: #1779ba;
-  background: #1779ba;
-  color: #fefefe;
-}
-
-.reserva-modal__dia--lleno:not(.reserva-modal__dia--sel) {
-  opacity: 0.5;
-}
-
-.reserva-modal__dia-sem {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.reserva-modal__dia-num {
-  font-size: 1.2rem;
-  font-weight: 700;
-}
-
-.reserva-modal__dia-mes {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-}
-
-.reserva-modal__dia-libres {
-  margin-top: 0.15rem;
-  font-size: 0.62rem;
-  opacity: 0.85;
-}
+/* El selector de día vive en components/shared/SelectorDia.css */
 
 .reserva-modal__horas {
   display: flex;

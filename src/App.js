@@ -5,6 +5,7 @@ import Navbar from './components/layout/Navbar';
 import DeporteHero from './components/hero/DeporteHero';
 import TransicionCatalogo from './components/canchas/TransicionCatalogo';
 import Catalogo from './components/canchas/Catalogo';
+import EventoCTA from './components/eventos/EventoCTA';
 import Footer from './components/layout/Footer';
 import './App.css';
 
@@ -30,6 +31,7 @@ const VIDEOS = {
  * Ids que otros componentes referencian (sin tocarlos):
  *  - #hero-placeholder    -> enlace "Inicio" del navbar
  *  - #canchas-placeholder -> enlaces "Ver canchas de..." de los DeporteHero
+ *  - #reservas-placeholder -> enlace "Reservar" del navbar (lo lleva EventoCTA)
  */
 function App() {
   return (
@@ -53,17 +55,9 @@ function App() {
 
         <main className="grid-container">
           <Catalogo />
-
-          <div className="grid-x grid-padding-x">
-            <section className="cell" id="reservas-placeholder">
-              <h2>Reservas</h2>
-              <p>
-                Cada cancha del catálogo tiene su propio botón de reserva, con el
-                detalle de horarios disponibles día por día.
-              </p>
-            </section>
-          </div>
         </main>
+
+        <EventoCTA />
 
         <Footer />
       </div>
