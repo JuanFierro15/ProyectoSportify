@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import ReservaModal from '../reservas/ReservaModal';
 import './CanchaCard.css';
 
 // Slug de deporte -> nombre visible.
@@ -20,19 +21,16 @@ const formatoPrecio = new Intl.NumberFormat('es-CO', {
  * Muestra nombre, deporte, precio por hora y un resumen de disponibilidad
  * (conteo de horarios libres + mini-grid de puntos verde/rojo por horario).
  *
- * El botón "Reservar" es un placeholder: el flujo real de selección/reserva
- * es del Bloque 4. Por ahora solo hace console.log(cancha.id).
+ * La `cancha` que recibe viene del ReservasContext (vía Catalogo), así que la
+ * disponibilidad se refleja en vivo. El botón "Reservar" abre el ReservaModal
+ * (Bloque 4).
  */
 function CanchaCard({ cancha }) {
-  const { id, deporte, nombre, precioHora, horarios } = cancha;
+  const { deporte, nombre, precioHora, horarios } = cancha;
+  const [modalAbierto, setModalAbierto] = useState(false);
 
   const libres = horarios.filter((h) => h.disponible).length;
   const total = horarios.length;
-
-  const manejarReservar = () => {
-    // Placeholder Bloque 3. El flujo real llega en el Bloque 4.
-    console.log(id);
-  };
 
   return (
     <article className="card cancha-card">
@@ -80,12 +78,18 @@ function CanchaCard({ cancha }) {
         <button
           type="button"
           className="button expanded cancha-card__cta"
-          onClick={manejarReservar}
+          onClick={() => setModalAbierto(true)}
           disabled={libres === 0}
         >
           {libres === 0 ? 'Sin horarios hoy' : 'Reservar'}
         </button>
       </div>
+
+      <ReservaModal
+        cancha={cancha}
+        abierto={modalAbierto}
+        onCerrar={() => setModalAbierto(false)}
+      />
     </article>
   );
 }

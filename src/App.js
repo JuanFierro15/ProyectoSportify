@@ -1,4 +1,5 @@
 import React from 'react';
+import { ReservasProvider } from './context/ReservasContext';
 import Navbar from './components/layout/Navbar';
 import DeporteHero from './components/hero/DeporteHero';
 import Catalogo from './components/canchas/Catalogo';
@@ -20,50 +21,56 @@ const VIDEO_FUTBOL = `${BASE}/media/hero_futbol.mp4`;
  * grid de Foundation con placeholders + Footer.
  * El contenedor de los heros lleva `id="hero-placeholder"` para que el enlace
  * "Inicio" del navbar (sin tocar) siga funcionando.
- * Placeholders pendientes:
- *  - #reservas-placeholder -> Bloque 4 (sistema de reservas)
  * El catálogo (Bloque 3) conserva el id="canchas-placeholder" para los enlaces
  * "Ver canchas de..." de los DeporteHero (sin tocar).
+ * Toda la app va envuelta en <ReservasProvider> (Bloque 4): disponibilidad y
+ * reservas en Context + localStorage.
  */
 function App() {
   return (
-    <div className="App">
-      <Navbar />
+    <ReservasProvider>
+      <div className="App">
+        <Navbar />
 
-      <div id="hero-placeholder">
-        <DeporteHero
-          nombre="Voley Playa"
-          videoSrc={VIDEO_VOLEY}
-          tituloCTA="Ver canchas de voley playa"
-          colorAcento="#f6a94b"
-        />
-        <DeporteHero
-          nombre="Pádel"
-          videoSrc={VIDEO_PADEL}
-          tituloCTA="Ver canchas de pádel"
-          colorAcento="#3fa9f5"
-        />
-        <DeporteHero
-          nombre="Fútbol"
-          videoSrc={VIDEO_FUTBOL}
-          tituloCTA="Ver canchas de fútbol"
-          colorAcento="#5bd67d"
-        />
-      </div>
-
-      <main className="grid-container">
-        <Catalogo />
-
-        <div className="grid-x grid-padding-x">
-          <section className="cell" id="reservas-placeholder">
-            <h2>Sistema de reservas</h2>
-            <p>Placeholder del selector de horarios y validación de reservas (Bloque 4).</p>
-          </section>
+        <div id="hero-placeholder">
+          <DeporteHero
+            nombre="Voley Playa"
+            videoSrc={VIDEO_VOLEY}
+            tituloCTA="Ver canchas de voley playa"
+            colorAcento="#f6a94b"
+          />
+          <DeporteHero
+            nombre="Pádel"
+            videoSrc={VIDEO_PADEL}
+            tituloCTA="Ver canchas de pádel"
+            colorAcento="#3fa9f5"
+          />
+          <DeporteHero
+            nombre="Fútbol"
+            videoSrc={VIDEO_FUTBOL}
+            tituloCTA="Ver canchas de fútbol"
+            colorAcento="#5bd67d"
+          />
         </div>
-      </main>
 
-      <Footer />
-    </div>
+        <main className="grid-container">
+          <Catalogo />
+
+          <div className="grid-x grid-padding-x">
+            <section className="cell" id="reservas-placeholder">
+              <h2>Reservas</h2>
+              <p>
+                Las reservas se hacen desde cada cancha del catálogo con el botón
+                &ldquo;Reservar&rdquo;. La disponibilidad se guarda en tu
+                navegador (localStorage).
+              </p>
+            </section>
+          </div>
+        </main>
+
+        <Footer />
+      </div>
+    </ReservasProvider>
   );
 }
 

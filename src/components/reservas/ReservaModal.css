@@ -1,0 +1,93 @@
+/* Bloque 4: modal de reserva. Usa las clases .reveal / .reveal-overlay de
+   Foundation; aquí solo lo necesario para mostrarlo sin la JS de Foundation. */
+
+.reserva-overlay {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 5vh 1rem;
+  overflow-y: auto;
+  background: rgba(10, 10, 10, 0.55);
+}
+
+.reserva-modal {
+  display: block;
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  transform: none;
+  margin: 0;
+  width: 100%;
+  max-width: 34rem;
+  border-radius: 6px;
+}
+
+.reserva-modal__titulo {
+  font-size: 1.35rem;
+  margin: 0 2rem 1rem 0;
+}
+
+.reserva-modal__campo {
+  border: 0;
+  margin: 0 0 1rem;
+  padding: 0;
+}
+
+.reserva-modal__campo legend {
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  padding: 0;
+}
+
+.reserva-modal__horas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.reserva-modal__hora {
+  margin: 0;
+}
+
+.reserva-modal__hora--ocupado {
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+.reserva-modal__hora--sel {
+  outline: 2px solid #1468a0;
+  outline-offset: 1px;
+}
+
+.reserva-modal__hora-tag {
+  font-size: 0.7em;
+  opacity: 0.8;
+}
+
+.reserva-modal__contacto {
+  margin-bottom: 0.5rem;
+}
+
+.reserva-modal__contacto label {
+  font-weight: 600;
+}
+
+.reserva-modal__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.reserva-modal__acciones .button {
+  margin: 0;
+}
+
+.reserva-modal__ok {
+  margin-bottom: 0;
+}
+
+.reserva-modal__ok .button {
+  margin: 0.5rem 0 0;
+}

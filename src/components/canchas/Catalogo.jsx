@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import canchas from '../../data/canchas.json';
+import { useReservas } from '../../context/ReservasContext';
 import CanchaCard from './CanchaCard';
 import './Catalogo.css';
 
@@ -18,19 +18,19 @@ const DEPORTES = [
 /**
  * Catalogo (Bloque 3) — catálogo de canchas.
  *
- * Lee la semilla `src/data/canchas.json`, agrupa las canchas por deporte en
- * tres secciones (Voley Playa / Pádel / Fútbol) y las maqueta con el grid de
- * Foundation (1 col en móvil, 2 en tablet, 3 en desktop).
+ * La lista de canchas y su disponibilidad se leen del ReservasContext
+ * (Bloque 4); `canchas.json` es solo la semilla. Agrupa por deporte en tres
+ * secciones (Voley Playa / Pádel / Fútbol) y maqueta con el grid de Foundation
+ * (1 col en móvil, 2 en tablet, 3 en desktop).
  *
  * Cada card entra con un scroll reveal (fade + slide desde abajo) usando
  * GSAP ScrollTrigger con `toggleActions: 'play none none reverse'`. Es un
  * reveal normal, sin pin. Toda la animación vive dentro de `gsap.context()`
  * con `ctx.revert()` en el cleanup, igual que en el resto de componentes.
- *
- * Aquí NO hay selección de horario ni lógica de reservas: eso es el Bloque 4.
  */
 function Catalogo() {
   const rootRef = useRef(null);
+  const { canchas } = useReservas();
 
   useEffect(() => {
     const ctx = gsap.context(() => {

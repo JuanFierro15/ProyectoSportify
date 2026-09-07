@@ -28,11 +28,14 @@ src/
 │   ├── layout/     Navbar, Footer (Bloque 1)
 │   ├── hero/       DeporteHero: heros por deporte con pinning GSAP/ScrollTrigger (Bloque 2.5)
 │   ├── canchas/    Catalogo + CanchaCard: catálogo con disponibilidad (Bloque 3)
-│   ├── reservas/   Sistema de reservas (Bloque 4)
+│   ├── reservas/   ReservaModal: modal de reserva (Bloque 4)
 │   └── chatbot/    Chatbot (Bloque 6)
+├── context/
+│   └── ReservasContext.jsx   Context + useReducer: disponibilidad y reservas,
+│                             espejadas a localStorage (Bloque 4)
 ├── data/
-│   └── canchas.json   Semilla de canchas (deporte, precio, horarios)
-├── App.js          Esqueleto: Navbar + grid con placeholders + Footer
+│   └── canchas.json   Semilla inicial de canchas (deporte, precio, horarios)
+├── App.js          Esqueleto: <ReservasProvider> + Navbar + heros + catálogo + Footer
 └── index.js        Punto de entrada (importa el CSS de Foundation)
 ```
 
