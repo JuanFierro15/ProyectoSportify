@@ -1,0 +1,40 @@
+/* Bloque 3: catálogo de canchas. Se monta dentro de <main class="grid-container">,
+   así que aquí solo espaciado y detalle propio. */
+
+.catalogo {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+  scroll-margin-top: 1rem;
+}
+
+.catalogo__intro {
+  margin-bottom: 2rem;
+}
+
+.catalogo__h2 {
+  margin: 0 0 0.25rem;
+}
+
+.catalogo__bajada {
+  margin: 0;
+  color: #6f6f6f;
+}
+
+.catalogo__seccion {
+  margin-bottom: 2.5rem;
+}
+
+.catalogo__seccion:last-child {
+  margin-bottom: 0;
+}
+
+.catalogo__titulo {
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e6e6e6;
+}
+
+/* Separación vertical entre cards cuando el grid hace wrap. */
+.catalogo__card {
+  margin-bottom: 1.5rem;
+}

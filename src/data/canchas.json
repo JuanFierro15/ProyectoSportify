@@ -1,0 +1,128 @@
+[
+  {
+    "id": "voley-1",
+    "deporte": "voley-playa",
+    "nombre": "Cancha Voley Playa 1",
+    "precioHora": 40000,
+    "horarios": [
+      { "hora": "08:00", "disponible": true },
+      { "hora": "09:00", "disponible": true },
+      { "hora": "10:00", "disponible": true },
+      { "hora": "11:00", "disponible": true },
+      { "hora": "12:00", "disponible": false },
+      { "hora": "13:00", "disponible": false },
+      { "hora": "14:00", "disponible": true },
+      { "hora": "15:00", "disponible": true },
+      { "hora": "16:00", "disponible": true },
+      { "hora": "17:00", "disponible": true },
+      { "hora": "18:00", "disponible": false },
+      { "hora": "19:00", "disponible": true },
+      { "hora": "20:00", "disponible": true }
+    ]
+  },
+  {
+    "id": "voley-2",
+    "deporte": "voley-playa",
+    "nombre": "Cancha Voley Playa 2",
+    "precioHora": 44000,
+    "horarios": [
+      { "hora": "08:00", "disponible": false },
+      { "hora": "09:00", "disponible": false },
+      { "hora": "10:00", "disponible": true },
+      { "hora": "11:00", "disponible": true },
+      { "hora": "12:00", "disponible": true },
+      { "hora": "13:00", "disponible": true },
+      { "hora": "14:00", "disponible": true },
+      { "hora": "15:00", "disponible": true },
+      { "hora": "16:00", "disponible": true },
+      { "hora": "17:00", "disponible": false },
+      { "hora": "18:00", "disponible": false },
+      { "hora": "19:00", "disponible": false },
+      { "hora": "20:00", "disponible": false }
+    ]
+  },
+  {
+    "id": "padel-1",
+    "deporte": "padel",
+    "nombre": "Cancha Pádel 1",
+    "precioHora": 60000,
+    "horarios": [
+      { "hora": "08:00", "disponible": true },
+      { "hora": "09:00", "disponible": true },
+      { "hora": "10:00", "disponible": false },
+      { "hora": "11:00", "disponible": false },
+      { "hora": "12:00", "disponible": true },
+      { "hora": "13:00", "disponible": true },
+      { "hora": "14:00", "disponible": true },
+      { "hora": "15:00", "disponible": true },
+      { "hora": "16:00", "disponible": false },
+      { "hora": "17:00", "disponible": true },
+      { "hora": "18:00", "disponible": true },
+      { "hora": "19:00", "disponible": false },
+      { "hora": "20:00", "disponible": true }
+    ]
+  },
+  {
+    "id": "padel-2",
+    "deporte": "padel",
+    "nombre": "Cancha Pádel 2",
+    "precioHora": 65000,
+    "horarios": [
+      { "hora": "08:00", "disponible": false },
+      { "hora": "09:00", "disponible": true },
+      { "hora": "10:00", "disponible": true },
+      { "hora": "11:00", "disponible": true },
+      { "hora": "12:00", "disponible": true },
+      { "hora": "13:00", "disponible": false },
+      { "hora": "14:00", "disponible": false },
+      { "hora": "15:00", "disponible": false },
+      { "hora": "16:00", "disponible": true },
+      { "hora": "17:00", "disponible": true },
+      { "hora": "18:00", "disponible": true },
+      { "hora": "19:00", "disponible": true },
+      { "hora": "20:00", "disponible": false }
+    ]
+  },
+  {
+    "id": "futbol-1",
+    "deporte": "futbol",
+    "nombre": "Cancha Fútbol 1",
+    "precioHora": 100000,
+    "horarios": [
+      { "hora": "08:00", "disponible": true },
+      { "hora": "09:00", "disponible": true },
+      { "hora": "10:00", "disponible": true },
+      { "hora": "11:00", "disponible": true },
+      { "hora": "12:00", "disponible": true },
+      { "hora": "13:00", "disponible": true },
+      { "hora": "14:00", "disponible": true },
+      { "hora": "15:00", "disponible": true },
+      { "hora": "16:00", "disponible": true },
+      { "hora": "17:00", "disponible": false },
+      { "hora": "18:00", "disponible": false },
+      { "hora": "19:00", "disponible": false },
+      { "hora": "20:00", "disponible": false }
+    ]
+  },
+  {
+    "id": "futbol-2",
+    "deporte": "futbol",
+    "nombre": "Cancha Fútbol 2",
+    "precioHora": 120000,
+    "horarios": [
+      { "hora": "08:00", "disponible": true },
+      { "hora": "09:00", "disponible": false },
+      { "hora": "10:00", "disponible": false },
+      { "hora": "11:00", "disponible": true },
+      { "hora": "12:00", "disponible": false },
+      { "hora": "13:00", "disponible": true },
+      { "hora": "14:00", "disponible": true },
+      { "hora": "15:00", "disponible": true },
+      { "hora": "16:00", "disponible": false },
+      { "hora": "17:00", "disponible": true },
+      { "hora": "18:00", "disponible": false },
+      { "hora": "19:00", "disponible": false },
+      { "hora": "20:00", "disponible": true }
+    ]
+  }
+]

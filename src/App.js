@@ -1,6 +1,7 @@
 import React from 'react';
 import Navbar from './components/layout/Navbar';
 import DeporteHero from './components/hero/DeporteHero';
+import Catalogo from './components/canchas/Catalogo';
 import Footer from './components/layout/Footer';
 import './App.css';
 
@@ -20,8 +21,9 @@ const VIDEO_FUTBOL = `${BASE}/media/hero_futbol.mp4`;
  * El contenedor de los heros lleva `id="hero-placeholder"` para que el enlace
  * "Inicio" del navbar (sin tocar) siga funcionando.
  * Placeholders pendientes:
- *  - #canchas-placeholder  -> Bloque 3 (catálogo de canchas)
  *  - #reservas-placeholder -> Bloque 4 (sistema de reservas)
+ * El catálogo (Bloque 3) conserva el id="canchas-placeholder" para los enlaces
+ * "Ver canchas de..." de los DeporteHero (sin tocar).
  */
 function App() {
   return (
@@ -50,12 +52,7 @@ function App() {
       </div>
 
       <main className="grid-container">
-        <div className="grid-x grid-padding-x">
-          <section className="cell" id="canchas-placeholder">
-            <h2>Catálogo de canchas</h2>
-            <p>Placeholder del catálogo de voley playa, pádel y fútbol (Bloque 3).</p>
-          </section>
-        </div>
+        <Catalogo />
 
         <div className="grid-x grid-padding-x">
           <section className="cell" id="reservas-placeholder">

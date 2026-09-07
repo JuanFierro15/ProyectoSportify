@@ -13,8 +13,8 @@ main.grid-container {
   padding-bottom: 2rem;
 }
 
-/* El hero (Bloque 2) trae sus propios estilos en Hero.css. */
-#canchas-placeholder,
+/* Hero (Bloque 2) y catálogo (Bloque 3) traen sus propios estilos.
+   Sólo queda como placeholder el de reservas (Bloque 4). */
 #reservas-placeholder {
   border: 1px dashed #cacaca;
   border-radius: 4px;
