@@ -55,30 +55,41 @@
   font-size: 0.95rem;
 }
 
-/* Mini-grid: un cuadrito por horario de hoy. */
+/* Mini-agenda de hoy: una casilla por horario, con la hora escrita y color
+   según disponibilidad. Se puede leer sin abrir el modal. */
 .cancha-card__grid {
   list-style: none;
   margin: 0 0 0.5rem;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 4px;
 }
 
 .cancha-card__slot {
-  display: inline-block;
-  width: 13px;
-  height: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 25px;
+  height: 20px;
+  padding: 0 3px;
   border-radius: 3px;
-  flex: none;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid transparent;
 }
 
 .cancha-card__slot--libre {
-  background: #3adb76;
+  background: #dcf3e2;
+  border-color: #a9e0ba;
+  color: #1d7a3d;
 }
 
 .cancha-card__slot--ocupado {
-  background: #d0d0d0;
+  background: #ededed;
+  color: #9a9a9a;
+  text-decoration: line-through;
 }
 
 /* Leyenda visible de qué significa cada color. */
@@ -97,9 +108,21 @@
   gap: 0.35rem;
 }
 
-.cancha-card__leyenda .cancha-card__slot {
-  width: 11px;
-  height: 11px;
+.cancha-card__leyenda-muestra {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+}
+
+.cancha-card__leyenda-muestra--libre {
+  background: #dcf3e2;
+  border-color: #a9e0ba;
+}
+
+.cancha-card__leyenda-muestra--ocupado {
+  background: #ededed;
 }
 
 /* CTA siempre al fondo -> filas de cards con la misma altura. */

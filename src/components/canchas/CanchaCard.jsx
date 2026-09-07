@@ -30,6 +30,10 @@ function CanchaCard({ cancha }) {
   const acento = info ? info.colorAcento : '#1779ba';
   const nombreDeporte = info ? info.nombre : deporte;
 
+  // En la card basta con "Cancha N": el deporte ya se ve arriba con su color.
+  const numeroCancha = (cancha.id.match(/(\d+)$/) || [])[1];
+  const tituloCard = numeroCancha ? `Cancha ${numeroCancha}` : nombre;
+
   const horariosHoy = disponibilidad(cancha.id, dias[0]);
   const libresHoy = horariosHoy.filter((h) => h.disponible).length;
   const totalHoras = horariosHoy.length;
@@ -43,7 +47,7 @@ function CanchaCard({ cancha }) {
     <article className="card cancha-card" style={{ '--acento': acento }}>
       <div className="card-section cancha-card__cuerpo">
         <p className="cancha-card__deporte">{nombreDeporte}</p>
-        <h3 className="cancha-card__nombre">{nombre}</h3>
+        <h3 className="cancha-card__nombre">{tituloCard}</h3>
 
         <p className="cancha-card__precio">
           {formatoPrecio.format(precioHora)}
@@ -62,7 +66,10 @@ function CanchaCard({ cancha }) {
             )}
           </p>
 
-          <ul className="cancha-card__grid" aria-hidden="true">
+          <ul
+            className="cancha-card__grid"
+            aria-label={`Horarios de hoy en ${tituloCard} de ${nombreDeporte}`}
+          >
             {horariosHoy.map((h) => (
               <li
                 key={h.hora}
@@ -73,17 +80,23 @@ function CanchaCard({ cancha }) {
                     : 'cancha-card__slot--ocupado')
                 }
                 title={`${h.hora} · ${h.disponible ? 'disponible' : 'reservado'}`}
-              />
+              >
+                {h.hora.slice(0, 2)}
+                <span className="show-for-sr">
+                  {' '}
+                  {h.disponible ? 'disponible' : 'reservado'}
+                </span>
+              </li>
             ))}
           </ul>
 
           <p className="cancha-card__leyenda">
             <span className="cancha-card__leyenda-item">
-              <span className="cancha-card__slot cancha-card__slot--libre" />
+              <span className="cancha-card__leyenda-muestra cancha-card__leyenda-muestra--libre" />
               Disponible
             </span>
             <span className="cancha-card__leyenda-item">
-              <span className="cancha-card__slot cancha-card__slot--ocupado" />
+              <span className="cancha-card__leyenda-muestra cancha-card__leyenda-muestra--ocupado" />
               Reservado
             </span>
           </p>
