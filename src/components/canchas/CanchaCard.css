@@ -1,82 +1,121 @@
-/* Bloque 3: tarjeta de cancha. Estructura base con .card de Foundation;
-   aquí solo los detalles propios. */
+/* Tarjeta de cancha. Estructura base con .card de Foundation; aquí el
+   detalle propio: acento por deporte, jerarquía y altura pareja. */
 
 .cancha-card {
   height: 100%;
   display: flex;
   flex-direction: column;
+  border-top: 4px solid var(--acento, #1779ba);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.cancha-card__cabecera {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.cancha-card__nombre {
-  margin: 0;
-  font-size: 1.1rem;
-}
-
-.cancha-card__deporte {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #6f6f6f;
-  white-space: nowrap;
+.cancha-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
 }
 
 .cancha-card__cuerpo {
   flex: 1 1 auto;
 }
 
-.cancha-card__precio {
-  margin: 0 0 0.25rem;
-  font-size: 1.25rem;
+/* Jerarquía: etiqueta de deporte pequeña y en color de acento. */
+.cancha-card__deporte {
+  margin: 0 0 0.15rem;
+  font-size: 0.72rem;
   font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--acento, #6f6f6f);
+}
+
+/* ...nombre grande y con peso... */
+.cancha-card__nombre {
+  margin: 0 0 0.6rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* ...precio destacado pero por debajo del nombre. */
+.cancha-card__precio {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1e1e1e;
 }
 
 .cancha-card__precio-unidad {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 400;
   color: #6f6f6f;
 }
 
-.cancha-card__resumen {
-  margin: 0 0 0.75rem;
-  font-size: 0.9rem;
+.cancha-card__disp-texto {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
 }
 
-/* Mini-grid de disponibilidad: un punto por horario. */
+/* Mini-grid: un cuadrito por horario de hoy. */
 .cancha-card__grid {
   list-style: none;
-  margin: 0;
+  margin: 0 0 0.5rem;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
 }
 
 .cancha-card__slot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  flex: none;
 }
 
 .cancha-card__slot--libre {
-  background: #3adb76; /* success de Foundation */
+  background: #3adb76;
 }
 
 .cancha-card__slot--ocupado {
-  background: #cc4b37; /* alert de Foundation */
-  opacity: 0.55;
+  background: #d0d0d0;
 }
 
+/* Leyenda visible de qué significa cada color. */
+.cancha-card__leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  font-size: 0.75rem;
+  color: #6f6f6f;
+}
+
+.cancha-card__leyenda-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.cancha-card__leyenda .cancha-card__slot {
+  width: 11px;
+  height: 11px;
+}
+
+/* CTA siempre al fondo -> filas de cards con la misma altura. */
 .cancha-card__pie {
   padding-top: 0;
+  margin-top: auto;
 }
 
 .cancha-card__cta {
   margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cancha-card,
+  .cancha-card:hover {
+    transition: none;
+    transform: none;
+  }
 }

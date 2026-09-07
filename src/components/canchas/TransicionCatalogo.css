@@ -1,0 +1,19 @@
+/* Sección de transición heros -> catálogo. Ocupa el ancho completo (se monta
+   fuera de main.grid-container); el texto va centrado en un grid-container. */
+
+.transicion-catalogo {
+  padding: 3.5rem 0 2.5rem;
+  text-align: center;
+}
+
+.transicion-catalogo__titulo {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 700;
+}
+
+.transicion-catalogo__bajada {
+  margin: 0 auto;
+  max-width: 34rem;
+  color: #4a4a4a;
+}

@@ -6,56 +6,118 @@ import React, {
   useCallback,
   useMemo,
 } from 'react';
-import canchasSemilla from '../data/canchas.json';
+import semilla from '../data/canchas.json';
 
 /**
  * ReservasContext (Bloque 4) — estado global de disponibilidad y reservas.
  *
- * - Fuente de verdad en runtime: este Context + localStorage.
- * - `src/data/canchas.json` es SOLO la semilla inicial (cuando no hay nada
- *   guardado todavía).
- * - Sin backend: todo vive en memoria y se espeja a localStorage.
+ * - Fuente de verdad en runtime: este Context + almacenamiento local del
+ *   navegador. `src/data/canchas.json` es solo la semilla inicial.
+ * - Modelo de disponibilidad por día, para los próximos 7 días (hoy + 6).
+ *   El estado guarda, por cancha y por fecha, la lista de horas ya reservadas
+ *   (`ocupados`); todo lo demás está disponible.
+ * - Sin backend: todo vive en memoria y se espeja al almacenamiento local.
  *
  * Consumir con el hook `useReservas()`.
  */
 
-const STORAGE_KEY = 'sportify_reservas_v1';
+const STORAGE_KEY = 'sportify_reservas_v2';
+const DIAS_VENTANA = 7;
 
 const ReservasContext = createContext(null);
 
-// Copia profunda de la semilla para no mutar nunca el JSON importado.
-function clonarCanchas(fuente) {
-  return fuente.map((c) => ({
-    ...c,
-    horarios: c.horarios.map((h) => ({ ...h })),
+// Fecha (YYYY-MM-DD, hora local) a `offset` días de hoy.
+function isoDia(offset) {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + offset);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+}
+
+function ventanaDias() {
+  return Array.from({ length: DIAS_VENTANA }, (_, i) => isoDia(i));
+}
+
+// Metadatos de las canchas (sin disponibilidad).
+function canchasMeta() {
+  return semilla.canchas.map((c) => ({
+    id: c.id,
+    deporte: c.deporte,
+    nombre: c.nombre,
+    precioHora: c.precioHora,
+    horas: [...semilla.horas],
   }));
 }
 
-// Estado inicial: localStorage si existe y es válido; si no, la semilla.
+// `ocupados` a partir de la semilla, mapeando el offset de día a fecha real.
+function ocupadosSemilla(dias) {
+  const ocupados = {};
+  semilla.canchas.forEach((c) => {
+    ocupados[c.id] = {};
+    dias.forEach((fecha, i) => {
+      const lista = (c.ocupadosSemilla && c.ocupadosSemilla[i]) || [];
+      ocupados[c.id][fecha] = [...lista];
+    });
+  });
+  return ocupados;
+}
+
+// Estado inicial: si hay datos guardados válidos se reconcilian con la ventana
+// de 7 días actual (se descartan fechas pasadas, las nuevas toman la semilla);
+// si no, se usa la semilla completa.
 function crearEstadoInicial() {
+  const dias = ventanaDias();
+  const canchas = canchasMeta();
+  const semillaOcup = ocupadosSemilla(dias);
+
   try {
     const guardado = window.localStorage.getItem(STORAGE_KEY);
     if (guardado) {
       const data = JSON.parse(guardado);
-      if (
-        data &&
-        Array.isArray(data.canchas) &&
-        Array.isArray(data.reservas)
-      ) {
-        return { canchas: data.canchas, reservas: data.reservas, error: null };
+      if (data && data.ocupados && Array.isArray(data.reservas)) {
+        const ocupados = {};
+        canchas.forEach((c) => {
+          ocupados[c.id] = {};
+          dias.forEach((fecha) => {
+            const guardadoDia =
+              data.ocupados[c.id] && data.ocupados[c.id][fecha];
+            ocupados[c.id][fecha] = Array.isArray(guardadoDia)
+              ? [...guardadoDia]
+              : [...semillaOcup[c.id][fecha]];
+          });
+        });
+        return { dias, canchas, ocupados, reservas: data.reservas, error: null };
       }
     }
   } catch (e) {
-    // localStorage no disponible o dato corrupto -> se usa la semilla.
+    // Sin almacenamiento local o dato corrupto -> semilla completa.
   }
-  return { canchas: clonarCanchas(canchasSemilla), reservas: [], error: null };
+
+  return { dias, canchas, ocupados: semillaOcup, reservas: [], error: null };
 }
 
-// ¿Está libre ese horario de esa cancha en el estado dado?
-function horarioDisponible(canchas, canchaId, hora) {
-  const cancha = canchas.find((c) => c.id === canchaId);
-  const horario = cancha && cancha.horarios.find((h) => h.hora === hora);
-  return Boolean(horario && horario.disponible);
+// Horas de una cancha en una fecha, con su disponibilidad.
+function calcularDisponibilidad(state, canchaId, fecha) {
+  const cancha = state.canchas.find((c) => c.id === canchaId);
+  if (!cancha) return [];
+  const ocup =
+    (state.ocupados[canchaId] && state.ocupados[canchaId][fecha]) || [];
+  return cancha.horas.map((hora) => ({
+    hora,
+    disponible: !ocup.includes(hora),
+  }));
+}
+
+function horaLibre(state, canchaId, fecha, hora) {
+  const cancha = state.canchas.find((c) => c.id === canchaId);
+  if (!cancha || !cancha.horas.includes(hora)) return false;
+  if (!state.dias.includes(fecha)) return false;
+  const ocup =
+    (state.ocupados[canchaId] && state.ocupados[canchaId][fecha]) || [];
+  return !ocup.includes(hora);
 }
 
 function reducer(state, action) {
@@ -64,23 +126,22 @@ function reducer(state, action) {
       const { canchaId, fecha, hora, nombre, telefono } = action.payload;
 
       // Validación de choque también a nivel reducer (última línea de defensa).
-      if (!horarioDisponible(state.canchas, canchaId, hora)) {
+      if (!horaLibre(state, canchaId, fecha, hora)) {
         return {
           ...state,
-          error: 'Ese horario ya no está disponible. Elegí otro.',
+          error: 'Ese horario ya está reservado. Elegí otro.',
         };
       }
 
-      const canchas = state.canchas.map((c) =>
-        c.id !== canchaId
-          ? c
-          : {
-              ...c,
-              horarios: c.horarios.map((h) =>
-                h.hora === hora ? { ...h, disponible: false } : h
-              ),
-            }
-      );
+      const previas =
+        (state.ocupados[canchaId] && state.ocupados[canchaId][fecha]) || [];
+      const ocupados = {
+        ...state.ocupados,
+        [canchaId]: {
+          ...state.ocupados[canchaId],
+          [fecha]: [...previas, hora],
+        },
+      };
 
       const cancha = state.canchas.find((c) => c.id === canchaId);
       const reserva = {
@@ -95,7 +156,12 @@ function reducer(state, action) {
         creadaEn: new Date().toISOString(),
       };
 
-      return { canchas, reservas: [...state.reservas, reserva], error: null };
+      return {
+        ...state,
+        ocupados,
+        reservas: [...state.reservas, reserva],
+        error: null,
+      };
     }
 
     case 'LIMPIAR_ERROR':
@@ -109,42 +175,48 @@ function reducer(state, action) {
 export function ReservasProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, undefined, crearEstadoInicial);
 
-  // Espejo a localStorage en cada cambio de disponibilidad o reservas.
+  // Espejo al almacenamiento local en cada cambio.
   useEffect(() => {
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ canchas: state.canchas, reservas: state.reservas })
+        JSON.stringify({ ocupados: state.ocupados, reservas: state.reservas })
       );
     } catch (e) {
-      // Sin persistencia (modo privado, cuota llena...): la app sigue en memoria.
+      // Sin persistencia (modo privado, cuota llena...): sigue en memoria.
     }
-  }, [state.canchas, state.reservas]);
+  }, [state.ocupados, state.reservas]);
 
-  // Reservar: valida disponibilidad actual y, si está libre, despacha.
-  // Devuelve { ok, error? } para feedback inmediato en el modal.
+  const disponibilidad = useCallback(
+    (canchaId, fecha) => calcularDisponibilidad(state, canchaId, fecha),
+    [state]
+  );
+
+  // Reserva: valida y, si sigue libre, despacha. Devuelve { ok, error? }.
   const reservar = useCallback(
     (datos) => {
-      if (!horarioDisponible(state.canchas, datos.canchaId, datos.hora)) {
-        return { ok: false, error: 'Ese horario ya no está disponible. Elegí otro.' };
+      if (!horaLibre(state, datos.canchaId, datos.fecha, datos.hora)) {
+        return { ok: false, error: 'Ese horario ya está reservado. Elegí otro.' };
       }
       dispatch({ type: 'RESERVAR', payload: datos });
       return { ok: true };
     },
-    [state.canchas]
+    [state]
   );
 
   const limpiarError = useCallback(() => dispatch({ type: 'LIMPIAR_ERROR' }), []);
 
   const value = useMemo(
     () => ({
+      dias: state.dias,
       canchas: state.canchas,
       reservas: state.reservas,
       error: state.error,
+      disponibilidad,
       reservar,
       limpiarError,
     }),
-    [state.canchas, state.reservas, state.error, reservar, limpiarError]
+    [state.dias, state.canchas, state.reservas, state.error, disponibilidad, reservar, limpiarError]
   );
 
   return (

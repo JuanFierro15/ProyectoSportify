@@ -1,22 +1,14 @@
-/* Bloque 3: catálogo de canchas. Se monta dentro de <main class="grid-container">,
+/* Catálogo de canchas. Se monta dentro de <main class="grid-container">,
    así que aquí solo espaciado y detalle propio. */
 
 .catalogo {
-  padding-top: 3rem;
+  padding-top: 2rem;
   padding-bottom: 3rem;
   scroll-margin-top: 1rem;
 }
 
-.catalogo__intro {
-  margin-bottom: 2rem;
-}
-
-.catalogo__h2 {
-  margin: 0 0 0.25rem;
-}
-
 .catalogo__bajada {
-  margin: 0;
+  margin: 0 0 2rem;
   color: #6f6f6f;
 }
 

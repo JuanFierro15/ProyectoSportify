@@ -2,31 +2,24 @@ import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useReservas } from '../../context/ReservasContext';
+import { DEPORTES } from '../../data/deportes';
 import CanchaCard from './CanchaCard';
 import './Catalogo.css';
 
 // Registro idempotente del plugin.
 gsap.registerPlugin(ScrollTrigger);
 
-// Orden y títulos de las secciones por deporte.
-const DEPORTES = [
-  { slug: 'voley-playa', titulo: 'Voley Playa' },
-  { slug: 'padel', titulo: 'Pádel' },
-  { slug: 'futbol', titulo: 'Fútbol' },
-];
-
 /**
- * Catalogo (Bloque 3) — catálogo de canchas.
+ * Catalogo — catálogo de canchas.
  *
- * La lista de canchas y su disponibilidad se leen del ReservasContext
- * (Bloque 4); `canchas.json` es solo la semilla. Agrupa por deporte en tres
- * secciones (Voley Playa / Pádel / Fútbol) y maqueta con el grid de Foundation
- * (1 col en móvil, 2 en tablet, 3 en desktop).
+ * Toma la lista de canchas del ReservasContext y las agrupa por deporte en
+ * tres secciones (mismo orden y nombres que los DeporteHero, vía data/deportes).
+ * Maquetación con el grid de Foundation: 1 columna en móvil, 2 en tablet, 3 en
+ * desktop, con `align-center` para centrar las filas incompletas.
  *
- * Cada card entra con un scroll reveal (fade + slide desde abajo) usando
- * GSAP ScrollTrigger con `toggleActions: 'play none none reverse'`. Es un
- * reveal normal, sin pin. Toda la animación vive dentro de `gsap.context()`
- * con `ctx.revert()` en el cleanup, igual que en el resto de componentes.
+ * Cada card entra con un scroll reveal (fade + slide desde abajo) usando GSAP
+ * ScrollTrigger con `toggleActions: 'play none none reverse'`, dentro de
+ * `gsap.context()` con `ctx.revert()` en el cleanup.
  */
 function Catalogo() {
   const rootRef = useRef(null);
@@ -54,21 +47,18 @@ function Catalogo() {
 
   return (
     <section id="canchas-placeholder" className="catalogo" ref={rootRef}>
-      <header className="catalogo__intro">
-        <h2 className="catalogo__h2">Nuestras canchas</h2>
-        <p className="catalogo__bajada">
-          Disponibilidad de hoy. Elegí una cancha para reservar.
-        </p>
-      </header>
+      <p className="catalogo__bajada">
+        Elegí día y horario. La disponibilidad cubre los próximos 7 días.
+      </p>
 
-      {DEPORTES.map(({ slug, titulo }) => {
+      {DEPORTES.map(({ slug, nombre }) => {
         const delDeporte = canchas.filter((c) => c.deporte === slug);
         if (delDeporte.length === 0) return null;
 
         return (
           <div className="catalogo__seccion" key={slug}>
-            <h3 className="catalogo__titulo">{titulo}</h3>
-            <div className="grid-x grid-padding-x">
+            <h3 className="catalogo__titulo">{nombre}</h3>
+            <div className="grid-x grid-padding-x align-center">
               {delDeporte.map((cancha) => (
                 <div
                   className="cell small-12 medium-6 large-4 catalogo__card"

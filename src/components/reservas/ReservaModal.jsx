@@ -3,32 +3,42 @@ import { createPortal } from 'react-dom';
 import { useReservas } from '../../context/ReservasContext';
 import './ReservaModal.css';
 
-const FECHAS = [
-  { valor: 'hoy', etiqueta: 'Hoy' },
-  { valor: 'manana', etiqueta: 'Mañana' },
+const DIA_SEMANA = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+const MES_CORTO = [
+  'ene', 'feb', 'mar', 'abr', 'may', 'jun',
+  'jul', 'ago', 'sep', 'oct', 'nov', 'dic',
+];
+const MES_LARGO = [
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
 ];
 
+function aDate(iso) {
+  return new Date(`${iso}T00:00:00`);
+}
+
 /**
- * ReservaModal (Bloque 4) — modal para reservar un horario de una cancha.
+ * ReservaModal — modal para reservar un horario de una cancha.
  *
  * - Se abre desde el botón "Reservar" de CanchaCard.
  * - Contenedor con las clases de Reveal de Foundation (`reveal-overlay` +
- *   `reveal`), pero abierto/cerrado desde React (sin la JS de Foundation).
- * - Lee la disponibilidad viva del ReservasContext, no del JSON.
- * - Al confirmar revalida el horario (choque) y, si ya no está libre, muestra
- *   un error en vez de reservar.
+ *   `reveal`), abierto/cerrado desde React (sin la JS de Foundation).
+ * - Selector de día tipo calendario: los próximos 7 días, hecho a mano con
+ *   botones de Foundation.
+ * - Lee la disponibilidad viva del ReservasContext por (cancha, fecha).
+ * - Al confirmar revalida el horario y, si ya no está libre, muestra un aviso
+ *   en vez de reservar.
  */
 function ReservaModal({ cancha, abierto, onCerrar }) {
-  const { canchas, reservar } = useReservas();
+  const { dias, canchas, disponibilidad, reservar } = useReservas();
   const canchaId = cancha ? cancha.id : null;
 
-  // Cancha "viva" desde el context (por si su disponibilidad cambió).
   const canchaViva = useMemo(
     () => canchas.find((c) => c.id === canchaId) || cancha,
     [canchas, canchaId, cancha]
   );
 
-  const [fecha, setFecha] = useState('hoy');
+  const [fechaSel, setFechaSel] = useState(dias[0]);
   const [horaSel, setHoraSel] = useState(null);
   const [nombre, setNombre] = useState('');
   const [telefono, setTelefono] = useState('');
@@ -38,14 +48,14 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
   // Reset al abrir o al cambiar de cancha.
   useEffect(() => {
     if (abierto) {
-      setFecha('hoy');
+      setFechaSel(dias[0]);
       setHoraSel(null);
       setNombre('');
       setTelefono('');
       setError(null);
       setConfirmada(null);
     }
-  }, [abierto, canchaId]);
+  }, [abierto, canchaId, dias]);
 
   // Cerrar con Escape.
   useEffect(() => {
@@ -57,24 +67,42 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [abierto, onCerrar]);
 
-  // Si el horario elegido se ocupa mientras el modal está abierto (choque en
+  const horarios =
+    abierto && canchaViva ? disponibilidad(canchaViva.id, fechaSel) : [];
+
+  // Si el horario elegido se reserva mientras el modal está abierto (choque en
   // la misma sesión), se deselecciona y se avisa.
   useEffect(() => {
     if (!horaSel || !canchaViva) return;
-    const h = canchaViva.horarios.find((x) => x.hora === horaSel);
+    const h = disponibilidad(canchaViva.id, fechaSel).find(
+      (x) => x.hora === horaSel
+    );
     if (h && !h.disponible) {
       setHoraSel(null);
-      setError('Ese horario acaba de ocuparse. Elegí otro.');
+      setError('Ese horario acaba de reservarse. Elegí otro.');
     }
-  }, [canchaViva, horaSel]);
+  }, [disponibilidad, canchaViva, fechaSel, horaSel]);
 
   if (!abierto || !canchaViva) return null;
+
+  const etiquetaDia = (iso) => {
+    if (iso === dias[0]) return 'Hoy';
+    if (iso === dias[1]) return 'Mañana';
+    return DIA_SEMANA[aDate(iso).getDay()];
+  };
+
+  const fechaLarga = (iso) => {
+    if (iso === dias[0]) return 'hoy';
+    if (iso === dias[1]) return 'mañana';
+    const d = aDate(iso);
+    return `el ${d.getDate()} de ${MES_LARGO[d.getMonth()]}`;
+  };
 
   const confirmar = () => {
     if (!horaSel) return;
     const res = reservar({
       canchaId: canchaViva.id,
-      fecha,
+      fecha: fechaSel,
       hora: horaSel,
       nombre: nombre.trim(),
       telefono: telefono.trim(),
@@ -85,7 +113,7 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
       return;
     }
     setError(null);
-    setConfirmada({ fecha, hora: horaSel });
+    setConfirmada({ fecha: fechaSel, hora: horaSel });
   };
 
   const modal = (
@@ -117,12 +145,11 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
         {confirmada ? (
           <div className="callout success reserva-modal__ok">
             <p>
-              <strong>Reserva confirmada</strong> para {canchaViva.nombre},{' '}
-              {confirmada.fecha === 'hoy' ? 'hoy' : 'mañana'} a las{' '}
-              {confirmada.hora}.
+              <strong>Reserva confirmada.</strong> {canchaViva.nombre},{' '}
+              {fechaLarga(confirmada.fecha)} a las {confirmada.hora}.
             </p>
             <button type="button" className="button" onClick={onCerrar}>
-              Cerrar
+              Listo
             </button>
           </div>
         ) : (
@@ -134,26 +161,56 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
             )}
 
             <fieldset className="reserva-modal__campo">
-              <legend>Fecha</legend>
-              <div className="button-group">
-                {FECHAS.map((f) => (
-                  <button
-                    key={f.valor}
-                    type="button"
-                    className={'button' + (fecha === f.valor ? '' : ' hollow')}
-                    aria-pressed={fecha === f.valor}
-                    onClick={() => setFecha(f.valor)}
-                  >
-                    {f.etiqueta}
-                  </button>
-                ))}
+              <legend>Día</legend>
+              <div
+                className="reserva-modal__dias"
+                role="group"
+                aria-label="Elegí el día"
+              >
+                {dias.map((iso) => {
+                  const d = aDate(iso);
+                  const sel = fechaSel === iso;
+                  const libres = disponibilidad(canchaViva.id, iso).filter(
+                    (h) => h.disponible
+                  ).length;
+                  return (
+                    <button
+                      key={iso}
+                      type="button"
+                      className={
+                        'reserva-modal__dia' +
+                        (sel ? ' reserva-modal__dia--sel' : '') +
+                        (libres === 0 ? ' reserva-modal__dia--lleno' : '')
+                      }
+                      aria-pressed={sel}
+                      onClick={() => {
+                        setFechaSel(iso);
+                        setHoraSel(null);
+                        setError(null);
+                      }}
+                    >
+                      <span className="reserva-modal__dia-sem">
+                        {etiquetaDia(iso)}
+                      </span>
+                      <span className="reserva-modal__dia-num">
+                        {d.getDate()}
+                      </span>
+                      <span className="reserva-modal__dia-mes">
+                        {MES_CORTO[d.getMonth()]}
+                      </span>
+                      <span className="reserva-modal__dia-libres">
+                        {libres === 0 ? 'completo' : `${libres} libres`}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </fieldset>
 
             <fieldset className="reserva-modal__campo">
               <legend>Horario</legend>
               <div className="reserva-modal__horas">
-                {canchaViva.horarios.map((h) => {
+                {horarios.map((h) => {
                   const seleccionado = horaSel === h.hora;
                   return (
                     <button
@@ -175,7 +232,10 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
                     >
                       {h.hora}
                       {!h.disponible && (
-                        <span className="reserva-modal__hora-tag"> · ocupado</span>
+                        <span className="reserva-modal__hora-tag">
+                          {' '}
+                          · reservado
+                        </span>
                       )}
                     </button>
                   );

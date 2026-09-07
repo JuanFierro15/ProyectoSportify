@@ -27,15 +27,16 @@ src/
 ├── components/
 │   ├── layout/     Navbar, Footer (Bloque 1)
 │   ├── hero/       DeporteHero: heros por deporte con pinning GSAP/ScrollTrigger (Bloque 2.5)
-│   ├── canchas/    Catalogo + CanchaCard: catálogo con disponibilidad (Bloque 3)
-│   ├── reservas/   ReservaModal: modal de reserva (Bloque 4)
+│   ├── canchas/    TransicionCatalogo + Catalogo + CanchaCard (Bloque 3 / pase de calidad)
+│   ├── reservas/   ReservaModal: modal de reserva con selector de 7 días (Bloque 4)
 │   └── chatbot/    Chatbot (Bloque 6)
 ├── context/
-│   └── ReservasContext.jsx   Context + useReducer: disponibilidad y reservas,
-│                             espejadas a localStorage (Bloque 4)
+│   └── ReservasContext.jsx   Context + useReducer: disponibilidad por día (7 días)
+│                             y reservas, persistidas en el navegador (Bloque 4)
 ├── data/
-│   └── canchas.json   Semilla inicial de canchas (deporte, precio, horarios)
-├── App.js          Esqueleto: <ReservasProvider> + Navbar + heros + catálogo + Footer
+│   ├── deportes.js    Nombre y colorAcento de cada deporte (fuente única)
+│   └── canchas.json   Semilla: horas base + ocupación por día de cada cancha
+├── App.js          <ReservasProvider> + Navbar + heros + transición + catálogo + Footer
 └── index.js        Punto de entrada (importa el CSS de Foundation)
 ```
 
