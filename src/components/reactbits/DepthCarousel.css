@@ -35,6 +35,12 @@
   position: absolute;
   top: 50%;
   left: 50%;
+  /* Adición manual: tamaño vía variables CSS (en vez de width/height inline
+     fijos) para que un consumidor pueda sobreescribirlo con un selector más
+     específico (p. ej. container queries) sin tocar este componente. Con
+     cardWidth/cardHeight normales, el resultado es idéntico al anterior. */
+  width: var(--dc-card-w);
+  height: var(--dc-card-h);
   transform-origin: center center;
   overflow: hidden;
   background: #0b0d12;
@@ -53,6 +59,44 @@
   display: block;
   pointer-events: none;
   -webkit-user-drag: none;
+}
+
+/* Adición manual: zoom lento (Ken Burns) solo en la imagen de la tarjeta
+   activa. El transform va en la <img>, no en la card (que ya tiene su propio
+   transform 3D en `layout()`), y se reinicia solo con quitar/poner la clase
+   al cambiar de tarjeta activa. */
+@keyframes depth-carousel-kenburns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.06);
+  }
+}
+
+.depth-carousel__img--activa {
+  animation: depth-carousel-kenburns 8s ease-out forwards;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* Adición manual: botón real que envuelve la imagen de la tarjeta activa
+   para abrir el visor en grande (accesible por teclado). Reset visual total
+   para no alterar la apariencia de la card. */
+.depth-carousel__trigger {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.depth-carousel__trigger:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.85);
+  outline-offset: -3px;
 }
 
 .depth-carousel__tint {
@@ -151,5 +195,9 @@
   .depth-carousel__arrow,
   .depth-carousel__dot {
     transition: none;
+  }
+  .depth-carousel__img--activa {
+    animation: none;
+    will-change: auto;
   }
 }

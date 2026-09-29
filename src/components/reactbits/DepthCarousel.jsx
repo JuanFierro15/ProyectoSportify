@@ -43,6 +43,14 @@ const DepthCarousel = ({
   // encima de cada card sin tocar el resto del layout 3D. Opcional: si no se
   // pasa, el comportamiento es idéntico al original.
   renderOverlay,
+  // Adición manual: si se pasa, la imagen de la tarjeta ACTIVA (solo esa; las
+  // laterales no son accesibles vía teclado, están aria-hidden) se envuelve en
+  // un <button> real para abrir un visor en grande. `getViewerLabel` arma el
+  // aria-label de ese botón; si no se pasa se usa un texto genérico. Un ítem
+  // sin `item.viewable` no ofrece esta acción (p. ej. sin foto real, solo
+  // degradado de respaldo).
+  onOpenViewer,
+  getViewerLabel,
   className = ''
 }) => {
   const data = useMemo(() => (Array.isArray(items) ? items : []).map(normalizeItem), [items]);
@@ -362,26 +370,22 @@ const DepthCarousel = ({
       onKeyDown={onKeyDown}
     >
       <div className="depth-carousel__stage" ref={stageRef}>
-        {data.map((item, i) => (
-          <div
-            key={i}
-            className="depth-carousel__card"
-            ref={el => (cardRefs.current[i] = el)}
-            style={{ width: cardWidth, height: cardHeight, borderRadius: radius }}
-            aria-roledescription="slide"
-            aria-label={`${i + 1} of ${count}`}
-            aria-hidden={active !== i}
-            onClick={() => onCardClick(i)}
-          >
-            {/* width/height/loading/decoding/onError: adición manual sobre el
-                componente descargado del registro, para fotos reales (evitan
-                salto de layout, difieren la carga de las cards no visibles y
-                caen al degradado de respaldo en item.fallback si la imagen
-                real falla). Sin item.width/height o item.fallback, el
-                comportamiento es idéntico al original. */}
+        {data.map((item, i) => {
+          const esActiva = active === i;
+          // width/height/loading/decoding/onError: adición manual sobre el
+          // componente descargado del registro, para fotos reales (evitan
+          // salto de layout, difieren la carga de las cards no visibles y
+          // caen al degradado de respaldo en item.fallback si la imagen real
+          // falla). srcSet/sizes: adición manual para servir la versión en
+          // alta resolución en pantallas retina sin cambiar la de por
+          // defecto. Sin esos campos en `item`, el comportamiento es
+          // idéntico al original.
+          const imagen = (
             <img
-              className="depth-carousel__img"
+              className={`depth-carousel__img${esActiva ? ' depth-carousel__img--activa' : ''}`}
               src={item.image}
+              srcSet={item.srcSet}
+              sizes={item.sizes}
               alt={item.alt || ''}
               draggable={false}
               width={item.width}
@@ -392,22 +396,56 @@ const DepthCarousel = ({
                 item.fallback
                   ? (e) => {
                       if (e.currentTarget.src !== item.fallback) {
+                        e.currentTarget.removeAttribute('srcset');
                         e.currentTarget.src = item.fallback;
                       }
                     }
                   : undefined
               }
             />
-            <span
-              className="depth-carousel__tint"
-              ref={el => (overlayRefs.current[i] = el)}
-              style={{ background: tint }}
-            />
-            {renderOverlay && (
-              <div className="depth-carousel__overlay">{renderOverlay(item, i, active === i)}</div>
-            )}
-          </div>
-        ))}
+          );
+
+          return (
+            <div
+              key={i}
+              className="depth-carousel__card"
+              ref={el => (cardRefs.current[i] = el)}
+              style={{
+                '--dc-card-w': typeof cardWidth === 'number' ? `${cardWidth}px` : cardWidth,
+                '--dc-card-h': typeof cardHeight === 'number' ? `${cardHeight}px` : cardHeight,
+                borderRadius: radius
+              }}
+              aria-roledescription="slide"
+              aria-label={`${i + 1} of ${count}`}
+              aria-hidden={!esActiva}
+              onClick={() => onCardClick(i)}
+            >
+              {onOpenViewer && esActiva && item.viewable ? (
+                <button
+                  type="button"
+                  className="depth-carousel__trigger"
+                  aria-label={getViewerLabel ? getViewerLabel(item, i) : 'Ver imagen en grande'}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenViewer(item, i);
+                  }}
+                >
+                  {imagen}
+                </button>
+              ) : (
+                imagen
+              )}
+              <span
+                className="depth-carousel__tint"
+                ref={el => (overlayRefs.current[i] = el)}
+                style={{ background: tint }}
+              />
+              {renderOverlay && (
+                <div className="depth-carousel__overlay">{renderOverlay(item, i, esActiva)}</div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {showControls && count > 1 && (
