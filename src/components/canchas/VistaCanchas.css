@@ -1,6 +1,31 @@
 /* Vista superpuesta de canchas (reemplaza el catálogo en el flujo de scroll).
    Mismo lenguaje visual que el resto de la app: radio de 12px, sombra suave,
-   variable --acento con color-mix, sin tipografías ni paleta nuevas. */
+   sin tipografías nuevas.
+
+   Tema por deporte: `--accent`, `--accent-soft` y `--accent-contrast` se
+   definen inline en `.vista-canchas` (VistaCanchas.jsx), calculadas a partir
+   de `colorAcento` de `src/data/deportes.js` — única fuente de verdad de
+   color. Registradas con @property para que los navegadores que lo soportan
+   animen la transición de color entre deportes; donde no, el cambio es
+   instantáneo (degradación segura, sin romper nada). */
+
+@property --accent {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #1779ba;
+}
+
+@property --accent-soft {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #eef3f8;
+}
+
+@property --accent-contrast {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #ffffff;
+}
 
 .vista-canchas {
   position: fixed;
@@ -9,7 +34,8 @@
      reserva quede siempre por encima; por encima del navbar (1000). */
   z-index: 1001;
   overflow-y: auto;
-  background: linear-gradient(180deg, #fbfbfb 0%, #ffffff 45%);
+  background: radial-gradient(circle at 50% 15%, var(--accent-soft, #eef3f8) 0%, #ffffff 60%);
+  transition: background 0.4s ease;
 }
 
 .vista-canchas__marco {
@@ -55,6 +81,8 @@
   background: transparent;
 }
 
+/* Los pills inactivos muestran el color propio de SU deporte (para
+   previsualizar los tres), no el tema activo -> variable local por <li>. */
 .vista-canchas__tabs .tabs-title > a {
   padding: 0.55rem 1.1rem;
   border: 2px solid color-mix(in srgb, var(--acento, #1779ba) 35%, transparent);
@@ -71,10 +99,11 @@
   background: #fff;
 }
 
+/* El pill activo sí lee del tema global (--accent), no de su color local. */
 .vista-canchas__tabs .tabs-title.is-active > a {
-  border-color: var(--acento, #1779ba);
-  background: var(--acento, #1779ba);
-  color: #fff;
+  border-color: var(--accent, #1779ba);
+  background: var(--accent, #1779ba);
+  color: var(--accent-contrast, #fff);
 }
 
 .vista-canchas__filtro {
@@ -89,11 +118,105 @@
   font-size: 0.95rem;
   color: #4a4a4a;
   cursor: pointer;
+  line-height: 24px; /* misma altura que el switch, para centrar el texto */
+}
+
+/* --- Switch "Solo disponibles hoy": rediseño propio sobre el checkbox real
+   de Foundation (mismo input, misma accesibilidad; solo se repinta). --- */
+.vista-canchas__filtro .switch {
+  width: 44px;
+  height: 24px;
+  margin: 0;
+}
+
+.vista-canchas__filtro .switch-paddle {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: #d6d6d6;
+}
+
+.vista-canchas__filtro .switch-paddle::after {
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+
+.vista-canchas__filtro .switch-input:checked ~ .switch-paddle {
+  background: var(--accent, #1779ba);
+}
+
+.vista-canchas__filtro .switch-input:checked ~ .switch-paddle::after {
+  left: 23px;
+}
+
+.vista-canchas__filtro .switch-input:focus-visible ~ .switch-paddle {
+  outline: 2px solid var(--accent, #1779ba);
+  outline-offset: 2px;
 }
 
 .vista-canchas__cuerpo {
+  position: relative;
   min-height: 380px;
   margin-bottom: 1.5rem;
+}
+
+/* --- Escenario: degradado + backdrop difuminado + textura de líneas de
+   cancha, detrás del carrusel/grid. Todo decorativo (aria-hidden,
+   pointer-events: none), contenido en su propio stacking context para que
+   el blur no se salga ni deje scroll horizontal. --- */
+.vista-canchas__escenario-fondo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 16px;
+  pointer-events: none;
+}
+
+.vista-canchas__backdrop {
+  position: absolute;
+  inset: -60px;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  filter: blur(50px) saturate(1.3);
+  opacity: 0.35;
+  animation: vista-canchas-backdrop-in 0.5s ease both;
+}
+
+@keyframes vista-canchas-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.35;
+  }
+}
+
+.vista-canchas__textura {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  stroke: var(--accent, #1779ba);
+  opacity: 0.07;
+}
+
+/* El contenido real (vacío / grid / carrusel) siempre por encima del
+   escenario de fondo, sea cual sea la rama activa. */
+.vista-canchas__vacio,
+.vista-canchas__grid-estatico {
+  position: relative;
+  z-index: 1;
+}
+
+.vista-canchas__cuerpo > .depth-carousel {
+  position: relative;
+  z-index: 1;
 }
 
 .vista-canchas__vacio {
@@ -109,8 +232,9 @@
 }
 
 /* Estilo base de "card cancha-card": único consumidor desde que el catálogo
-   en scroll (Bloque 3 original) se reemplazó por esta vista. Radio, sombra y
-   franja de acento superior, iguales a como se veían en el catálogo. */
+   en scroll (Bloque 3 original) se reemplazó por esta vista. Radio, franja
+   de acento superior y sombra teñida con el acento (con fallback a la
+   sombra gris original si el navegador no soporta color-mix). */
 .cancha-card {
   position: relative;
   height: 100%;
@@ -123,20 +247,33 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+@supports (box-shadow: 0 0 0 color-mix(in srgb, red 50%, transparent)) {
+  .cancha-card {
+    box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--accent, #1779ba) 22%, transparent),
+      0 2px 4px -1px color-mix(in srgb, var(--accent, #1779ba) 14%, transparent);
+  }
+}
+
 .cancha-card::before {
   content: '';
   display: block;
   height: 4px;
   background: linear-gradient(
     90deg,
-    var(--acento, #1779ba),
-    color-mix(in srgb, var(--acento, #1779ba) 45%, white)
+    var(--accent, #1779ba),
+    color-mix(in srgb, var(--accent, #1779ba) 45%, white)
   );
 }
 
 .cancha-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 16px 30px -4px rgba(0, 0, 0, 0.12);
+}
+
+@supports (box-shadow: 0 0 0 color-mix(in srgb, red 50%, transparent)) {
+  .cancha-card:hover {
+    box-shadow: 0 16px 30px -4px color-mix(in srgb, var(--accent, #1779ba) 30%, transparent);
+  }
 }
 
 /* Layout estático (deportes con menos de 3 canchas): reutiliza el estilo de
@@ -152,10 +289,11 @@
   background: #fff;
   font: inherit;
   cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .vista-canchas .cancha-card.vista-canchas__card-estatica--activa {
-  border-color: var(--acento, #1779ba);
+  border-color: var(--accent, #1779ba);
 }
 
 .vista-canchas__card-nombre {
@@ -190,9 +328,10 @@
   flex-wrap: wrap;
   padding: 1.1rem 1.25rem;
   border-radius: 12px;
-  border-left: 4px solid var(--acento, #1779ba);
-  background: color-mix(in srgb, var(--acento, #1779ba) 6%, #fff);
+  border-left: 4px solid var(--accent, #1779ba);
+  background: color-mix(in srgb, var(--accent, #1779ba) 6%, #fff);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  transition: background-color 0.35s ease, border-color 0.35s ease;
 }
 
 .vista-canchas__panel-info {
@@ -211,8 +350,9 @@
   gap: 0.35rem;
   margin: 0 0 0.3rem;
   font-weight: 700;
-  color: var(--acento, #1779ba);
+  color: var(--accent, #1779ba);
   font-variant-numeric: tabular-nums;
+  transition: color 0.35s ease;
 }
 
 .vista-canchas__panel-unidad {
@@ -222,21 +362,116 @@
 }
 
 .vista-canchas__panel-disp {
-  margin: 0;
+  margin: 0 0 0.5rem;
   font-size: 0.9rem;
   color: #4a4a4a;
+}
+
+/* Barra de ocupación: proporción libre/total de hoy, en el acento activo. */
+.vista-canchas__ocupacion {
+  width: 160px;
+  max-width: 40vw;
+  height: 6px;
+  margin: 0 0 0.4rem;
+  border-radius: 999px;
+  background: #e9e9e9;
+  overflow: hidden;
+}
+
+.vista-canchas__ocupacion-barra {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent, #1779ba);
+  transition: width 0.3s ease, background-color 0.35s ease;
+}
+
+.vista-canchas__panel-proximo {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  color: #4a4a4a;
+}
+
+.vista-canchas__panel-proximo--vacio {
+  color: #8a8a8a;
+  font-style: italic;
+}
+
+/* Badges de características de la cancha. */
+.vista-canchas__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vista-canchas__badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent, #1779ba);
+  background: color-mix(in srgb, var(--accent, #1779ba) 14%, transparent);
+  transition: color 0.35s ease, background-color 0.35s ease;
 }
 
 .vista-canchas__panel-cta {
   flex-shrink: 0;
   margin: 0;
+  background: var(--accent, #1779ba);
+  color: var(--accent-contrast, #fff);
+  border: none;
+  transition: background-color 0.2s ease, color 0.35s ease, opacity 0.2s ease,
+    transform 0.15s ease, box-shadow 0.2s ease;
 }
 
+.vista-canchas__panel-cta:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent, #1779ba) 85%, black);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 18px -6px color-mix(in srgb, var(--accent, #1779ba) 45%, transparent);
+}
+
+.vista-canchas__panel-cta:focus-visible {
+  outline: 2px solid var(--accent, #1779ba);
+  outline-offset: 2px;
+}
+
+.vista-canchas__panel-cta:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Respeta prefers-reduced-motion: sin fade del backdrop, sin deslizamiento
+   del switch/tabs, sin transición de color entre deportes ni hover-lift. */
 @media (prefers-reduced-motion: reduce) {
+  .vista-canchas,
+  .vista-canchas *,
+  .vista-canchas *::before,
+  .vista-canchas *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
   .vista-canchas__cerrar:hover,
-  .cancha-card,
-  .cancha-card:hover {
-    transition: none;
+  .cancha-card:hover,
+  .vista-canchas__panel-cta:hover:not(:disabled) {
     transform: none;
+  }
+}
+
+/* En pantallas angostas el backdrop/textura no deben forzar scroll
+   horizontal: quedan contenidos por overflow: hidden del propio escenario,
+   pero se reduce el radio para que no se note el recorte en esquinas. */
+@media (max-width: 480px) {
+  .vista-canchas__escenario-fondo {
+    border-radius: 10px;
+  }
+
+  .vista-canchas__ocupacion {
+    width: 120px;
   }
 }

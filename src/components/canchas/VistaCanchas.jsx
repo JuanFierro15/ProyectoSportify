@@ -5,9 +5,15 @@ import { X, Tag } from 'lucide-react';
 import { useVistaCanchas } from '../../context/VistaCanchasContext';
 import { useReservas } from '../../context/ReservasContext';
 import { DEPORTES, deportePorSlug } from '../../data/deportes';
-import { canchasDelDeporte, tituloCancha, imagenPlaceholderCancha } from '../../lib/canchas';
+import {
+  canchasDelDeporte,
+  tituloCancha,
+  imagenPlaceholderCancha,
+  colorContraste,
+} from '../../lib/canchas';
 import DepthCarousel from '../reactbits/DepthCarousel';
 import ReservaModal from '../reservas/ReservaModal';
+import TexturaCancha from './TexturaCancha';
 import './VistaCanchas.css';
 
 const formatoPrecio = new Intl.NumberFormat('es-CO', {
@@ -20,22 +26,39 @@ const formatoPrecio = new Intl.NumberFormat('es-CO', {
 // ve vacío): se usa un grid estático centrado en su lugar.
 const MINIMO_PARA_CARRUSEL = 3;
 
+// Primer horario de hoy que sigue disponible y todavía no pasó (comparado
+// contra la hora real del navegador). Puramente de presentación: no toca el
+// cálculo de disponibilidad del ReservasContext.
+function proximaHoraLibre(horariosHoy) {
+  const ahora = new Date();
+  const minutosAhora = ahora.getHours() * 60 + ahora.getMinutes();
+  const siguiente = horariosHoy.find((h) => {
+    if (!h.disponible) return false;
+    const [hh, mm] = h.hora.split(':').map(Number);
+    return hh * 60 + mm >= minutosAhora;
+  });
+  return siguiente ? siguiente.hora : null;
+}
+
 /**
  * Panel de detalle, sincronizado con la card activa del carrusel (o la card
  * elegida en el layout estático). Vive dentro del mismo archivo por ser un
  * detalle de presentación exclusivo de VistaCanchas (no se reutiliza en
- * ningún otro sitio).
+ * ningún otro sitio). El color de acento no se pasa por prop: se hereda de
+ * `--accent` definida en el contenedor `.vista-canchas` (tema por deporte).
  */
-function PanelDetalle({ cancha, acento, dias, disponibilidad, onReservar }) {
+function PanelDetalle({ cancha, dias, disponibilidad, onReservar }) {
   const horariosHoy = disponibilidad(cancha.id, dias[0]);
   const libresHoy = horariosHoy.filter((h) => h.disponible).length;
   const totalHoras = horariosHoy.length;
   const hayCuposSemana = dias.some((d) =>
     disponibilidad(cancha.id, d).some((h) => h.disponible)
   );
+  const proximoLibre = proximaHoraLibre(horariosHoy);
+  const porcentajeLibre = totalHoras > 0 ? Math.round((libresHoy / totalHoras) * 100) : 0;
 
   return (
-    <div className="vista-canchas__panel" style={{ '--acento': acento }}>
+    <div className="vista-canchas__panel">
       <div className="vista-canchas__panel-info">
         <p className="vista-canchas__panel-nombre">{tituloCancha(cancha)}</p>
         <p className="vista-canchas__panel-precio">
@@ -52,6 +75,38 @@ function PanelDetalle({ cancha, acento, dias, disponibilidad, onReservar }) {
             </>
           )}
         </p>
+
+        {proximoLibre ? (
+          <>
+            <div
+              className="vista-canchas__ocupacion"
+              role="img"
+              aria-label={`${libresHoy} de ${totalHoras} horarios libres hoy`}
+            >
+              <div
+                className="vista-canchas__ocupacion-barra"
+                style={{ width: `${porcentajeLibre}%` }}
+              />
+            </div>
+            <p className="vista-canchas__panel-proximo">
+              Próximo libre: <strong>{proximoLibre}</strong>
+            </p>
+          </>
+        ) : (
+          <p className="vista-canchas__panel-proximo vista-canchas__panel-proximo--vacio">
+            Sin horarios libres hoy
+          </p>
+        )}
+
+        {cancha.caracteristicas && cancha.caracteristicas.length > 0 && (
+          <ul className="vista-canchas__badges">
+            {cancha.caracteristicas.map((c) => (
+              <li key={c} className="vista-canchas__badge">
+                {c}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       <button
         type="button"
@@ -97,6 +152,7 @@ function VistaCanchas() {
 
   const infoDeporte = deporteMostrado ? deportePorSlug(deporteMostrado) : null;
   const acento = infoDeporte ? infoDeporte.colorAcento : '#1779ba';
+  const acentoContraste = colorContraste(acento);
 
   const totalDelDeporte = deporteMostrado
     ? canchasDelDeporte(canchas, deporteMostrado).length
@@ -228,6 +284,12 @@ function VistaCanchas() {
       role="dialog"
       aria-modal="true"
       aria-labelledby="vista-canchas-titulo"
+      data-sport={deporteMostrado || undefined}
+      style={{
+        '--accent': acento,
+        '--accent-soft': `color-mix(in srgb, ${acento} 25%, white)`,
+        '--accent-contrast': acentoContraste,
+      }}
     >
       <div className="vista-canchas__marco grid-container">
         <button
@@ -272,6 +334,7 @@ function VistaCanchas() {
               className="switch-input"
               id={idFiltro}
               type="checkbox"
+              role="switch"
               checked={soloDisponibles}
               onChange={(e) => setSoloDisponibles(e.target.checked)}
             />
@@ -285,6 +348,17 @@ function VistaCanchas() {
         </div>
 
         <div className="vista-canchas__cuerpo">
+          <div className="vista-canchas__escenario-fondo" aria-hidden="true">
+            {canchaActiva && canchaActiva.imagen && (
+              <div
+                key={canchaActiva.id}
+                className="vista-canchas__backdrop"
+                style={{ backgroundImage: `url(${canchaActiva.imagen})` }}
+              />
+            )}
+            <TexturaCancha deporte={deporteMostrado} />
+          </div>
+
           {canchasFiltradas.length === 0 ? (
             <div className="vista-canchas__vacio">
               <p>
@@ -313,7 +387,6 @@ function VistaCanchas() {
                         ? ' vista-canchas__card-estatica--activa'
                         : '')
                     }
-                    style={{ '--acento': acento }}
                     aria-pressed={!!canchaActiva && canchaActiva.id === c.id}
                     onClick={() => setCanchaActivaId(c.id)}
                   >
@@ -350,7 +423,6 @@ function VistaCanchas() {
         {canchaActiva && (
           <PanelDetalle
             cancha={canchaActiva}
-            acento={acento}
             dias={dias}
             disponibilidad={disponibilidad}
             onReservar={() => setReservaAbierta(true)}
