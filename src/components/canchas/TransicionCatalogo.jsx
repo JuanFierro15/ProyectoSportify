@@ -14,7 +14,7 @@ const ACENTO_FINAL = DEPORTES[DEPORTES.length - 1].colorAcento;
 /**
  * TransicionCatalogo — sección corta entre el último DeporteHero y el catálogo.
  *
- * Título "Elegí tu cancha" sobre un gradiente que baja del color de acento del
+ * Título "Elige tu cancha" sobre un gradiente que baja del color de acento del
  * último deporte al blanco del catálogo. El texto entra con fade al aparecer en
  * viewport (mismo patrón gsap.context() + ScrollTrigger del resto de la app).
  */
@@ -50,8 +50,7 @@ function TransicionCatalogo() {
       <div className="grid-container transicion-catalogo__contenido">
         <h2 className="transicion-catalogo__titulo">Elegí tu cancha</h2>
         <p className="transicion-catalogo__bajada">
-          Voley playa, pádel y fútbol. Mirá los horarios libres y reservá en
-          segundos.
+          Voley playa, pádel y fútbol. Consultá los horarios libres de los próximos 7 días y reservá al instante.
         </p>
       </div>
     </section>

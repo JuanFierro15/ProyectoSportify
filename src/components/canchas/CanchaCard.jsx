@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Tag } from 'lucide-react';
 import ReservaModal from '../reservas/ReservaModal';
 import { useReservas } from '../../context/ReservasContext';
 import { deportePorSlug } from '../../data/deportes';
@@ -50,10 +51,13 @@ function CanchaCard({ cancha }) {
   return (
     <article className="card cancha-card" style={{ '--acento': acento }}>
       <div className="card-section cancha-card__cuerpo">
-        <p className="cancha-card__deporte">{nombreDeporte}</p>
+        <span className="cancha-card__deporte-badge">
+          {info?.superficie || nombreDeporte}
+        </span>
         <h3 className="cancha-card__nombre">{tituloCard}</h3>
 
         <p className="cancha-card__precio">
+          <Tag size={15} className="cancha-card__precio-icono" aria-hidden="true" />
           {formatoPrecio.format(precioHora)}
           <span className="cancha-card__precio-unidad"> / hora</span>
         </p>

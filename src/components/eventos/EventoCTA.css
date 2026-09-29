@@ -1,28 +1,70 @@
 /* Banda de entrada al flujo de evento especial. Ancho completo (se monta
-   fuera de main.grid-container). */
+   fuera de main.grid-container). Pila vertical centrada: eyebrow + título +
+   bajada, tira de stats reales, botón. */
 
 .evento-cta {
   background: linear-gradient(120deg, #262626 0%, #1b1b1b 100%);
   color: #fefefe;
-  padding: 3rem 0;
+  padding: clamp(3.5rem, 6vw, 5rem) 0;
   scroll-margin-top: 1rem;
 }
 
+.evento-cta__texto {
+  text-align: center;
+}
+
+.evento-cta__eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #f6a94b;
+}
+
 .evento-cta__titulo {
-  margin: 0 0 0.4rem;
-  font-size: clamp(1.4rem, 3vw, 2rem);
+  margin: 0 0 0.6rem;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
   font-weight: 700;
 }
 
 .evento-cta__bajada {
-  margin: 0;
-  color: #cfcfcf;
+  margin: 0 auto;
   max-width: 34rem;
+  color: #cfcfcf;
+}
+
+/* Tira de estadísticas reales del servicio de eventos. */
+.evento-cta__stats {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 1.75rem 0 0;
+  padding: 0;
+}
+
+.evento-cta__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f1f1f1;
+}
+
+.evento-cta__stat svg {
+  flex-shrink: 0;
+  color: #f6a94b;
 }
 
 .evento-cta__accion {
-  display: flex;
-  justify-content: flex-end;
+  margin-top: 2rem;
 }
 
 .evento-cta__boton.button.large {
@@ -40,8 +82,7 @@
 }
 
 @media screen and (max-width: 39.9375em) {
-  .evento-cta__accion {
-    justify-content: flex-start;
-    margin-top: 1rem;
+  .evento-cta__stat {
+    font-size: 0.8rem;
   }
 }

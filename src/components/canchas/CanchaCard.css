@@ -2,30 +2,49 @@
    detalle propio: acento por deporte, jerarquía y altura pareja. */
 
 .cancha-card {
+  position: relative;
   height: 100%;
   display: flex;
   flex-direction: column;
-  border-top: 4px solid var(--acento, #1779ba);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cancha-card::before {
+  content: '';
+  display: block;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--acento, #1779ba),
+    color-mix(in srgb, var(--acento, #1779ba) 45%, white)
+  );
 }
 
 .cancha-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+  transform: translateY(-5px);
+  box-shadow: 0 16px 30px -4px rgba(0, 0, 0, 0.12);
 }
 
 .cancha-card__cuerpo {
   flex: 1 1 auto;
 }
 
-/* Jerarquía: etiqueta de deporte pequeña y en color de acento. */
-.cancha-card__deporte {
-  margin: 0 0 0.15rem;
-  font-size: 0.72rem;
+/* Insignia de deporte: pill translúcida con el color de acento. */
+.cancha-card__deporte-badge {
+  display: inline-block;
+  margin: 0 0 0.6rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--acento, #6f6f6f);
+  color: var(--acento, #1779ba);
+  background: color-mix(in srgb, var(--acento, #1779ba) 12%, transparent);
 }
 
 /* ...nombre grande y con peso... */
@@ -38,10 +57,19 @@
 
 /* ...precio destacado pero por debajo del nombre. */
 .cancha-card__precio {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   margin: 0 0 1rem;
   font-size: 1.15rem;
   font-weight: 700;
   color: #1e1e1e;
+  font-variant-numeric: tabular-nums;
+}
+
+.cancha-card__precio-icono {
+  flex-shrink: 0;
+  color: var(--acento, #1779ba);
 }
 
 .cancha-card__precio-unidad {
@@ -59,21 +87,21 @@
    según disponibilidad. Se puede leer sin abrir el modal. */
 .cancha-card__grid {
   list-style: none;
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.6rem;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 5px;
 }
 
 .cancha-card__slot {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 25px;
-  height: 20px;
-  padding: 0 3px;
-  border-radius: 3px;
+  min-width: 28px;
+  height: 22px;
+  padding: 0 4px;
+  border-radius: 6px;
   font-size: 0.68rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -81,34 +109,35 @@
 }
 
 .cancha-card__slot--libre {
-  background: #dcf3e2;
-  border-color: #a9e0ba;
-  color: #1d7a3d;
+  background: #e3f7ea;
+  border-color: #34d399;
+  color: #0f7a4c;
 }
 
 .cancha-card__slot--ocupado {
-  background: #ededed;
+  background: #f1f1f1;
+  border-color: #e4e4e4;
   color: #9a9a9a;
-  text-decoration: line-through;
 }
 
 /* Ocupado por un evento (torneo/cumpleaños): mismo "no disponible" pero
    diferenciado con un tinte índigo y un puntito, sin gritar. */
 .cancha-card__slot--evento {
   position: relative;
-  background: #eceafc;
-  color: #6a5acd;
+  background: #ece9fd;
+  border-color: #b9aef2;
+  color: #5b4bc4;
 }
 
 .cancha-card__slot--evento::after {
   content: '';
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: 3px;
+  right: 3px;
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #6a5acd;
+  background: #5b4bc4;
 }
 
 /* Leyenda visible de qué significa cada color. */
@@ -131,22 +160,23 @@
   display: inline-block;
   width: 12px;
   height: 12px;
-  border-radius: 3px;
+  border-radius: 4px;
   border: 1px solid transparent;
 }
 
 .cancha-card__leyenda-muestra--libre {
-  background: #dcf3e2;
-  border-color: #a9e0ba;
+  background: #e3f7ea;
+  border-color: #34d399;
 }
 
 .cancha-card__leyenda-muestra--ocupado {
-  background: #ededed;
+  background: #f1f1f1;
+  border-color: #e4e4e4;
 }
 
 .cancha-card__leyenda-muestra--evento {
-  background: #eceafc;
-  border-color: #c7bff2;
+  background: #ece9fd;
+  border-color: #b9aef2;
 }
 
 /* CTA siempre al fondo -> filas de cards con la misma altura. */
@@ -157,11 +187,18 @@
 
 .cancha-card__cta {
   margin: 0;
+  transition: background-color 0.18s ease, opacity 0.18s ease, transform 0.18s ease;
+}
+
+.cancha-card__cta:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .cancha-card,
-  .cancha-card:hover {
+  .cancha-card:hover,
+  .cancha-card__cta {
     transition: none;
     transform: none;
   }

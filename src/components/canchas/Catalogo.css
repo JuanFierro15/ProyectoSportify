@@ -30,3 +30,108 @@
 .catalogo__card {
   margin-bottom: 1.5rem;
 }
+
+/* Estado vacío: cuando un deporte no tiene canchas para mostrar. */
+.catalogo__vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.6rem;
+  padding: 2.5rem 1.5rem;
+  border: 1px dashed #d5d5d5;
+  border-radius: 12px;
+  background: #fbfbfb;
+  color: #6f6f6f;
+}
+
+.catalogo__vacio-icono {
+  color: #b5b5b5;
+}
+
+.catalogo__vacio-texto {
+  margin: 0;
+  max-width: 26rem;
+}
+
+.catalogo__vacio-cta {
+  margin: 0.25rem 0 0;
+}
+
+/* Skeleton: placeholder con shimmer del mismo tamaño que una CanchaCard,
+   mientras se inicializa la disponibilidad. */
+.catalogo-skeleton {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1.25rem;
+  border-radius: 12px;
+  background: #fefefe;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+}
+
+.catalogo-skeleton__barra,
+.catalogo-skeleton__linea,
+.catalogo-skeleton__chip,
+.catalogo-skeleton__boton {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #ececec 25%, #f6f6f6 37%, #ececec 63%);
+  background-size: 400px 100%;
+  animation: catalogo-shimmer 1.4s ease-in-out infinite;
+}
+
+.catalogo-skeleton__barra {
+  width: 40%;
+  height: 0.55rem;
+  border-radius: 999px;
+}
+
+.catalogo-skeleton__linea {
+  height: 0.9rem;
+}
+
+.catalogo-skeleton__linea--ancha {
+  width: 70%;
+}
+
+.catalogo-skeleton__linea--media {
+  width: 45%;
+}
+
+.catalogo-skeleton__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+}
+
+.catalogo-skeleton__chip {
+  width: 28px;
+  height: 22px;
+  border-radius: 6px;
+}
+
+.catalogo-skeleton__boton {
+  margin-top: auto;
+  height: 2.4rem;
+  border-radius: 6px;
+}
+
+@keyframes catalogo-shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: 200px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalogo-skeleton__barra,
+  .catalogo-skeleton__linea,
+  .catalogo-skeleton__chip,
+  .catalogo-skeleton__boton {
+    animation: none;
+  }
+}
