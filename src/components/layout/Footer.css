@@ -1,0 +1,144 @@
+/* Pie de página. Tono más oscuro que la banda de evento que lo precede
+   (.evento-cta), con una costura sutil arriba para que ambas secciones se
+   lean como zonas distintas en vez de fundirse en un solo bloque negro. */
+
+.footer {
+  position: relative;
+  background: #141414;
+  color: #d8d8d8;
+  padding-top: 3.5rem;
+}
+
+.footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.14) 50%,
+    transparent
+  );
+}
+
+.footer__cuerpo {
+  padding-bottom: 2.5rem;
+}
+
+.footer__col {
+  margin-bottom: 1.5rem;
+}
+
+.footer__marca {
+  margin: 0 0 0.75rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fefefe;
+}
+
+.footer__bajada {
+  margin: 0;
+  max-width: 26rem;
+  color: #a8a8a8;
+  line-height: 1.6;
+}
+
+.footer__col-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f6a94b;
+}
+
+.footer__nav {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.footer__nav a {
+  color: #d8d8d8;
+  transition: color 0.15s ease, transform 0.15s ease;
+  display: inline-block;
+}
+
+.footer__nav a:hover,
+.footer__nav a:focus {
+  color: #f6a94b;
+  transform: translateX(2px);
+}
+
+.footer__horario p {
+  margin: 0 0 0.3rem;
+  color: #d8d8d8;
+}
+
+.footer__horario p:last-child {
+  margin-bottom: 0;
+}
+
+.footer__horario-dias {
+  font-weight: 600;
+  color: #fefefe;
+}
+
+.footer__inferior {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.25rem 0;
+}
+
+.footer__inferior-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.footer__copy {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #8a8a8a;
+}
+
+.footer__volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: #d8d8d8;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.footer__volver:hover,
+.footer__volver:focus {
+  color: #f6a94b;
+  transform: translateY(-1px);
+}
+
+/* Costuras verticales entre columnas, solo cuando quedan una al lado de la
+   otra (a partir del breakpoint medium de Foundation). */
+@media screen and (min-width: 40em) {
+  .footer__col--separado {
+    padding-left: 1.5rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer__nav a,
+  .footer__volver {
+    transition: none;
+  }
+}

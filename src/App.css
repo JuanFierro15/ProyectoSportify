@@ -13,14 +13,4 @@ main.grid-container {
   padding-bottom: 2rem;
 }
 
-/* Cada bloque (hero, catálogo, evento) trae sus propios estilos. */
-
-#main-footer {
-  background: #1e1e1e;
-  color: #fefefe;
-  padding: 2rem 1rem 1rem;
-}
-
-#main-footer a {
-  color: #8ac6ff;
-}
+/* Cada bloque (hero, catálogo, evento, footer, navbar) trae sus propios estilos. */
