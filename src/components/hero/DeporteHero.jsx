@@ -164,7 +164,7 @@ function DeporteHero({
             <h2 className="deporte-hero__titulo">{nombre}</h2>
             <p className="deporte-hero__texto">
               {descripcion ||
-                `Viví la experiencia del ${nombre.toLowerCase()} en un espacio pensado para disfrutar al máximo cada partido.`}
+                `Vive la experiencia del ${nombre.toLowerCase()} en un espacio pensado para disfrutar al máximo cada partido.`}
             </p>
             <a
               className="button large deporte-hero__cta"

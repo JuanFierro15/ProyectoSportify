@@ -151,7 +151,7 @@ function reducer(state, action) {
       if (!horaLibre(state, canchaId, fecha, hora)) {
         return {
           ...state,
-          error: 'Ese horario ya está reservado. Elegí otro.',
+          error: 'Ese horario ya está reservado. Elige otro.',
         };
       }
 
@@ -283,7 +283,7 @@ export function ReservasProvider({ children }) {
   const reservar = useCallback(
     (datos) => {
       if (!horaLibre(state, datos.canchaId, datos.fecha, datos.hora)) {
-        return { ok: false, error: 'Ese horario ya está reservado. Elegí otro.' };
+        return { ok: false, error: 'Ese horario ya está reservado. Elige otro.' };
       }
       dispatch({ type: 'RESERVAR', payload: datos });
       return { ok: true };

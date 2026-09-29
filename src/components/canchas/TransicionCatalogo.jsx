@@ -48,9 +48,9 @@ function TransicionCatalogo() {
       }}
     >
       <div className="grid-container transicion-catalogo__contenido">
-        <h2 className="transicion-catalogo__titulo">Elegí tu cancha</h2>
+        <h2 className="transicion-catalogo__titulo">Elige tu cancha</h2>
         <p className="transicion-catalogo__bajada">
-          Voley playa, pádel y fútbol. Consultá los horarios libres de los próximos 7 días y reservá al instante.
+          Voley playa, pádel y fútbol. Consulta los horarios libres de los próximos 7 días y reserva al instante.
         </p>
       </div>
     </section>
