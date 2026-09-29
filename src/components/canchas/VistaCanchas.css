@@ -531,11 +531,27 @@
   transition: transform 0.22s ease;
 }
 
+/* Fondo compartido -- una sola capa para todo el visor, no una por elemento
+   -- con la misma foto de la cancha en su versión liviana de 720, muy
+   difuminada y oscurecida (misma idea que el backdrop del carrusel): así las
+   franjas que deja `object-fit: contain` y, en horizontal, la columna de
+   información, no se ven vacías. `.vista-canchas__visor-imagen-wrap` y
+   `.vista-canchas__visor-info` son "positioned" (ver más abajo), así que se
+   pintan por encima de esta capa aunque vaya antes en el DOM. */
+.vista-canchas__visor-fondo {
+  position: absolute;
+  inset: -40px;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(40px) brightness(0.45) saturate(1.15);
+}
+
 .vista-canchas__visor-cerrar {
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
-  z-index: 1;
+  z-index: 2;
   display: grid;
   place-items: center;
   width: 38px;
@@ -553,15 +569,15 @@
 }
 
 /* La imagen nunca se escala por encima de su resolución real (1440px de
-   ancho): `.vista-canchas__visor-contenido` ya limita el ancho a 1440px como
-   máximo, y object-fit: contain sobre un <img> a 100%/100% de este envoltorio
-   solo puede reducir esa proporción, nunca ampliarla. El espacio sobrante
-   (por diferencia de alto) lo cubre el fondo oscuro del envoltorio. */
+   ancho): el envoltorio nunca mide más que eso (aquí y en el layout
+   horizontal de abajo), y object-fit: contain sobre un <img> a 100%/100% de
+   este envoltorio solo puede reducir esa proporción, nunca ampliarla. */
 .vista-canchas__visor-imagen-wrap {
   position: relative;
+  z-index: 1;
   flex: 1 1 auto;
   min-height: 0;
-  background: #000;
+  max-width: 1440px;
 }
 
 /* Posicionamiento absoluto en vez de width/height: 100% directos: un alto en
@@ -580,7 +596,13 @@
 }
 
 .vista-canchas__visor-info {
+  position: relative;
+  z-index: 1;
   padding: 1.25rem 1.5rem 1.5rem;
+  /* Panel semitransparente para que el texto siga siendo legible sobre el
+     fondo difuminado incluso con canchas de foto clara (voley-3, padel-1,
+     futbol-3). */
+  background: rgba(6, 7, 11, 0.45);
 }
 
 .vista-canchas__visor-nombre {
@@ -601,12 +623,53 @@
 }
 
 .vista-canchas__visor-info .vista-canchas__badge {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.16);
+  color: var(--accent-soft, #eef3f8);
+  background: color-mix(in srgb, var(--accent, #1779ba) 35%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-soft, #eef3f8) 45%, transparent);
 }
 
 .vista-canchas__visor-cta {
   margin: 0;
+  background: var(--accent, #1779ba);
+  color: var(--accent-contrast, #fff);
+  border: none;
+  transition: background-color 0.2s ease, color 0.35s ease, transform 0.15s ease,
+    box-shadow 0.2s ease;
+}
+
+.vista-canchas__visor-cta:hover {
+  background: color-mix(in srgb, var(--accent, #1779ba) 85%, black);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 18px -6px color-mix(in srgb, var(--accent, #1779ba) 45%, transparent);
+}
+
+.vista-canchas__visor-cta:focus-visible {
+  outline: 2px solid var(--accent, #1779ba);
+  outline-offset: 2px;
+}
+
+/* Pantallas más anchas que altas (la gran mayoría de escritorio): imagen a
+   la izquierda ocupando todo el alto disponible del visor, columna de
+   información de ancho fijo a la derecha. En vertical se mantiene el
+   apilado por defecto de arriba: imagen arriba, información abajo. */
+@media (min-aspect-ratio: 1/1) {
+  .vista-canchas__visor-contenido {
+    flex-direction: row;
+    max-width: min(calc(1440px + 340px), 100%);
+  }
+
+  .vista-canchas__visor-info {
+    flex: 0 0 340px;
+    width: 340px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow-y: auto;
+    /* El botón de cerrar queda arriba a la derecha de todo el visor, es
+       decir sobre esta columna en este layout: se le deja espacio para que
+       no tape el nombre de la cancha. */
+    padding-top: 3.5rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

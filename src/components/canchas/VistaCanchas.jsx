@@ -10,7 +10,7 @@ import {
   tituloCancha,
   imagenPlaceholderCancha,
   imagenGrandeCancha,
-  colorContraste,
+  estiloAcento,
 } from '../../lib/canchas';
 import DepthCarousel from '../reactbits/DepthCarousel';
 import ReservaModal from '../reservas/ReservaModal';
@@ -52,6 +52,11 @@ function altCancha(cancha, infoDeporte) {
 function etiquetaVerGrande(cancha, infoDeporte) {
   const deporte = infoDeporte ? infoDeporte.nombre.toLowerCase() : cancha.deporte;
   return `Ver ${tituloCancha(cancha)} de ${deporte} en grande`;
+}
+
+// Título del visor con el deporte, ej. "Cancha 3 · Fútbol".
+function tituloConDeporte(cancha, infoDeporte) {
+  return infoDeporte ? `${tituloCancha(cancha)} · ${infoDeporte.nombre}` : tituloCancha(cancha);
 }
 
 // Primer horario de hoy que sigue disponible y todavía no pasó (comparado
@@ -159,8 +164,17 @@ function PanelDetalle({ cancha, dias, disponibilidad, onReservar }) {
  * botón o por clic en el fondo, el navegador dispara `close` (onClose), que
  * VistaCanchas usa para poner `visorAbierto` en false y así el guard de su
  * propio Escape (ver más abajo) deja de bloquearse.
+ *
+ * Tema de acento propio: un <dialog> abierto con showModal() se promueve al
+ * "top layer" del navegador (se pinta como si fuera hijo directo del
+ * documento, para quedar por encima de todo). Sigue siendo descendiente de
+ * `.vista-canchas` en el DOM -- y por lo tanto hereda `--accent` igual que
+ * cualquier otro elemento -- pero apoyarse en esa herencia deja el color del
+ * visor acoplado a un detalle de dónde se monta el componente en el árbol.
+ * Por eso el <dialog> recibe sus propias variables (mismo `estiloAcento()`
+ * que usa `.vista-canchas`, sin duplicar la fórmula) y su propio `data-sport`.
  */
-function VisorCancha({ cancha, infoDeporte, abierto, onCerrar, onReservar }) {
+function VisorCancha({ cancha, infoDeporte, acento, abierto, onCerrar, onReservar }) {
   const dialogRef = useRef(null);
   const reducidoRef = useRef(false);
 
@@ -199,6 +213,8 @@ function VisorCancha({ cancha, infoDeporte, abierto, onCerrar, onReservar }) {
     <dialog
       ref={dialogRef}
       className="vista-canchas__visor"
+      data-sport={infoDeporte ? infoDeporte.slug : undefined}
+      style={estiloAcento(acento)}
       aria-labelledby={tituloId}
       onClose={onCerrar}
       onClick={(e) => {
@@ -206,6 +222,17 @@ function VisorCancha({ cancha, infoDeporte, abierto, onCerrar, onReservar }) {
       }}
     >
       <div className="vista-canchas__visor-contenido">
+        {/* Fondo compartido (una sola capa para todo el visor, no una por
+            elemento): la misma foto de la cancha, en su versión liviana de
+            720, muy difuminada y oscurecida -- igual idea que el backdrop del
+            carrusel -- para que las franjas que deja `object-fit: contain` y
+            la columna de información (en horizontal) no se vean vacías. */}
+        <div
+          className="vista-canchas__visor-fondo"
+          aria-hidden="true"
+          style={cancha.imagen ? { backgroundImage: `url(${cancha.imagen})` } : undefined}
+        />
+
         <button
           type="button"
           className="vista-canchas__visor-cerrar"
@@ -220,8 +247,7 @@ function VisorCancha({ cancha, infoDeporte, abierto, onCerrar, onReservar }) {
               aspect-ratio implícito (para evitar salto de layout) que pisa el
               width/height: 100% + object-fit: contain de abajo y termina
               mostrando solo un recorte de la imagen. Aquí no hace falta esa
-              reserva de espacio: el envoltorio ya tiene su propio tamaño y
-              fondo (ver .vista-canchas__visor-imagen-wrap). */}
+              reserva de espacio: el envoltorio ya tiene su propio tamaño. */}
           <img
             className="vista-canchas__visor-imagen"
             src={imagenGrandeCancha(cancha.imagen)}
@@ -231,7 +257,7 @@ function VisorCancha({ cancha, infoDeporte, abierto, onCerrar, onReservar }) {
 
         <div className="vista-canchas__visor-info">
           <h3 id={tituloId} className="vista-canchas__visor-nombre">
-            {tituloCancha(cancha)}
+            {tituloConDeporte(cancha, infoDeporte)}
           </h3>
           <p className="vista-canchas__visor-precio">
             {formatoPrecio.format(cancha.precioHora)}
@@ -289,7 +315,6 @@ function VistaCanchas() {
 
   const infoDeporte = deporteMostrado ? deportePorSlug(deporteMostrado) : null;
   const acento = infoDeporte ? infoDeporte.colorAcento : '#1779ba';
-  const acentoContraste = colorContraste(acento);
 
   const totalDelDeporte = deporteMostrado
     ? canchasDelDeporte(canchas, deporteMostrado).length
@@ -433,11 +458,7 @@ function VistaCanchas() {
       aria-modal="true"
       aria-labelledby="vista-canchas-titulo"
       data-sport={deporteMostrado || undefined}
-      style={{
-        '--accent': acento,
-        '--accent-soft': `color-mix(in srgb, ${acento} 25%, white)`,
-        '--accent-contrast': acentoContraste,
-      }}
+      style={estiloAcento(acento)}
     >
       <div className="vista-canchas__marco grid-container">
         <button
@@ -616,6 +637,7 @@ function VistaCanchas() {
       <VisorCancha
         cancha={canchaActiva}
         infoDeporte={infoDeporte}
+        acento={acento}
         abierto={visorAbierto}
         onCerrar={() => setVisorAbierto(false)}
         onReservar={() => {
