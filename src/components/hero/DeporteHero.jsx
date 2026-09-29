@@ -20,10 +20,13 @@ const SUAVIZADO = 0.3;
  * DeporteHero (Bloque 2.5) — sección narrativa por deporte, reutilizable.
  *
  * Props:
- *  - nombre      {string}  nombre del deporte (ej. "Voley Playa")
- *  - videoSrc    {string}  ruta del video de fondo
- *  - tituloCTA   {string}  texto del botón
- *  - colorAcento {string}  color de acento (hex) para el CTA y el "eyebrow"
+ *  - nombre        {string}  nombre del deporte (ej. "Voley Playa")
+ *  - videoSrc      {string}  ruta del video de fondo
+ *  - tituloCTA     {string}  texto del botón
+ *  - colorAcento   {string}  color de acento (hex) para el CTA y el "eyebrow"
+ *  - ultimoDeporte {bool}    true solo en el último hero del listado: agrega
+ *    un degradado de salida (transparente -> --eventos-fondo) para que no
+ *    quede un corte abrupto contra la sección de eventos que sigue.
  *
  * Comportamiento:
  *  - Ocupa 100vh con el video cubriendo la sección (object-fit: cover) + overlay.
@@ -52,6 +55,7 @@ function DeporteHero({
   descripcion,
   preload = 'metadata',
   onVerCanchas,
+  ultimoDeporte = false,
 }) {
   const rootRef = useRef(null);
   const contenidoRef = useRef(null);
@@ -139,7 +143,7 @@ function DeporteHero({
 
   return (
     <section
-      className="deporte-hero"
+      className={`deporte-hero${ultimoDeporte ? ' deporte-hero--ultimo' : ''}`}
       ref={rootRef}
       style={{ '--acento': colorAcento }}
     >

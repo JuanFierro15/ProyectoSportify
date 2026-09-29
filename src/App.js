@@ -58,7 +58,7 @@ function AppContenido() {
       <Navbar />
 
       <div id="hero-placeholder">
-        {DEPORTES.map((d) => (
+        {DEPORTES.map((d, i) => (
           <DeporteHero
             key={d.slug}
             nombre={d.nombre}
@@ -68,6 +68,7 @@ function AppContenido() {
             eyebrow={d.eyebrow}
             descripcion={d.descripcion}
             onVerCanchas={() => abrirVista(d.slug)}
+            ultimoDeporte={i === DEPORTES.length - 1}
           />
         ))}
       </div>

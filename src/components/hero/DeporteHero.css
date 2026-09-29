@@ -36,6 +36,18 @@
   );
 }
 
+/* Solo en el último hero: degradado de salida hacia el color exacto con el
+   que arranca la sección de eventos, para que no quede un corte abrupto. */
+.deporte-hero--ultimo::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: clamp(120px, 12vh, 160px);
+  z-index: 1;
+  background: linear-gradient(180deg, transparent 0%, var(--eventos-fondo, #0d0d0d) 100%);
+  pointer-events: none;
+}
+
 .deporte-hero__contenido {
   position: relative;
   z-index: 2;

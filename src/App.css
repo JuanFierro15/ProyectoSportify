@@ -1,6 +1,13 @@
 /* Bloque 1: estilos mínimos de estructura.
    El detalle visual se trabaja en bloques posteriores. */
 
+:root {
+  /* Color de fondo con el que arranca la sección de eventos; el hero
+     anterior a ella usa la misma variable para que su degradado de salida
+     termine exactamente en ese color y no quede una línea de corte. */
+  --eventos-fondo: #0d0d0d;
+}
+
 .App {
   display: flex;
   flex-direction: column;
