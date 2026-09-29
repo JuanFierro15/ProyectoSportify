@@ -27,6 +27,9 @@ yarn-error.log*
 CLAUDE.md
 .mcp.json
 .claude.json
+.agents/
+skills-lock.json
+lighthouse-report*.json
 
 # Videos fuente en alta calidad de los heros: se guardan localmente, no en el
 # repo. En public/media/ solo van las versiones web ligeras (hero_*.mp4).
