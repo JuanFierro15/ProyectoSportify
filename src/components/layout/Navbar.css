@@ -163,7 +163,6 @@
 
 /* Espacio de anclaje para no tapar títulos con la barra fija */
 #hero-placeholder,
-#canchas-placeholder,
 #reservas-placeholder {
   scroll-margin-top: 80px;
 }

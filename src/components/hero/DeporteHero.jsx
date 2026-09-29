@@ -51,6 +51,7 @@ function DeporteHero({
   eyebrow = 'Nuestras canchas',
   descripcion,
   preload = 'metadata',
+  onVerCanchas,
 }) {
   const rootRef = useRef(null);
   const contenidoRef = useRef(null);
@@ -169,6 +170,12 @@ function DeporteHero({
             <a
               className="button large deporte-hero__cta"
               href="#canchas-placeholder"
+              onClick={(e) => {
+                if (onVerCanchas) {
+                  e.preventDefault();
+                  onVerCanchas();
+                }
+              }}
             >
               {tituloCTA}
             </a>

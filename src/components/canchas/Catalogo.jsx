@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { CalendarX } from 'lucide-react';
 import { useReservas } from '../../context/ReservasContext';
 import { DEPORTES } from '../../data/deportes';
+import { canchasDelDeporte } from '../../lib/canchas';
 import CanchaCard from './CanchaCard';
 import './Catalogo.css';
 
@@ -90,7 +91,7 @@ function Catalogo() {
         </div>
       ) : (
         DEPORTES.map(({ slug, nombre }) => {
-          const delDeporte = canchas.filter((c) => c.deporte === slug);
+          const delDeporte = canchasDelDeporte(canchas, slug);
 
           return (
             <div className="catalogo__seccion" key={slug}>

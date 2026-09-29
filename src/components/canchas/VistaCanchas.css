@@ -1,0 +1,208 @@
+/* Vista superpuesta de canchas (reemplaza el catálogo en el flujo de scroll).
+   Mismo lenguaje visual que el resto de la app: radio de 12px, sombra suave,
+   variable --acento con color-mix, sin tipografías ni paleta nuevas. */
+
+.vista-canchas {
+  position: fixed;
+  inset: 0;
+  /* Por debajo de .reveal-overlay (1005, Foundation) para que el modal de
+     reserva quede siempre por encima; por encima del navbar (1000). */
+  z-index: 1001;
+  overflow-y: auto;
+  background: linear-gradient(180deg, #fbfbfb 0%, #ffffff 45%);
+}
+
+.vista-canchas__marco {
+  position: relative;
+  min-height: 100%;
+  padding-top: 4.5rem;
+  padding-bottom: 3rem;
+}
+
+.vista-canchas__cerrar {
+  position: absolute;
+  top: 1.25rem;
+  right: 1rem;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 999px;
+  background: #f1f1f1;
+  color: #1e1e1e;
+  cursor: pointer;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.vista-canchas__cerrar:hover {
+  background: #e4e4e4;
+  transform: rotate(90deg);
+}
+
+.vista-canchas__titulo {
+  margin: 0 0 1.25rem;
+  font-size: 1.9rem;
+  font-weight: 700;
+}
+
+.vista-canchas__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+  border: none;
+  background: transparent;
+}
+
+.vista-canchas__tabs .tabs-title > a {
+  padding: 0.55rem 1.1rem;
+  border: 2px solid color-mix(in srgb, var(--acento, #1779ba) 35%, transparent);
+  border-radius: 999px;
+  background: #fff;
+  color: #4a4a4a;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.vista-canchas__tabs .tabs-title > a:hover,
+.vista-canchas__tabs .tabs-title > a:focus {
+  background: #fff;
+}
+
+.vista-canchas__tabs .tabs-title.is-active > a {
+  border-color: var(--acento, #1779ba);
+  background: var(--acento, #1779ba);
+  color: #fff;
+}
+
+.vista-canchas__filtro {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.vista-canchas__filtro-texto {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #4a4a4a;
+  cursor: pointer;
+}
+
+.vista-canchas__cuerpo {
+  min-height: 380px;
+  margin-bottom: 1.5rem;
+}
+
+.vista-canchas__vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 380px;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #4a4a4a;
+}
+
+/* Layout estático (deportes con menos de 3 canchas): reutiliza el estilo de
+   CanchaCard ("card cancha-card") sobre un <button> clicable. */
+.vista-canchas .cancha-card.vista-canchas__card-estatica {
+  width: 100%;
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 3px solid transparent;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.vista-canchas .cancha-card.vista-canchas__card-estatica--activa {
+  border-color: var(--acento, #1779ba);
+}
+
+.vista-canchas__card-nombre {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+/* Carrusel: cards con contenido propio vía `renderOverlay` de DepthCarousel. */
+.vista-canchas .cancha-card.vista-canchas__card-overlay {
+  width: 100%;
+  padding: 1rem 0.9rem 0.85rem;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.75) 100%);
+  pointer-events: none;
+}
+
+.vista-canchas .cancha-card.vista-canchas__card-overlay::before {
+  display: none;
+}
+
+.vista-canchas .cancha-card.vista-canchas__card-overlay .vista-canchas__card-nombre {
+  color: #fff;
+}
+
+.vista-canchas__panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1.1rem 1.25rem;
+  border-radius: 12px;
+  border-left: 4px solid var(--acento, #1779ba);
+  background: color-mix(in srgb, var(--acento, #1779ba) 6%, #fff);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+}
+
+.vista-canchas__panel-info {
+  min-width: 0;
+}
+
+.vista-canchas__panel-nombre {
+  margin: 0 0 0.3rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.vista-canchas__panel-precio {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0 0.3rem;
+  font-weight: 700;
+  color: var(--acento, #1779ba);
+  font-variant-numeric: tabular-nums;
+}
+
+.vista-canchas__panel-unidad {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #6f6f6f;
+}
+
+.vista-canchas__panel-disp {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #4a4a4a;
+}
+
+.vista-canchas__panel-cta {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vista-canchas__cerrar:hover {
+    transform: none;
+  }
+}

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Trophy } from 'lucide-react';
+import { useVistaCanchas } from '../../context/VistaCanchasContext';
 import './Navbar.css';
 
 /**
@@ -18,6 +19,7 @@ import './Navbar.css';
 function Navbar() {
   const [visible, setVisible] = useState(true);
   const [sobreHero, setSobreHero] = useState(true);
+  const { abrirVista } = useVistaCanchas();
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
@@ -100,7 +102,15 @@ function Navbar() {
               </a>
             </li>
             <li>
-              <a href="#canchas-placeholder">Canchas</a>
+              <a
+                href="#canchas-placeholder"
+                onClick={(e) => {
+                  e.preventDefault();
+                  abrirVista('voley-playa');
+                }}
+              >
+                Canchas
+              </a>
             </li>
             <li>
               <a href="#reservas-placeholder">Eventos especiales</a>

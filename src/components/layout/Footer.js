@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowUp, Clock, Compass } from 'lucide-react';
+import { useVistaCanchas } from '../../context/VistaCanchasContext';
 import './Footer.css';
 
 /**
@@ -8,6 +9,7 @@ import './Footer.css';
  */
 function Footer() {
   const year = new Date().getFullYear();
+  const { abrirVista } = useVistaCanchas();
 
   return (
     <footer className="footer" id="main-footer">
@@ -31,7 +33,15 @@ function Footer() {
                 <a href="#hero-placeholder">Inicio</a>
               </li>
               <li>
-                <a href="#canchas-placeholder">Canchas</a>
+                <a
+                  href="#canchas-placeholder"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    abrirVista('voley-playa');
+                  }}
+                >
+                  Canchas
+                </a>
               </li>
               <li>
                 <a href="#reservas-placeholder">Eventos especiales</a>
