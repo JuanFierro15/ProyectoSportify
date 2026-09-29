@@ -38,9 +38,20 @@
   transition: background 0.4s ease;
 }
 
+/* Columna flex: título, pestañas, filtro y panel miden su alto por
+   contenido, igual que en flujo de bloque normal (los flex items en columna
+   con align-items: stretch por defecto se comportan igual de ancho, y su
+   alto sigue siendo el de su contenido salvo que se les dé flex-grow). El
+   único que crece es el escenario (.vista-canchas__cuerpo), hasta el alto de
+   la ventana: sin una altura definida en este contenedor, el
+   `container-type: size` del escenario no tendría de qué medir y
+   colapsaría a 0 (ver comentario en .vista-canchas__cuerpo). */
 .vista-canchas__marco {
   position: relative;
-  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
   padding-top: 4.5rem;
   padding-bottom: 3rem;
 }
@@ -159,8 +170,26 @@
 
 .vista-canchas__cuerpo {
   position: relative;
-  min-height: 380px;
+  /* flex-basis 380px conserva el alto de antes cuando no sobra espacio
+     vertical; flex-grow (el "1") deja que ocupe el resto de la ventana en
+     viewports más altos. min-height: 0 permite que se mida por este cálculo
+     de flex y no por el contenido (necesario junto con container-type). */
+  flex: 1 1 380px;
+  min-height: 0;
   margin-bottom: 1.5rem;
+  container-type: size;
+}
+
+/* Tarjeta activa del carrusel dimensionada por el alto real del escenario
+   (container query) en vez de los cardWidth/cardHeight fijos que se le
+   siguen pasando a DepthCarousel: esos quedan solo como valor de fallback
+   (navegadores sin soporte de container queries) y como referencia para su
+   propio cálculo interno de escala al arrastrar/ajustar al ancho, que no se
+   toca. */
+.vista-canchas__cuerpo .depth-carousel__card {
+  width: auto;
+  height: min(88cqh, 560px);
+  aspect-ratio: 720 / 893;
 }
 
 /* --- Escenario: degradado + backdrop difuminado + textura de líneas de
@@ -446,6 +475,145 @@
   opacity: 0.55;
   transform: none;
   box-shadow: none;
+}
+
+/* --- Visor a pantalla completa: foto en grande de la tarjeta activa,
+   abierto con showModal() sobre un <dialog> nativo. El propio <dialog> hace
+   de "fondo": ocupa toda la ventana con un tinte oscuro, y el clic fuera de
+   `.vista-canchas__visor-contenido` (el cuadro visible) cae directo sobre
+   él, así que cerrar con clic en el fondo es solo comparar el target del
+   clic contra el propio <dialog> (ver VistaCanchas.jsx). --- */
+.vista-canchas__visor {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+  margin: 0;
+  padding: clamp(1rem, 4vw, 2.5rem);
+  border: none;
+  background: rgba(8, 9, 13, 0.82);
+  color: #fff;
+  opacity: 1;
+  transition: opacity 0.22s ease;
+}
+
+.vista-canchas__visor[open] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Clase transitoria (VistaCanchas.jsx la quita en el frame siguiente a
+   showModal()) para poder animar el fade + escala de entrada; sin esto,
+   `[open]` ya estaría aplicado desde el primer frame y no habría nada que
+   transicionar. */
+.vista-canchas__visor--abriendo {
+  opacity: 0;
+}
+
+.vista-canchas__visor--abriendo .vista-canchas__visor-contenido {
+  transform: scale(0.96);
+}
+
+.vista-canchas__visor-contenido {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  max-width: min(1440px, 100%);
+  overflow: hidden;
+  background: #0c0e13;
+  border-radius: 16px;
+  transform: scale(1);
+  transition: transform 0.22s ease;
+}
+
+.vista-canchas__visor-cerrar {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+}
+
+.vista-canchas__visor-cerrar:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+/* La imagen nunca se escala por encima de su resolución real (1440px de
+   ancho): `.vista-canchas__visor-contenido` ya limita el ancho a 1440px como
+   máximo, y object-fit: contain sobre un <img> a 100%/100% de este envoltorio
+   solo puede reducir esa proporción, nunca ampliarla. El espacio sobrante
+   (por diferencia de alto) lo cubre el fondo oscuro del envoltorio. */
+.vista-canchas__visor-imagen-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: #000;
+}
+
+/* Posicionamiento absoluto en vez de width/height: 100% directos: un alto en
+   porcentaje sobre un ancestro cuyo tamaño sale de flex-grow (como este
+   envoltorio) no siempre se resuelve de forma fiable a través de varios
+   niveles de flexbox anidados (el hijo puede terminar viendo un alto
+   "indefinido" y cayendo a su relación de aspecto natural). Anclarla con
+   inset: 0 contra el envoltorio, que sí tiene un tamaño final ya resuelto,
+   evita ese problema. */
+.vista-canchas__visor-imagen {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.vista-canchas__visor-info {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.vista-canchas__visor-nombre {
+  margin: 0 0 0.4rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.vista-canchas__visor-precio {
+  margin: 0 0 0.6rem;
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.vista-canchas__visor-info .vista-canchas__badges {
+  margin-bottom: 1rem;
+}
+
+.vista-canchas__visor-info .vista-canchas__badge {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.vista-canchas__visor-cta {
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vista-canchas__visor,
+  .vista-canchas__visor-contenido {
+    transition: none;
+  }
 }
 
 /* Respeta prefers-reduced-motion: sin fade del backdrop, sin deslizamiento
