@@ -8,19 +8,8 @@ import PixelSwap from './PixelSwap';
 import EventoModal from './EventoModal';
 import './EventoCTA.css';
 
-// Registro idempotente del plugin de ScrollTrigger.
 gsap.registerPlugin(ScrollTrigger);
 
-/**
- * EventoCTA — sección de eventos a pantalla completa (100vh).
- *
- * Utiliza el componente oficial PixelSwap de React Bits con trigger="hover"
- * para intercambiar dinámicamente entre la vista inicial y la vista detallada
- * de beneficios de eventos con animaciones basadas en ventanas de píxeles.
- *
- * Además, las etiquetas estadísticas caen en cascada al entrar al viewport
- * mediante ScrollTrigger con física elástica de gravedad.
- */
 function EventoCTA() {
   const rootRef = useRef(null);
   const statsRef = useRef(null);
@@ -72,7 +61,6 @@ function EventoCTA() {
     if (prefersReducedMotion) return undefined;
 
     const ctx = gsap.context(() => {
-      // Animación de caída de etiquetas al hacer scroll (Physics Drop)
       const statElements = gsap.utils.toArray('.evento-cta__stat--primaria');
       if (statsRef.current && statElements.length > 0) {
         const dropTl = gsap.timeline({
@@ -98,9 +86,8 @@ function EventoCTA() {
             rotation: 0,
             duration: 0.8,
             stagger: 0.12,
-            ease: 'back.out(2)', // rebote elástico de gravedad
+            ease: 'back.out(2)',
             onComplete: () => {
-              // Limpiar transform para permitir efectos hover CSS
               statElements.forEach((el) => gsap.set(el, { clearProps: 'transform' }));
             },
           }
@@ -127,7 +114,6 @@ function EventoCTA() {
               </p>
             </div>
 
-            {/* Etiquetas animadas en caída libre por scroll */}
             <ul
               className="evento-cta__stats"
               ref={statsRef}
