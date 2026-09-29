@@ -3,58 +3,54 @@
   position: relative;
   min-height: 100vh;
   width: 100%;
-  overflow: hidden;
   box-sizing: border-box;
   scroll-margin-top: 80px;
-  background: #0d0d0d;
+  background: var(--eventos-fondo, #0d0d0d);
   color: #fefefe;
 }
 
-.evento-cta .evento-cta__transicion {
+/* PixelSwap ocupa la sección de borde a borde: el fondo (oscuro u oscuro +
+   foto) vive dentro de cada panel, no en .evento-cta, para que la grilla de
+   píxeles cubra también el fondo y no solo el texto. */
+.evento-cta__swap {
   width: 100%;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  color: var(--evento-acento);
 }
 
-.evento-cta__pantalla {
-  width: 100%;
+.evento-cta__panel {
   min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: clamp(3.5rem, 6vh, 6rem) 1.5rem;
-  box-sizing: border-box;
-  position: relative;
-  z-index: 2;
-  background: radial-gradient(circle at 50% 40%, #252525 0%, #171717 60%, #0d0d0d 100%);
+  /* El padding inferior es más grande a propósito: reserva sitio para
+     .evento-cta__controles, que se superpone (position:absolute) sobre el
+     panel en vez de venir después en el flujo. Sin este espacio, en
+     pantallas bajas el contenido centrado (título + 4 stats + botón) puede
+     terminar tan cerca del borde inferior que el control se le monta
+     encima. */
+  padding: clamp(3.5rem, 6vh, 6rem) 1.5rem clamp(7rem, 16vh, 9rem);
 }
 
-.evento-cta__pantalla::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: min(650px, 85vw);
-  height: min(650px, 85vw);
-  transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(246, 169, 75, 0.12) 0%, rgba(246, 169, 75, 0.03) 50%, transparent 70%);
-  pointer-events: none;
-  z-index: 1;
+.evento-cta__panel--primario {
+  background: radial-gradient(circle at 50% 32%, rgba(246, 169, 75, 0.1) 0%, transparent 55%),
+    var(--eventos-fondo, #0d0d0d);
 }
 
-.evento-cta__contenido {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
+/* La imagen de fondo se aplica por style inline desde EventoCTA.jsx (con
+   PUBLIC_URL, igual que los videos de los heros): css-loader intenta
+   resolver un url() de CSS como módulo de webpack, no como ruta pública en
+   tiempo de ejecución, y falla al compilar. Aquí solo el tamaño/posición. */
+.evento-cta__panel--secundario {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .evento-cta__texto {
   text-align: center;
+  width: 100%;
 }
 
 .evento-cta__eyebrow {
@@ -160,20 +156,31 @@
   box-shadow: 0 14px 32px rgba(246, 169, 75, 0.45);
 }
 
+/* Controles persistentes (fuera de los paneles: PixelSwap los clonaría por
+   cada píxel si vivieran adentro). Anclados cerca del borde inferior de la
+   sección en vez de "pegados" al botón de reserva, cuya posición varía
+   según el alto del contenido centrado; así su ubicación es estable sin
+   importar qué panel esté activo. */
 .evento-cta__controles {
-  margin-top: 1.5rem;
+  position: absolute;
+  left: 50%;
+  bottom: clamp(1.5rem, 4vh, 3rem);
+  transform: translateX(-50%);
+  z-index: 5;
+  text-align: center;
 }
 
 .evento-cta__alternar {
   appearance: none;
   border: 1px solid rgba(255, 255, 255, 0.25);
-  background: transparent;
+  background: rgba(13, 13, 13, 0.35);
   color: #f3f3f3;
   font-size: 0.85rem;
   font-weight: 600;
   padding: 0.55rem 1.4rem;
   border-radius: 999px;
   cursor: pointer;
+  backdrop-filter: blur(4px);
   transition: border-color 0.25s ease, background-color 0.25s ease, color 0.25s ease;
 }
 
@@ -206,8 +213,8 @@
 }
 
 @media screen and (max-width: 39.9375em) {
-  .evento-cta__pantalla {
-    padding: clamp(3rem, 5vh, 4.5rem) 1rem;
+  .evento-cta__panel {
+    padding: clamp(3rem, 5vh, 4.5rem) 1rem clamp(8rem, 20vh, 10rem);
   }
 
   .evento-cta__stat {
