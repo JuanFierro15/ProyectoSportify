@@ -45,7 +45,9 @@ function ventanaDias() {
   return Array.from({ length: DIAS_VENTANA }, (_, i) => isoDia(i));
 }
 
-// Metadatos de las canchas (sin disponibilidad).
+// Metadatos de las canchas (sin disponibilidad). `caracteristicas` e
+// `imagen` son opcionales en la semilla (canchas antiguas sin esos campos
+// siguen funcionando, con lista vacía / sin imagen).
 function canchasMeta() {
   return semilla.canchas.map((c) => ({
     id: c.id,
@@ -53,6 +55,8 @@ function canchasMeta() {
     nombre: c.nombre,
     precioHora: c.precioHora,
     horas: [...semilla.horas],
+    caracteristicas: Array.isArray(c.caracteristicas) ? c.caracteristicas : [],
+    imagen: c.imagen || null,
   }));
 }
 

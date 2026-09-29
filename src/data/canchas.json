@@ -20,6 +20,8 @@
       "deporte": "voley-playa",
       "nombre": "Cancha Voley Playa 1",
       "precioHora": 40000,
+      "caracteristicas": ["Al aire libre", "Arena importada", "Iluminación nocturna"],
+      "imagen": "",
       "ocupadosSemilla": [
         ["12:00", "13:00", "18:00"],
         ["09:00", "19:00", "20:00"],
@@ -35,6 +37,8 @@
       "deporte": "voley-playa",
       "nombre": "Cancha Voley Playa 2",
       "precioHora": 44000,
+      "caracteristicas": ["Al aire libre", "Arena importada"],
+      "imagen": "",
       "ocupadosSemilla": [
         ["08:00", "09:00", "17:00", "18:00", "19:00", "20:00"],
         ["14:00", "15:00"],
@@ -50,6 +54,8 @@
       "deporte": "voley-playa",
       "nombre": "Cancha Voley Playa 3",
       "precioHora": 48000,
+      "caracteristicas": ["Al aire libre", "Iluminación nocturna"],
+      "imagen": "",
       "ocupadosSemilla": [
         ["09:00", "14:00", "15:00"],
         ["08:00", "19:00"],
@@ -65,6 +71,8 @@
       "deporte": "padel",
       "nombre": "Cancha Pádel 1",
       "precioHora": 60000,
+      "caracteristicas": ["Techada", "Paredes de cristal", "Iluminación nocturna"],
+      "imagen": "",
       "ocupadosSemilla": [
         ["10:00", "11:00", "16:00", "19:00"],
         ["08:00", "09:00", "10:00"],
@@ -80,6 +88,8 @@
       "deporte": "padel",
       "nombre": "Cancha Pádel 2",
       "precioHora": 65000,
+      "caracteristicas": ["Paredes de cristal", "Al aire libre"],
+      "imagen": "",
       "ocupadosSemilla": [
         ["08:00", "13:00", "14:00", "15:00", "20:00"],
         ["17:00", "18:00", "19:00", "20:00"],
@@ -95,6 +105,8 @@
       "deporte": "padel",
       "nombre": "Cancha Pádel 3",
       "precioHora": 70000,
+      "caracteristicas": ["Techada", "Iluminación nocturna"],
+      "imagen": "",
       "ocupadosSemilla": [
         ["10:00", "11:00"],
         ["09:00", "16:00", "17:00", "18:00"],
@@ -110,6 +122,8 @@
       "deporte": "futbol",
       "nombre": "Cancha Fútbol 1",
       "precioHora": 100000,
+      "caracteristicas": ["Césped sintético", "Al aire libre", "Iluminación nocturna"],
+      "imagen": "",
       "ocupadosSemilla": [
         ["17:00", "18:00", "19:00", "20:00"],
         ["19:00", "20:00"],
@@ -125,6 +139,8 @@
       "deporte": "futbol",
       "nombre": "Cancha Fútbol 2",
       "precioHora": 120000,
+      "caracteristicas": ["Césped sintético", "Iluminación nocturna"],
+      "imagen": "",
       "ocupadosSemilla": [
         ["09:00", "10:00", "12:00", "16:00", "18:00", "19:00"],
         ["18:00", "19:00", "20:00"],
@@ -140,6 +156,8 @@
       "deporte": "futbol",
       "nombre": "Cancha Fútbol 3",
       "precioHora": 110000,
+      "caracteristicas": ["Césped sintético", "Al aire libre"],
+      "imagen": "",
       "ocupadosSemilla": [
         ["18:00", "19:00"],
         ["08:00", "09:00", "10:00"],
