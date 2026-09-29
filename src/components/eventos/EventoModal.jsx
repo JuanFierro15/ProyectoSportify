@@ -241,7 +241,7 @@ function EventoModal({ abierto, onCerrar }) {
             <fieldset className="evento-modal__campo">
               <legend>Canchas</legend>
               <p className="evento-modal__ayuda">
-                Elegí una o varias. Podés combinar canchas de distintos deportes.
+                Elige una o varias. Puedes combinar canchas de distintos deportes.
               </p>
               <div className="evento-modal__canchas">
                 {canchas.map((c) => {
@@ -278,7 +278,7 @@ function EventoModal({ abierto, onCerrar }) {
               <legend>Franja horaria</legend>
               {canchaIds.length === 0 ? (
                 <p className="evento-modal__ayuda">
-                  Elegí al menos una cancha para ver los horarios libres.
+                  Elige al menos una cancha para ver los horarios libres.
                 </p>
               ) : (
                 <>
@@ -355,7 +355,7 @@ function EventoModal({ abierto, onCerrar }) {
                   {desde && hasta && !bloqueLibre && (
                     <p className="evento-modal__aviso">
                       Ese rango tiene horas ocupadas en alguna de las canchas
-                      elegidas. Ajustá la franja o las canchas.
+                      elegidas. Ajusta la franja o las canchas.
                     </p>
                   )}
                   {bloqueLibre && (
@@ -374,40 +374,46 @@ function EventoModal({ abierto, onCerrar }) {
               <fieldset className="evento-modal__campo">
                 <legend>Datos del torneo</legend>
                 <div className="grid-x grid-padding-x">
-                  <label className="cell medium-6">
-                    Equipos / participantes
+                  <div className="cell medium-6">
+                    <label htmlFor="evento-equipos">Equipos / participantes</label>
                     <input
+                      id="evento-equipos"
+                      name="equipos"
                       type="number"
                       min="2"
                       value={equipos}
                       onChange={(e) => setEquipos(e.target.value)}
                     />
-                  </label>
-                  <label className="cell medium-6">
-                    Canchas necesarias
+                  </div>
+                  <div className="cell medium-6">
+                    <label htmlFor="evento-canchas-necesarias">Canchas necesarias</label>
                     <input
+                      id="evento-canchas-necesarias"
+                      name="canchasNecesarias"
                       type="number"
                       min="1"
                       value={canchasNecesarias}
                       onChange={(e) => setCanchasNecesarias(e.target.value)}
                       placeholder={String(canchaIds.length || '')}
                     />
-                  </label>
+                  </div>
                 </div>
               </fieldset>
             ) : (
               <fieldset className="evento-modal__campo">
                 <legend>Datos del cumpleaños</legend>
                 <div className="grid-x grid-padding-x">
-                  <label className="cell medium-6">
-                    Invitados
+                  <div className="cell medium-6">
+                    <label htmlFor="evento-invitados">Invitados</label>
                     <input
+                      id="evento-invitados"
+                      name="invitados"
                       type="number"
                       min="1"
                       value={invitados}
                       onChange={(e) => setInvitados(e.target.value)}
                     />
-                  </label>
+                  </div>
                 </div>
               </fieldset>
             )}
@@ -415,24 +421,30 @@ function EventoModal({ abierto, onCerrar }) {
             <fieldset className="evento-modal__campo">
               <legend>Contacto</legend>
               <div className="grid-x grid-padding-x">
-                <label className="cell medium-6">
-                  Nombre (opcional)
+                <div className="cell medium-6">
+                  <label htmlFor="evento-nombre">Nombre (opcional)</label>
                   <input
+                    id="evento-nombre"
+                    name="nombre"
                     type="text"
                     value={nombre}
                     onChange={(e) => setNombre(e.target.value)}
-                    autoComplete="off"
+                    autoComplete="name"
+                    placeholder="Ej. Juan Pérez…"
                   />
-                </label>
-                <label className="cell medium-6">
-                  Teléfono (opcional)
+                </div>
+                <div className="cell medium-6">
+                  <label htmlFor="evento-telefono">Teléfono (opcional)</label>
                   <input
+                    id="evento-telefono"
+                    name="telefono"
                     type="tel"
                     value={telefono}
                     onChange={(e) => setTelefono(e.target.value)}
-                    autoComplete="off"
+                    autoComplete="tel"
+                    placeholder="Ej. 300 123 4567…"
                   />
-                </label>
+                </div>
               </div>
             </fieldset>
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { CalendarCheck, CheckCircle2, X } from 'lucide-react';
 import { useReservas } from '../../context/ReservasContext';
 import SelectorDia from '../shared/SelectorDia';
 import { fechaLarga } from '../../lib/fechas';
@@ -67,7 +68,7 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
     );
     if (h && !h.disponible) {
       setHoraSel(null);
-      setError('Ese horario acaba de reservarse. Elegí otro.');
+      setError('Ese horario acaba de reservarse. Elige otro.');
     }
   }, [disponibilidad, canchaViva, fechaSel, horaSel]);
 
@@ -106,24 +107,40 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
       >
         <button
           type="button"
-          className="close-button"
+          className="reserva-modal__cerrar"
           aria-label="Cerrar"
           onClick={onCerrar}
         >
-          <span aria-hidden="true">&times;</span>
+          <X size={18} aria-hidden="true" />
         </button>
 
-        <h2 id="reserva-modal-titulo" className="reserva-modal__titulo">
-          Reservar &mdash; {canchaViva.nombre}
-        </h2>
+        <div className="reserva-modal__encabezado">
+          <span className="reserva-modal__encabezado-icono" aria-hidden="true">
+            <CalendarCheck size={20} />
+          </span>
+          <h2 id="reserva-modal-titulo" className="reserva-modal__titulo">
+            Reservar &mdash; {canchaViva.nombre}
+          </h2>
+        </div>
 
         {confirmada ? (
-          <div className="callout success reserva-modal__ok">
-            <p>
-              <strong>Reserva confirmada.</strong> {canchaViva.nombre},{' '}
-              {fechaLarga(confirmada.fecha, dias)} a las {confirmada.hora}.
+          <div className="reserva-modal__ok">
+            <CheckCircle2
+              size={42}
+              className="reserva-modal__ok-icono"
+              aria-hidden="true"
+            />
+            <p className="reserva-modal__ok-titulo">Reserva confirmada</p>
+            <p className="reserva-modal__ok-resumen">
+              <strong>{canchaViva.nombre}</strong>
+              <br />
+              {fechaLarga(confirmada.fecha, dias)} a las {confirmada.hora}
             </p>
-            <button type="button" className="button" onClick={onCerrar}>
+            <button
+              type="button"
+              className="button success reserva-modal__ok-boton"
+              onClick={onCerrar}
+            >
               Listo
             </button>
           </div>
@@ -189,24 +206,36 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
             </fieldset>
 
             <div className="grid-x grid-padding-x reserva-modal__contacto">
-              <label className="cell medium-6">
-                Nombre (opcional)
+              <div className="cell medium-6">
+                <label htmlFor="reserva-nombre">
+                  Nombre (opcional)
+                </label>
                 <input
+                  id="reserva-nombre"
+                  name="nombre"
                   type="text"
+                  className="reserva-modal__input"
+                  placeholder="Ej. Juan Pérez…"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
-                  autoComplete="off"
+                  autoComplete="name"
                 />
-              </label>
-              <label className="cell medium-6">
-                Teléfono (opcional)
+              </div>
+              <div className="cell medium-6">
+                <label htmlFor="reserva-telefono">
+                  Teléfono (opcional)
+                </label>
                 <input
+                  id="reserva-telefono"
+                  name="telefono"
                   type="tel"
+                  className="reserva-modal__input"
+                  placeholder="Ej. 300 123 4567…"
                   value={telefono}
                   onChange={(e) => setTelefono(e.target.value)}
-                  autoComplete="off"
+                  autoComplete="tel"
                 />
-              </label>
+              </div>
             </div>
 
             <div className="reserva-modal__acciones">

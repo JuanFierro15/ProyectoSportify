@@ -7,7 +7,9 @@
   justify-content: center;
   padding: 5vh 1rem;
   overflow-y: auto;
-  background: rgba(10, 10, 10, 0.55);
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .reserva-modal {
@@ -20,12 +22,56 @@
   margin: 0;
   width: 100%;
   max-width: 36rem;
-  border-radius: 6px;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.35);
+}
+
+.reserva-modal__cerrar {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: #f1f1f1;
+  color: #4a4a4a;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.reserva-modal__cerrar:hover {
+  background: #e2e2e2;
+  color: #1e1e1e;
+}
+
+.reserva-modal__encabezado {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 2rem 1rem 0;
+}
+
+.reserva-modal__encabezado-icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: rgba(23, 121, 186, 0.12);
+  color: #1779ba;
 }
 
 .reserva-modal__titulo {
   font-size: 1.35rem;
-  margin: 0 2rem 1rem 0;
+  margin: 0;
 }
 
 .reserva-modal__campo {
@@ -45,21 +91,23 @@
 .reserva-modal__horas {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.45rem;
 }
 
 .reserva-modal__hora {
   margin: 0;
+  border-radius: 999px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
 .reserva-modal__hora--ocupado {
-  text-decoration: line-through;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
 .reserva-modal__hora--sel {
-  outline: 2px solid #1468a0;
-  outline-offset: 1px;
+  box-shadow: 0 8px 16px -4px rgba(20, 104, 160, 0.5);
+  transform: translateY(-1px);
 }
 
 .reserva-modal__hora-tag {
@@ -75,6 +123,19 @@
   font-weight: 600;
 }
 
+.reserva-modal__input {
+  border: 1px solid #d5d5d5;
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.reserva-modal__input:focus {
+  border-color: #1779ba;
+  box-shadow: 0 0 0 3px rgba(23, 121, 186, 0.2);
+  outline: none;
+}
+
 .reserva-modal__acciones {
   display: flex;
   justify-content: flex-end;
@@ -86,10 +147,42 @@
   margin: 0;
 }
 
+/* Pantalla de reserva confirmada: tarjeta de éxito centrada, con jerarquía
+   tipográfica clara en vez del callout básico de Foundation. */
 .reserva-modal__ok {
-  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.4rem;
+  padding: 1.5rem 1rem 0.5rem;
 }
 
-.reserva-modal__ok .button {
-  margin: 0.5rem 0 0;
+.reserva-modal__ok-icono {
+  color: #0f9d58;
+  margin-bottom: 0.2rem;
+}
+
+.reserva-modal__ok-titulo {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.reserva-modal__ok-resumen {
+  margin: 0;
+  color: #4a4a4a;
+  line-height: 1.5;
+}
+
+.reserva-modal__ok-boton {
+  margin: 1rem 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reserva-modal__cerrar,
+  .reserva-modal__hora,
+  .reserva-modal__input {
+    transition: none;
+  }
 }

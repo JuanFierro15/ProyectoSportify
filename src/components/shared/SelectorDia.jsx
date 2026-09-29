@@ -15,7 +15,7 @@ import './SelectorDia.css';
  */
 function SelectorDia({ dias, valor, onChange, contarLibres }) {
   return (
-    <div className="selector-dia" role="group" aria-label="Elegí el día">
+    <div className="selector-dia" role="group" aria-label="Elige el día">
       {dias.map((iso) => {
         const d = aDate(iso);
         const sel = valor === iso;
