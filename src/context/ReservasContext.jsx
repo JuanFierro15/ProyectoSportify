@@ -73,6 +73,40 @@ function ocupadosSemilla(dias) {
   return ocupados;
 }
 
+/**
+ * fusionarConSemilla — combina lo guardado en localStorage con la semilla
+ * vigente, separando claramente dos clases de dato:
+ *
+ * - Campos de **catálogo** (nombre, imagen, características, precioHora,
+ *   deporte, horas): siempre vienen de la semilla actual, nunca de
+ *   localStorage. Ya llegan resueltos en `canchas` (ver `canchasMeta()`) —
+ *   por eso esta función no los toca; es la razón por la que actualizar
+ *   `canchas.json` (una foto nueva, una característica) se refleja de
+ *   inmediato sin importar qué haya guardado el navegador.
+ * - Campos de **estado de uso** (horas ya ocupadas): sí se conservan de
+ *   localStorage cuando existen. Al recorrer `canchas` (la lista vigente,
+ *   no la guardada): una cancha nueva en la semilla que no estaba en
+ *   localStorage se completa con `ocupadosSemilla`; una cancha que ya no
+ *   existe en la semilla actual simplemente no se recorre, así que queda
+ *   descartada.
+ *
+ * Función pura: mismas entradas -> misma salida, sin leer ni escribir
+ * storage ni estado de React (eso lo hace `crearEstadoInicial`).
+ */
+export function fusionarConSemilla(canchas, dias, ocupadosGuardados, semillaOcup) {
+  const ocupados = {};
+  canchas.forEach((c) => {
+    ocupados[c.id] = {};
+    dias.forEach((fecha) => {
+      const guardadoDia = ocupadosGuardados && ocupadosGuardados[c.id] && ocupadosGuardados[c.id][fecha];
+      ocupados[c.id][fecha] = Array.isArray(guardadoDia)
+        ? [...guardadoDia]
+        : [...semillaOcup[c.id][fecha]];
+    });
+  });
+  return ocupados;
+}
+
 // Estado inicial: si hay datos guardados válidos se reconcilian con la ventana
 // de 7 días actual (se descartan fechas pasadas, las nuevas toman la semilla);
 // si no, se usa la semilla completa.
@@ -86,17 +120,7 @@ function crearEstadoInicial() {
     if (guardado) {
       const data = JSON.parse(guardado);
       if (data && data.ocupados && Array.isArray(data.reservas)) {
-        const ocupados = {};
-        canchas.forEach((c) => {
-          ocupados[c.id] = {};
-          dias.forEach((fecha) => {
-            const guardadoDia =
-              data.ocupados[c.id] && data.ocupados[c.id][fecha];
-            ocupados[c.id][fecha] = Array.isArray(guardadoDia)
-              ? [...guardadoDia]
-              : [...semillaOcup[c.id][fecha]];
-          });
-        });
+        const ocupados = fusionarConSemilla(canchas, dias, data.ocupados, semillaOcup);
         // Registros viejos sin `tipo` -> se infieren.
         const reservas = data.reservas.map((r) => ({
           tipo: r.tipo || (Array.isArray(r.canchaIds) ? 'evento' : 'individual'),
