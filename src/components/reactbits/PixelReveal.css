@@ -1,0 +1,24 @@
+.pixel-reveal {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.pixel-reveal__mosaico,
+.pixel-reveal__capa-final {
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+}
+
+/* Cada celda es del tamaño real de su píxel (no del contenedor): la capa
+   compuesta que promueve el navegador para animar transform/opacity pesa
+   lo que pesa esa celda pequeña, no la sección completa. */
+.pixel-reveal__cuadro {
+  position: absolute;
+  opacity: 0;
+  background-repeat: no-repeat;
+  will-change: transform, opacity;
+  contain: paint;
+}
