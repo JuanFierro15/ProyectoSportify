@@ -25,6 +25,7 @@ yarn-error.log*
 # Claude Code / config local de IA (no versionar)
 .claude/
 CLAUDE.md
+GEMINI.md
 .mcp.json
 .claude.json
 .agents/

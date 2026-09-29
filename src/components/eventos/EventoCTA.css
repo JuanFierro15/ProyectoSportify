@@ -1,7 +1,6 @@
 .evento-cta {
   position: relative;
   min-height: 100vh;
-  height: 100vh;
   width: 100%;
   overflow: hidden;
   box-sizing: border-box;
@@ -10,15 +9,29 @@
   color: #fefefe;
 }
 
-.evento-cta .pixel-swap {
+.evento-cta__mosaico {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  min-height: 100vh;
+  display: grid;
+  grid-template-columns: repeat(var(--pixel-cols, 12), 1fr);
+  grid-template-rows: repeat(var(--pixel-rows, 8), 1fr);
+  pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
+}
+
+.evento-cta__pixel {
+  transform-origin: center center;
+  transform: scale(0);
+  opacity: 0;
+  will-change: transform, opacity;
+  border: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 .evento-cta__pantalla {
   width: 100%;
-  height: 100%;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -27,14 +40,8 @@
   padding: clamp(3.5rem, 6vh, 6rem) 1.5rem;
   box-sizing: border-box;
   position: relative;
-}
-
-.evento-cta__pantalla--primaria {
+  z-index: 2;
   background: radial-gradient(circle at 50% 40%, #252525 0%, #171717 60%, #0d0d0d 100%);
-}
-
-.evento-cta__pantalla--secundaria {
-  background: radial-gradient(circle at 50% 40%, #2c2419 0%, #1a150f 60%, #0b0907 100%);
 }
 
 .evento-cta__pantalla::before {
@@ -45,8 +52,7 @@
   width: min(650px, 85vw);
   height: min(650px, 85vw);
   transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(246, 169, 75, 0.09) 0%, transparent 70%);
-  filter: blur(50px);
+  background: radial-gradient(circle, rgba(246, 169, 75, 0.12) 0%, rgba(246, 169, 75, 0.03) 50%, transparent 70%);
   pointer-events: none;
   z-index: 1;
 }
@@ -110,14 +116,12 @@
   gap: 0.55rem;
   padding: 0.65rem 1.25rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   font-size: 0.95rem;
   font-weight: 600;
   color: #f3f3f3;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
   will-change: transform, opacity;
   transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
               box-shadow 0.25s ease,
