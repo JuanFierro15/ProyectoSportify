@@ -1,22 +1,47 @@
-/* Sección de entrada al flujo de evento especial (pantalla completa 100vh) */
+/* Sección de eventos a pantalla completa (100vh) */
 
 .evento-cta {
   position: relative;
+  min-height: 100vh;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  scroll-margin-top: 80px;
+  background: #0d0d0d;
+  color: #fefefe;
+}
+
+/* Integración del componente PixelSwap oficial de React Bits */
+.evento-cta .pixel-swap {
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+}
+
+.evento-cta__pantalla {
+  width: 100%;
+  height: 100%;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: radial-gradient(circle at 50% 40%, #252525 0%, #171717 60%, #0d0d0d 100%);
-  color: #fefefe;
-  padding: clamp(3.5rem, 6vh, 6rem) 1rem;
-  overflow: hidden;
+  padding: clamp(3.5rem, 6vh, 6rem) 1.5rem;
   box-sizing: border-box;
-  scroll-margin-top: 80px;
+  position: relative;
+}
+
+.evento-cta__pantalla--primaria {
+  background: radial-gradient(circle at 50% 40%, #252525 0%, #171717 60%, #0d0d0d 100%);
+}
+
+.evento-cta__pantalla--secundaria {
+  background: radial-gradient(circle at 50% 40%, #2c2419 0%, #1a150f 60%, #0b0907 100%);
 }
 
 /* Resplandor ambiental de fondo */
-.evento-cta::before {
+.evento-cta__pantalla::before {
   content: '';
   position: absolute;
   top: 50%;
@@ -30,33 +55,10 @@
   z-index: 1;
 }
 
-/* Cuadrícula de animación Pixel Swap (React Bits) */
-.pixel-swap-grid {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: grid;
-  grid-template-columns: repeat(var(--pixel-cols, 12), 1fr);
-  grid-template-rows: repeat(var(--pixel-rows, 8), 1fr);
-  pointer-events: none;
-  z-index: 2;
-  overflow: hidden;
-}
-
-.pixel-swap-cell {
-  background-color: #1a1a1a;
-  border: 1px solid rgba(255, 255, 255, 0.025);
-  transform-origin: center center;
-  transform: scale(0);
-  opacity: 0;
-  will-change: transform, opacity;
-}
-
 /* Contenedor central del contenido */
 .evento-cta__contenido {
   position: relative;
-  z-index: 3;
+  z-index: 2;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
@@ -64,10 +66,6 @@
 
 .evento-cta__texto {
   text-align: center;
-}
-
-.evento-cta__texto-bloque {
-  will-change: transform, opacity;
 }
 
 .evento-cta__eyebrow {
@@ -79,23 +77,28 @@
   color: #f6a94b;
 }
 
+.evento-cta__eyebrow--dorado {
+  color: #ffc266;
+}
+
 .evento-cta__titulo {
   margin: 0 0 1rem;
   font-size: clamp(2.2rem, 5vw, 3.2rem);
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.15;
+  color: #fefefe;
 }
 
 .evento-cta__bajada {
   margin: 0 auto;
-  max-width: 36rem;
+  max-width: 38rem;
   font-size: clamp(1.05rem, 2vw, 1.2rem);
   color: #d0d0d0;
   line-height: 1.6;
 }
 
-/* Tira de etiquetas con animación de caída libre por scroll */
+/* Tira de etiquetas estadísticas */
 .evento-cta__stats {
   list-style: none;
   display: flex;
@@ -104,7 +107,7 @@
   gap: 0.85rem;
   margin: 2.25rem auto 0;
   padding: 0;
-  max-width: 46rem;
+  max-width: 48rem;
 }
 
 .evento-cta__stat {
@@ -140,10 +143,14 @@
   color: #f6a94b;
 }
 
+.evento-cta__stat--secundaria {
+  background: rgba(246, 169, 75, 0.12);
+  border-color: rgba(246, 169, 75, 0.35);
+}
+
 /* Botón CTA principal */
 .evento-cta__accion {
-  margin-top: 2.75rem;
-  will-change: transform, opacity;
+  margin-top: 2.5rem;
 }
 
 .evento-cta__boton.button.large {
@@ -168,8 +175,18 @@
   box-shadow: 0 14px 32px rgba(246, 169, 75, 0.45);
 }
 
+/* Indicador de ayuda sutil para hover */
+.evento-cta__hint {
+  margin: 1.5rem auto 0;
+  font-size: 0.8rem;
+  color: #929292;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
 @media screen and (max-width: 39.9375em) {
-  .evento-cta {
+  .evento-cta__pantalla {
     padding: clamp(3rem, 5vh, 4.5rem) 1rem;
   }
 
