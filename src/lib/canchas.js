@@ -8,6 +8,14 @@ export function canchasDelDeporte(canchas, slug) {
   return canchas.filter((c) => c.deporte === slug);
 }
 
+// Deriva la ruta de la versión grande (1440px) de una foto de cancha a partir
+// de la ruta de 720px guardada en el JSON semilla, sin duplicar rutas en los
+// datos: "/img/canchas/voley-1.webp" -> "/img/canchas/voley-1-lg.webp".
+export function imagenGrandeCancha(imagen) {
+  if (!imagen) return imagen;
+  return imagen.replace(/\.webp$/, '-lg.webp');
+}
+
 // "Cancha N": el deporte ya se ve por separado (badge, pestaña...), así que
 // en la tarjeta basta con el número.
 export function tituloCancha(cancha) {
