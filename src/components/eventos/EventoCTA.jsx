@@ -4,17 +4,14 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { CalendarDays, Clock, LayoutGrid, Sparkles, Trophy, Users } from 'lucide-react';
 import { useReservas } from '../../context/ReservasContext';
 import { DEPORTES } from '../../data/deportes';
-import PixelSwap from '../reactbits/PixelSwap';
+import PixelReveal from '../reactbits/PixelReveal';
 import EventoModal from './EventoModal';
 import './EventoCTA.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const IMAGEN_SECUNDARIA = `${process.env.PUBLIC_URL}/img/canchas/futbol-2-lg.webp`;
-const FONDO_SECUNDARIO = `linear-gradient(rgba(10, 8, 6, 0.78), rgba(10, 8, 6, 0.82)), url(${IMAGEN_SECUNDARIA})`;
 
-// Sin atributos "id" aquí adentro: PixelSwap clona este contenido por cada
-// píxel durante la transición y un id duplicado se repetiría en el DOM.
 function PanelEvento({ eyebrow, eyebrowClase, titulo, bajada, stats, statClase, statsRef, ariaLabelStats, onReservar }) {
   return (
     <>
@@ -48,17 +45,27 @@ function EventoCTA() {
   const [activo, setActivo] = useState(false);
   const [abierto, setAbierto] = useState(false);
   const [hoverDisponible, setHoverDisponible] = useState(false);
+  const [reducirMovimiento, setReducirMovimiento] = useState(false);
   const { canchas, dias } = useReservas();
 
   // Un solo estado (`activo`) maneja tanto el hover de escritorio como el
-  // botón: así el texto del botón nunca puede desincronizarse del panel
-  // que PixelSwap tiene como objetivo, sea cual sea el disparador.
+  // botón: así el texto del botón nunca puede desincronizarse del fondo
+  // que PixelReveal tiene como objetivo, sea cual sea el disparador.
   useEffect(() => {
-    const mq = window.matchMedia('(hover: hover) and (pointer: fine)');
-    const actualizar = () => setHoverDisponible(mq.matches);
-    actualizar();
-    mq.addEventListener('change', actualizar);
-    return () => mq.removeEventListener('change', actualizar);
+    const mqHover = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const actualizarHover = () => setHoverDisponible(mqHover.matches);
+    actualizarHover();
+    mqHover.addEventListener('change', actualizarHover);
+
+    const mqMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const actualizarMovimiento = () => setReducirMovimiento(mqMovimiento.matches);
+    actualizarMovimiento();
+    mqMovimiento.addEventListener('change', actualizarMovimiento);
+
+    return () => {
+      mqHover.removeEventListener('change', actualizarHover);
+      mqMovimiento.removeEventListener('change', actualizarMovimiento);
+    };
   }, []);
 
   const statsPrimarios = [
@@ -127,23 +134,26 @@ function EventoCTA() {
   return (
     <>
       <section id="eventos" className="evento-cta" ref={rootRef} {...hoverProps}>
-        <PixelSwap
-          className="evento-cta__swap"
-          trigger="manual"
-          active={activo}
-          aspectRatio="auto"
-          pixelSize={72}
-          gap={0}
-          pixelScale={0.35}
-          fade
-          duration={1200}
-          pixelDuration={450}
-          pattern="center"
-          randomness={0.3}
-          firstContent={
-            <div className="evento-cta__panel evento-cta__panel--primario">
-              <div className="grid-x grid-padding-x align-center">
-                <div className="cell small-12 medium-10 large-8 evento-cta__texto">
+        <div className="evento-cta__panel">
+          <PixelReveal
+            className="evento-cta__mosaico-fondo"
+            imageUrl={IMAGEN_SECUNDARIA}
+            active={activo}
+            reducedMotion={reducirMovimiento}
+            pixelSize={80}
+            gap={0}
+            pixelScale={0.35}
+            duration={1200}
+            pixelDuration={450}
+            pattern="center"
+            randomness={0.3}
+          />
+          <div className="evento-cta__overlay-oscuro" style={{ opacity: activo ? 1 : 0 }} aria-hidden="true" />
+
+          <div className="grid-x grid-padding-x align-center evento-cta__grid-texto">
+            <div className="cell small-12 medium-10 large-8 evento-cta__texto">
+              <div className="evento-cta__texto-stack">
+                <div className="evento-cta__texto-capa" data-visible={!activo}>
                   <PanelEvento
                     eyebrow="Eventos y torneos"
                     titulo="¿Organizas un torneo o un cumpleaños?"
@@ -155,16 +165,7 @@ function EventoCTA() {
                     onReservar={abrirModal}
                   />
                 </div>
-              </div>
-            </div>
-          }
-          secondContent={
-            <div
-              className="evento-cta__panel evento-cta__panel--secundario"
-              style={{ backgroundImage: FONDO_SECUNDARIO }}
-            >
-              <div className="grid-x grid-padding-x align-center">
-                <div className="cell small-12 medium-10 large-8 evento-cta__texto">
+                <div className="evento-cta__texto-capa" data-visible={activo}>
                   <PanelEvento
                     eyebrow="Experiencia deportiva completa"
                     eyebrowClase="evento-cta__eyebrow--dorado"
@@ -178,8 +179,8 @@ function EventoCTA() {
                 </div>
               </div>
             </div>
-          }
-        />
+          </div>
+        </div>
 
         <div className="evento-cta__controles">
           <button

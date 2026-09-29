@@ -9,17 +9,18 @@
   color: #fefefe;
 }
 
-/* PixelSwap ocupa la sección de borde a borde: el fondo (oscuro u oscuro +
-   foto) vive dentro de cada panel, no en .evento-cta, para que la grilla de
-   píxeles cubra también el fondo y no solo el texto. */
-.evento-cta__swap {
-  width: 100%;
-}
-
+/* PixelReveal ocupa la sección de borde a borde: el fondo (oscuro, o la
+   foto revelada) vive dentro de .evento-cta__panel, no en .evento-cta, para
+   que el mosaico cubra también el fondo y no solo el texto. .evento-cta__panel
+   es el contenedor posicionado del que cuelgan el mosaico (absoluto, detrás),
+   la capa oscura de contraste (absoluta, en medio) y el texto (en flujo,
+   arriba de todo). */
 .evento-cta__panel {
+  position: relative;
   min-height: 100vh;
   width: 100%;
   box-sizing: border-box;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -31,26 +32,67 @@
      terminar tan cerca del borde inferior que el control se le monta
      encima. */
   padding: clamp(3.5rem, 6vh, 6rem) 1.5rem clamp(7rem, 16vh, 9rem);
-}
-
-.evento-cta__panel--primario {
   background: radial-gradient(circle at 50% 32%, rgba(246, 169, 75, 0.1) 0%, transparent 55%),
     var(--eventos-fondo, #0d0d0d);
 }
 
-/* La imagen de fondo se aplica por style inline desde EventoCTA.jsx (con
-   PUBLIC_URL, igual que los videos de los heros): css-loader intenta
-   resolver un url() de CSS como módulo de webpack, no como ruta pública en
-   tiempo de ejecución, y falla al compilar. Aquí solo el tamaño/posición. */
-.evento-cta__panel--secundario {
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+.evento-cta__mosaico-fondo {
+  z-index: 0;
+}
+
+/* Capa oscura de contraste sobre la foto revelada: un solo fundido de
+   opacidad (CSS, no por cuadro) para que el texto blanco se lea bien una
+   vez terminada la revelación. */
+.evento-cta__overlay-oscuro {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(rgba(10, 8, 6, 0.78), rgba(10, 8, 6, 0.82));
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  pointer-events: none;
+}
+
+/* Los hijos de .evento-cta__panel se apilan por DOM order salvo que se les
+   dé z-index explícito: sin esto, el contenido de texto (no posicionado)
+   pintaría por debajo de las capas absolutas del fondo. */
+.evento-cta__grid-texto {
+  position: relative;
+  z-index: 2;
+  width: 100%;
 }
 
 .evento-cta__texto {
   text-align: center;
   width: 100%;
+}
+
+/* Los dos bloques de texto (primario/secundario) se apilan en la misma
+   celda de grid y cruzan con un fundido + leve desplazamiento vertical,
+   retrasado hasta el punto medio de la revelación del fondo (duration del
+   PixelReveal = 1200ms). El bloque oculto usa visibility (no display) para
+   conservar su altura en el grid y salir del Tab/árbol de accesibilidad. */
+.evento-cta__texto-stack {
+  position: relative;
+  display: grid;
+  width: 100%;
+}
+
+.evento-cta__texto-capa {
+  grid-area: 1 / 1;
+  width: 100%;
+  min-height: 100%;
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+  transition: opacity 0.45s ease 0.6s, transform 0.45s ease 0.6s, visibility 0s linear 0.6s;
+}
+
+.evento-cta__texto-capa[data-visible='false'] {
+  opacity: 0;
+  transform: translateY(14px);
+  visibility: hidden;
+  transition: opacity 0.45s ease 0.6s, transform 0.45s ease 0.6s, visibility 0s linear 1.05s;
 }
 
 .evento-cta__eyebrow {
@@ -156,8 +198,8 @@
   box-shadow: 0 14px 32px rgba(246, 169, 75, 0.45);
 }
 
-/* Controles persistentes (fuera de los paneles: PixelSwap los clonaría por
-   cada píxel si vivieran adentro). Anclados cerca del borde inferior de la
+/* Controles persistentes (fuera de .evento-cta__panel, no dentro del texto
+   que cruza con el fondo). Anclados cerca del borde inferior de la
    sección en vez de "pegados" al botón de reserva, cuya posición varía
    según el alto del contenido centrado; así su ubicación es estable sin
    importar qué panel esté activo. */
@@ -209,6 +251,13 @@
 @media (hover: hover) {
   .evento-cta__hint {
     display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evento-cta__texto-capa,
+  .evento-cta__overlay-oscuro {
+    transition: none;
   }
 }
 
