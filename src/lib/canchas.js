@@ -55,6 +55,21 @@ export function colorContraste(hex) {
   return contrasteBlanco >= contrasteOscuro ? '#ffffff' : '#161616';
 }
 
+// Objeto de estilo en línea con las variables CSS del tema de acento
+// (--accent, --accent-soft, --accent-contrast) a partir del colorAcento de un
+// deporte. Única función que arma este objeto: tanto `.vista-canchas` como el
+// visor en grande la usan para que ambos calculen el mismo tema sin duplicar
+// la fórmula (el visor no depende de heredarlas de `.vista-canchas`, ya que
+// vive en el "top layer" del navegador al abrirse con showModal()).
+export function estiloAcento(acento) {
+  const color = acento || '#1779ba';
+  return {
+    '--accent': color,
+    '--accent-soft': `color-mix(in srgb, ${color} 25%, white)`,
+    '--accent-contrast': colorContraste(color),
+  };
+}
+
 // No hay fotografía real de cada cancha todavía: en vez de enlazar imágenes
 // de stock ajenas al proyecto, se genera una textura local (degradado con el
 // acento del deporte) para el fondo de cada card del carrusel. El nombre real
