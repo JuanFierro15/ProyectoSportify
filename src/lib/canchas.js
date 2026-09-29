@@ -1,7 +1,7 @@
 /**
  * Helpers de presentación derivados de las canchas del ReservasContext.
- * Compartidos por Catalogo y VistaCanchas para no duplicar la agrupación
- * por deporte ni el título corto de cada cancha.
+ * Usados por VistaCanchas para agrupar canchas por deporte, generar el
+ * título corto de cada una y su textura de fondo en el carrusel.
  */
 
 export function canchasDelDeporte(canchas, slug) {

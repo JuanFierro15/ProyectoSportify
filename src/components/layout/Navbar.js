@@ -14,7 +14,7 @@ import './Navbar.css';
  * - Al hacer scroll hacia arriba o mover el cursor hacia el borde superior, la barra
  *   se vuelve a desplegar suavemente.
  * - Adapta automáticamente su contraste: transparente con letras blancas flotantes sobre
- *   el hero video, y superficie clara con letras oscuras al desplazarse por el catálogo.
+ *   el hero video, y superficie clara con letras oscuras al desplazarse más allá de los heros.
  */
 function Navbar() {
   const [visible, setVisible] = useState(true);
@@ -25,10 +25,10 @@ function Navbar() {
     let lastScrollY = window.scrollY;
 
     const checkHero = () => {
-      const transicion = document.querySelector('.transicion-catalogo');
-      if (!transicion) return true;
-      const rect = transicion.getBoundingClientRect();
-      return rect.top > 80;
+      const heros = document.getElementById('hero-placeholder');
+      if (!heros) return true;
+      const rect = heros.getBoundingClientRect();
+      return rect.bottom > 80;
     };
 
     const handleScroll = () => {

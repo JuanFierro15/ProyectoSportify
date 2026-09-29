@@ -4,7 +4,6 @@ import { VistaCanchasProvider, useVistaCanchas } from './context/VistaCanchasCon
 import { DEPORTES } from './data/deportes';
 import Navbar from './components/layout/Navbar';
 import DeporteHero from './components/hero/DeporteHero';
-import TransicionCatalogo from './components/canchas/TransicionCatalogo';
 import VistaCanchas from './components/canchas/VistaCanchas';
 import EventoCTA from './components/eventos/EventoCTA';
 import Footer from './components/layout/Footer';
@@ -23,13 +22,14 @@ const VIDEOS = {
 
 /**
  * Esqueleto de la aplicación.
- * Navbar + heros por deporte (Bloque 2.5) + transición + vista superpuesta de
- * canchas (Bloque 3, rediseñado) + Footer, envuelto en <ReservasProvider>
- * (Bloque 4) y <VistaCanchasProvider> (estado de la vista de canchas).
+ * Navbar + heros por deporte (Bloque 2.5) + EventoCTA + Footer, envuelto en
+ * <ReservasProvider> (Bloque 4) y <VistaCanchasProvider> (estado de la vista
+ * superpuesta de canchas, Bloque 3 rediseñado). La vista de canchas
+ * (`<VistaCanchas>`) no vive en el flujo de scroll: se monta siempre pero solo
+ * se renderiza (vía portal a `document.body`) cuando el usuario la abre.
  *
  * Los deportes (nombre + colorAcento) salen de `src/data/deportes.js`, misma
- * fuente para heros, transición, cards y la vista de canchas -> continuidad
- * visual.
+ * fuente para heros, cards y la vista de canchas -> continuidad visual.
  *
  * Ids que otros componentes referencian (sin tocarlos):
  *  - #hero-placeholder     -> enlace "Inicio" del navbar
@@ -71,8 +71,6 @@ function AppContenido() {
           />
         ))}
       </div>
-
-      <TransicionCatalogo />
 
       <EventoCTA />
 

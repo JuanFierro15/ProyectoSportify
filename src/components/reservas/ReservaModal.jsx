@@ -9,7 +9,7 @@ import './ReservaModal.css';
 /**
  * ReservaModal — modal para reservar un horario de una cancha.
  *
- * - Se abre desde el botón "Reservar" de CanchaCard.
+ * - Se abre desde el botón "Reservar" del panel de detalle de VistaCanchas.
  * - Contenedor con las clases de Reveal de Foundation (`reveal-overlay` +
  *   `reveal`), abierto/cerrado desde React (sin la JS de Foundation).
  * - Selector de día: componente compartido `<SelectorDia>` (mismo que usa el

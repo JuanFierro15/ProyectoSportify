@@ -7,10 +7,4 @@
   min-height: 100vh;
 }
 
-main.grid-container {
-  flex: 1 0 auto;
-  padding-top: 2rem;
-  padding-bottom: 2rem;
-}
-
-/* Cada bloque (hero, catálogo, evento, footer, navbar) trae sus propios estilos. */
+/* Cada bloque (hero, vista de canchas, evento, footer, navbar) trae sus propios estilos. */
