@@ -218,7 +218,16 @@ function VisorCancha({ cancha, infoDeporte, acento, abierto, onCerrar, onReserva
       aria-labelledby={tituloId}
       onClose={onCerrar}
       onClick={(e) => {
-        if (e.target === dialogRef.current) onCerrar();
+        // El <dialog> ahora cubre toda la pantalla (sin el padding propio
+        // que antes dejaba un "fondo" clicable alrededor del contenido), así
+        // que ya no alcanza con comparar el target contra el propio
+        // <dialog>: un clic en la capa de fondo difuminada o en el espacio
+        // vacío de `.vista-canchas__visor-contenido` también debe cerrar.
+        // Cierra salvo que el clic haya caído dentro de la imagen o de la
+        // columna de información (el botón "Reservar" incluido).
+        if (!e.target.closest('.vista-canchas__visor-imagen-wrap, .vista-canchas__visor-info')) {
+          onCerrar();
+        }
       }}
     >
       <div className="vista-canchas__visor-contenido">
@@ -430,6 +439,31 @@ function VistaCanchas() {
       document.body.style.paddingRight = paddingPrevio;
     };
   }, [montado]);
+
+  // El scroll de la PÁGINA ya queda bloqueado arriba mientras la vista está
+  // montada, pero `.vista-canchas` (este contenedor, `rootRef`) tiene su
+  // propio `overflow-y: auto` -- es el que de verdad hace scroll detrás del
+  // visor -- así que con el visor abierto se bloquea también a él, con el
+  // mismo truco de compensar el ancho de su propia barra con padding-right
+  // para que no haya salto de layout al aparecer/desaparecer. No se toca
+  // `scrollTop`: al volver a poner `overflow: auto` el navegador conserva la
+  // posición de scroll tal como estaba.
+  useEffect(() => {
+    if (!visorAbierto) return undefined;
+    const el = rootRef.current;
+    if (!el) return undefined;
+    const anchoBarra = el.offsetWidth - el.clientWidth;
+    const overflowPrevio = el.style.overflow;
+    const paddingPrevio = el.style.paddingRight;
+    el.style.overflow = 'hidden';
+    if (anchoBarra > 0) {
+      el.style.paddingRight = `${anchoBarra}px`;
+    }
+    return () => {
+      el.style.overflow = overflowPrevio;
+      el.style.paddingRight = paddingPrevio;
+    };
+  }, [visorAbierto]);
 
   // Escape cierra la vista, salvo que el modal de reserva o el visor en
   // grande estén abiertos encima (ambos manejan su propio Escape: el modal
