@@ -478,25 +478,49 @@
 }
 
 /* --- Visor a pantalla completa: foto en grande de la tarjeta activa,
-   abierto con showModal() sobre un <dialog> nativo. El propio <dialog> hace
-   de "fondo": ocupa toda la ventana con un tinte oscuro, y el clic fuera de
-   `.vista-canchas__visor-contenido` (el cuadro visible) cae directo sobre
-   él, así que cerrar con clic en el fondo es solo comparar el target del
-   clic contra el propio <dialog> (ver VistaCanchas.jsx). --- */
+   abierto con showModal() sobre un <dialog> nativo.
+
+   El navegador aplica sus propios `max-width`/`max-height` a todo
+   `dialog:modal` (`calc(100% - 6px - 2em)`, para dejarle un margen visible
+   por defecto); si no se anulan, ese margen deja ver la vista de canchas de
+   fondo -- solo atenuada por el `::backdrop` -- por debajo del <dialog>.
+   Aquí se fuerza a `none` y el tamaño real sale de width/height: 100dvw /
+   100dvh (con vw/vh como respaldo en navegadores sin soporte de unidades
+   dinámicas), sin margin ni padding propios: el <dialog> pasa a ser una
+   superficie opaca de borde a borde, y el respiro visual alrededor de la
+   imagen/información pasa a ser el padding de `.vista-canchas__visor-
+   contenido` (ver más abajo), no el del propio <dialog>.
+
+   El clic fuera del contenido real (imagen o columna de información) cae
+   sobre el <dialog>, sobre `.vista-canchas__visor-contenido` o sobre la capa
+   de fondo difuminado -- nunca dentro de `.vista-canchas__visor-imagen-wrap`
+   ni de `.vista-canchas__visor-info` --, así que cerrar con clic en el fondo
+   se resuelve con un `closest()` contra esos dos contenedores (ver
+   VistaCanchas.jsx), no comparando el target contra el propio <dialog>. --- */
 .vista-canchas__visor {
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
-  max-width: 100vw;
-  max-height: 100vh;
+  width: 100dvw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
   margin: 0;
-  padding: clamp(1rem, 4vw, 2.5rem);
+  padding: 0;
   border: none;
-  background: rgba(8, 9, 13, 0.82);
+  background: #05060a;
   color: #fff;
   opacity: 1;
   transition: opacity 0.22s ease;
+}
+
+/* Respaldo: el ::backdrop del navegador cubre siempre toda la ventana
+   (independiente del tamaño del propio <dialog>), así que si por lo que sea
+   el <dialog> no llegara a cubrirla entera, esto sigue tapando la vista de
+   canchas por completo en vez de solo atenuarla. */
+.vista-canchas__visor::backdrop {
+  background: #05060a;
 }
 
 .vista-canchas__visor[open] {
@@ -524,9 +548,15 @@
   width: 100%;
   height: 100%;
   max-width: min(1440px, 100%);
+  /* El respiro que antes daba el padding del propio <dialog> (ver comentario
+     de arriba): ahora el <dialog> es la ventana completa sin padding, así
+     que ese espacio alrededor de la imagen/información lo pone este
+     contenedor -- que sigue midiendo el área completa, no achicándose por
+     su propio padding -- para que quede tapado por su fondo opaco y no por
+     el `background` translúcido de antes. */
+  padding: clamp(1rem, 4vw, 2.5rem);
   overflow: hidden;
   background: #0c0e13;
-  border-radius: 16px;
   transform: scale(1);
   transition: transform 0.22s ease;
 }
@@ -549,8 +579,12 @@
 
 .vista-canchas__visor-cerrar {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
+  /* Antes quedaba dentro del padding del <dialog>, así que en pantallas
+     grandes terminaba bastante más adentro que esto; ahora que el <dialog>
+     no tiene padding propio, se separa un poco más del borde real de la
+     ventana para no quedar pegado a la esquina. */
+  top: clamp(0.75rem, 2.5vw, 1.5rem);
+  right: clamp(0.75rem, 2.5vw, 1.5rem);
   z-index: 2;
   display: grid;
   place-items: center;
