@@ -2,7 +2,7 @@
    Navbar / Site Header
    ========================================================================== */
 
-/* El contenedor header cubre todo el ancho de forma uniforme */
+/* El contenedor header fijo cubre todo el ancho con transición suave */
 .site-header {
   position: fixed;
   top: 0;
@@ -10,17 +10,17 @@
   right: 0;
   width: 100%;
   z-index: 1000;
-  background-color: #ffffff !important;
-  border-bottom: 1px solid #e2e8f0;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
   will-change: transform;
 }
 
 /* Estado oculto: se desliza hacia arriba */
 .site-header--hidden {
   transform: translateY(-100%);
-  box-shadow: none;
+  box-shadow: none !important;
 }
 
 /* Estado visible: posicionado en el tope */
@@ -28,21 +28,105 @@
   transform: translateY(0);
 }
 
-/* Forzar que todos los contenedores hijos de Foundation adopten el mismo fondo blanco,
-   eliminando cualquier recuadro gris (.top-bar, .top-bar ul, .menu de Foundation) */
-.site-header,
-.site-header #main-navbar,
-.site-header .top-bar,
-.site-header .top-bar-left,
-.site-header .top-bar-right,
-.site-header .top-bar ul,
-.site-header .menu {
-  background-color: #ffffff !important;
-  background: #ffffff !important;
+/* ==========================================================================
+   MODO 1: Transparente (sobre los videos hero / estado inicial)
+   Fondo completamente invisible, solo las letras flotando sobre el video
+   ========================================================================== */
+.site-header--transparent,
+.site-header--transparent #main-navbar,
+.site-header--transparent .top-bar,
+.site-header--transparent .top-bar-left,
+.site-header--transparent .top-bar-right,
+.site-header--transparent .top-bar ul,
+.site-header--transparent .menu {
+  background-color: transparent !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
+.site-header--transparent .site-header__brand-text {
+  color: #ffffff !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75);
+}
+
+.site-header--transparent .site-header__brand-icon {
+  color: #f6a94b !important;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7));
+}
+
+.site-header--transparent .menu a {
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+  font-size: 1.08rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em;
+  padding: 0.55rem 1.05rem !important;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.site-header--transparent .menu a:hover,
+.site-header--transparent .menu a:focus-visible {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(6px);
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   MODO 2: Con fondo claro (fuera de los videos, sobre el catálogo)
+   Fondo blanco con desenfoque suave para máxima legibilidad
+   ========================================================================== */
+.site-header--scrolled {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06) !important;
+}
+
+.site-header--scrolled #main-navbar,
+.site-header--scrolled .top-bar,
+.site-header--scrolled .top-bar-left,
+.site-header--scrolled .top-bar-right,
+.site-header--scrolled .top-bar ul,
+.site-header--scrolled .menu {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+.site-header--scrolled .site-header__brand-text {
+  color: #0f172a !important;
+  text-shadow: none;
+}
+
+.site-header--scrolled .site-header__brand-icon {
+  color: #1779ba !important;
+  filter: none;
+}
+
+.site-header--scrolled .menu a {
+  color: #0c5484 !important; /* Ratio > 7:1 contra blanco */
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  padding: 0.55rem 1rem !important;
+  border-radius: 8px;
+  text-shadow: none;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.site-header--scrolled .menu a:hover,
+.site-header--scrolled .menu a:focus-visible {
+  color: #083b5d !important;
+  background-color: #f1f5f9 !important;
+  outline: 2px solid #0c5484;
+  outline-offset: 2px;
+}
+
+/* Layout general de la barra */
 .site-header .top-bar {
-  padding: 0.5rem 1.5rem;
+  padding: 0.65rem 1.75rem;
   max-width: 1200px;
   margin: 0 auto;
   display: flex;
@@ -50,34 +134,26 @@
   align-items: center;
 }
 
-/* Marca / Logo */
 .site-header__brand {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.65rem;
   font-weight: 800;
-  font-size: 1.18rem;
-  color: #0f172a !important;
+  font-size: 1.28rem;
   text-decoration: none;
   letter-spacing: -0.015em;
   padding: 0.35rem 0;
 }
 
 .site-header__brand-icon {
-  color: #1779ba;
   display: inline-flex;
   align-items: center;
 }
 
-.site-header__brand-text {
-  color: #0f172a;
-}
-
-/* Menú de navegación alineado */
 .site-header .menu {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.5rem;
   margin: 0;
 }
 
@@ -85,42 +161,25 @@
   list-style: none;
 }
 
-.site-header .menu a {
-  color: #0c5484 !important; /* Ratio de contraste > 7.2:1 contra fondo blanco */
-  font-weight: 600;
-  font-size: 0.95rem;
-  padding: 0.5rem 0.9rem !important;
-  border-radius: 6px;
-  text-decoration: none;
-  transition: color 0.15s ease, background-color 0.15s ease;
-}
-
-.site-header .menu a:hover,
-.site-header .menu a:focus-visible {
-  color: #083b5d !important;
-  background-color: #f1f5f9 !important;
-  outline: 2px solid #0c5484;
-  outline-offset: 2px;
-}
-
-/* Espacio de anclaje para que la barra fija no tape los títulos al hacer click */
+/* Espacio de anclaje para no tapar títulos con la barra fija */
 #hero-placeholder,
 #canchas-placeholder,
 #reservas-placeholder {
-  scroll-margin-top: 75px;
+  scroll-margin-top: 80px;
 }
 
 @media (max-width: 640px) {
   .site-header .top-bar {
-    padding: 0.5rem 0.85rem;
+    padding: 0.5rem 1rem;
   }
 
   .site-header__brand-text {
-    font-size: 1.05rem;
+    font-size: 1.1rem;
   }
 
-  .site-header .menu a {
-    padding: 0.4rem 0.6rem !important;
-    font-size: 0.88rem;
+  .site-header--transparent .menu a,
+  .site-header--scrolled .menu a {
+    padding: 0.45rem 0.65rem !important;
+    font-size: 0.92rem !important;
   }
 }

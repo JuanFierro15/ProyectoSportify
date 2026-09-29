@@ -3,62 +3,54 @@ import { Trophy } from 'lucide-react';
 import './Navbar.css';
 
 /**
- * Barra de navegación superior.
+ * Barra de navegación superior interactiva.
  *
- * Comportamiento:
- * - Durante la sección de placeholders / hero videos (#hero-placeholder),
- *   la navbar permanece COMPLETAMENTE OCULTA para dar protagonismo total
- *   al video y la animación en pantalla completa (100vh).
- * - Una vez que el usuario sale de los placeholders (al llegar a la sección
- *   de transición y catálogo), la barra se activa.
- * - En las secciones posteriores:
- *     - Al hacer scroll hacia abajo -> se oculta.
- *     - Al hacer scroll hacia arriba o mover el cursor hacia arriba -> se despliega.
- *     - Si se regresa al tope (#hero-placeholder) -> se oculta de inmediato.
+ * Características:
+ * - Al cargar la página o presionar "Inicio", la barra se visualiza en su estado
+ *   inicial transparente (fondo invisible, solo letras legibles y destacadas sobre el video),
+ *   permitiendo ir directamente a Canchas o Eventos sin necesidad de ver todos los videos.
+ * - Al hacer scroll hacia abajo, la barra se oculta inmediatamente.
+ * - Al hacer scroll hacia arriba o mover el cursor hacia el borde superior, la barra
+ *   se vuelve a desplegar suavemente.
+ * - Adapta automáticamente su contraste: transparente con letras blancas flotantes sobre
+ *   el hero video, y superficie clara con letras oscuras al desplazarse por el catálogo.
  */
 function Navbar() {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const [sobreHero, setSobreHero] = useState(true);
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
 
-    const estaEnPlaceholder = () => {
+    const checkHero = () => {
       const transicion = document.querySelector('.transicion-catalogo');
       if (!transicion) return true;
       const rect = transicion.getBoundingClientRect();
-      // Si la sección de transición aún no ha llegado a la parte superior del viewport
-      return rect.top > 60;
+      return rect.top > 80;
     };
 
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
+      const enHero = checkHero();
+      setSobreHero(enHero);
 
-      if (estaEnPlaceholder()) {
-        // En los heroes / placeholders: siempre oculta
+      if (currentScrollY <= 25) {
+        // Estado inicial o tope de página: siempre visible y transparente
+        setVisible(true);
+      } else if (currentScrollY > lastScrollY + 5) {
+        // Al scrollear hacia abajo: ocultar inmediatamente
         setVisible(false);
-      } else {
-        // Fuera de los placeholders:
-        if (currentScrollY < lastScrollY - 4) {
-          // Scroll hacia arriba -> mostrar
-          setVisible(true);
-        } else if (currentScrollY > lastScrollY + 4) {
-          // Scroll hacia abajo -> ocultar
-          setVisible(false);
-        }
+      } else if (currentScrollY < lastScrollY - 5) {
+        // Al scrollear hacia arriba: desplegar inmediatamente
+        setVisible(true);
       }
 
       lastScrollY = currentScrollY;
     };
 
     const handleMouseMove = (e) => {
-      // Si está en el hero placeholder, no se despliega nunca
-      if (estaEnPlaceholder()) {
-        setVisible(false);
-        return;
-      }
-
-      // Fuera del hero: si el cursor se acerca al borde superior (< 80px)
-      // o se desplaza con dirección hacia arriba en el tercio superior de la pantalla
+      // Si el cursor se acerca al borde superior (< 80px)
+      // o se desplaza hacia arriba con intención en la zona superior
       if (e.clientY <= 80 || (e.movementY < -3 && e.clientY < 260)) {
         setVisible(true);
       }
@@ -67,10 +59,8 @@ function Navbar() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
-    // Comprobación inicial al montar
-    if (estaEnPlaceholder()) {
-      setVisible(false);
-    }
+    // Sincronizar estado inicial al montar
+    setSobreHero(checkHero());
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
@@ -78,18 +68,26 @@ function Navbar() {
     };
   }, []);
 
+  const irAInicio = () => {
+    setVisible(true);
+    setSobreHero(true);
+  };
+
   return (
     <header
       className={`site-header ${
         visible ? 'site-header--visible' : 'site-header--hidden'
-      }`}
-      aria-hidden={!visible}
+      } ${sobreHero ? 'site-header--transparent' : 'site-header--scrolled'}`}
     >
       <div className="top-bar" id="main-navbar">
         <div className="top-bar-left">
-          <a href="#hero-placeholder" className="site-header__brand">
+          <a
+            href="#hero-placeholder"
+            className="site-header__brand"
+            onClick={irAInicio}
+          >
             <span className="site-header__brand-icon" aria-hidden="true">
-              <Trophy size={20} />
+              <Trophy size={22} />
             </span>
             <span className="site-header__brand-text">Reservas Deportivas</span>
           </a>
@@ -97,7 +95,9 @@ function Navbar() {
         <div className="top-bar-right">
           <ul className="menu">
             <li>
-              <a href="#hero-placeholder">Inicio</a>
+              <a href="#hero-placeholder" onClick={irAInicio}>
+                Inicio
+              </a>
             </li>
             <li>
               <a href="#canchas-placeholder">Canchas</a>
