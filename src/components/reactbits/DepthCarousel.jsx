@@ -373,7 +373,31 @@ const DepthCarousel = ({
             aria-hidden={active !== i}
             onClick={() => onCardClick(i)}
           >
-            <img className="depth-carousel__img" src={item.image} alt={item.alt || ''} draggable={false} />
+            {/* width/height/loading/decoding/onError: adición manual sobre el
+                componente descargado del registro, para fotos reales (evitan
+                salto de layout, difieren la carga de las cards no visibles y
+                caen al degradado de respaldo en item.fallback si la imagen
+                real falla). Sin item.width/height o item.fallback, el
+                comportamiento es idéntico al original. */}
+            <img
+              className="depth-carousel__img"
+              src={item.image}
+              alt={item.alt || ''}
+              draggable={false}
+              width={item.width}
+              height={item.height}
+              decoding="async"
+              loading={i === 0 ? 'eager' : 'lazy'}
+              onError={
+                item.fallback
+                  ? (e) => {
+                      if (e.currentTarget.src !== item.fallback) {
+                        e.currentTarget.src = item.fallback;
+                      }
+                    }
+                  : undefined
+              }
+            />
             <span
               className="depth-carousel__tint"
               ref={el => (overlayRefs.current[i] = el)}

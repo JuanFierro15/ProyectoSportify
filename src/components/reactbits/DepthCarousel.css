@@ -63,12 +63,14 @@
   mix-blend-mode: multiply;
 }
 
-/* Adición manual: contenedor del contenido propio pasado vía `renderOverlay`. */
+/* Adición manual: contenedor del contenido propio pasado vía `renderOverlay`.
+   Anclado arriba (no abajo): con fotos reales, el título necesita protegerse
+   del cielo/techo claro que suele quedar en la parte superior de la toma. */
 .depth-carousel__overlay {
   position: absolute;
   inset: 0;
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   pointer-events: none;
 }
 

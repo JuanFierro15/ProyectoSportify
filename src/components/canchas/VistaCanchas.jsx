@@ -26,6 +26,20 @@ const formatoPrecio = new Intl.NumberFormat('es-CO', {
 // ve vacío): se usa un grid estático centrado en su lugar.
 const MINIMO_PARA_CARRUSEL = 3;
 
+// Dimensiones reales de las fotos en public/img/canchas/ (720x893): se pasan
+// como width/height del <img> para que el navegador reserve el espacio antes
+// de que cargue y no haya salto de layout.
+const ANCHO_IMAGEN = 720;
+const ALTO_IMAGEN = 893;
+
+// Texto alternativo de cada card del carrusel, ej. "Cancha 2 de vóley playa
+// con iluminación nocturna" (nombre corto + deporte + primera característica).
+function altCancha(cancha, infoDeporte) {
+  const base = `${tituloCancha(cancha)} de ${infoDeporte ? infoDeporte.nombre.toLowerCase() : cancha.deporte}`;
+  const rasgo = cancha.caracteristicas && cancha.caracteristicas[0];
+  return rasgo ? `${base} con ${rasgo.toLowerCase()}` : base;
+}
+
 // Primer horario de hoy que sigue disponible y todavía no pasó (comparado
 // contra la hora real del navegador). Puramente de presentación: no toca el
 // cálculo de disponibilidad del ReservasContext.
@@ -398,11 +412,19 @@ function VistaCanchas() {
           ) : (
             <DepthCarousel
               key={deporteMostrado}
-              items={canchasFiltradas.map((c) => ({
-                id: c.id,
-                image: imagenPlaceholderCancha(acento),
-                alt: '',
-              }))}
+              items={canchasFiltradas.map((c) => {
+                const degradado = imagenPlaceholderCancha(acento);
+                return c.imagen
+                  ? {
+                      id: c.id,
+                      image: c.imagen,
+                      fallback: degradado,
+                      width: ANCHO_IMAGEN,
+                      height: ALTO_IMAGEN,
+                      alt: altCancha(c, infoDeporte),
+                    }
+                  : { id: c.id, image: degradado, alt: '' };
+              })}
               cardWidth={240}
               cardHeight={300}
               radius={12}
