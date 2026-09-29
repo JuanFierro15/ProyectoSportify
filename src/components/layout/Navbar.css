@@ -163,7 +163,7 @@
 
 /* Espacio de anclaje para no tapar títulos con la barra fija */
 #hero-placeholder,
-#reservas-placeholder {
+#eventos {
   scroll-margin-top: 80px;
 }
 

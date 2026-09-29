@@ -44,7 +44,7 @@ function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#reservas-placeholder">Eventos especiales</a>
+                <a href="#eventos">Eventos especiales</a>
               </li>
             </ul>
           </div>

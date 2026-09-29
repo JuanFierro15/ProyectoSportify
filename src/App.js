@@ -32,8 +32,8 @@ const VIDEOS = {
  * fuente para heros, cards y la vista de canchas -> continuidad visual.
  *
  * Ids que otros componentes referencian (sin tocarlos):
- *  - #hero-placeholder     -> enlace "Inicio" del navbar
- *  - #reservas-placeholder -> enlace "Reservar" del navbar (lo lleva EventoCTA)
+ *  - #hero-placeholder -> enlace "Inicio" del navbar
+ *  - #eventos           -> enlace "Eventos especiales" del navbar/footer (lo lleva EventoCTA)
  *
  * `#canchas-placeholder` ya NO existe en el DOM: el catálogo dejó de vivir en
  * el flujo de scroll. Los botones "Ver canchas de..." de los DeporteHero y los
