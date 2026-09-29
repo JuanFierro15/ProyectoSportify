@@ -43,7 +43,15 @@ const SUAVIZADO = 0.3;
  *  - `ScrollTrigger.refresh()` cuando el video reporta su duración, para que el
  *    largo del pin (que depende de esa duración) quede bien medido.
  */
-function DeporteHero({ nombre, videoSrc, tituloCTA, colorAcento }) {
+function DeporteHero({
+  nombre,
+  videoSrc,
+  tituloCTA,
+  colorAcento,
+  eyebrow = 'Nuestras canchas',
+  descripcion,
+  preload = 'metadata',
+}) {
   const rootRef = useRef(null);
   const contenidoRef = useRef(null);
   const videoRef = useRef(null);
@@ -52,6 +60,9 @@ function DeporteHero({ nombre, videoSrc, tituloCTA, colorAcento }) {
     const seccion = rootRef.current;
     const contenido = contenidoRef.current;
     const video = videoRef.current;
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     // Progreso objetivo del scroll (0..1) que persigue el bucle del ticker.
     let progresoObjetivo = 0;
@@ -64,8 +75,13 @@ function DeporteHero({ nombre, videoSrc, tituloCTA, colorAcento }) {
           trigger: seccion,
           start: 'top top',
           // El pin dura lo que dure el video (en px de scroll).
-          end: () =>
-            '+=' + Math.max(1, Math.round((video.duration || 1) * PX_POR_SEGUNDO)),
+          end: () => {
+            const dur =
+              video && Number.isFinite(video.duration) && video.duration > 0
+                ? video.duration
+                : 1;
+            return '+=' + Math.max(1, Math.round(dur * PX_POR_SEGUNDO));
+          },
           scrub: true,
           pin: true,
           anticipatePin: 1,
@@ -101,7 +117,10 @@ function DeporteHero({ nombre, videoSrc, tituloCTA, colorAcento }) {
       if (Math.abs(delta) < 0.033) return; // ~1 frame: nada que hacer
       video.currentTime += delta * SUAVIZADO;
     };
-    gsap.ticker.add(seguirVideo);
+
+    if (!prefersReducedMotion) {
+      gsap.ticker.add(seguirVideo);
+    }
 
     // La duración del video llega de forma asíncrona y de ella depende el largo
     // del pin -> re-medir cuando esté disponible.
@@ -109,7 +128,9 @@ function DeporteHero({ nombre, videoSrc, tituloCTA, colorAcento }) {
     video.addEventListener('loadedmetadata', onLoadedMetadata);
 
     return () => {
-      gsap.ticker.remove(seguirVideo);
+      if (!prefersReducedMotion) {
+        gsap.ticker.remove(seguirVideo);
+      }
       video.removeEventListener('loadedmetadata', onLoadedMetadata);
       ctx.revert();
     };
@@ -128,7 +149,9 @@ function DeporteHero({ nombre, videoSrc, tituloCTA, colorAcento }) {
           src={videoSrc}
           muted
           playsInline
-          preload="auto"
+          preload={preload}
+          tabIndex="-1"
+          aria-hidden="true"
         />
       </div>
 
@@ -137,11 +160,11 @@ function DeporteHero({ nombre, videoSrc, tituloCTA, colorAcento }) {
       <div className="grid-container deporte-hero__contenido" ref={contenidoRef}>
         <div className="grid-x grid-padding-x align-center">
           <div className="cell small-12 medium-10 large-8">
-            <p className="deporte-hero__eyebrow">Nuestras canchas</p>
+            <p className="deporte-hero__eyebrow">{eyebrow}</p>
             <h2 className="deporte-hero__titulo">{nombre}</h2>
             <p className="deporte-hero__texto">
-              Viví la experiencia del {nombre.toLowerCase()} en un espacio
-              pensado para jugar, con torneos y eventos durante todo el año.
+              {descripcion ||
+                `Viví la experiencia del ${nombre.toLowerCase()} en un espacio pensado para disfrutar al máximo cada partido.`}
             </p>
             <a
               className="button large deporte-hero__cta"

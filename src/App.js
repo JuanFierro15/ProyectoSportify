@@ -47,6 +47,8 @@ function App() {
               videoSrc={VIDEOS[d.slug]}
               tituloCTA={`Ver canchas de ${d.nombre.toLowerCase()}`}
               colorAcento={d.colorAcento}
+              eyebrow={d.eyebrow}
+              descripcion={d.descripcion}
             />
           ))}
         </div>
