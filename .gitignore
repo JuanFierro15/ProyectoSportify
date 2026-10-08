@@ -35,3 +35,6 @@ lighthouse-report*.json
 # Videos fuente en alta calidad de los heros: se guardan localmente, no en el
 # repo. En public/media/ solo van las versiones web ligeras (hero_*.mp4).
 public/media/fuente/
+
+# Respaldo local de los videos viejos de los heros
+/backup_videos_viejos/
