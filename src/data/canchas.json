@@ -20,7 +20,7 @@
       "deporte": "voley-playa",
       "nombre": "Cancha Voley Playa 1",
       "precioHora": 40000,
-      "caracteristicas": ["Al aire libre", "Arena importada"],
+      "caracteristicas": ["Vista al mar", "Arena blanca", "Al aire libre"],
       "imagen": "/img/canchas/voley-1.webp",
       "ocupadosSemilla": [
         ["12:00", "13:00", "18:00"],
@@ -37,7 +37,7 @@
       "deporte": "voley-playa",
       "nombre": "Cancha Voley Playa 2",
       "precioHora": 44000,
-      "caracteristicas": ["Iluminación nocturna", "Arena importada"],
+      "caracteristicas": ["Líneas de tensión", "Arena compacta", "Atardecer"],
       "imagen": "/img/canchas/voley-2.webp",
       "ocupadosSemilla": [
         ["08:00", "09:00", "17:00", "18:00", "19:00", "20:00"],
@@ -54,7 +54,7 @@
       "deporte": "voley-playa",
       "nombre": "Cancha Voley Playa 3",
       "precioHora": 48000,
-      "caracteristicas": ["Con sombra", "Arena importada"],
+      "caracteristicas": ["Red reglamentaria", "Protección en postes", "Arena nivelada"],
       "imagen": "/img/canchas/voley-3.webp",
       "ocupadosSemilla": [
         ["09:00", "14:00", "15:00"],
@@ -71,7 +71,7 @@
       "deporte": "padel",
       "nombre": "Cancha Pádel 1",
       "precioHora": 60000,
-      "caracteristicas": ["Al aire libre", "Paredes de vidrio"],
+      "caracteristicas": ["Pista indoor", "Césped azul premium", "Vidrio templado"],
       "imagen": "/img/canchas/padel-1.webp",
       "ocupadosSemilla": [
         ["10:00", "11:00", "16:00", "19:00"],
@@ -88,7 +88,7 @@
       "deporte": "padel",
       "nombre": "Cancha Pádel 2",
       "precioHora": 65000,
-      "caracteristicas": ["Al aire libre", "Paredes de vidrio"],
+      "caracteristicas": ["Climatizada", "Iluminación profesional", "Zona lounge"],
       "imagen": "/img/canchas/padel-2.webp",
       "ocupadosSemilla": [
         ["08:00", "13:00", "14:00", "15:00", "20:00"],
@@ -105,7 +105,7 @@
       "deporte": "padel",
       "nombre": "Cancha Pádel 3",
       "precioHora": 70000,
-      "caracteristicas": ["Iluminación nocturna", "Paredes de vidrio"],
+      "caracteristicas": ["Panorámica", "Estructura pro", "Acceso lateral"],
       "imagen": "/img/canchas/padel-3.webp",
       "ocupadosSemilla": [
         ["10:00", "11:00"],
@@ -122,7 +122,7 @@
       "deporte": "futbol",
       "nombre": "Cancha Fútbol 1",
       "precioHora": 100000,
-      "caracteristicas": ["Al aire libre", "Césped sintético"],
+      "caracteristicas": ["Fútbol 7", "Césped monofilamento", "Foco córner"],
       "imagen": "/img/canchas/futbol-1.webp",
       "ocupadosSemilla": [
         ["17:00", "18:00", "19:00", "20:00"],
@@ -139,7 +139,7 @@
       "deporte": "futbol",
       "nombre": "Cancha Fútbol 2",
       "precioHora": 120000,
-      "caracteristicas": ["Iluminación nocturna", "Césped sintético"],
+      "caracteristicas": ["Arcos reglamentarios", "Malla perimetral", "Iluminación LED"],
       "imagen": "/img/canchas/futbol-2.webp",
       "ocupadosSemilla": [
         ["09:00", "10:00", "12:00", "16:00", "18:00", "19:00"],
@@ -156,7 +156,7 @@
       "deporte": "futbol",
       "nombre": "Cancha Fútbol 3",
       "precioHora": 110000,
-      "caracteristicas": ["Techada", "Césped sintético"],
+      "caracteristicas": ["Fútbol 11", "Vista panorámica", "Césped impecable", "Partidos nocturnos"],
       "imagen": "/img/canchas/futbol-3.webp",
       "ocupadosSemilla": [
         ["18:00", "19:00"],
