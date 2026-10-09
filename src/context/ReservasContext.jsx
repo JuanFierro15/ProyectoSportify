@@ -7,6 +7,7 @@ import React, {
   useMemo,
 } from 'react';
 import semilla from '../data/canchas.json';
+import { calcularPrecio, MAX_HORAS_SEGUIDAS } from '../lib/precios';
 
 /**
  * ReservasContext — estado global de disponibilidad y reservas.
@@ -17,7 +18,7 @@ import semilla from '../data/canchas.json';
  *   El estado guarda, por cancha y por fecha, la lista de horas ya reservadas
  *   (`ocupados`); todo lo demás está disponible.
  * - `reservas` mezcla dos clases de registro, distinguidas por `tipo`:
- *     - "individual": una cancha, una hora (Bloque 4).
+ *     - "individual": una cancha, de 1 a 3 horas seguidas (Bloque 4).
  *     - "evento": torneo o cumpleaños; varias canchas y/o varias horas
  *       consecutivas, bloqueadas todo-o-nada (Bloque 5).
  * - Sin backend: todo vive en memoria y se espeja al almacenamiento local.
@@ -171,13 +172,33 @@ function horaDeEvento(state, canchaId, fecha, hora) {
   );
 }
 
+// ¿Las horas pedidas son consecutivas (franjas de 1 h una tras otra) y todas
+// están libres? Sirve para la reserva individual de 1 a 3 horas seguidas.
+function bloqueLibre(state, canchaId, fecha, horas) {
+  const cancha = state.canchas.find((c) => c.id === canchaId);
+  if (!cancha || !Array.isArray(horas) || horas.length === 0) return false;
+  if (horas.length > MAX_HORAS_SEGUIDAS) return false;
+  const inicio = cancha.horas.indexOf(horas[0]);
+  if (inicio < 0) return false;
+  const consecutivas = horas.every((h, i) => cancha.horas[inicio + i] === h);
+  return consecutivas && horas.every((h) => horaLibre(state, canchaId, fecha, h));
+}
+
+// Acepta `horas` (bloque de 1 a 3) o, por compatibilidad, `hora` suelta.
+function horasDe(datos) {
+  return Array.isArray(datos.horas) && datos.horas.length > 0
+    ? datos.horas
+    : [datos.hora];
+}
+
 function reducer(state, action) {
   switch (action.type) {
     case 'RESERVAR': {
-      const { canchaId, fecha, hora, nombre, telefono } = action.payload;
+      const { canchaId, fecha, nombre, telefono } = action.payload;
+      const horas = horasDe(action.payload);
 
       // Validación de choque también a nivel reducer (última línea de defensa).
-      if (!horaLibre(state, canchaId, fecha, hora)) {
+      if (!bloqueLibre(state, canchaId, fecha, horas)) {
         return {
           ...state,
           error: 'Ese horario ya está reservado. Elige otro.',
@@ -190,19 +211,25 @@ function reducer(state, action) {
         ...state.ocupados,
         [canchaId]: {
           ...state.ocupados[canchaId],
-          [fecha]: [...previas, hora],
+          [fecha]: [...previas, ...horas],
         },
       };
 
       const cancha = state.canchas.find((c) => c.id === canchaId);
+      const precio = calcularPrecio(cancha ? cancha.precioHora : 0, horas.length);
       const reserva = {
-        id: `${canchaId}__${fecha}__${hora}__${Date.now()}`,
+        id: `${canchaId}__${fecha}__${horas[0]}__${Date.now()}`,
         tipo: 'individual',
         canchaId,
         canchaNombre: cancha ? cancha.nombre : canchaId,
         deporte: cancha ? cancha.deporte : null,
         fecha,
-        hora,
+        hora: horas[0],
+        horas: [...horas],
+        precioHora: precio.precioHora,
+        descuentoHora: precio.descuentoHora,
+        total: precio.total,
+        aguaGratis: precio.aguaGratis,
         nombre: nombre || null,
         telefono: telefono || null,
         creadaEn: new Date().toISOString(),
@@ -311,7 +338,7 @@ export function ReservasProvider({ children }) {
   // Reserva individual: valida y, si sigue libre, despacha. Devuelve { ok, error? }.
   const reservar = useCallback(
     (datos) => {
-      if (!horaLibre(state, datos.canchaId, datos.fecha, datos.hora)) {
+      if (!bloqueLibre(state, datos.canchaId, datos.fecha, horasDe(datos))) {
         return { ok: false, error: 'Ese horario ya está reservado. Elige otro.' };
       }
       dispatch({ type: 'RESERVAR', payload: datos });
