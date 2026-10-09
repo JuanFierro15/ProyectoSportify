@@ -122,7 +122,7 @@
       "deporte": "futbol",
       "nombre": "Cancha Fútbol 1",
       "precioHora": 100000,
-      "caracteristicas": ["Fútbol 7", "Césped monofilamento", "Foco córner"],
+      "caracteristicas": ["Fútbol 11", "Césped monofilamento", "Foco córner"],
       "imagen": "/img/canchas/futbol-1.webp",
       "ocupadosSemilla": [
         ["17:00", "18:00", "19:00", "20:00"],
@@ -139,7 +139,7 @@
       "deporte": "futbol",
       "nombre": "Cancha Fútbol 2",
       "precioHora": 120000,
-      "caracteristicas": ["Arcos reglamentarios", "Malla perimetral", "Iluminación LED"],
+      "caracteristicas": ["Fútbol 7", "Arcos reglamentarios", "Malla perimetral", "Iluminación LED"],
       "imagen": "/img/canchas/futbol-2.webp",
       "ocupadosSemilla": [
         ["09:00", "10:00", "12:00", "16:00", "18:00", "19:00"],
@@ -156,7 +156,7 @@
       "deporte": "futbol",
       "nombre": "Cancha Fútbol 3",
       "precioHora": 110000,
-      "caracteristicas": ["Fútbol 11", "Vista panorámica", "Césped impecable", "Partidos nocturnos"],
+      "caracteristicas": ["Fútbol 7", "Vista panorámica", "Césped impecable", "Partidos nocturnos"],
       "imagen": "/img/canchas/futbol-3.webp",
       "ocupadosSemilla": [
         ["18:00", "19:00"],
