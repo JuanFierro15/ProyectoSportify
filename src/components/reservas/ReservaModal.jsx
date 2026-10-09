@@ -4,6 +4,13 @@ import { CalendarCheck, CheckCircle2, X } from 'lucide-react';
 import { useReservas } from '../../context/ReservasContext';
 import SelectorDia from '../shared/SelectorDia';
 import { fechaLarga } from '../../lib/fechas';
+import {
+  errorNombre,
+  empiezaMalTelefono,
+  errorTelefono,
+  limpiarNombre,
+  limpiarTelefono,
+} from '../../lib/validacion';
 import './ReservaModal.css';
 
 /**
@@ -31,6 +38,7 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
   const [horaSel, setHoraSel] = useState(null);
   const [nombre, setNombre] = useState('');
   const [telefono, setTelefono] = useState('');
+  const [tocado, setTocado] = useState({ nombre: false, telefono: false });
   const [error, setError] = useState(null);
   const [confirmada, setConfirmada] = useState(null);
 
@@ -41,6 +49,7 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
       setHoraSel(null);
       setNombre('');
       setTelefono('');
+      setTocado({ nombre: false, telefono: false });
       setError(null);
       setConfirmada(null);
     }
@@ -74,8 +83,14 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
 
   if (!abierto || !canchaViva) return null;
 
+  const errNombre = errorNombre(nombre);
+  const errTelefono = errorTelefono(telefono);
+  const verErrTelefono =
+    !!errTelefono && (tocado.telefono || empiezaMalTelefono(telefono));
+  const contactoOk = !errNombre && !errTelefono;
+
   const confirmar = () => {
-    if (!horaSel) return;
+    if (!horaSel || !contactoOk) return;
     const res = reservar({
       canchaId: canchaViva.id,
       fecha: fechaSel,
@@ -214,12 +229,24 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
                   id="reserva-nombre"
                   name="nombre"
                   type="text"
-                  className="reserva-modal__input"
+                  className={
+                    'reserva-modal__input' +
+                    (tocado.nombre && errNombre ? ' is-invalid-input' : '')
+                  }
                   placeholder="Ej. Juan Pérez…"
                   value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
+                  onChange={(e) => setNombre(limpiarNombre(e.target.value))}
+                  onBlur={() => setTocado((t) => ({ ...t, nombre: true }))}
                   autoComplete="name"
+                  aria-invalid={tocado.nombre && !!errNombre}
+                  aria-describedby="reserva-nombre-error"
                 />
+                <span
+                  id="reserva-nombre-error"
+                  className={'form-error' + (tocado.nombre && errNombre ? ' is-visible' : '')}
+                >
+                  {errNombre}
+                </span>
               </div>
               <div className="cell medium-6">
                 <label htmlFor="reserva-telefono">
@@ -229,12 +256,26 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
                   id="reserva-telefono"
                   name="telefono"
                   type="tel"
-                  className="reserva-modal__input"
-                  placeholder="Ej. 300 123 4567…"
+                  className={
+                    'reserva-modal__input' +
+                    (verErrTelefono ? ' is-invalid-input' : '')
+                  }
+                  placeholder="Ej. 3001234567"
                   value={telefono}
-                  onChange={(e) => setTelefono(e.target.value)}
-                  autoComplete="tel"
+                  onChange={(e) => setTelefono(limpiarTelefono(e.target.value))}
+                  onBlur={() => setTocado((t) => ({ ...t, telefono: true }))}
+                  inputMode="numeric"
+                  maxLength={10}
+                  autoComplete="tel-national"
+                  aria-invalid={verErrTelefono}
+                  aria-describedby="reserva-telefono-error"
                 />
+                <span
+                  id="reserva-telefono-error"
+                  className={'form-error' + (verErrTelefono ? ' is-visible' : '')}
+                >
+                  {errTelefono}
+                </span>
               </div>
             </div>
 
@@ -249,7 +290,7 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
               <button
                 type="button"
                 className="button success"
-                disabled={!horaSel}
+                disabled={!horaSel || !contactoOk}
                 onClick={confirmar}
               >
                 Confirmar reserva

@@ -6,6 +6,13 @@ import SelectorDia from '../shared/SelectorDia';
 import CanchaEventoCard from './CanchaEventoCard';
 import { fechaLarga } from '../../lib/fechas';
 import { canchasDelDeporte } from '../../lib/canchas';
+import {
+  errorNombre,
+  empiezaMalTelefono,
+  errorTelefono,
+  limpiarNombre,
+  limpiarTelefono,
+} from '../../lib/validacion';
 import './EventoModal.css';
 
 const TIPOS = [
@@ -45,6 +52,7 @@ function EventoModal({ abierto, onCerrar }) {
   const [invitados, setInvitados] = useState('');
   const [nombre, setNombre] = useState('');
   const [telefono, setTelefono] = useState('');
+  const [tocado, setTocado] = useState({ nombre: false, telefono: false });
   const [error, setError] = useState(null);
   const [confirmado, setConfirmado] = useState(null);
 
@@ -60,6 +68,7 @@ function EventoModal({ abierto, onCerrar }) {
       setInvitados('');
       setNombre('');
       setTelefono('');
+      setTocado({ nombre: false, telefono: false });
       setError(null);
       setConfirmado(null);
     }
@@ -97,8 +106,18 @@ function EventoModal({ abierto, onCerrar }) {
   const camposTipoOk =
     tipo === 'torneo' ? Number(equipos) > 0 : Number(invitados) > 0;
 
+  const errNombre = errorNombre(nombre);
+  const errTelefono = errorTelefono(telefono);
+  const verErrTelefono =
+    !!errTelefono && (tocado.telefono || empiezaMalTelefono(telefono));
+
   const puedeConfirmar =
-    canchaIds.length > 0 && bloqueLibre && camposTipoOk && !confirmado;
+    canchaIds.length > 0 &&
+    bloqueLibre &&
+    camposTipoOk &&
+    !errNombre &&
+    !errTelefono &&
+    !confirmado;
 
   const toggleCancha = (id) => {
     setCanchaIds((prev) =>
@@ -463,11 +482,21 @@ function EventoModal({ abierto, onCerrar }) {
                     id="evento-nombre"
                     name="nombre"
                     type="text"
+                    className={tocado.nombre && errNombre ? 'is-invalid-input' : undefined}
                     value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
+                    onChange={(e) => setNombre(limpiarNombre(e.target.value))}
+                    onBlur={() => setTocado((t) => ({ ...t, nombre: true }))}
                     autoComplete="name"
                     placeholder="Ej. Juan Pérez…"
+                    aria-invalid={tocado.nombre && !!errNombre}
+                    aria-describedby="evento-nombre-error"
                   />
+                  <span
+                    id="evento-nombre-error"
+                    className={'form-error' + (tocado.nombre && errNombre ? ' is-visible' : '')}
+                  >
+                    {errNombre}
+                  </span>
                 </div>
                 <div className="cell medium-6">
                   <label htmlFor="evento-telefono">Teléfono (opcional)</label>
@@ -475,11 +504,23 @@ function EventoModal({ abierto, onCerrar }) {
                     id="evento-telefono"
                     name="telefono"
                     type="tel"
+                    className={verErrTelefono ? 'is-invalid-input' : undefined}
                     value={telefono}
-                    onChange={(e) => setTelefono(e.target.value)}
-                    autoComplete="tel"
-                    placeholder="Ej. 300 123 4567…"
+                    onChange={(e) => setTelefono(limpiarTelefono(e.target.value))}
+                    onBlur={() => setTocado((t) => ({ ...t, telefono: true }))}
+                    inputMode="numeric"
+                    maxLength={10}
+                    autoComplete="tel-national"
+                    placeholder="Ej. 3001234567"
+                    aria-invalid={verErrTelefono}
+                    aria-describedby="evento-telefono-error"
                   />
+                  <span
+                    id="evento-telefono-error"
+                    className={'form-error' + (verErrTelefono ? ' is-visible' : '')}
+                  >
+                    {errTelefono}
+                  </span>
                 </div>
               </div>
             </fieldset>
