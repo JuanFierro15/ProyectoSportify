@@ -107,8 +107,9 @@ function EventoModal({ abierto, onCerrar }) {
 
   const cambiarDesde = (v) => {
     setDesde(v);
-    // si "hasta" quedó antes o igual, se limpia
-    if (hasta && horasFin.indexOf(hasta) <= horasBase.indexOf(v)) setHasta('');
+    // `horasFin[i]` es el cierre de la franja que empieza en `horasBase[i]`, así
+    // que un "hasta" solo queda inválido si cierra antes de ese inicio.
+    if (hasta && horasFin.indexOf(hasta) < horasBase.indexOf(v)) setHasta('');
     setError(null);
   };
 
@@ -341,7 +342,7 @@ function EventoModal({ abierto, onCerrar }) {
                           .filter(
                             (h) =>
                               !desde ||
-                              horasFin.indexOf(h) > horasBase.indexOf(desde)
+                              horasFin.indexOf(h) >= horasBase.indexOf(desde)
                           )
                           .map((h) => (
                             <option key={h} value={h}>
