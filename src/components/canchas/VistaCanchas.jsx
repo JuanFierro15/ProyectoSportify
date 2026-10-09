@@ -14,6 +14,7 @@ import {
 } from '../../lib/canchas';
 import DepthCarousel from '../reactbits/DepthCarousel';
 import ReservaModal from '../reservas/ReservaModal';
+import { DESCUENTO_POR_HORA, MIN_HORAS_BENEFICIO } from '../../lib/precios';
 import TexturaCancha from './TexturaCancha';
 import './VistaCanchas.css';
 
@@ -98,6 +99,10 @@ function PanelDetalle({ cancha, dias, disponibilidad, onReservar }) {
           <Tag size={15} aria-hidden="true" />
           {formatoPrecio.format(cancha.precioHora)}
           <span className="vista-canchas__panel-unidad"> / hora</span>
+        </p>
+        <p className="vista-canchas__panel-promo">
+          Desde {MIN_HORAS_BENEFICIO} horas seguidas: {formatoPrecio.format(DESCUENTO_POR_HORA)}{' '}
+          menos por hora y pack de agua gratis
         </p>
         <p className="vista-canchas__panel-disp">
           {libresHoy === 0 ? (

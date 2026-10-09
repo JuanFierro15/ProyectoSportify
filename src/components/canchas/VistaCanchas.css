@@ -430,6 +430,13 @@
 }
 
 /* Badges de características de la cancha. */
+.vista-canchas__panel-promo {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent, #1779ba);
+}
+
 .vista-canchas__badges {
   display: flex;
   flex-wrap: wrap;

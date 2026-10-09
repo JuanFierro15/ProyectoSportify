@@ -115,6 +115,65 @@
   opacity: 0.8;
 }
 
+.reserva-modal__promo {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  background: #eaf6ee;
+  color: #1d6b3a;
+  font-size: 0.85rem;
+}
+
+.reserva-modal__promo svg {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.reserva-modal__resumen {
+  margin-top: 0.9rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  background: #f4f8fb;
+  border: 1px solid #d9e6f0;
+}
+
+.reserva-modal__resumen p {
+  margin: 0;
+}
+
+.reserva-modal__resumen-rango {
+  font-weight: 700;
+}
+
+.reserva-modal__resumen-ahorro {
+  margin-top: 0.15rem;
+  font-size: 0.85rem;
+  color: #1d6b3a;
+}
+
+.reserva-modal__resumen-total {
+  margin-top: 0.35rem;
+  font-size: 1.15rem;
+}
+
+.reserva-modal__resumen-tachado {
+  margin-right: 0.5rem;
+  font-size: 0.9rem;
+  color: #8a8a8a;
+}
+
+.reserva-modal__ok-agua {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  color: #1d6b3a;
+  font-weight: 600;
+}
+
 .reserva-modal__contacto {
   margin-bottom: 0.5rem;
 }

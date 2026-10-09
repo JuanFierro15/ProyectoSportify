@@ -1,9 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { CalendarCheck, CheckCircle2, X } from 'lucide-react';
+import { CalendarCheck, CheckCircle2, Gift, X } from 'lucide-react';
 import { useReservas } from '../../context/ReservasContext';
 import SelectorDia from '../shared/SelectorDia';
 import { fechaLarga } from '../../lib/fechas';
+import {
+  DESCUENTO_POR_HORA,
+  MAX_HORAS_SEGUIDAS,
+  MIN_HORAS_BENEFICIO,
+  calcularPrecio,
+  finDeFranja,
+  formatoPrecio,
+} from '../../lib/precios';
 import {
   errorNombre,
   empiezaMalTelefono,
@@ -14,7 +22,13 @@ import {
 import './ReservaModal.css';
 
 /**
- * ReservaModal — modal para reservar un horario de una cancha.
+ * ReservaModal — modal para reservar de 1 a 3 horas seguidas de una cancha.
+ *
+ * - Las horas se eligen con clics sobre los botones de horario: una hora suelta
+ *   o varias contiguas (hasta MAX_HORAS_SEGUIDAS). Un clic en una hora vecina
+ *   del bloque lo amplía; un clic en una hora ya elegida la quita; un clic en
+ *   una hora lejana empieza una selección nueva.
+ * - Desde 2 horas seguidas: descuento por hora y pack de agua (ver lib/precios).
  *
  * - Se abre desde el botón "Reservar" del panel de detalle de VistaCanchas.
  * - Contenedor con las clases de Reveal de Foundation (`reveal-overlay` +
@@ -35,7 +49,7 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
   );
 
   const [fechaSel, setFechaSel] = useState(dias[0]);
-  const [horaSel, setHoraSel] = useState(null);
+  const [horasSel, setHorasSel] = useState([]);
   const [nombre, setNombre] = useState('');
   const [telefono, setTelefono] = useState('');
   const [tocado, setTocado] = useState({ nombre: false, telefono: false });
@@ -46,7 +60,7 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
   useEffect(() => {
     if (abierto) {
       setFechaSel(dias[0]);
-      setHoraSel(null);
+      setHorasSel([]);
       setNombre('');
       setTelefono('');
       setTocado({ nombre: false, telefono: false });
@@ -68,18 +82,20 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
   const horarios =
     abierto && canchaViva ? disponibilidad(canchaViva.id, fechaSel) : [];
 
-  // Si el horario elegido se reserva mientras el modal está abierto (choque en
-  // la misma sesión), se deselecciona y se avisa.
+  // Si alguna hora elegida se reserva mientras el modal está abierto (choque en
+  // la misma sesión), se limpia la selección y se avisa.
   useEffect(() => {
-    if (!horaSel || !canchaViva) return;
-    const h = disponibilidad(canchaViva.id, fechaSel).find(
-      (x) => x.hora === horaSel
-    );
-    if (h && !h.disponible) {
-      setHoraSel(null);
+    if (horasSel.length === 0 || !canchaViva) return;
+    const lista = disponibilidad(canchaViva.id, fechaSel);
+    const algunaOcupada = horasSel.some((hora) => {
+      const h = lista.find((x) => x.hora === hora);
+      return !h || !h.disponible;
+    });
+    if (algunaOcupada) {
+      setHorasSel([]);
       setError('Ese horario acaba de reservarse. Elige otro.');
     }
-  }, [disponibilidad, canchaViva, fechaSel, horaSel]);
+  }, [disponibilidad, canchaViva, fechaSel, horasSel]);
 
   if (!abierto || !canchaViva) return null;
 
@@ -89,22 +105,71 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
     !!errTelefono && (tocado.telefono || empiezaMalTelefono(telefono));
   const contactoOk = !errNombre && !errTelefono;
 
+  // `horasSel` siempre es un bloque de horas contiguas (lo garantiza
+  // `alternarHora`), ordenado de la más temprana a la más tarde.
+  const bloque = horasSel;
+  const precio = calcularPrecio(canchaViva.precioHora, bloque.length);
+  const finBloque = bloque.length > 0 ? finDeFranja(bloque[bloque.length - 1]) : null;
+
+  const indiceHora = (hora) => horarios.findIndex((h) => h.hora === hora);
+
+  const alternarHora = (hora) => {
+    setError(null);
+
+    // Hora ya elegida -> se quita. Si queda en medio de un bloque de 3, se
+    // conserva solo la parte anterior para que el resto siga siendo contiguo.
+    const pos = horasSel.indexOf(hora);
+    if (pos >= 0) {
+      if (pos === 0) setHorasSel(horasSel.slice(1));
+      else if (pos === horasSel.length - 1) setHorasSel(horasSel.slice(0, -1));
+      else setHorasSel(horasSel.slice(0, pos));
+      return;
+    }
+
+    if (horasSel.length === 0) {
+      setHorasSel([hora]);
+      return;
+    }
+
+    // Hora vecina del bloque -> se amplía (hasta el máximo).
+    const i = indiceHora(hora);
+    const primero = indiceHora(horasSel[0]);
+    const ultimo = indiceHora(horasSel[horasSel.length - 1]);
+    if (i === ultimo + 1 || i === primero - 1) {
+      if (horasSel.length >= MAX_HORAS_SEGUIDAS) {
+        setError(`Puedes reservar hasta ${MAX_HORAS_SEGUIDAS} horas seguidas.`);
+        return;
+      }
+      setHorasSel(i === ultimo + 1 ? [...horasSel, hora] : [hora, ...horasSel]);
+      return;
+    }
+
+    // Hora lejana -> empieza una selección nueva.
+    setHorasSel([hora]);
+  };
+
   const confirmar = () => {
-    if (!horaSel || !contactoOk) return;
+    if (bloque.length === 0 || !contactoOk) return;
     const res = reservar({
       canchaId: canchaViva.id,
       fecha: fechaSel,
-      hora: horaSel,
+      horas: bloque,
       nombre: nombre.trim(),
       telefono: telefono.trim(),
     });
     if (!res.ok) {
       setError(res.error);
-      setHoraSel(null);
+      setHorasSel([]);
       return;
     }
     setError(null);
-    setConfirmada({ fecha: fechaSel, hora: horaSel });
+    setConfirmada({
+      fecha: fechaSel,
+      inicio: bloque[0],
+      fin: finBloque,
+      total: precio.total,
+      aguaGratis: precio.aguaGratis,
+    });
   };
 
   const modal = (
@@ -149,8 +214,16 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
             <p className="reserva-modal__ok-resumen">
               <strong>{canchaViva.nombre}</strong>
               <br />
-              {fechaLarga(confirmada.fecha, dias)} a las {confirmada.hora}
+              {fechaLarga(confirmada.fecha, dias)}, de {confirmada.inicio} a{' '}
+              {confirmada.fin}
+              <br />
+              Total: <strong>{formatoPrecio.format(confirmada.total)}</strong>
             </p>
+            {confirmada.aguaGratis && (
+              <p className="reserva-modal__ok-agua">
+                <Gift size={16} aria-hidden="true" /> Incluye un pack de agua gratis
+              </p>
+            )}
             <button
               type="button"
               className="button success reserva-modal__ok-boton"
@@ -174,7 +247,7 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
                 valor={fechaSel}
                 onChange={(iso) => {
                   setFechaSel(iso);
-                  setHoraSel(null);
+                  setHorasSel([]);
                   setError(null);
                 }}
                 contarLibres={(iso) =>
@@ -186,9 +259,17 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
 
             <fieldset className="reserva-modal__campo">
               <legend>Horario</legend>
+              <p className="reserva-modal__promo">
+                <Gift size={16} aria-hidden="true" />
+                <span>
+                  Desde {MIN_HORAS_BENEFICIO} horas seguidas:{' '}
+                  <strong>{formatoPrecio.format(DESCUENTO_POR_HORA)} menos por hora</strong>{' '}
+                  y un <strong>pack de agua gratis</strong>.
+                </span>
+              </p>
               <div className="reserva-modal__horas">
                 {horarios.map((h) => {
-                  const seleccionado = horaSel === h.hora;
+                  const seleccionado = bloque.includes(h.hora);
                   return (
                     <button
                       key={h.hora}
@@ -202,10 +283,7 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
                       }
                       disabled={!h.disponible}
                       aria-pressed={seleccionado}
-                      onClick={() => {
-                        setHoraSel(h.hora);
-                        setError(null);
-                      }}
+                      onClick={() => alternarHora(h.hora)}
                     >
                       {h.hora}
                       {!h.disponible && (
@@ -218,6 +296,28 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
                   );
                 })}
               </div>
+              {bloque.length > 0 && (
+                <div className="reserva-modal__resumen" aria-live="polite">
+                  <p className="reserva-modal__resumen-rango">
+                    {bloque[0]} a {finBloque} · {bloque.length}{' '}
+                    {bloque.length === 1 ? 'hora' : 'horas'}
+                  </p>
+                  {precio.aguaGratis && (
+                    <p className="reserva-modal__resumen-ahorro">
+                      Ahorras {formatoPrecio.format(precio.ahorro)} y te llevas un
+                      pack de agua gratis
+                    </p>
+                  )}
+                  <p className="reserva-modal__resumen-total">
+                    {precio.aguaGratis && (
+                      <s className="reserva-modal__resumen-tachado">
+                        {formatoPrecio.format(precio.subtotal)}
+                      </s>
+                    )}
+                    <strong>{formatoPrecio.format(precio.total)}</strong>
+                  </p>
+                </div>
+              )}
             </fieldset>
 
             <div className="grid-x grid-padding-x reserva-modal__contacto">
@@ -290,7 +390,7 @@ function ReservaModal({ cancha, abierto, onCerrar }) {
               <button
                 type="button"
                 className="button success"
-                disabled={!horaSel || !contactoOk}
+                disabled={bloque.length === 0 || !contactoOk}
                 onClick={confirmar}
               >
                 Confirmar reserva
