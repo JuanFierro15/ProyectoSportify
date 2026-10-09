@@ -21,6 +21,7 @@
       "nombre": "Cancha Voley Playa 1",
       "precioHora": 40000,
       "caracteristicas": ["Vista al mar", "Arena blanca", "Al aire libre"],
+      "descripcion": "Cancha abierta sobre arena blanca, con vista despejada al mar y postes acolchados. Ideal para torneos y partidos al aire libre.",
       "imagen": "/img/canchas/voley-1.webp",
       "ocupadosSemilla": [
         ["12:00", "13:00", "18:00"],
@@ -38,6 +39,7 @@
       "nombre": "Cancha Voley Playa 2",
       "precioHora": 44000,
       "caracteristicas": ["Líneas de tensión", "Arena compacta", "Atardecer"],
+      "descripcion": "Arena compacta con cintas de demarcación bien visibles. Perfecta para partidos competitivos con la luz del atardecer.",
       "imagen": "/img/canchas/voley-2.webp",
       "ocupadosSemilla": [
         ["08:00", "09:00", "17:00", "18:00", "19:00", "20:00"],
@@ -55,6 +57,7 @@
       "nombre": "Cancha Voley Playa 3",
       "precioHora": 48000,
       "caracteristicas": ["Red reglamentaria", "Protección en postes", "Arena nivelada"],
+      "descripcion": "Red reglamentaria, postes con protección y arena rastrillada y nivelada. Lista para jugar en serio.",
       "imagen": "/img/canchas/voley-3.webp",
       "ocupadosSemilla": [
         ["09:00", "14:00", "15:00"],
@@ -72,6 +75,7 @@
       "nombre": "Cancha Pádel 1",
       "precioHora": 60000,
       "caracteristicas": ["Pista indoor", "Césped azul premium", "Vidrio templado"],
+      "descripcion": "Pista techada de césped azul, con iluminación LED uniforme y cerramiento de vidrio templado. Ideal para partidos y mini torneos.",
       "imagen": "/img/canchas/padel-1.webp",
       "ocupadosSemilla": [
         ["10:00", "11:00", "16:00", "19:00"],
@@ -89,6 +93,7 @@
       "nombre": "Cancha Pádel 2",
       "precioHora": 65000,
       "caracteristicas": ["Climatizada", "Iluminación profesional", "Zona lounge"],
+      "descripcion": "Pista cubierta y climatizada, con iluminación profesional sin reflejos y vista directa a la zona lounge para descansar entre partidos.",
       "imagen": "/img/canchas/padel-2.webp",
       "ocupadosSemilla": [
         ["08:00", "13:00", "14:00", "15:00", "20:00"],
@@ -106,6 +111,7 @@
       "nombre": "Cancha Pádel 3",
       "precioHora": 70000,
       "caracteristicas": ["Panorámica", "Estructura pro", "Acceso lateral"],
+      "descripcion": "Pista panorámica con esquinas de cristal continuo y estructura profesional: máxima visibilidad y rebotes limpios.",
       "imagen": "/img/canchas/padel-3.webp",
       "ocupadosSemilla": [
         ["10:00", "11:00"],
@@ -123,6 +129,7 @@
       "nombre": "Cancha Fútbol 1",
       "precioHora": 100000,
       "caracteristicas": ["Fútbol 11", "Césped monofilamento", "Foco córner"],
+      "descripcion": "Cancha sintética de fútbol 11 con césped monofilamento, líneas nítidas e iluminación desde las esquinas para jugar de noche.",
       "imagen": "/img/canchas/futbol-1.webp",
       "ocupadosSemilla": [
         ["17:00", "18:00", "19:00", "20:00"],
@@ -140,6 +147,7 @@
       "nombre": "Cancha Fútbol 2",
       "precioHora": 120000,
       "caracteristicas": ["Fútbol 7", "Arcos reglamentarios", "Malla perimetral", "Iluminación LED"],
+      "descripcion": "Porterías reglamentarias con red reforzada, malla perimetral y reflectores LED para que el balón siga en juego a cualquier hora.",
       "imagen": "/img/canchas/futbol-2.webp",
       "ocupadosSemilla": [
         ["09:00", "10:00", "12:00", "16:00", "18:00", "19:00"],
@@ -157,6 +165,7 @@
       "nombre": "Cancha Fútbol 3",
       "precioHora": 110000,
       "caracteristicas": ["Fútbol 7", "Vista panorámica", "Césped impecable", "Partidos nocturnos"],
+      "descripcion": "Cancha de fútbol 7 con césped impecable y áreas y círculo central bien marcados. Ideal para torneos y partidos nocturnos.",
       "imagen": "/img/canchas/futbol-3.webp",
       "ocupadosSemilla": [
         ["18:00", "19:00"],
