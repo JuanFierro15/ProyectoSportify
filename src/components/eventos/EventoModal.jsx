@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useReservas } from '../../context/ReservasContext';
-import { deportePorSlug } from '../../data/deportes';
+import { DEPORTES } from '../../data/deportes';
 import SelectorDia from '../shared/SelectorDia';
+import CanchaEventoCard from './CanchaEventoCard';
 import { fechaLarga } from '../../lib/fechas';
+import { canchasDelDeporte } from '../../lib/canchas';
 import './EventoModal.css';
 
 const TIPOS = [
@@ -101,6 +103,17 @@ function EventoModal({ abierto, onCerrar }) {
   const toggleCancha = (id) => {
     setCanchaIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+    setError(null);
+  };
+
+  // "Elegir todas / Quitar todas" de un deporte: si ya están todas marcadas las
+  // quita; si no, suma las que falten sin tocar las de otros deportes.
+  const toggleDeporte = (ids) => {
+    setCanchaIds((prev) =>
+      ids.every((id) => prev.includes(id))
+        ? prev.filter((id) => !ids.includes(id))
+        : [...prev, ...ids.filter((id) => !prev.includes(id))]
     );
     setError(null);
   };
@@ -244,35 +257,57 @@ function EventoModal({ abierto, onCerrar }) {
               <p className="evento-modal__ayuda">
                 Elige una o varias. Puedes combinar canchas de distintos deportes.
               </p>
-              <div className="evento-modal__canchas">
-                {canchas.map((c) => {
-                  const info = deportePorSlug(c.deporte);
-                  const num = (c.id.match(/(\d+)$/) || [])[1] || '';
-                  const marcada = canchaIds.includes(c.id);
-                  return (
-                    <label
-                      key={c.id}
-                      className={
-                        'evento-modal__cancha' +
-                        (marcada ? ' evento-modal__cancha--sel' : '')
-                      }
-                      style={{ '--acento': info ? info.colorAcento : '#1779ba' }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={marcada}
-                        onChange={() => toggleCancha(c.id)}
-                      />
-                      <span className="evento-modal__cancha-deporte">
-                        {info ? info.nombre : c.deporte}
-                      </span>
-                      <span className="evento-modal__cancha-nombre">
-                        Cancha {num}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
+              {DEPORTES.map((d) => {
+                const delDeporte = canchasDelDeporte(canchas, d.slug);
+                if (delDeporte.length === 0) return null;
+                const ids = delDeporte.map((c) => c.id);
+                const todas = ids.every((id) => canchaIds.includes(id));
+                return (
+                  <section
+                    key={d.slug}
+                    className="evento-modal__deporte"
+                    style={{ '--acento': d.colorAcento }}
+                  >
+                    <div className="evento-modal__deporte-cabecera">
+                      <h3 className="evento-modal__deporte-nombre">{d.nombre}</h3>
+                      <button
+                        type="button"
+                        className="evento-modal__deporte-todas"
+                        onClick={() => toggleDeporte(ids)}
+                      >
+                        {todas ? 'Quitar todas' : 'Elegir todas'}
+                      </button>
+                    </div>
+                    <div className="grid-x grid-margin-x align-center evento-modal__canchas">
+                      {delDeporte.map((c) => {
+                        const horarios = disponibilidad(c.id, fecha);
+                        return (
+                          <div
+                            key={c.id}
+                            className="cell small-12 medium-6 large-4 evento-modal__celda"
+                          >
+                            <CanchaEventoCard
+                              cancha={c}
+                              acento={d.colorAcento}
+                              marcada={canchaIds.includes(c.id)}
+                              onToggle={() => toggleCancha(c.id)}
+                              libresDia={horarios.filter((h) => h.disponible).length}
+                              totalDia={horarios.length}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                );
+              })}
+              <p className="evento-modal__nota evento-modal__resumen" aria-live="polite">
+                {canchaIds.length === 0
+                  ? 'Aún no has elegido canchas.'
+                  : `${canchaIds.length} ${
+                      canchaIds.length === 1 ? 'cancha elegida' : 'canchas elegidas'
+                    }`}
+              </p>
             </fieldset>
 
             <fieldset className="evento-modal__campo">
