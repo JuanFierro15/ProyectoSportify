@@ -14,15 +14,9 @@ import {
 } from '../../lib/canchas';
 import DepthCarousel from '../reactbits/DepthCarousel';
 import ReservaModal from '../reservas/ReservaModal';
-import { DESCUENTO_POR_HORA, MIN_HORAS_BENEFICIO } from '../../lib/precios';
+import { DESCUENTO_POR_HORA, MIN_HORAS_BENEFICIO, formatoPrecio } from '../../lib/precios';
 import TexturaCancha from './TexturaCancha';
 import './VistaCanchas.css';
-
-const formatoPrecio = new Intl.NumberFormat('es-CO', {
-  style: 'currency',
-  currency: 'COP',
-  maximumFractionDigits: 0,
-});
 
 // Por debajo de este número de canchas, el carrusel 3D no aporta nada (y se
 // ve vacío): se usa un grid estático centrado en su lugar.

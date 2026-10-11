@@ -1,12 +1,7 @@
 import React from 'react';
 import { Check, Tag } from 'lucide-react';
 import { estiloAcento, imagenPlaceholderCancha, tituloCancha } from '../../lib/canchas';
-
-const formatoPrecio = new Intl.NumberFormat('es-CO', {
-  style: 'currency',
-  currency: 'COP',
-  maximumFractionDigits: 0,
-});
+import { formatoPrecio } from '../../lib/precios';
 
 // Dimensiones reales de las fotos (720x893): evitan el salto de layout.
 const ANCHO_IMAGEN = 720;
