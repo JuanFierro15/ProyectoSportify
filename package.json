@@ -27,6 +27,9 @@
       "react-app/jest"
     ]
   },
+  "jest": {
+    "transformIgnorePatterns": ["node_modules/(?!(gsap)/)"]
+  },
   "browserslist": {
     "production": [
       ">0.2%",
