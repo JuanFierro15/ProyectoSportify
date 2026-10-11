@@ -29,7 +29,7 @@ src/
 │   ├── hero/       DeporteHero: heros por deporte con pinning GSAP/ScrollTrigger (Bloque 2.5)
 │   ├── canchas/    VistaCanchas: vista superpuesta con Depth Carousel (Bloque 3, rediseñado)
 │   ├── reactbits/  DepthCarousel: componente de React Bits usado por VistaCanchas
-│   ├── reservas/   ReservaModal: reserva de una cancha por hora (Bloque 4)
+│   ├── reservas/   ReservaModal: reserva de 1 a 3 horas seguidas por cancha, con descuento y pack de agua (Bloque 4)
 │   ├── eventos/    EventoCTA + EventoModal: torneos y cumpleaños (Bloque 5)
 │   ├── shared/     SelectorDia: tira de 7 días, usada por ambos modales
 │   └── chatbot/    Chatbot (Bloque 6, pendiente)
