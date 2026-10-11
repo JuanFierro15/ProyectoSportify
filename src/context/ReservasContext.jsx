@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 import semilla from '../data/canchas.json';
 import { calcularPrecio, MAX_HORAS_SEGUIDAS } from '../lib/precios';
+import { esHoraPasada } from '../lib/fechas';
 
 /**
  * ReservasContext — estado global de disponibilidad y reservas.
@@ -146,7 +147,7 @@ function calcularDisponibilidad(state, canchaId, fecha) {
     (state.ocupados[canchaId] && state.ocupados[canchaId][fecha]) || [];
   return cancha.horas.map((hora) => ({
     hora,
-    disponible: !ocup.includes(hora),
+    disponible: !ocup.includes(hora) && !esHoraPasada(fecha, hora),
   }));
 }
 
@@ -154,6 +155,7 @@ function horaLibre(state, canchaId, fecha, hora) {
   const cancha = state.canchas.find((c) => c.id === canchaId);
   if (!cancha || !cancha.horas.includes(hora)) return false;
   if (!state.dias.includes(fecha)) return false;
+  if (esHoraPasada(fecha, hora)) return false;
   const ocup =
     (state.ocupados[canchaId] && state.ocupados[canchaId][fecha]) || [];
   return !ocup.includes(hora);
