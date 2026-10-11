@@ -6,6 +6,7 @@
   gap: 0.5rem;
   overflow-x: auto;
   padding: 0.2rem 0.2rem 0.5rem;
+  max-width: 100%;
 }
 
 .selector-dia__opcion {
