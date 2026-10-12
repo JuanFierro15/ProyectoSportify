@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useReservas } from '../../context/ReservasContext';
+import useAccionesReserva from './useAccionesReserva';
 import {
   CLAVE_SESION,
   MAX_MENSAJE,
@@ -10,6 +11,8 @@ import {
   historialParaEnviar,
   normalizarRespuesta,
   parsearConversacion,
+  detectarSiNo,
+  MENSAJE_CANCELACION_NO_HECHA,
 } from '../../lib/chat';
 
 // Estado del chat: mensajes (persistidos en sessionStorage, con respaldo en
@@ -67,6 +70,88 @@ export default function useChatbot() {
     };
   }, []);
 
+  const agregarMensaje = useCallback((parcial) => {
+    const nuevo = {
+      id: crearId(),
+      rol: 'bot',
+      sugerencias: [],
+      accion: null,
+      ...parcial,
+    };
+    mensajesRef.current = (() => {
+      let base = mensajesRef.current;
+      if (parcial?.estado === 'pendiente') {
+        base = base.map((m) =>
+          m.estado === 'pendiente' ? { ...m, estado: 'descartada' } : m
+        );
+      }
+      return [...base, nuevo];
+    })();
+    setMensajes((prev) => {
+      let base = prev;
+      if (parcial?.estado === 'pendiente') {
+        base = prev.map((m) =>
+          m.estado === 'pendiente' ? { ...m, estado: 'descartada' } : m
+        );
+      }
+      return [...base, nuevo];
+    });
+    return nuevo;
+  }, []);
+
+  const actualizarMensaje = useCallback((id, cambios) => {
+    mensajesRef.current = mensajesRef.current.map((m) =>
+      m.id === id ? { ...m, ...cambios } : m
+    );
+    setMensajes((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, ...cambios } : m))
+    );
+  }, []);
+
+  const {
+    confirmarReserva,
+    rechazarReserva,
+    confirmarCancelacion,
+    rechazarCancelacion,
+    elegirReserva: ejecutarElegirReserva,
+    manejarBusqueda,
+  } = useAccionesReserva({ agregarMensaje, actualizarMensaje });
+
+  const confirmarTarjeta = useCallback(
+    (id) => {
+      const msg = mensajesRef.current.find((m) => m.id === id);
+      if (!msg || msg.estado !== 'pendiente') return;
+      if (msg.accion?.tipo === 'CONFIRMAR_RESERVA') {
+        confirmarReserva(msg);
+      } else if (msg.tarjeta?.tipo === 'cancelacion') {
+        confirmarCancelacion(msg);
+      }
+    },
+    [confirmarReserva, confirmarCancelacion]
+  );
+
+  const rechazarTarjeta = useCallback(
+    (id) => {
+      const msg = mensajesRef.current.find((m) => m.id === id);
+      if (!msg || msg.estado !== 'pendiente') return;
+      if (msg.accion?.tipo === 'CONFIRMAR_RESERVA') {
+        rechazarReserva(msg);
+      } else if (msg.tarjeta?.tipo === 'cancelacion') {
+        rechazarCancelacion(msg);
+      }
+    },
+    [rechazarReserva, rechazarCancelacion]
+  );
+
+  const elegirReserva = useCallback(
+    (id, reservaId) => {
+      const msg = mensajesRef.current.find((m) => m.id === id);
+      if (!msg || msg.estado !== 'pendiente') return;
+      ejecutarElegirReserva(msg, reservaId);
+    },
+    [ejecutarElegirReserva]
+  );
+
   const enviar = useCallback(
     async (texto) => {
       const textoLimpio = typeof texto === 'string' ? texto.trim() : '';
@@ -75,6 +160,60 @@ export default function useChatbot() {
       }
 
       const mensaje = textoLimpio.slice(0, MAX_MENSAJE);
+      const mensajesActuales = mensajesRef.current;
+      let pendiente = null;
+      for (let i = mensajesActuales.length - 1; i >= 0; i -= 1) {
+        if (mensajesActuales[i]?.estado === 'pendiente') {
+          pendiente = mensajesActuales[i];
+          break;
+        }
+      }
+
+      if (pendiente) {
+        const decision = detectarSiNo(mensaje);
+        const esOpciones = Array.isArray(pendiente.opciones);
+
+        if (esOpciones) {
+          if (decision === 'no') {
+            const mensajeUsuario = {
+              id: crearId(),
+              rol: 'usuario',
+              texto: mensaje,
+            };
+            mensajesRef.current = [...mensajesRef.current, mensajeUsuario];
+            setMensajes((prev) => [...prev, mensajeUsuario]);
+            actualizarMensaje(pendiente.id, { estado: 'cancelada' });
+            agregarMensaje({ texto: MENSAJE_CANCELACION_NO_HECHA });
+            return;
+          }
+          actualizarMensaje(pendiente.id, { estado: 'descartada' });
+        } else {
+          if (decision === 'si') {
+            const mensajeUsuario = {
+              id: crearId(),
+              rol: 'usuario',
+              texto: mensaje,
+            };
+            mensajesRef.current = [...mensajesRef.current, mensajeUsuario];
+            setMensajes((prev) => [...prev, mensajeUsuario]);
+            confirmarTarjeta(pendiente.id);
+            return;
+          }
+          if (decision === 'no') {
+            const mensajeUsuario = {
+              id: crearId(),
+              rol: 'usuario',
+              texto: mensaje,
+            };
+            mensajesRef.current = [...mensajesRef.current, mensajeUsuario];
+            setMensajes((prev) => [...prev, mensajeUsuario]);
+            rechazarTarjeta(pendiente.id);
+            return;
+          }
+          actualizarMensaje(pendiente.id, { estado: 'descartada' });
+        }
+      }
+
       const historial = historialParaEnviar(mensajesRef.current);
       const generacion = generacionRef.current;
 
@@ -87,6 +226,7 @@ export default function useChatbot() {
         rol: 'usuario',
         texto: mensaje,
       };
+      mensajesRef.current = [...mensajesRef.current, mensajeUsuario];
       setMensajes((prev) => [...prev, mensajeUsuario]);
 
       const controller = new AbortController();
@@ -122,45 +262,42 @@ export default function useChatbot() {
 
         const respuestaNormalizada = normalizarRespuesta(json);
         if (respuestaNormalizada) {
-          setMensajes((prev) => [
-            ...prev,
-            {
-              id: crearId(),
-              rol: 'bot',
+          if (respuestaNormalizada.accion?.tipo === 'CONFIRMAR_RESERVA') {
+            agregarMensaje({
               texto: respuestaNormalizada.respuesta,
               sugerencias: respuestaNormalizada.sugerencias,
               accion: respuestaNormalizada.accion,
-            },
-          ]);
+              estado: 'pendiente',
+            });
+          } else {
+            agregarMensaje({
+              texto: respuestaNormalizada.respuesta,
+              sugerencias: respuestaNormalizada.sugerencias,
+              accion: respuestaNormalizada.accion,
+            });
+            if (respuestaNormalizada.accion?.tipo === 'BUSCAR_CANCELACION') {
+              manejarBusqueda(respuestaNormalizada.accion);
+            }
+          }
         } else {
           setError(true);
-          setMensajes((prev) => [
-            ...prev,
-            {
-              id: crearId(),
-              rol: 'bot',
-              texto: TEXTO_ERROR_CHAT,
-              sugerencias: [],
-              accion: null,
-              error: true,
-            },
-          ]);
+          agregarMensaje({
+            texto: TEXTO_ERROR_CHAT,
+            sugerencias: [],
+            accion: null,
+            error: true,
+          });
         }
       } catch {
         // Abortada por "Nueva conversación": no se agrega nada.
         if (generacion !== generacionRef.current) return;
         setError(true);
-        setMensajes((prev) => [
-          ...prev,
-          {
-            id: crearId(),
-            rol: 'bot',
-            texto: TEXTO_ERROR_CHAT,
-            sugerencias: [],
-            accion: null,
-            error: true,
-          },
-        ]);
+        agregarMensaje({
+          texto: TEXTO_ERROR_CHAT,
+          sugerencias: [],
+          accion: null,
+          error: true,
+        });
       } finally {
         clearTimeout(timeoutId);
         if (timeoutIdRef.current === timeoutId) {
@@ -177,7 +314,16 @@ export default function useChatbot() {
         }
       }
     },
-    [dias, canchas, disponibilidad]
+    [
+      actualizarMensaje,
+      agregarMensaje,
+      canchas,
+      confirmarTarjeta,
+      dias,
+      disponibilidad,
+      manejarBusqueda,
+      rechazarTarjeta,
+    ]
   );
 
   const reiniciar = useCallback(() => {
@@ -193,7 +339,9 @@ export default function useChatbot() {
     peticionEnCursoRef.current = false;
     setEsperando(false);
     setError(false);
-    setMensajes([mensajeBienvenida()]);
+    const bienvenida = mensajeBienvenida();
+    mensajesRef.current = [bienvenida];
+    setMensajes([bienvenida]);
     try {
       if (typeof window !== 'undefined') {
         window.sessionStorage.removeItem(CLAVE_SESION);
@@ -209,5 +357,8 @@ export default function useChatbot() {
     esperando,
     error,
     reiniciar,
+    confirmarTarjeta,
+    rechazarTarjeta,
+    elegirReserva,
   };
 }

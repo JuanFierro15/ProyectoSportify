@@ -8,6 +8,7 @@ import { deportePorSlug } from '../../data/deportes';
 import { estiloAcento } from '../../lib/canchas';
 import { MAX_MENSAJE } from '../../lib/chat';
 import MensajeChat from './MensajeChat';
+import ConfirmacionReserva from '../reservas/ConfirmacionReserva';
 import './Chatbot.css';
 
 // Asistente Sportify: botón flotante + panel, en un portal a document.body.
@@ -16,17 +17,28 @@ import './Chatbot.css';
 // activo (useDeporteActivo); sin deporte, los tokens de marca de App.css.
 // El panel sigue montado mientras anima su salida, como VistaCanchas.
 function Chatbot() {
-  const { mensajes, enviar, esperando, reiniciar } = useChatbot();
+  const {
+    mensajes,
+    enviar,
+    esperando,
+    reiniciar,
+    confirmarTarjeta,
+    rechazarTarjeta,
+    elegirReserva,
+  } = useChatbot();
   const slug = useDeporteActivo();
 
   const [abierto, setAbierto] = useState(false);
   const [montado, setMontado] = useState(false);
   const [texto, setTexto] = useState('');
+  const [comprobante, setComprobante] = useState(null);
 
   const panelRef = useRef(null);
   const botonRef = useRef(null);
   const inputRef = useRef(null);
   const listaRef = useRef(null);
+  const comprobanteRef = useRef(null);
+  const comprobantePrevioRef = useRef(false);
   const entrarRef = useRef(null);
   const salirRef = useRef(null);
   const abiertoRef = useRef(abierto);
@@ -42,6 +54,7 @@ function Chatbot() {
 
   const cerrar = useCallback(() => {
     setAbierto(false);
+    setComprobante(null);
   }, []);
 
   const alternar = useCallback(() => {
@@ -143,12 +156,27 @@ function Chatbot() {
     }
   }, [mensajes, esperando, montado]);
 
-  // Escape cierra solo el chat: stopPropagation evita que llegue al listener
-  // de window con el que la vista de canchas también se cierra con Escape.
+  useEffect(() => {
+    if (comprobante) {
+      comprobanteRef.current?.focus();
+      comprobantePrevioRef.current = true;
+    } else if (comprobantePrevioRef.current) {
+      comprobantePrevioRef.current = false;
+      inputRef.current?.focus();
+    }
+  }, [comprobante]);
+
+  // Escape: si hay comprobante abierto, lo cierra (y stopPropagation); si no,
+  // cierra el panel. stopPropagation evita que llegue al listener de window con
+  // el que la vista de canchas también se cierra con Escape.
   const manejarKeyDown = (e) => {
     if (e.key === 'Escape') {
       e.stopPropagation();
-      cerrar();
+      if (comprobante) {
+        setComprobante(null);
+      } else {
+        cerrar();
+      }
     }
   };
 
@@ -215,6 +243,7 @@ function Chatbot() {
                 title="Nueva conversación"
                 onClick={() => {
                   reiniciar();
+                  setComprobante(null);
                   inputRef.current?.focus();
                 }}
               >
@@ -231,59 +260,84 @@ function Chatbot() {
             </div>
           </header>
 
-          <ol className="chatbot__mensajes" aria-live="polite" ref={listaRef}>
-            {mensajes.map((m) => (
-              <MensajeChat key={m.id} mensaje={m} onAccion={alUsarAccion} />
-            ))}
-            {esperando && (
-              <li className="chatbot__escribiendo">
-                <span className="chatbot__punto" aria-hidden="true" />
-                <span className="chatbot__punto" aria-hidden="true" />
-                <span className="chatbot__punto" aria-hidden="true" />
-                <span className="show-for-sr">Escribiendo…</span>
-              </li>
-            )}
-          </ol>
-
-          {mostrarSugerencias && (
-            <div className="chatbot__sugerencias">
-              {ultimoMensaje.sugerencias.map((sugerencia) => (
-                <button
-                  key={sugerencia}
-                  type="button"
-                  className="chatbot__chip"
-                  onClick={() => enviar(sugerencia)}
-                >
-                  {sugerencia}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <form className="chatbot__formulario" onSubmit={manejarEnvio}>
-            <label htmlFor="chatbot-input" className="show-for-sr">
-              Escribe tu mensaje
-            </label>
-            <input
-              id="chatbot-input"
-              ref={inputRef}
-              type="text"
-              className="chatbot__input"
-              placeholder="Escribe tu pregunta…"
-              maxLength={MAX_MENSAJE}
-              autoComplete="off"
-              value={texto}
-              onChange={(e) => setTexto(e.target.value)}
-            />
-            <button
-              type="submit"
-              className="chatbot__enviar"
-              aria-label="Enviar"
-              disabled={esperando || !texto.trim()}
+          {comprobante ? (
+            <div
+              className="chatbot__comprobante"
+              tabIndex={-1}
+              ref={comprobanteRef}
             >
-              <Send size={18} aria-hidden="true" />
-            </button>
-          </form>
+              <ConfirmacionReserva
+                codigo={comprobante.codigo}
+                textoQr={comprobante.textoQr}
+                resumen={comprobante.resumen}
+                onListo={() => setComprobante(null)}
+              />
+            </div>
+          ) : (
+            <>
+              <ol className="chatbot__mensajes" aria-live="polite" ref={listaRef}>
+                {mensajes.map((m) => (
+                  <MensajeChat
+                    key={m.id}
+                    mensaje={m}
+                    onAccion={alUsarAccion}
+                    onConfirmarTarjeta={confirmarTarjeta}
+                    onRechazarTarjeta={rechazarTarjeta}
+                    onElegirReserva={elegirReserva}
+                    onVerComprobante={setComprobante}
+                  />
+                ))}
+                {esperando && (
+                  <li className="chatbot__escribiendo">
+                    <span className="chatbot__punto" aria-hidden="true" />
+                    <span className="chatbot__punto" aria-hidden="true" />
+                    <span className="chatbot__punto" aria-hidden="true" />
+                    <span className="show-for-sr">Escribiendo…</span>
+                  </li>
+                )}
+              </ol>
+
+              {mostrarSugerencias && (
+                <div className="chatbot__sugerencias">
+                  {ultimoMensaje.sugerencias.map((sugerencia) => (
+                    <button
+                      key={sugerencia}
+                      type="button"
+                      className="chatbot__chip"
+                      onClick={() => enviar(sugerencia)}
+                    >
+                      {sugerencia}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <form className="chatbot__formulario" onSubmit={manejarEnvio}>
+                <label htmlFor="chatbot-input" className="show-for-sr">
+                  Escribe tu mensaje
+                </label>
+                <input
+                  id="chatbot-input"
+                  ref={inputRef}
+                  type="text"
+                  className="chatbot__input"
+                  placeholder="Escribe tu pregunta…"
+                  maxLength={MAX_MENSAJE}
+                  autoComplete="off"
+                  value={texto}
+                  onChange={(e) => setTexto(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  className="chatbot__enviar"
+                  aria-label="Enviar"
+                  disabled={esperando || !texto.trim()}
+                >
+                  <Send size={18} aria-hidden="true" />
+                </button>
+              </form>
+            </>
+          )}
         </section>
       )}
     </div>,

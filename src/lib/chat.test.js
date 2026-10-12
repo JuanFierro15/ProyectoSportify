@@ -11,6 +11,12 @@ import {
   historialParaEnviar,
   normalizarRespuesta,
   parsearConversacion,
+  precioTexto,
+  rangoHoras,
+  detectarSiNo,
+  mensajeReservaHecha,
+  mensajeChoque,
+  mensajeCancelacionHecha,
 } from './chat';
 
 describe('constantes y valores iniciales', () => {
@@ -209,3 +215,82 @@ describe('parsearConversacion', () => {
     expect(parsearConversacion(JSON.stringify(conversacion))).toEqual(conversacion);
   });
 });
+
+describe('mensajes y textos de reserva y cancelación en chat', () => {
+  test('detectarSiNo detecta respuestas afirmativas, negativas y descarta otras', () => {
+    expect(detectarSiNo('Sí')).toBe('si');
+    expect(detectarSiNo('¡Dale!')).toBe('si');
+    expect(detectarSiNo('sí, confirmo')).toBe('si');
+    expect(detectarSiNo('listo.')).toBe('si');
+    expect(detectarSiNo('No')).toBe('no');
+    expect(detectarSiNo('no, gracias')).toBe('no');
+    expect(detectarSiNo('cancelar')).toBe('no');
+    expect(detectarSiNo('sí, pero a las 10')).toBeNull();
+    expect(detectarSiNo('quiero otra hora')).toBeNull();
+    expect(detectarSiNo('')).toBeNull();
+  });
+
+  test('mensajeReservaHecha con total 45000 contiene abono del 50%, medios, teléfono y código', () => {
+    const texto = mensajeReservaHecha({
+      canchaNombre: 'Cancha Voley Playa 1',
+      fecha: '2026-10-12',
+      horas: ['09:00'],
+      codigo: 'SPF-TEST01',
+      total: 45000,
+    });
+    expect(texto).toContain('$45.000');
+    expect(texto).toContain('50 %');
+    expect(texto).toContain('$22.500');
+    expect(texto).toContain('Nequi o Transferencia Bancolombia');
+    expect(texto).toContain('310 774 0572');
+    expect(texto).toContain('SPF-TEST01');
+  });
+
+  test('mensajeChoque lista franjas libres o avisa que no hay disponibles', () => {
+    const conLibres = mensajeChoque({
+      canchaNombre: 'Pista Pádel 1',
+      fecha: '2026-10-12',
+      libres: ['10:00', '13:00'],
+    });
+    expect(conLibres).toContain('10:00 a. m., 1:00 p. m.');
+
+    const sinLibres = mensajeChoque({
+      canchaNombre: 'Pista Pádel 1',
+      fecha: '2026-10-12',
+      libres: [],
+    });
+    expect(sinLibres).toContain('ya no tiene franjas libres');
+  });
+
+  test('rangoHoras calcula de inicio a fin de la franja', () => {
+    expect(rangoHoras(['09:00', '10:00'])).toBe('de 9:00 a. m. a 11:00 a. m.');
+  });
+
+  test('precioTexto formatea valores a pesos colombianos sin espacios', () => {
+    expect(precioTexto(120000)).toBe('$120.000');
+  });
+
+  test('normalizarRespuesta quita el doble punto del modelo y respeta los puntos suspensivos', () => {
+    expect(normalizarRespuesta({ respuesta: 'Abrimos de 8:00 a. m. a 9:00 p. m..' }).respuesta).toBe(
+      'Abrimos de 8:00 a. m. a 9:00 p. m.'
+    );
+    expect(normalizarRespuesta({ respuesta: 'Déjame ver...' }).respuesta).toBe('Déjame ver...');
+  });
+
+  test('los textos fijos no dejan doble punto después de "a. m." / "p. m."', () => {
+    const hecha = mensajeReservaHecha({
+      canchaNombre: 'Cancha Voley Playa 1',
+      fecha: '2026-10-13',
+      horas: ['15:00'],
+      codigo: 'SPF-TEST01',
+      total: 45000,
+    });
+    expect(hecha).toContain('de 3:00 p. m. a 4:00 p. m. Código: SPF-TEST01.');
+    expect(hecha).not.toMatch(/\.\./);
+    expect(mensajeChoque({ canchaNombre: 'Pista Pádel 1', fecha: '2026-10-13', libres: ['13:00'] })).not.toMatch(/\.\./);
+    expect(mensajeCancelacionHecha({ canchaNombre: 'Cancha Voley Playa 1', fecha: '2026-10-13', horas: ['15:00'] })).toContain(
+      'a 4:00 p. m. La franja quedó libre.'
+    );
+  });
+});
+

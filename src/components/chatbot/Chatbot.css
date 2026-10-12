@@ -330,3 +330,180 @@
     animation: none;
   }
 }
+
+.chatbot__mensaje--con-tarjeta {
+  max-width: 100%;
+  width: 100%;
+}
+
+.chatbot__tarjeta {
+  margin-top: 0.6rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: #f7f9fb;
+}
+
+.chatbot__tarjeta-datos {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.3rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.chatbot__tarjeta-datos dt {
+  color: #64748b;
+  font-weight: 500;
+  margin: 0;
+}
+
+.chatbot__tarjeta-datos dd {
+  color: #1e293b;
+  font-weight: 600;
+  margin: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.chatbot__tarjeta-nota {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.chatbot__tarjeta-acciones {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.chatbot__tarjeta-acciones > button,
+.chatbot__tarjeta-acciones .chatbot__boton-primario,
+.chatbot__tarjeta-acciones .chatbot__boton-secundario,
+.chatbot__tarjeta-acciones .chatbot__boton-peligro {
+  flex: 1;
+}
+
+.chatbot__boton-primario {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.5rem 0.9rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  cursor: pointer;
+  margin: 0;
+}
+
+.chatbot__boton-primario:hover {
+  background: color-mix(in srgb, var(--accent) 85%, #000);
+}
+
+.chatbot__boton-secundario {
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #334155;
+  padding: 0.5rem 0.9rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin: 0;
+}
+
+.chatbot__boton-secundario:hover {
+  border-color: #94a3b8;
+  background: #f1f5f9;
+}
+
+.chatbot__boton-peligro {
+  border: 1px solid #f0c7bf;
+  border-radius: 999px;
+  background: #fdf3f1;
+  color: #8a3424;
+  padding: 0.5rem 0.9rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin: 0;
+}
+
+.chatbot__boton-peligro:hover {
+  background: #f9e2dd;
+}
+
+.chatbot__boton-primario:disabled,
+.chatbot__boton-secundario:disabled,
+.chatbot__boton-peligro:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.chatbot__boton-primario:focus-visible,
+.chatbot__boton-secundario:focus-visible,
+.chatbot__boton-peligro:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 60%, #1a1a1a);
+  outline-offset: 2px;
+}
+
+.chatbot__tarjeta-estado {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.chatbot__opciones {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.chatbot__opciones li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chatbot__opcion {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 0.5rem 0.7rem;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin: 0;
+}
+
+.chatbot__opcion:hover {
+  background: color-mix(in srgb, var(--accent) 12%, #ffffff);
+}
+
+.chatbot__opcion:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chatbot__opcion--elegida {
+  background: color-mix(in srgb, var(--accent) 18%, #ffffff);
+  font-weight: 600;
+}
+
+.chatbot__comprobante {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.5rem 1rem 1rem;
+  background: #ffffff;
+  position: relative;
+}
+
