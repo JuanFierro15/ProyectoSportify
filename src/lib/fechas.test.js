@@ -1,4 +1,11 @@
-import { esHoraPasada } from './fechas';
+import { esHoraPasada, fechaCompleta } from './fechas';
+
+describe('fechaCompleta', () => {
+  test('día de la semana, número y mes, sin fechas relativas', () => {
+    expect(fechaCompleta('2026-10-13')).toBe('Martes 13 de octubre');
+    expect(fechaCompleta('2026-10-14')).toBe('Miércoles 14 de octubre');
+  });
+});
 
 describe('esHoraPasada', () => {
   beforeEach(() => {

@@ -4,7 +4,7 @@ import './SelectorDia.css';
 
 /**
  * SelectorDia — tira de 7 días (hoy + 6) hecha a mano con botones de Foundation.
- * Compartido por el modal de reserva individual y el de evento especial.
+ * Lo usa ModalReserva en sus tres modos (cancha, torneo y cumpleaños).
  *
  * Props:
  *  - dias         {string[]}  fechas ISO (las mismas del ReservasContext)

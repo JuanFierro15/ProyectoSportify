@@ -1,9 +1,13 @@
 /**
- * Helpers de fechas compartidos por el selector de día, el modal de reserva
- * y el modal de evento. Todo trabaja con fechas ISO `YYYY-MM-DD` en hora local.
+ * Helpers de fechas compartidos por el selector de día y el modal de reserva
+ * (ModalReserva). Todo trabaja con fechas ISO `YYYY-MM-DD` en hora local.
  */
 
 export const DIA_SEMANA = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+
+export const DIA_LARGO = [
+  'domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado',
+];
 
 export const MES_CORTO = [
   'ene', 'feb', 'mar', 'abr', 'may', 'jun',
@@ -26,12 +30,13 @@ export function etiquetaDia(iso, dias) {
   return DIA_SEMANA[aDate(iso).getDay()];
 }
 
-// Frase para confirmaciones: "hoy" / "mañana" / "el 10 de septiembre".
-export function fechaLarga(iso, dias) {
-  if (dias && iso === dias[0]) return 'hoy';
-  if (dias && iso === dias[1]) return 'mañana';
+// Fecha absoluta: "Martes 13 de octubre". La usan el voucher, la
+// confirmación y el QR, que no pueden decir "mañana": el QR se escanea el día
+// de la reserva, cuando "mañana" ya no es cierto.
+export function fechaCompleta(iso) {
   const d = aDate(iso);
-  return `el ${d.getDate()} de ${MES_LARGO[d.getMonth()]}`;
+  const dia = DIA_LARGO[d.getDay()];
+  return `${dia[0].toUpperCase()}${dia.slice(1)} ${d.getDate()} de ${MES_LARGO[d.getMonth()]}`;
 }
 
 // Fecha de hoy en hora local, como ISO `YYYY-MM-DD`.

@@ -13,7 +13,7 @@ import {
   estiloAcento,
 } from '../../lib/canchas';
 import DepthCarousel from '../reactbits/DepthCarousel';
-import ReservaModal from '../reservas/ReservaModal';
+import ModalReserva from '../reservas/ModalReserva';
 import { DESCUENTO_POR_HORA, MIN_HORAS_BENEFICIO, formatoPrecio } from '../../lib/precios';
 import TexturaCancha from './TexturaCancha';
 import './VistaCanchas.css';
@@ -661,8 +661,9 @@ function VistaCanchas() {
         )}
       </div>
 
-      <ReservaModal
-        cancha={canchaActiva}
+      <ModalReserva
+        modoInicial="cancha"
+        canchaInicial={canchaActiva}
         abierto={reservaAbierta}
         onCerrar={() => setReservaAbierta(false)}
       />

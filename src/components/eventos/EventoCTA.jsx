@@ -5,7 +5,7 @@ import { useReservas } from '../../context/ReservasContext';
 import { DEPORTES, deportePorSlug } from '../../data/deportes';
 import { canchasDelDeporte, imagenGrandeCancha } from '../../lib/canchas';
 import AccordionGallery from '../reactbits/AccordionGallery';
-import EventoModal from './EventoModal';
+import ModalReserva from '../reservas/ModalReserva';
 import './EventoCTA.css';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -131,7 +131,7 @@ function EventoCTA() {
           </div>
         </div>
       </section>
-      <EventoModal abierto={abierto} onCerrar={() => setAbierto(false)} />
+      <ModalReserva modoInicial="torneo" abierto={abierto} onCerrar={() => setAbierto(false)} />
     </>
   );
 }

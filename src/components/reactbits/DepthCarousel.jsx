@@ -29,6 +29,14 @@ const DepthCarousel = ({
   showControls = true,
   showIndicators = true,
   onChange,
+  // Adición manual: tarjeta inicial en la que arranca centrado el carrusel al montar.
+  initialIndex = 0,
+  // Adición manual: textos accesibles configurables con respaldo en inglés.
+  ariaLabel = 'Depth carousel',
+  prevLabel = 'Previous slide',
+  nextLabel = 'Next slide',
+  getSlideLabel = (i, n) => `${i + 1} of ${n}`,
+  getDotLabel = (i) => `Go to slide ${i + 1}`,
   // Adición manual sobre el componente descargado del registro de React Bits:
   // permite pintar contenido propio (nombre de cancha, acento del deporte...)
   // encima de cada card sin tocar el resto del layout 3D. Opcional: si no se
@@ -47,13 +55,15 @@ const DepthCarousel = ({
   const data = useMemo(() => (Array.isArray(items) ? items : []).map(normalizeItem), [items]);
   const count = data.length;
 
+  const inicio = count > 0 ? clamp(initialIndex, 0, count - 1) : 0;
+
   const rootRef = useRef(null);
   const stageRef = useRef(null);
   const cardRefs = useRef([]);
   const overlayRefs = useRef([]);
 
-  const posRef = useRef(0);
-  const focusRef = useRef(0);
+  const posRef = useRef(inicio);
+  const focusRef = useRef(inicio);
   const tweenRef = useRef(null);
   const scaleRef = useRef(1);
   const cfgRef = useRef({});
@@ -64,7 +74,7 @@ const DepthCarousel = ({
   const autoTimerRef = useRef(null);
   const reducedRef = useRef(false);
 
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(inicio);
 
   onChangeRef.current = onChange;
   cfgRef.current = {
@@ -352,7 +362,7 @@ const DepthCarousel = ({
       style={{ '--dc-perspective': `${perspective}px` }}
       role="group"
       aria-roledescription="carousel"
-      aria-label="Depth carousel"
+      aria-label={ariaLabel}
       tabIndex={0}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -407,7 +417,7 @@ const DepthCarousel = ({
                 borderRadius: radius
               }}
               aria-roledescription="slide"
-              aria-label={`${i + 1} of ${count}`}
+              aria-label={getSlideLabel(i, count)}
               aria-hidden={!esActiva}
               onClick={() => onCardClick(i)}
             >
@@ -444,7 +454,7 @@ const DepthCarousel = ({
           <button
             type="button"
             className="depth-carousel__arrow depth-carousel__arrow--prev"
-            aria-label="Previous slide"
+            aria-label={prevLabel}
             onClick={() => navigateBy(-1)}
           >
             <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
@@ -461,7 +471,7 @@ const DepthCarousel = ({
           <button
             type="button"
             className="depth-carousel__arrow depth-carousel__arrow--next"
-            aria-label="Next slide"
+            aria-label={nextLabel}
             onClick={() => navigateBy(1)}
           >
             <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
@@ -486,7 +496,7 @@ const DepthCarousel = ({
               type="button"
               role="tab"
               aria-selected={active === i}
-              aria-label={`Go to slide ${i + 1}`}
+              aria-label={getDotLabel(i)}
               className={`depth-carousel__dot${active === i ? ' is-active' : ''}`}
               onClick={() => setFocus(i, true)}
             />

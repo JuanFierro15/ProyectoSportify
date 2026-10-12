@@ -1,0 +1,179 @@
+.voucher-reserva {
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+  background: #f7f9fb;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+
+.voucher-reserva__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px dashed #d5dee6;
+}
+
+.voucher-reserva__titulo {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.voucher-reserva__tipo {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #1779ba;
+  background: rgba(23, 121, 186, 0.1);
+}
+
+.voucher-reserva__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 0.9rem;
+}
+
+.voucher-reserva__fila {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+}
+
+.voucher-reserva__etiqueta {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.voucher-reserva__valor {
+  color: #1e293b;
+  font-weight: 600;
+  text-align: right;
+}
+
+.voucher-reserva__cuerpo {
+  margin-bottom: 1.15rem;
+}
+
+.voucher-reserva__vacio {
+  margin: 0.5rem 0;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: #edf2f7;
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.voucher-reserva__lineas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.voucher-reserva__linea {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.voucher-reserva__linea-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.voucher-reserva__linea-nombre {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.voucher-reserva__linea-calculo {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.voucher-reserva__linea-precio {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.voucher-reserva__linea-tachado {
+  color: #8a8a8a;
+  font-size: 0.8rem;
+}
+
+.voucher-reserva__linea-total {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.voucher-reserva__separador {
+  border-top: 1px dashed #d5dee6;
+  margin: 0.9rem 0;
+}
+
+.voucher-reserva__desglose {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.voucher-reserva__valor--ahorro {
+  color: #1d6b3a;
+  font-weight: 700;
+}
+
+.voucher-reserva__fila--total {
+  margin-top: 0.4rem;
+  padding-top: 0.55rem;
+  border-top: 1px dashed #d5dee6;
+  align-items: center;
+}
+
+.voucher-reserva__etiqueta-total {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.voucher-reserva__valor-total {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.voucher-reserva__acciones {
+  margin-top: auto;
+}
+
+.voucher-reserva__acciones .button {
+  margin-bottom: 0.5rem;
+  border-radius: 8px;
+}
+
+.voucher-reserva__acciones .button:last-child {
+  margin-bottom: 0;
+}
+
+.voucher-reserva__bloqueo {
+  margin: -0.15rem 0 0.5rem;
+  font-size: 0.8rem;
+  color: #64748b;
+  text-align: center;
+}
