@@ -10,19 +10,29 @@ pádel y fútbol, además de gestionar torneos, cumpleaños y eventos especiales
 - **Foundation** (`foundation-sites`) para la maquetación
 - **GSAP + ScrollTrigger** para animaciones
 - **Sin base de datos**: estado de React + `localStorage` + JSON semilla
+- **Chatbot**: función de servidor en Vercel (`/api/chat`) con Gemini
+  (`@google/genai`); la función no guarda nada
 
 ## Scripts
 
 ```bash
 npm install     # instalar dependencias
-npm start       # servidor de desarrollo en http://localhost:3000
+npm start       # servidor de desarrollo en http://localhost:3000 (sin /api)
+vercel dev      # sitio + /api/chat en local (necesita el proyecto enlazado y .env.local)
 npm run build   # build de producción en /build
 npm test        # tests
+node scripts/probar-chat.mjs [url]  # casos de prueba del chat (por defecto, localhost:3000)
 ```
 
 ## Estructura
 
 ```
+api/
+├── chat.js         POST /api/chat: valida la petición, llama a Gemini una vez y
+│                   convierte su respuesta en texto, sugerencias y una acción propuesta
+└── _lib/           Validación de la petición, instrucciones del asistente y funciones
+scripts/
+└── probar-chat.mjs Casos de prueba de /api/chat
 src/
 ├── components/
 │   ├── layout/     Navbar, Footer (Bloque 1)
@@ -44,15 +54,17 @@ src/
 ├── data/
 │   ├── deportes.js    Nombre y colorAcento de cada deporte (fuente única)
 │   ├── canchas.json   Semilla: horas base + ocupación por día de cada cancha
-│   └── local.json     Dirección, teléfono, días de atención y mapa del local (fuente única)
+│   └── negocio.json   Datos del local (fuente única): contacto, mapa, pagos, cancelación,
+│                      servicios y tipos de evento; lo usan el sitio y el chat
 ├── lib/
 │   ├── fechas.js         Helpers de fecha compartidos (etiquetas, meses...)
 │   ├── canchas.js        Agrupar canchas por deporte, título corto de cada una
 │   ├── precios.js        Reglas de precio (descuento desde 2 horas, eventos por cancha)
 │   ├── horarios.js       Selección de horas: bloque de hasta 3 o rango inicio-fin
 │   ├── codigoReserva.js  Código de reserva y texto del QR
-│   ├── local.js          Teléfono del local (formato y enlace) y horario a partir de las franjas
-│   └── validacion.js     Nombre y teléfono del formulario
+│   ├── negocio.js        Teléfono del local (formato y enlace) y horario a partir de las franjas
+│   └── validacion.js     Nombre y teléfono (formulario y chat) y validación de una
+│                         reserva propuesta desde el chat
 ├── App.js          <ReservasProvider> + <VistaCanchasProvider> + Navbar + heros + evento + ubicación + Footer
 └── index.js        Punto de entrada (importa el CSS de Foundation)
 ```
@@ -88,9 +100,57 @@ panel de administración.
 La sección "Visítanos" (`#ubicacion`, enlazada desde el navbar y el footer)
 muestra la dirección, el teléfono (con enlace para llamar), el horario y un
 mapa de Google con el botón "Cómo llegar". Los datos salen de
-`src/data/local.json` y el horario se calcula de las franjas de
+`src/data/negocio.json` y el horario se calcula de las franjas de
 `canchas.json` (de la primera a la última hora reservable), así que el footer
 y la sección siempre coinciden.
+
+## Chatbot (Bloque 6)
+
+El asistente responde preguntas sobre el local (horarios libres, precios,
+servicios, pagos, cancelación, ubicación) y propone acciones; nunca reserva
+por su cuenta.
+
+- **El navegador es la única fuente de verdad.** En cada mensaje envía a
+  `/api/chat` el historial reciente y las franjas libres de hoy y los 6 días
+  siguientes. La función no guarda estado.
+- **Una sola llamada a Gemini por mensaje.** La información del local
+  (`negocio.json`), los precios (`canchas.json`, `precios.js`) y la
+  disponibilidad van en las instrucciones del modelo.
+- **El modelo propone, el código valida.** Cuando el usuario quiere reservar,
+  cancelar o ver una sección, Gemini llama una función; el servidor valida los
+  datos con `src/lib/validacion.js` (el mismo módulo del formulario) y
+  devuelve una acción propuesta que el sitio ejecuta solo si el usuario
+  confirma. Si algo no es válido, responde un mensaje fijo sin volver a llamar
+  al modelo.
+
+### Configurar la key
+
+1. Crea una API key en [Google AI Studio](https://aistudio.google.com/apikey)
+   ("Create API key").
+2. En Vercel, agrégala al proyecto como variable secreta, junto con el modelo:
+   ```bash
+   vercel env add GEMINI_API_KEY production,preview --sensitive
+   vercel env add GEMINI_MODEL production,preview --value gemini-3.5-flash-lite --no-sensitive
+   ```
+   También se puede hacer en *Settings → Environment Variables* del proyecto.
+   Las variables nuevas aplican desde el siguiente deploy.
+3. En local, copia `.env.example` a `.env.local` y pon tu key. Nunca uses el
+   prefijo `REACT_APP_`: esas variables quedan dentro del bundle público.
+
+### Probar en local
+
+`npm start` solo sirve el sitio: no ejecuta las funciones de `/api`. Para
+probar el chat usa `vercel dev` (con el proyecto enlazado mediante
+`vercel link`), que levanta el sitio y `/api/chat` en `http://localhost:3000`.
+`vercel dev` no le pasa a las funciones lo que hay en `.env.local`, pero sí
+las variables del entorno de la terminal, así que cárgalas antes (Git Bash):
+
+```bash
+set -a; . <(tr -d '\r' < .env.local); set +a; vercel dev
+```
+
+Después corre `node scripts/probar-chat.mjs` para ver las respuestas de los
+casos de prueba. No lo corras junto a `npm start`.
 
 ## Avance por bloques
 
@@ -100,5 +160,5 @@ y la sección siempre coinciden.
 3. ✅ Catálogo de canchas — vista superpuesta con Depth Carousel
 4. ✅ Sistema de reservas (horarios, validación de choques, `localStorage`)
 5. ✅ Modo evento especial: torneos y cumpleaños (varias canchas + franja consecutiva, bloqueo todo-o-nada)
-6. Chatbot ← siguiente
+6. Chatbot ← en curso (6.1: datos del negocio y `/api/chat`)
 7. Panel de estado/admin (opcional)
