@@ -79,18 +79,30 @@
   transform: translateX(2px);
 }
 
-.footer__horario p {
+.footer__horario p,
+.footer__contacto p {
   margin: 0 0 0.3rem;
   color: #d8d8d8;
 }
 
-.footer__horario p:last-child {
+.footer__horario p:last-child,
+.footer__contacto p:last-child {
   margin-bottom: 0;
 }
 
 .footer__horario-dias {
   font-weight: 600;
   color: #fefefe;
+}
+
+.footer__contacto a {
+  color: #d8d8d8;
+  transition: color 0.15s ease;
+}
+
+.footer__contacto a:hover,
+.footer__contacto a:focus {
+  color: #f6a94b;
 }
 
 .footer__inferior {
@@ -127,9 +139,9 @@
   transform: translateY(-1px);
 }
 
-/* Costuras verticales entre columnas, solo cuando quedan una al lado de la
-   otra (a partir del breakpoint medium de Foundation). */
-@media screen and (min-width: 40em) {
+/* Costuras verticales entre columnas, solo cuando quedan las 4 columnas
+   en una fila (a partir del breakpoint large de Foundation). */
+@media screen and (min-width: 64em) {
   .footer__col--separado {
     padding-left: 1.5rem;
     border-left: 1px solid rgba(255, 255, 255, 0.08);
@@ -138,6 +150,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .footer__nav a,
+  .footer__contacto a,
   .footer__volver {
     transition: none;
   }

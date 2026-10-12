@@ -113,7 +113,15 @@ function Navbar() {
               </a>
             </li>
             <li>
-              <a href="#eventos">Eventos especiales</a>
+              {/* En móvil se acorta a "Eventos" para que los cuatro enlaces
+                  quepan en una sola fila. */}
+              <a href="#eventos">
+                <span className="show-for-medium">Eventos especiales</span>
+                <span className="hide-for-medium">Eventos</span>
+              </a>
+            </li>
+            <li>
+              <a href="#ubicacion">Ubicación</a>
             </li>
           </ul>
         </div>

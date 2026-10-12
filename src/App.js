@@ -6,6 +6,7 @@ import Navbar from './components/layout/Navbar';
 import DeporteHero from './components/hero/DeporteHero';
 import VistaCanchas from './components/canchas/VistaCanchas';
 import EventoCTA from './components/eventos/EventoCTA';
+import Ubicacion from './components/ubicacion/Ubicacion';
 import Footer from './components/layout/Footer';
 import './App.css';
 
@@ -22,7 +23,7 @@ const VIDEOS = {
 
 /**
  * Esqueleto de la aplicación.
- * Navbar + heros por deporte (Bloque 2.5) + EventoCTA + Footer, envuelto en
+ * Navbar + heros por deporte (Bloque 2.5) + EventoCTA + Ubicacion + Footer, envuelto en
  * <ReservasProvider> (Bloque 4) y <VistaCanchasProvider> (estado de la vista
  * superpuesta de canchas, Bloque 3 rediseñado). La vista de canchas
  * (`<VistaCanchas>`) no vive en el flujo de scroll: se monta siempre pero solo
@@ -34,6 +35,7 @@ const VIDEOS = {
  * Ids que otros componentes referencian (sin tocarlos):
  *  - #hero-placeholder -> enlace "Inicio" del navbar
  *  - #eventos           -> enlace "Eventos especiales" del navbar/footer (lo lleva EventoCTA)
+ *  - #ubicacion        -> enlace "Ubicación" del navbar/footer (lo lleva Ubicacion)
  *
  * `#canchas-placeholder` ya NO existe en el DOM: el catálogo dejó de vivir en
  * el flujo de scroll. Los botones "Ver canchas de..." de los DeporteHero y los
@@ -74,6 +76,8 @@ function AppContenido() {
       </div>
 
       <EventoCTA />
+
+      <Ubicacion />
 
       <Footer />
 
