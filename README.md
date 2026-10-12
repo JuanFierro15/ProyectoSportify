@@ -49,8 +49,8 @@ src/
 │                   useAccionesChat (botones que abren canchas, eventos o ubicación)
 ├── context/
 │   ├── ReservasContext.jsx    Context + useReducer: disponibilidad por día (7 días);
-│   │                          reservas "individual" y "evento" (bloqueo todo-o-nada),
-│   │                          persistidas en el navegador
+│   │                          reservas "individual" y "evento" (bloqueo todo-o-nada)
+│   │                          y cancelación de las individuales, persistidas en el navegador
 │   └── VistaCanchasContext.jsx  Estado de la vista de canchas (qué deporte está
 │                                abierto), sincronizado con el hash de la URL
 ├── data/
@@ -64,8 +64,9 @@ src/
 │   ├── precios.js        Reglas de precio (descuento desde 2 horas, eventos por cancha)
 │   ├── horarios.js       Selección de horas: bloque de hasta 3 o rango inicio-fin
 │   ├── codigoReserva.js  Código de reserva y texto del QR
-│   ├── chat.js           Contexto que el chat envía (franjas libres de 7 días), historial
-│   │                     y validación de la respuesta
+│   ├── chat.js           Contexto que el chat envía (franjas libres de 7 días), historial,
+│   │                     validación de la respuesta, sí/no y textos fijos
+│   ├── cancelacion.js    Cancelación de reservas: plazo, estado resultante y búsqueda
 │   ├── negocio.js        Teléfono del local (formato y enlace) y horario a partir de las franjas
 │   └── validacion.js     Nombre y teléfono (formulario y chat) y validación de una
 │                         reserva propuesta desde el chat
@@ -135,6 +136,19 @@ conversación" la borra). Toma el color del deporte que se está viendo y,
 cuando la respuesta lo amerita, muestra un botón para abrir las canchas, la
 reserva de eventos o la sección de ubicación.
 
+También reserva y cancela canchas, siempre con una confirmación explícita:
+
+- **Reservar**: cuando tiene cancha, fecha, horas seguidas (1 a 3), nombre y
+  teléfono, muestra una tarjeta con el resumen y el total. La reserva se hace
+  solo al tocar "Confirmar" o responder "sí", con la misma función que el
+  formulario: si alguna franja se ocupó entretanto, no reserva nada y ofrece
+  las otras libres. Después muestra el código, el abono y un botón para ver
+  el comprobante con el QR.
+- **Cancelar**: busca las reservas futuras con el mismo nombre y teléfono
+  (las hechas sin teléfono no se pueden encontrar; en ese caso sugiere llamar
+  al local) y, tras confirmar, libera la franja. No cancela eventos ni
+  reservas a menos de 6 horas de empezar (política en `negocio.json`).
+
 ### Configurar la key
 
 1. Crea una API key en [Google AI Studio](https://aistudio.google.com/apikey)
@@ -172,5 +186,5 @@ casos de prueba. No lo corras junto a `npm start`.
 3. ✅ Catálogo de canchas — vista superpuesta con Depth Carousel
 4. ✅ Sistema de reservas (horarios, validación de choques, `localStorage`)
 5. ✅ Modo evento especial: torneos y cumpleaños (varias canchas + franja consecutiva, bloqueo todo-o-nada)
-6. Chatbot ← en curso (6.1: datos del negocio y `/api/chat` · 6.2: widget en todas las vistas)
+6. ✅ Chatbot: datos del negocio y `/api/chat`, widget en todas las vistas, y reservas y cancelaciones desde el chat
 7. Panel de estado/admin (opcional)
