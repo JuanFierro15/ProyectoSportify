@@ -1,100 +1,27 @@
+/* Sección de llamada a la acción para eventos y torneos */
 .evento-cta {
   --evento-acento: #f6a94b;
   position: relative;
   min-height: 100vh;
+  display: flex;
+  align-items: center;
   width: 100%;
   box-sizing: border-box;
   scroll-margin-top: 80px;
-  background: var(--eventos-fondo, #0d0d0d);
+  padding: clamp(4rem, 9vh, 7rem) 0;
   color: #fefefe;
-}
-
-/* PixelReveal ocupa la sección de borde a borde: el fondo (oscuro, o la
-   foto revelada) vive dentro de .evento-cta__panel, no en .evento-cta, para
-   que el mosaico cubra también el fondo y no solo el texto. .evento-cta__panel
-   es el contenedor posicionado del que cuelgan el mosaico (absoluto, detrás),
-   la capa oscura de contraste (absoluta, en medio) y el texto (en flujo,
-   arriba de todo). */
-.evento-cta__panel {
-  position: relative;
-  min-height: 100vh;
-  width: 100%;
-  box-sizing: border-box;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  /* El padding inferior es más grande a propósito: reserva sitio para
-     .evento-cta__controles, que se superpone (position:absolute) sobre el
-     panel en vez de venir después en el flujo. Sin este espacio, en
-     pantallas bajas el contenido centrado (título + 4 stats + botón) puede
-     terminar tan cerca del borde inferior que el control se le monta
-     encima. */
-  padding: clamp(3.5rem, 6vh, 6rem) 1.5rem clamp(7rem, 16vh, 9rem);
-  background: radial-gradient(circle at 50% 32%, rgba(246, 169, 75, 0.1) 0%, transparent 55%),
+  background:
+    radial-gradient(circle at 18% 30%, rgba(246, 169, 75, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 85% 75%, rgba(255, 255, 255, 0.04) 0%, transparent 45%),
     var(--eventos-fondo, #0d0d0d);
 }
 
-.evento-cta__mosaico-fondo {
-  z-index: 0;
-}
-
-/* Capa oscura de contraste sobre la foto revelada: un solo fundido de
-   opacidad (CSS, no por cuadro) para que el texto blanco se lea bien una
-   vez terminada la revelación. */
-.evento-cta__overlay-oscuro {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(rgba(10, 8, 6, 0.78), rgba(10, 8, 6, 0.82));
-  opacity: 0;
-  transition: opacity 1.2s ease;
-  pointer-events: none;
-}
-
-/* Los hijos de .evento-cta__panel se apilan por DOM order salvo que se les
-   dé z-index explícito: sin esto, el contenido de texto (no posicionado)
-   pintaría por debajo de las capas absolutas del fondo. */
-.evento-cta__grid-texto {
-  position: relative;
-  z-index: 2;
+.evento-cta .grid-container {
   width: 100%;
 }
 
-.evento-cta__texto {
-  text-align: center;
-  width: 100%;
-}
-
-/* Los dos bloques de texto (primario/secundario) se apilan en la misma
-   celda de grid y cruzan con un fundido + leve desplazamiento vertical,
-   retrasado hasta el punto medio de la revelación del fondo (duration del
-   PixelReveal = 1200ms). El bloque oculto usa visibility (no display) para
-   conservar su altura en el grid y salir del Tab/árbol de accesibilidad. */
-.evento-cta__texto-stack {
-  position: relative;
-  display: grid;
-  width: 100%;
-}
-
-.evento-cta__texto-capa {
-  grid-area: 1 / 1;
-  width: 100%;
-  min-height: 100%;
-  opacity: 1;
-  transform: translateY(0);
-  visibility: visible;
-  transition: opacity 0.45s ease 0.6s, transform 0.45s ease 0.6s, visibility 0s linear 0.6s;
-}
-
-.evento-cta__texto-capa[data-visible='false'] {
-  opacity: 0;
-  transform: translateY(14px);
-  visibility: hidden;
-  transition: opacity 0.45s ease 0.6s, transform 0.45s ease 0.6s, visibility 0s linear 1.05s;
-}
-
+/* Columna de mensaje y detalles */
 .evento-cta__eyebrow {
   margin: 0 0 0.75rem;
   font-size: 0.85rem;
@@ -104,76 +31,71 @@
   color: var(--evento-acento);
 }
 
-.evento-cta__eyebrow--dorado {
-  color: #ffc266;
-}
-
 .evento-cta__titulo {
   margin: 0 0 1rem;
-  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  font-size: clamp(2.1rem, 4.2vw, 3.1rem);
   font-weight: 800;
   letter-spacing: -0.02em;
-  line-height: 1.15;
+  line-height: 1.12;
   color: #fefefe;
 }
 
 .evento-cta__bajada {
-  margin: 0 auto;
-  max-width: 38rem;
-  font-size: clamp(1.05rem, 2vw, 1.2rem);
+  margin: 0;
+  max-width: 34rem;
+  font-size: clamp(1.05rem, 1.6vw, 1.2rem);
   color: #d0d0d0;
   line-height: 1.6;
 }
 
+/* Grilla de cifras destacadas */
 .evento-cta__stats {
   list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.85rem;
-  margin: 2.25rem auto 0;
+  margin: 2rem 0 0;
   padding: 0;
-  max-width: 48rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  max-width: 30rem;
 }
 
 .evento-cta__stat {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.65rem 1.25rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.09);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #f3f3f3;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-  will-change: transform, opacity;
-  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
-              box-shadow 0.25s ease,
-              border-color 0.25s ease,
-              background-color 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem 1.15rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition:
+    border-color 0.25s ease,
+    background-color 0.25s ease,
+    transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .evento-cta__stat:hover {
-  transform: translateY(-4px) scale(1.04);
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(246, 169, 75, 0.5);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45), 0 0 20px rgba(246, 169, 75, 0.25);
+  transform: translateY(-3px);
+  border-color: rgba(246, 169, 75, 0.45);
+  background: rgba(255, 255, 255, 0.09);
 }
 
-.evento-cta__stat svg {
-  flex-shrink: 0;
+.evento-cta__stat-numero {
+  font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+  font-weight: 800;
+  line-height: 1.1;
   color: var(--evento-acento);
+  font-variant-numeric: tabular-nums;
 }
 
-.evento-cta__stat--secundaria {
-  background: rgba(246, 169, 75, 0.12);
-  border-color: rgba(246, 169, 75, 0.35);
+.evento-cta__stat-etiqueta {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #d6d6d6;
 }
 
+/* Botón principal de acción */
 .evento-cta__accion {
-  margin-top: 2.5rem;
+  margin-top: 2.25rem;
 }
 
 .evento-cta__boton.button.large {
@@ -185,9 +107,10 @@
   padding: 1rem 2.5rem;
   border-radius: 999px;
   box-shadow: 0 10px 25px rgba(246, 169, 75, 0.3);
-  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
-              box-shadow 0.25s ease,
-              background-color 0.25s ease;
+  transition:
+    transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.25s ease,
+    background-color 0.25s ease;
 }
 
 .evento-cta__boton.button.large:hover,
@@ -198,81 +121,68 @@
   box-shadow: 0 14px 32px rgba(246, 169, 75, 0.45);
 }
 
-/* Controles persistentes (fuera de .evento-cta__panel, no dentro del texto
-   que cruza con el fondo). Anclados cerca del borde inferior de la
-   sección en vez de "pegados" al botón de reserva, cuya posición varía
-   según el alto del contenido centrado; así su ubicación es estable sin
-   importar qué panel esté activo. */
-.evento-cta__controles {
-  position: absolute;
-  left: 50%;
-  bottom: clamp(1.5rem, 4vh, 3rem);
-  transform: translateX(-50%);
-  z-index: 5;
-  text-align: center;
-}
-
-.evento-cta__alternar {
-  appearance: none;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(13, 13, 13, 0.35);
-  color: #f3f3f3;
-  font-size: 0.85rem;
-  font-weight: 600;
-  padding: 0.55rem 1.4rem;
-  border-radius: 999px;
-  cursor: pointer;
-  backdrop-filter: blur(4px);
-  transition: border-color 0.25s ease, background-color 0.25s ease, color 0.25s ease;
-}
-
-.evento-cta__alternar:hover {
-  border-color: var(--evento-acento);
-  color: var(--evento-acento);
-}
-
-.evento-cta__alternar:focus-visible {
-  outline: 2px solid var(--evento-acento);
-  outline-offset: 2px;
+/* Columna de la galería interactiva */
+.evento-cta__galeria {
+  position: relative;
 }
 
 .evento-cta__hint {
-  display: none;
-  margin: 0.85rem auto 0;
+  margin: 0.9rem 0 0;
   font-size: 0.8rem;
   color: #929292;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-weight: 600;
+  text-align: center;
 }
 
-/* La invitación a "pasar el cursor" solo tiene sentido en dispositivos que
-   realmente tienen hover; en táctil el botón de arriba es el único control. */
-@media (hover: hover) {
-  .evento-cta__hint {
-    display: block;
+/* Ajustes responsivos */
+@media screen and (min-width: 521px) {
+  .evento-cta__galeria .accordion-gallery {
+    height: clamp(380px, 62vh, 520px) !important;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .evento-cta__texto-capa,
-  .evento-cta__overlay-oscuro {
-    transition: none;
+@media screen and (max-width: 63.9375em) {
+  .evento-cta__texto {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  .evento-cta__bajada,
+  .evento-cta__stats {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .evento-cta__galeria .ag-panel--active {
+    min-height: 240px;
+  }
+
+  .evento-cta__galeria .accordion-gallery .ag-panel__media {
+    height: 100%;
   }
 }
 
 @media screen and (max-width: 39.9375em) {
-  .evento-cta__panel {
-    padding: clamp(3rem, 5vh, 4.5rem) 1rem clamp(8rem, 20vh, 10rem);
+  .evento-cta__stat {
+    padding: 0.85rem 0.9rem;
   }
 
-  .evento-cta__stat {
-    font-size: 0.85rem;
-    padding: 0.55rem 1rem;
+  .evento-cta__stat-etiqueta {
+    font-size: 0.82rem;
   }
 
   .evento-cta__boton.button.large {
     font-size: 1rem;
     padding: 0.85rem 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evento-cta__stat {
+    transition: none;
   }
 }
