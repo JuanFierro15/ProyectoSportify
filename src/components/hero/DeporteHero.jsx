@@ -167,13 +167,19 @@ function DeporteHero({
           <div className="cell small-12 medium-10 large-8">
             <p className="deporte-hero__eyebrow">{eyebrow}</p>
             <h2 className="deporte-hero__titulo">{nombre}</h2>
-            <p className="deporte-hero__texto">
+            {/* En móvil (menos de 640px) solo título y botón: show-for-medium
+                de Foundation oculta la descripción por debajo de `medium`. */}
+            <p className="deporte-hero__texto show-for-medium">
               {descripcion ||
                 `Vive la experiencia del ${nombre.toLowerCase()} en un espacio pensado para disfrutar al máximo cada partido.`}
             </p>
+            {/* En móvil el texto se acorta a "Ver canchas" (el deporte ya está
+                en el título); el aria-label conserva el texto completo para
+                lectores de pantalla en cualquier tamaño. */}
             <a
               className="button large deporte-hero__cta"
               href="#canchas-placeholder"
+              aria-label={tituloCTA}
               onClick={(e) => {
                 if (onVerCanchas) {
                   e.preventDefault();
@@ -181,7 +187,8 @@ function DeporteHero({
                 }
               }}
             >
-              {tituloCTA}
+              <span className="show-for-medium">{tituloCTA}</span>
+              <span className="hide-for-medium">Ver canchas</span>
             </a>
           </div>
         </div>
