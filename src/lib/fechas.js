@@ -57,3 +57,24 @@ export function esHoraPasada(fecha, hora) {
   const [hh, mm] = hora.split(':').map(Number);
   return hh * 60 + mm < minutosAhora;
 }
+
+// Formato de 12 horas del chat: '09:00' -> '9:00 a. m.', '12:00' -> '12:00 m.',
+// '13:00' -> '1:00 p. m.'. Si no es 'HH:MM', devuelve el valor tal cual.
+export function horaAmPm(hora) {
+  if (typeof hora !== 'string' || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(hora)) {
+    return hora;
+  }
+  const [hhStr, mm] = hora.split(':');
+  const hh = parseInt(hhStr, 10);
+  if (hh === 0) {
+    return `12:${mm} a. m.`;
+  }
+  if (hh === 12) {
+    return `12:${mm} m.`;
+  }
+  if (hh < 12) {
+    return `${hh}:${mm} a. m.`;
+  }
+  return `${hh - 12}:${mm} p. m.`;
+}
+

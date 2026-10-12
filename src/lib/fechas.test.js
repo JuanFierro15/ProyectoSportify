@@ -1,4 +1,4 @@
-import { esHoraPasada, fechaCompleta } from './fechas';
+import { esHoraPasada, fechaCompleta, horaAmPm } from './fechas';
 
 describe('fechaCompleta', () => {
   test('día de la semana, número y mes, sin fechas relativas', () => {
@@ -29,5 +29,20 @@ describe('esHoraPasada', () => {
 
   test('otros días nunca están pasados', () => {
     expect(esHoraPasada('2026-10-12', '08:00')).toBe(false);
+  });
+});
+
+describe('horaAmPm', () => {
+  test('formato de 12 horas en español de Colombia', () => {
+    expect(horaAmPm('09:00')).toBe('9:00 a. m.');
+    expect(horaAmPm('08:30')).toBe('8:30 a. m.');
+    expect(horaAmPm('12:00')).toBe('12:00 m.');
+    expect(horaAmPm('13:00')).toBe('1:00 p. m.');
+    expect(horaAmPm('20:00')).toBe('8:00 p. m.');
+    expect(horaAmPm('00:00')).toBe('12:00 a. m.');
+  });
+
+  test('valor inválido se devuelve tal cual', () => {
+    expect(horaAmPm('hola')).toBe('hola');
   });
 });
