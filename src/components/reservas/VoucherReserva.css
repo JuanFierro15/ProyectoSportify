@@ -32,8 +32,9 @@
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #1779ba;
-  background: rgba(23, 121, 186, 0.1);
+  /* Color del deporte activo (lo define la vista de canchas). */
+  color: color-mix(in srgb, var(--accent, #1779ba) 50%, #1a1a1a);
+  background: color-mix(in srgb, var(--accent, #1779ba) 16%, #ffffff);
 }
 
 .voucher-reserva__meta {
@@ -169,6 +170,25 @@
 
 .voucher-reserva__acciones .button:last-child {
   margin-bottom: 0;
+}
+
+/* Confirmar: color del deporte activo en vez del verde de Foundation. */
+.voucher-reserva__acciones .button.success,
+.voucher-reserva__acciones .button.success:disabled,
+.voucher-reserva__acciones .button.success:disabled:hover,
+.voucher-reserva__acciones .button.success:disabled:focus {
+  background: var(--accent, #3adb76);
+  color: var(--accent-contrast, #0a0a0a);
+}
+
+.voucher-reserva__acciones .button.success:hover:not(:disabled),
+.voucher-reserva__acciones .button.success:focus:not(:disabled) {
+  background: color-mix(in srgb, var(--accent, #3adb76) 85%, #000000);
+  color: var(--accent-contrast, #0a0a0a);
+}
+
+.voucher-reserva__acciones .button.success:disabled {
+  opacity: 0.4;
 }
 
 .voucher-reserva__bloqueo {

@@ -27,18 +27,21 @@
     border-color 0.15s ease, background-color 0.15s ease;
 }
 
+/* Colores del deporte activo vía `--accent` / `--accent-contrast` (los
+   define la vista de canchas); sin ellas, el azul de antes. */
 .selector-dia__opcion:hover {
-  border-color: #8a8a8a;
+  border-color: var(--accent, #8a8a8a);
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
 }
 
-.selector-dia__opcion--sel {
-  border-color: #1468a0;
-  background: #1779ba;
-  color: #fefefe;
+.selector-dia__opcion--sel,
+.selector-dia__opcion--sel:hover {
+  border-color: color-mix(in srgb, var(--accent, #1779ba) 85%, #000000);
+  background: var(--accent, #1779ba);
+  color: var(--accent-contrast, #fefefe);
   transform: translateY(-2px);
-  box-shadow: 0 10px 18px -4px rgba(23, 121, 186, 0.45);
+  box-shadow: 0 10px 18px -4px color-mix(in srgb, var(--accent, #1779ba) 50%, transparent);
 }
 
 .selector-dia__opcion--lleno:not(.selector-dia__opcion--sel) {

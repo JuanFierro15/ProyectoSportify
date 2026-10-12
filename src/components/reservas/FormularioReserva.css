@@ -32,6 +32,10 @@
   color: #64748b;
 }
 
+/* Colores del deporte activo: `--accent` y `--accent-contrast` los define la
+   vista de canchas (estiloAcento). El texto usa el acento oscurecido para
+   que se lea sobre fondo claro aunque el acento sea claro (p. ej. el ámbar
+   del vóley). Fuera de la vista, los respaldos dan el verde/azul de antes. */
 .formulario-reserva__promo {
   display: flex;
   align-items: flex-start;
@@ -39,14 +43,15 @@
   margin: 0 0 0.85rem;
   padding: 0.55rem 0.75rem;
   border-radius: 10px;
-  background: #eaf6ee;
-  color: #1d6b3a;
+  background: color-mix(in srgb, var(--accent, #2fa35a) 14%, #ffffff);
+  color: color-mix(in srgb, var(--accent, #2fa35a) 45%, #1a1a1a);
   font-size: 0.85rem;
 }
 
 .formulario-reserva__promo svg {
   flex-shrink: 0;
   margin-top: 0.1rem;
+  color: color-mix(in srgb, var(--accent, #2fa35a) 75%, #1a1a1a);
 }
 
 .formulario-reserva__horas {
@@ -58,7 +63,22 @@
 .formulario-reserva__hora {
   margin: 0;
   border-radius: 999px;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease,
+    background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+/* Horas libres (botón hollow de Foundation): borde y texto del deporte. */
+.formulario-reserva__hora.button.hollow,
+.formulario-reserva__hora.button.hollow:disabled {
+  border-color: var(--accent, #1779ba);
+  color: color-mix(in srgb, var(--accent, #1779ba) 55%, #1a1a1a);
+}
+
+.formulario-reserva__hora.button.hollow:hover:not(:disabled),
+.formulario-reserva__hora.button.hollow:focus:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent, #1779ba) 80%, #1a1a1a);
+  background: color-mix(in srgb, var(--accent, #1779ba) 12%, #ffffff);
+  color: color-mix(in srgb, var(--accent, #1779ba) 45%, #1a1a1a);
 }
 
 .formulario-reserva__hora--ocupado {
@@ -66,8 +86,14 @@
   cursor: not-allowed;
 }
 
-.formulario-reserva__hora--sel {
-  box-shadow: 0 8px 16px -4px rgba(20, 104, 160, 0.5);
+/* Hora elegida (botón relleno): fondo del deporte y texto con contraste. */
+.formulario-reserva__hora--sel.button,
+.formulario-reserva__hora--sel.button:hover,
+.formulario-reserva__hora--sel.button:focus {
+  border-color: var(--accent, #1779ba);
+  background: var(--accent, #1779ba);
+  color: var(--accent-contrast, #ffffff);
+  box-shadow: 0 8px 16px -4px color-mix(in srgb, var(--accent, #1779ba) 55%, transparent);
   transform: translateY(-1px);
 }
 
