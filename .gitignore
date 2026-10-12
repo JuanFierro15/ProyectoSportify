@@ -39,3 +39,6 @@ public/media/fuente/
 
 # Respaldo local de los videos viejos de los heros
 /backup_videos_viejos/
+
+# Enlace local con el proyecto de Vercel (lo crea `vercel link`)
+.vercel

@@ -1,0 +1,10 @@
+# La CLI de Vercel no lee el .gitignore: sube todo salvo lo que diga este
+# archivo. Lista blanca con solo lo que necesita el build de producción.
+/*
+!/src
+!/public
+!/package.json
+!/package-lock.json
+
+# Videos fuente en alta calidad: no van al sitio publicado.
+/public/media/fuente
