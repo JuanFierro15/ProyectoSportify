@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useReservas } from '../../context/ReservasContext';
+import { useVistaCanchas } from '../../context/VistaCanchasContext';
 import { DEPORTES, deportePorSlug } from '../../data/deportes';
 import { canchasDelDeporte, imagenGrandeCancha } from '../../lib/canchas';
 import AccordionGallery from '../reactbits/AccordionGallery';
-import ModalReserva from '../reservas/ModalReserva';
 import './EventoCTA.css';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -21,7 +21,7 @@ const TIPOS_EVENTO = [
 // animaciones GSAP dentro de gsap.context con ctx.revert y desactivadas si se prefiere movimiento reducido.
 function EventoCTA() {
   const { canchas, dias } = useReservas();
-  const [abierto, setAbierto] = useState(false);
+  const { abrirVista } = useVistaCanchas();
 
   const rootRef = useRef(null);
   const textoRef = useRef(null);
@@ -108,7 +108,11 @@ function EventoCTA() {
                 ))}
               </ul>
               <div className="evento-cta__accion evento-cta__anim">
-                <button type="button" className="button large evento-cta__boton" onClick={() => setAbierto(true)}>
+                <button
+                  type="button"
+                  className="button large evento-cta__boton"
+                  onClick={() => abrirVista(DEPORTES[0].slug, { modo: 'torneo' })}
+                >
                   Reserva un evento
                 </button>
               </div>
@@ -131,7 +135,6 @@ function EventoCTA() {
           </div>
         </div>
       </section>
-      <ModalReserva modoInicial="torneo" abierto={abierto} onCerrar={() => setAbierto(false)} />
     </>
   );
 }

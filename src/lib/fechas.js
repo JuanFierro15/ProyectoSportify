@@ -1,6 +1,7 @@
 /**
- * Helpers de fechas compartidos por el selector de día y el modal de reserva
- * (ModalReserva). Todo trabaja con fechas ISO `YYYY-MM-DD` en hora local.
+ * Helpers de fechas compartidos por el selector de día y la reserva
+ * (FormularioReserva, VoucherReserva y el QR). Todo trabaja con fechas ISO
+ * `YYYY-MM-DD` en hora local.
  */
 
 export const DIA_SEMANA = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];

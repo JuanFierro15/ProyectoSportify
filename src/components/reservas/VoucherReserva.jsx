@@ -4,7 +4,7 @@ import './VoucherReserva.css';
 
 /**
  * VoucherReserva — resumen en vivo de lo que se paga, en todos los modos de
- * ModalReserva: una línea por cancha (horas × precio, con descuento si
+ * la vista de reserva (VistaCanchas): una línea por cancha (horas × precio, con descuento si
  * aplica), packs de agua, ahorro, total y los botones de confirmar/cancelar.
  *
  * Props: tipoEtiqueta, fechaTexto, horas (bloque elegido), precio (resultado

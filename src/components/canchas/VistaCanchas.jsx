@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { gsap } from 'gsap';
-import { X, Tag } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useVistaCanchas } from '../../context/VistaCanchasContext';
 import { useReservas } from '../../context/ReservasContext';
 import { DEPORTES, deportePorSlug } from '../../data/deportes';
@@ -12,9 +12,16 @@ import {
   imagenGrandeCancha,
   estiloAcento,
 } from '../../lib/canchas';
+import { formatoPrecio } from '../../lib/precios';
+import { fechaCompleta } from '../../lib/fechas';
 import DepthCarousel from '../reactbits/DepthCarousel';
-import ModalReserva from '../reservas/ModalReserva';
-import { DESCUENTO_POR_HORA, MIN_HORAS_BENEFICIO, formatoPrecio } from '../../lib/precios';
+import useReserva from '../reservas/useReserva';
+import SelectorModo from '../reservas/SelectorModo';
+import CanchasElegidas from '../reservas/CanchasElegidas';
+import FormularioReserva from '../reservas/FormularioReserva';
+import VoucherReserva from '../reservas/VoucherReserva';
+import ConfirmacionReserva from '../reservas/ConfirmacionReserva';
+import TarjetaCanchaCarrusel from '../reservas/TarjetaCanchaCarrusel';
 import TexturaCancha from './TexturaCancha';
 import './VistaCanchas.css';
 
@@ -54,126 +61,15 @@ function tituloConDeporte(cancha, infoDeporte) {
   return infoDeporte ? `${tituloCancha(cancha)} · ${infoDeporte.nombre}` : tituloCancha(cancha);
 }
 
-// Primer horario de hoy que sigue disponible y todavía no pasó (comparado
-// contra la hora real del navegador). Puramente de presentación: no toca el
-// cálculo de disponibilidad del ReservasContext.
-function proximaHoraLibre(horariosHoy) {
-  const ahora = new Date();
-  const minutosAhora = ahora.getHours() * 60 + ahora.getMinutes();
-  const siguiente = horariosHoy.find((h) => {
-    if (!h.disponible) return false;
-    const [hh, mm] = h.hora.split(':').map(Number);
-    return hh * 60 + mm >= minutosAhora;
-  });
-  return siguiente ? siguiente.hora : null;
-}
-
-/**
- * Panel de detalle, sincronizado con la card activa del carrusel (o la card
- * elegida en el layout estático). Vive dentro del mismo archivo por ser un
- * detalle de presentación exclusivo de VistaCanchas (no se reutiliza en
- * ningún otro sitio). El color de acento no se pasa por prop: se hereda de
- * `--accent` definida en el contenedor `.vista-canchas` (tema por deporte).
- */
-function PanelDetalle({ cancha, dias, disponibilidad, onReservar }) {
-  const horariosHoy = disponibilidad(cancha.id, dias[0]);
-  const libresHoy = horariosHoy.filter((h) => h.disponible).length;
-  const totalHoras = horariosHoy.length;
-  const hayCuposSemana = dias.some((d) =>
-    disponibilidad(cancha.id, d).some((h) => h.disponible)
-  );
-  const proximoLibre = proximaHoraLibre(horariosHoy);
-  const porcentajeLibre = totalHoras > 0 ? Math.round((libresHoy / totalHoras) * 100) : 0;
-
-  return (
-    <div className="vista-canchas__panel">
-      <div className="vista-canchas__panel-info">
-        <p className="vista-canchas__panel-nombre">{tituloCancha(cancha)}</p>
-        <p className="vista-canchas__panel-precio">
-          <Tag size={15} aria-hidden="true" />
-          {formatoPrecio.format(cancha.precioHora)}
-          <span className="vista-canchas__panel-unidad"> / hora</span>
-        </p>
-        <p className="vista-canchas__panel-promo">
-          Desde {MIN_HORAS_BENEFICIO} horas seguidas: {formatoPrecio.format(DESCUENTO_POR_HORA)}{' '}
-          menos por hora y pack de agua gratis
-        </p>
-        <p className="vista-canchas__panel-disp">
-          {libresHoy === 0 ? (
-            'Sin horarios disponibles hoy'
-          ) : (
-            <>
-              <strong>{libresHoy}</strong> de {totalHoras} horarios libres hoy
-            </>
-          )}
-        </p>
-
-        {proximoLibre ? (
-          <>
-            <div
-              className="vista-canchas__ocupacion"
-              role="img"
-              aria-label={`${libresHoy} de ${totalHoras} horarios libres hoy`}
-            >
-              <div
-                className="vista-canchas__ocupacion-barra"
-                style={{ width: `${porcentajeLibre}%` }}
-              />
-            </div>
-            <p className="vista-canchas__panel-proximo">
-              Próximo libre: <strong>{proximoLibre}</strong>
-            </p>
-          </>
-        ) : (
-          <p className="vista-canchas__panel-proximo vista-canchas__panel-proximo--vacio">
-            Sin horarios libres hoy
-          </p>
-        )}
-
-        {cancha.caracteristicas && cancha.caracteristicas.length > 0 && (
-          <ul className="vista-canchas__badges">
-            {cancha.caracteristicas.map((c) => (
-              <li key={c} className="vista-canchas__badge">
-                {c}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-      <button
-        type="button"
-        className="button vista-canchas__panel-cta"
-        disabled={!hayCuposSemana}
-        onClick={onReservar}
-      >
-        {hayCuposSemana ? 'Reservar' : 'Sin disponibilidad'}
-      </button>
-    </div>
-  );
-}
-
-/**
- * Visor a pantalla completa de la foto de la cancha activa del carrusel:
- * <dialog> nativo (showModal), sin librería de modales. Vive en este mismo
- * archivo por la misma razón que PanelDetalle: es un detalle de presentación
- * exclusivo de VistaCanchas, no se reutiliza en ningún otro sitio.
- *
- * `abierto` es la fuente de verdad (estado de VistaCanchas); el efecto solo
- * sincroniza el <dialog> nativo con ese estado. Al cerrarse por Esc, por el
- * botón o por clic en el fondo, el navegador dispara `close` (onClose), que
- * VistaCanchas usa para poner `visorAbierto` en false y así el guard de su
- * propio Escape (ver más abajo) deja de bloquearse.
- *
- * Tema de acento propio: un <dialog> abierto con showModal() se promueve al
- * "top layer" del navegador (se pinta como si fuera hijo directo del
- * documento, para quedar por encima de todo). Sigue siendo descendiente de
- * `.vista-canchas` en el DOM -- y por lo tanto hereda `--accent` igual que
- * cualquier otro elemento -- pero apoyarse en esa herencia deja el color del
- * visor acoplado a un detalle de dónde se monta el componente en el árbol.
- * Por eso el <dialog> recibe sus propias variables (mismo `estiloAcento()`
- * que usa `.vista-canchas`, sin duplicar la fórmula) y su propio `data-sport`.
- */
-function VisorCancha({ cancha, infoDeporte, acento, abierto, onCerrar, onReservar }) {
+function VisorCancha({
+  cancha,
+  infoDeporte,
+  acento,
+  abierto,
+  onCerrar,
+  textoAccion,
+  onAccion,
+}) {
   const dialogRef = useRef(null);
   const reducidoRef = useRef(false);
 
@@ -187,10 +83,6 @@ function VisorCancha({ cancha, infoDeporte, acento, abierto, onCerrar, onReserva
     if (abierto && !dlg.open) {
       dlg.showModal();
       if (!reducidoRef.current) {
-        // Doble rAF: fuerza el estado "cerrado" (opacity/scale de partida) en
-        // un frame ya pintado antes de quitar la clase, para que el navegador
-        // tenga algo de qué transicionar (si se quitara en el mismo tick que
-        // showModal(), no habría cambio de estilo que animar).
         dlg.classList.add('vista-canchas__visor--abriendo');
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
@@ -217,24 +109,12 @@ function VisorCancha({ cancha, infoDeporte, acento, abierto, onCerrar, onReserva
       aria-labelledby={tituloId}
       onClose={onCerrar}
       onClick={(e) => {
-        // El <dialog> ahora cubre toda la pantalla (sin el padding propio
-        // que antes dejaba un "fondo" clicable alrededor del contenido), así
-        // que ya no alcanza con comparar el target contra el propio
-        // <dialog>: un clic en la capa de fondo difuminada o en el espacio
-        // vacío de `.vista-canchas__visor-contenido` también debe cerrar.
-        // Cierra salvo que el clic haya caído dentro de la imagen o de la
-        // columna de información (el botón "Reservar" incluido).
         if (!e.target.closest('.vista-canchas__visor-imagen-wrap, .vista-canchas__visor-info')) {
           onCerrar();
         }
       }}
     >
       <div className="vista-canchas__visor-contenido">
-        {/* Fondo compartido (una sola capa para todo el visor, no una por
-            elemento): la misma foto de la cancha, en su versión liviana de
-            720, muy difuminada y oscurecida -- igual idea que el backdrop del
-            carrusel -- para que las franjas que deja `object-fit: contain` y
-            la columna de información (en horizontal) no se vean vacías. */}
         <div
           className="vista-canchas__visor-fondo"
           aria-hidden="true"
@@ -251,11 +131,6 @@ function VisorCancha({ cancha, infoDeporte, acento, abierto, onCerrar, onReserva
         </button>
 
         <div className="vista-canchas__visor-imagen-wrap">
-          {/* Sin width/height: con ambos atributos, el navegador infiere un
-              aspect-ratio implícito (para evitar salto de layout) que pisa el
-              width/height: 100% + object-fit: contain de abajo y termina
-              mostrando solo un recorte de la imagen. Aquí no hace falta esa
-              reserva de espacio: el envoltorio ya tiene su propio tamaño. */}
           <img
             className="vista-canchas__visor-imagen"
             src={imagenGrandeCancha(cancha.imagen)}
@@ -280,8 +155,8 @@ function VisorCancha({ cancha, infoDeporte, acento, abierto, onCerrar, onReserva
               ))}
             </ul>
           )}
-          <button type="button" className="button vista-canchas__visor-cta" onClick={onReservar}>
-            Reservar
+          <button type="button" className="button vista-canchas__visor-cta" onClick={onAccion}>
+            {textoAccion}
           </button>
         </div>
       </div>
@@ -290,7 +165,7 @@ function VisorCancha({ cancha, infoDeporte, acento, abierto, onCerrar, onReserva
 }
 
 function VistaCanchas() {
-  const { deporteAbierto, cambiarDeporte, cerrarVista, restaurarFoco } = useVistaCanchas();
+  const { deporteAbierto, modoInicial, cambiarDeporte, cerrarVista, restaurarFoco } = useVistaCanchas();
   const { canchas, dias, disponibilidad } = useReservas();
 
   // El componente sigue montado (para poder animar la salida) un instante
@@ -299,8 +174,13 @@ function VistaCanchas() {
   const [deporteMostrado, setDeporteMostrado] = useState(null);
   const [soloDisponibles, setSoloDisponibles] = useState(false);
   const [canchaActivaId, setCanchaActivaId] = useState(null);
-  const [reservaAbierta, setReservaAbierta] = useState(false);
   const [visorAbierto, setVisorAbierto] = useState(false);
+
+  const reserva = useReserva({
+    activo: montado,
+    modoInicial,
+    canchaInicial: deporteMostrado ? canchasDelDeporte(canchas, deporteMostrado)[0] || null : null,
+  });
 
   const rootRef = useRef(null);
   const cerrarBtnRef = useRef(null);
@@ -333,14 +213,34 @@ function VistaCanchas() {
     const delDeporte = canchasDelDeporte(canchas, deporteMostrado);
     if (!soloDisponibles) return delDeporte;
     return delDeporte.filter((c) =>
-      disponibilidad(c.id, dias[0]).some((h) => h.disponible)
+      disponibilidad(c.id, reserva.fecha).some((h) => h.disponible)
     );
-  }, [canchas, deporteMostrado, soloDisponibles, disponibilidad, dias]);
+  }, [canchas, deporteMostrado, soloDisponibles, disponibilidad, reserva.fecha]);
 
-  // Si la selección explícita ya no está en la lista filtrada (cambio de
-  // filtro o de pestaña), se cae de vuelta a la primera card visible.
+  const idActivaPorDefecto = reserva.esEvento
+    ? reserva.canchaIds.find((id) => canchasFiltradas.some((c) => c.id === id))
+    : reserva.canchaSel && reserva.canchaSel.id;
   const canchaActiva =
-    canchasFiltradas.find((c) => c.id === canchaActivaId) || canchasFiltradas[0] || null;
+    canchasFiltradas.find((c) => c.id === canchaActivaId) ||
+    canchasFiltradas.find((c) => c.id === idActivaPorDefecto) ||
+    canchasFiltradas[0] ||
+    null;
+
+  useEffect(() => {
+    setCanchaActivaId(null);
+  }, [reserva.esEvento]);
+
+  // Modo cancha: la cancha elegida siempre es una de la pestaña visible. Si
+  // no lo es (se volvió de un evento con canchas de otro deporte, el filtro
+  // la ocultó, o la vista se reabrió con el estado de la sesión anterior),
+  // se elige la primera de la pestaña: manda la pestaña que el usuario mira.
+  const { modo: modoReserva, canchaSel: canchaReserva, elegirCancha } = reserva;
+  useEffect(() => {
+    if (!montado || modoReserva !== 'cancha' || !canchasFiltradas[0]) return;
+    if (!canchaReserva || !canchasFiltradas.some((c) => c.id === canchaReserva.id)) {
+      elegirCancha(canchasFiltradas[0].id);
+    }
+  }, [montado, modoReserva, canchaReserva, canchasFiltradas, elegirCancha]);
 
   // Precarga la foto en grande de la cancha activa así el visor no tiene que
   // esperar a que cargue cuando el usuario haga clic para abrirlo.
@@ -464,24 +364,19 @@ function VistaCanchas() {
     };
   }, [visorAbierto]);
 
-  // Escape cierra la vista, salvo que el modal de reserva o el visor en
-  // grande estén abiertos encima (ambos manejan su propio Escape: el modal
-  // de reserva con este mismo patrón de window keydown, el visor de forma
-  // nativa vía <dialog>. Si no se frena aquí, un solo Escape cerraría eso Y
-  // la vista a la vez, porque ninguno de los dos detiene la propagación del
-  // keydown hacia este listener de window).
+  // Escape cierra la vista, salvo que el visor en grande esté abierto encima.
   useEffect(() => {
-    if (!montado || reservaAbierta || visorAbierto) return undefined;
+    if (!montado || visorAbierto) return undefined;
     const onKey = (e) => {
       if (e.key === 'Escape') cerrarVista();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [montado, reservaAbierta, visorAbierto, cerrarVista]);
+  }, [montado, visorAbierto, cerrarVista]);
 
   if (!montado) return null;
 
-  const idFiltro = 'vista-canchas-filtro-hoy';
+  const idFiltro = 'vista-canchas-filtro-libres';
 
   const contenido = (
     <div
@@ -505,180 +400,254 @@ function VistaCanchas() {
         </button>
 
         <h2 id="vista-canchas-titulo" className="vista-canchas__titulo">
-          Elige tu cancha
+          {reserva.modoInfo.titulo}
         </h2>
 
-        <ul className="tabs vista-canchas__tabs" role="tablist" aria-label="Deporte">
-          {DEPORTES.map((d) => (
-            <li
-              key={d.slug}
-              className={'tabs-title' + (deporteMostrado === d.slug ? ' is-active' : '')}
-              style={{ '--acento': d.colorAcento }}
-            >
-              <a
-                href={`#canchas-${d.slug}`}
-                role="tab"
-                aria-selected={deporteMostrado === d.slug}
-                onClick={(e) => {
-                  e.preventDefault();
-                  cambiarDeporte(d.slug);
-                }}
-              >
-                {d.nombre}
-              </a>
-            </li>
-          ))}
-        </ul>
+        {!reserva.confirmado && (
+          <div className="vista-canchas__modo">
+            <SelectorModo modo={reserva.modo} onCambiar={reserva.cambiarModo} />
+          </div>
+        )}
 
-        <div className="vista-canchas__filtro">
-          <div className="switch small">
-            <input
-              className="switch-input"
-              id={idFiltro}
-              type="checkbox"
-              role="switch"
-              checked={soloDisponibles}
-              onChange={(e) => setSoloDisponibles(e.target.checked)}
+        {reserva.confirmado ? (
+          <div className="vista-canchas__confirmacion">
+            <ConfirmacionReserva
+              codigo={reserva.confirmado.codigo}
+              textoQr={reserva.confirmado.textoQr}
+              resumen={reserva.confirmado.resumen}
+              onListo={cerrarVista}
             />
-            <label className="switch-paddle" htmlFor={idFiltro}>
-              <span className="show-for-sr">Solo disponibles hoy</span>
-            </label>
           </div>
-          <label htmlFor={idFiltro} className="vista-canchas__filtro-texto">
-            Solo disponibles hoy
-          </label>
-        </div>
-
-        <div className="vista-canchas__cuerpo">
-          <div className="vista-canchas__escenario-fondo" aria-hidden="true">
-            {canchaActiva && canchaActiva.imagen && (
-              <div
-                key={canchaActiva.id}
-                className="vista-canchas__backdrop"
-                style={{ backgroundImage: `url(${canchaActiva.imagen})` }}
-              />
-            )}
-            <TexturaCancha deporte={deporteMostrado} />
-          </div>
-
-          {canchasFiltradas.length === 0 ? (
-            <div className="vista-canchas__vacio">
-              <p>
-                Ninguna cancha de {infoDeporte ? infoDeporte.nombre.toLowerCase() : 'este deporte'}{' '}
-                tiene horarios libres hoy.
-              </p>
-              {soloDisponibles && (
-                <button
-                  type="button"
-                  className="button hollow small"
-                  onClick={() => setSoloDisponibles(false)}
+        ) : (
+          <>
+            <ul className="tabs vista-canchas__tabs" role="tablist" aria-label="Deporte">
+              {DEPORTES.map((d) => (
+                <li
+                  key={d.slug}
+                  className={'tabs-title' + (deporteMostrado === d.slug ? ' is-active' : '')}
+                  style={{ '--acento': d.colorAcento }}
                 >
-                  Ver todas de todas formas
-                </button>
-              )}
-            </div>
-          ) : totalDelDeporte < MINIMO_PARA_CARRUSEL ? (
-            <div className="vista-canchas__grid-estatico grid-x grid-padding-x align-center">
-              {canchasFiltradas.map((c) => (
-                <div key={c.id} className="cell small-12 medium-6 vista-canchas__grid-celda">
-                  <button
-                    type="button"
-                    className={
-                      'card cancha-card vista-canchas__card-estatica' +
-                      (canchaActiva && canchaActiva.id === c.id
-                        ? ' vista-canchas__card-estatica--activa'
-                        : '')
-                    }
-                    aria-pressed={!!canchaActiva && canchaActiva.id === c.id}
-                    onClick={() => setCanchaActivaId(c.id)}
+                  <a
+                    href={`#canchas-${d.slug}`}
+                    role="tab"
+                    aria-selected={deporteMostrado === d.slug}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (reserva.modo === 'cancha') {
+                        reserva.elegirCancha((canchasDelDeporte(canchas, d.slug)[0] || {}).id || null);
+                      }
+                      cambiarDeporte(d.slug);
+                    }}
                   >
-                    <span className="vista-canchas__card-nombre">{tituloCancha(c)}</span>
-                  </button>
-                </div>
+                    {d.nombre}
+                  </a>
+                </li>
               ))}
-            </div>
-          ) : (
-            <DepthCarousel
-              key={deporteMostrado}
-              items={canchasFiltradas.map((c) => {
-                const degradado = imagenPlaceholderCancha(acento);
-                return c.imagen
-                  ? {
-                      id: c.id,
-                      image: c.imagen,
-                      srcSet: `${c.imagen} 720w, ${imagenGrandeCancha(c.imagen)} 1440w`,
-                      sizes: TAMANOS_IMAGEN_CARRUSEL,
-                      fallback: degradado,
-                      width: ANCHO_IMAGEN,
-                      height: ALTO_IMAGEN,
-                      alt: altCancha(c, infoDeporte),
-                      viewable: true,
-                    }
-                  : { id: c.id, image: degradado, alt: '' };
-              })}
-              cardWidth={240}
-              cardHeight={300}
-              radius={12}
-              tint={acento}
-              // Tarjetas laterales más discretas ahora que la activa es
-              // mucho más grande (container query en VistaCanchas.css):
-              // falloff 0.2->0.32 y blur 6->10 (oscurecen/desenfocan más
-              // rápido según la distancia a la activa) y visibleCards 4->3
-              // (menos tarjetas compitiendo a la vez). No se toca `spread`:
-              // ese valor entra también en el cálculo de escala de
-              // DepthCarousel para que el carrusel quepa en el ancho
-              // disponible (ver ResizeObserver en DepthCarousel.jsx), y
-              // subirlo fuerza ESE cálculo a achicar la tarjeta activa en
-              // pantallas angostas, justo el efecto contrario al buscado.
-              falloff={0.32}
-              blur={10}
-              visibleCards={3}
-              onChange={(_, item) => setCanchaActivaId(item.id)}
-              onOpenViewer={() => setVisorAbierto(true)}
-              getViewerLabel={(item) => {
-                const c = canchasFiltradas.find((x) => x.id === item.id);
-                return c ? etiquetaVerGrande(c, infoDeporte) : 'Ver imagen en grande';
-              }}
-              renderOverlay={(item) => {
-                const c = canchasFiltradas.find((x) => x.id === item.id);
-                return c ? (
-                  <div className="card cancha-card vista-canchas__card-overlay">
-                    <span className="vista-canchas__card-nombre">{tituloCancha(c)}</span>
-                  </div>
-                ) : null;
-              }}
-            />
-          )}
-        </div>
+            </ul>
 
-        {canchaActiva && (
-          <PanelDetalle
-            cancha={canchaActiva}
-            dias={dias}
-            disponibilidad={disponibilidad}
-            onReservar={() => setReservaAbierta(true)}
-          />
+            <div className="vista-canchas__filtro">
+              <div className="switch small">
+                <input
+                  className="switch-input"
+                  id={idFiltro}
+                  type="checkbox"
+                  role="switch"
+                  checked={soloDisponibles}
+                  onChange={(e) => setSoloDisponibles(e.target.checked)}
+                />
+                <label className="switch-paddle" htmlFor={idFiltro}>
+                  <span className="show-for-sr">Solo con horarios libres ese día</span>
+                </label>
+              </div>
+              <label htmlFor={idFiltro} className="vista-canchas__filtro-texto">
+                Solo con horarios libres ese día
+              </label>
+            </div>
+
+            <div className="vista-canchas__reserva">
+              <div className="vista-canchas__principal">
+                <div className="vista-canchas__cuerpo">
+                  <div className="vista-canchas__escenario-fondo" aria-hidden="true">
+                    {canchaActiva && canchaActiva.imagen && (
+                      <div
+                        key={canchaActiva.id}
+                        className="vista-canchas__backdrop"
+                        style={{ backgroundImage: `url(${canchaActiva.imagen})` }}
+                      />
+                    )}
+                    <TexturaCancha deporte={deporteMostrado} />
+                  </div>
+
+                  {canchasFiltradas.length === 0 ? (
+                    <div className="vista-canchas__vacio">
+                      <p>
+                        Ninguna cancha de {infoDeporte ? infoDeporte.nombre.toLowerCase() : 'este deporte'}{' '}
+                        tiene horarios libres ese día.
+                      </p>
+                      {soloDisponibles && (
+                        <button
+                          type="button"
+                          className="button hollow small"
+                          onClick={() => setSoloDisponibles(false)}
+                        >
+                          Ver todas de todas formas
+                        </button>
+                      )}
+                    </div>
+                  ) : totalDelDeporte < MINIMO_PARA_CARRUSEL ? (
+                    <div className="vista-canchas__grid-estatico grid-x grid-padding-x align-center">
+                      {canchasFiltradas.map((c) => {
+                        const esActiva = reserva.esEvento
+                          ? reserva.canchaIds.includes(c.id)
+                          : !!reserva.canchaSel && reserva.canchaSel.id === c.id;
+                        return (
+                          <div key={c.id} className="cell small-12 medium-6 vista-canchas__grid-celda">
+                            <button
+                              type="button"
+                              className={
+                                'card cancha-card vista-canchas__card-estatica' +
+                                (esActiva ? ' vista-canchas__card-estatica--activa' : '')
+                              }
+                              aria-pressed={esActiva}
+                              onClick={() => {
+                                if (reserva.esEvento) {
+                                  reserva.alternarCancha(c.id);
+                                } else {
+                                  setCanchaActivaId(c.id);
+                                  reserva.elegirCancha(c.id);
+                                }
+                              }}
+                            >
+                              <span className="vista-canchas__card-nombre">{tituloCancha(c)}</span>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <DepthCarousel
+                      key={`${deporteMostrado}-${reserva.esEvento ? 'evento' : 'cancha'}`}
+                      items={canchasFiltradas.map((c) => {
+                        const degradado = imagenPlaceholderCancha(acento);
+                        return c.imagen
+                          ? {
+                              id: c.id,
+                              image: c.imagen,
+                              srcSet: `${c.imagen} 720w, ${imagenGrandeCancha(c.imagen)} 1440w`,
+                              sizes: TAMANOS_IMAGEN_CARRUSEL,
+                              fallback: degradado,
+                              width: ANCHO_IMAGEN,
+                              height: ALTO_IMAGEN,
+                              alt: altCancha(c, infoDeporte),
+                              viewable: true,
+                            }
+                          : { id: c.id, image: degradado, alt: '' };
+                      })}
+                      initialIndex={Math.max(
+                        0,
+                        canchasFiltradas.findIndex((c) => canchaActiva && c.id === canchaActiva.id)
+                      )}
+                      cardWidth={240}
+                      cardHeight={300}
+                      radius={12}
+                      tint={acento}
+                      falloff={0.32}
+                      blur={10}
+                      visibleCards={3}
+                      ariaLabel="Canchas"
+                      prevLabel="Cancha anterior"
+                      nextLabel="Cancha siguiente"
+                      getSlideLabel={(i, n) => `Cancha ${i + 1} de ${n}`}
+                      getDotLabel={(i) => `Ir a la cancha ${i + 1}`}
+                      onChange={(_, item) => {
+                        setCanchaActivaId(item.id);
+                        if (!reserva.esEvento) reserva.elegirCancha(item.id);
+                      }}
+                      onOpenViewer={() => setVisorAbierto(true)}
+                      getViewerLabel={(item) => {
+                        const c = canchasFiltradas.find((x) => x.id === item.id);
+                        return c ? etiquetaVerGrande(c, infoDeporte) : 'Ver imagen en grande';
+                      }}
+                      renderOverlay={(item, i, esActiva) => {
+                        const c = canchasFiltradas.find((x) => x.id === item.id);
+                        if (!c) return null;
+                        const horarios = disponibilidad(c.id, reserva.fecha);
+                        return (
+                          <TarjetaCanchaCarrusel
+                            cancha={c}
+                            deporte={deportePorSlug(c.deporte)}
+                            modo={reserva.esEvento ? 'evento' : 'cancha'}
+                            activa={esActiva}
+                            marcada={reserva.esEvento ? reserva.canchaIds.includes(c.id) : false}
+                            libresDia={horarios.filter((h) => h.disponible).length}
+                            totalDia={horarios.length}
+                            onAlternar={() => reserva.alternarCancha(c.id)}
+                          />
+                        );
+                      }}
+                    />
+                  )}
+                </div>
+
+                {reserva.esEvento && (
+                  <CanchasElegidas
+                    canchas={reserva.canchasElegidas}
+                    deporte={infoDeporte}
+                    idsDeporte={canchasDelDeporte(canchas, deporteMostrado).map((c) => c.id)}
+                    onQuitar={reserva.alternarCancha}
+                    onAlternarDeporte={reserva.alternarDeporte}
+                  />
+                )}
+
+                <FormularioReserva reserva={reserva} dias={dias} />
+              </div>
+
+              <VoucherReserva
+                tipoEtiqueta={reserva.modoInfo.tipoEtiqueta}
+                fechaTexto={fechaCompleta(reserva.fecha)}
+                horas={reserva.horasSel}
+                precio={reserva.precio}
+                puedeConfirmar={reserva.puedeConfirmar}
+                motivoBloqueo={reserva.motivoBloqueo}
+                onConfirmar={reserva.confirmar}
+                onCancelar={cerrarVista}
+              />
+            </div>
+          </>
         )}
       </div>
 
-      <ModalReserva
-        modoInicial="cancha"
-        canchaInicial={canchaActiva}
-        abierto={reservaAbierta}
-        onCerrar={() => setReservaAbierta(false)}
-      />
-
-      <VisorCancha
-        cancha={canchaActiva}
-        infoDeporte={infoDeporte}
-        acento={acento}
-        abierto={visorAbierto}
-        onCerrar={() => setVisorAbierto(false)}
-        onReservar={() => {
-          setVisorAbierto(false);
-          setReservaAbierta(true);
-        }}
-      />
+      {canchaActiva && (
+        <VisorCancha
+          cancha={canchaActiva}
+          infoDeporte={infoDeporte}
+          acento={acento}
+          abierto={visorAbierto}
+          onCerrar={() => setVisorAbierto(false)}
+          textoAccion={
+            reserva.esEvento
+              ? reserva.canchaIds.includes(canchaActiva.id)
+                ? 'Quitar del evento'
+                : 'Agregar al evento'
+              : 'Elegir horario'
+          }
+          onAccion={() => {
+            if (reserva.esEvento) {
+              reserva.alternarCancha(canchaActiva.id);
+              setVisorAbierto(false);
+            } else {
+              setVisorAbierto(false);
+              reserva.elegirCancha(canchaActiva.id);
+              requestAnimationFrame(() => {
+                document.getElementById('reserva-horario')?.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'start',
+                });
+              });
+            }
+          }}
+        />
+      )}
     </div>
   );
 

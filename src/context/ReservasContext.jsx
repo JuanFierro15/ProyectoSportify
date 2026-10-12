@@ -25,8 +25,8 @@ import { generarCodigo } from '../lib/codigoReserva';
  *       consecutivas, bloqueadas todo-o-nada (Bloque 5). Guarda también su
  *       `total` (mismas reglas de precio por cancha, ver calcularPrecioEvento).
  *   Ambos tipos guardan un `codigo` corto (SPF-XXXXXX) que se muestra en el
- *   QR de confirmación y ambos tipos se reservan desde un único modal
- *   (ModalReserva).
+ *   QR de confirmación. Ambos tipos se reservan desde la misma ventana: la
+ *   vista de canchas (VistaCanchas).
  * - Sin backend: todo vive en memoria y se espeja al almacenamiento local.
  *
  * Consumir con el hook `useReservas()`.

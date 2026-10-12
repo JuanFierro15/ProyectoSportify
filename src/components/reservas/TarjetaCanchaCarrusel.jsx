@@ -6,7 +6,7 @@ import './TarjetaCanchaCarrusel.css';
 
 /**
  * TarjetaCanchaCarrusel — contenido que se pinta encima de cada tarjeta del
- * carrusel de ModalReserva (vía `renderOverlay` de DepthCarousel): deporte,
+ * carrusel de la vista de reserva (VistaCanchas, vía `renderOverlay` de DepthCarousel): deporte,
  * nombre y, en la tarjeta activa, características, descripción, precio y
  * disponibilidad del día.
  *

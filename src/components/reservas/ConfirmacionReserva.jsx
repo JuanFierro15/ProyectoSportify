@@ -5,7 +5,7 @@ import { formatoPrecio } from '../../lib/precios';
 import './ConfirmacionReserva.css';
 
 /**
- * ConfirmacionReserva — pantalla final de ModalReserva: código de reserva, QR
+ * ConfirmacionReserva — pantalla final de la reserva (en VistaCanchas): código de reserva, QR
  * (con los datos en texto, ver lib/codigoReserva) para mostrar al llegar,
  * resumen y opción de descargar el QR como imagen.
  *

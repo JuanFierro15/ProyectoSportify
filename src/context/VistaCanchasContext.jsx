@@ -14,9 +14,12 @@ import { DEPORTES } from '../data/deportes';
  * rediseñado): qué deporte está abierto, si hay alguno, y su sincronización
  * con el hash de la URL (para que "atrás" y los enlaces directos funcionen).
  *
- * - `abrirVista(slug)`: usada por los CTA de los heros y el navbar/footer.
- *   Guarda qué elemento tenía el foco (para devolvérselo al cerrar) y añade
- *   una entrada nueva al historial (`#canchas-<slug>`).
+ * - `abrirVista(slug, { modo })`: usada por los CTA de los heros, el
+ *   navbar/footer (modo 'cancha', por defecto) y "Reserva un evento" (modo
+ *   'torneo'). La vista es la ventana de reserva: `modoInicial` dice en qué
+ *   modo arranca. Guarda qué elemento tenía el foco (para devolvérselo al
+ *   cerrar) y añade una entrada nueva al historial (`#canchas-<slug>`; el
+ *   modo no va en el hash, así que un enlace directo abre en modo cancha).
  * - `cambiarDeporte(slug)`: usada por las pestañas DENTRO de la vista ya
  *   abierta. Actualiza el hash sin apilar una entrada nueva, para que el
  *   botón "atrás" cierre la vista de un solo paso sin importar cuántas
@@ -41,6 +44,7 @@ const VistaCanchasContext = createContext(null);
 
 export function VistaCanchasProvider({ children }) {
   const [deporteAbierto, setDeporteAbierto] = useState(leerDeporteDesdeHash);
+  const [modoInicial, setModoInicial] = useState('cancha');
   const focoPrevioRef = useRef(null);
 
   useEffect(() => {
@@ -49,9 +53,10 @@ export function VistaCanchasProvider({ children }) {
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
-  const abrirVista = useCallback((slug) => {
+  const abrirVista = useCallback((slug, { modo = 'cancha' } = {}) => {
     if (!SLUGS_VALIDOS.includes(slug)) return;
     focoPrevioRef.current = document.activeElement;
+    setModoInicial(modo);
     setDeporteAbierto(slug);
     window.history.pushState({ vistaCanchas: slug }, '', `#canchas-${slug}`);
   }, []);
@@ -86,8 +91,8 @@ export function VistaCanchasProvider({ children }) {
   }, []);
 
   const value = useMemo(
-    () => ({ deporteAbierto, abrirVista, cambiarDeporte, cerrarVista, restaurarFoco }),
-    [deporteAbierto, abrirVista, cambiarDeporte, cerrarVista, restaurarFoco]
+    () => ({ deporteAbierto, modoInicial, abrirVista, cambiarDeporte, cerrarVista, restaurarFoco }),
+    [deporteAbierto, modoInicial, abrirVista, cambiarDeporte, cerrarVista, restaurarFoco]
   );
 
   return (

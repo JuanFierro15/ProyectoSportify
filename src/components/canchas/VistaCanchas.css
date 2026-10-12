@@ -30,22 +30,13 @@
 .vista-canchas {
   position: fixed;
   inset: 0;
-  /* Por debajo de .reveal-overlay (1005, Foundation) para que el modal de
-     reserva quede siempre por encima; por encima del navbar (1000). */
+  /* Por encima del navbar (1000). */
   z-index: 1001;
   overflow-y: auto;
   background: radial-gradient(circle at 50% 15%, var(--accent-soft, #eef3f8) 0%, #ffffff 60%);
   transition: background 0.4s ease;
 }
 
-/* Columna flex: título, pestañas, filtro y panel miden su alto por
-   contenido, igual que en flujo de bloque normal (los flex items en columna
-   con align-items: stretch por defecto se comportan igual de ancho, y su
-   alto sigue siendo el de su contenido salvo que se les dé flex-grow). El
-   único que crece es el escenario (.vista-canchas__cuerpo), hasta el alto de
-   la ventana: sin una altura definida en este contenedor, el
-   `container-type: size` del escenario no tendría de qué medir y
-   colapsaría a 0 (ver comentario en .vista-canchas__cuerpo). */
 .vista-canchas__marco {
   position: relative;
   display: flex;
@@ -81,6 +72,10 @@
   margin: 0 0 1.25rem;
   font-size: 1.9rem;
   font-weight: 700;
+}
+
+.vista-canchas__modo {
+  margin: -0.5rem 0 1.25rem;
 }
 
 .vista-canchas__tabs {
@@ -170,13 +165,8 @@
 
 .vista-canchas__cuerpo {
   position: relative;
-  /* flex-basis 380px conserva el alto de antes cuando no sobra espacio
-     vertical; flex-grow (el "1") deja que ocupe el resto de la ventana en
-     viewports más altos. min-height: 0 permite que se mida por este cálculo
-     de flex y no por el contenido (necesario junto con container-type). */
-  flex: 1 1 380px;
-  min-height: 0;
-  margin-bottom: 1.5rem;
+  height: clamp(420px, 62vh, 620px);
+  margin-bottom: 1rem;
   container-type: size;
 }
 
@@ -330,111 +320,50 @@
   font-weight: 700;
 }
 
-/* Carrusel: cards con contenido propio vía `renderOverlay` de DepthCarousel.
-   Título arriba, con un degradado oscuro que ocupa solo el ~35% superior de
-   la card (no toda la altura): alcanza para leer el texto sobre cielos o
-   techos claros sin oscurecer el resto de la foto. */
-.vista-canchas .cancha-card.vista-canchas__card-overlay {
-  width: 100%;
-  height: 35%;
-  padding: 0.85rem 0.9rem;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, transparent 100%);
-  pointer-events: none;
+.vista-canchas__cuerpo .tarjeta-cancha__nombre {
+  font-size: clamp(1.2rem, 4.5cqh, 1.75rem);
 }
 
-.vista-canchas .cancha-card.vista-canchas__card-overlay::before {
-  display: none;
+.vista-canchas__cuerpo .tarjeta-cancha__descripcion {
+  font-size: clamp(0.85rem, 2.4cqh, 1rem);
 }
 
-.vista-canchas .cancha-card.vista-canchas__card-overlay .vista-canchas__card-nombre {
-  color: #fff;
+.vista-canchas__reserva {
+  display: grid;
+  gap: 1.5rem;
+  align-items: start;
 }
 
-.vista-canchas__panel {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  padding: 1.1rem 1.25rem;
-  border-radius: 12px;
-  border-left: 4px solid var(--accent, #1779ba);
-  background: color-mix(in srgb, var(--accent, #1779ba) 6%, #fff);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-  transition: background-color 0.35s ease, border-color 0.35s ease;
+@media screen and (min-width: 64em) {
+  .vista-canchas__reserva {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 2rem;
+  }
+
+  .vista-canchas__reserva > .voucher-reserva {
+    position: sticky;
+    top: 1.5rem;
+  }
 }
 
-.vista-canchas__panel-info {
+.vista-canchas__principal {
   min-width: 0;
 }
 
-.vista-canchas__panel-nombre {
-  margin: 0 0 0.3rem;
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.vista-canchas__panel-precio {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin: 0 0 0.3rem;
-  font-weight: 700;
-  color: var(--accent, #1779ba);
-  font-variant-numeric: tabular-nums;
-  transition: color 0.35s ease;
+.vista-canchas__confirmacion {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.35);
 }
 
 .vista-canchas__panel-unidad {
   font-size: 0.8rem;
   font-weight: 400;
   color: #6f6f6f;
-}
-
-.vista-canchas__panel-disp {
-  margin: 0 0 0.5rem;
-  font-size: 0.9rem;
-  color: #4a4a4a;
-}
-
-/* Barra de ocupación: proporción libre/total de hoy, en el acento activo. */
-.vista-canchas__ocupacion {
-  width: 160px;
-  max-width: 40vw;
-  height: 6px;
-  margin: 0 0 0.4rem;
-  border-radius: 999px;
-  background: #e9e9e9;
-  overflow: hidden;
-}
-
-.vista-canchas__ocupacion-barra {
-  height: 100%;
-  border-radius: inherit;
-  background: var(--accent, #1779ba);
-  transition: width 0.3s ease, background-color 0.35s ease;
-}
-
-.vista-canchas__panel-proximo {
-  margin: 0 0 0.6rem;
-  font-size: 0.85rem;
-  color: #4a4a4a;
-}
-
-.vista-canchas__panel-proximo--vacio {
-  color: #8a8a8a;
-  font-style: italic;
-}
-
-/* Badges de características de la cancha. */
-.vista-canchas__panel-promo {
-  margin: 0 0 0.5rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--accent, #1779ba);
 }
 
 .vista-canchas__badges {
@@ -454,34 +383,6 @@
   color: var(--accent, #1779ba);
   background: color-mix(in srgb, var(--accent, #1779ba) 14%, transparent);
   transition: color 0.35s ease, background-color 0.35s ease;
-}
-
-.vista-canchas__panel-cta {
-  flex-shrink: 0;
-  margin: 0;
-  background: var(--accent, #1779ba);
-  color: var(--accent-contrast, #fff);
-  border: none;
-  transition: background-color 0.2s ease, color 0.35s ease, opacity 0.2s ease,
-    transform 0.15s ease, box-shadow 0.2s ease;
-}
-
-.vista-canchas__panel-cta:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent, #1779ba) 85%, black);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 18px -6px color-mix(in srgb, var(--accent, #1779ba) 45%, transparent);
-}
-
-.vista-canchas__panel-cta:focus-visible {
-  outline: 2px solid var(--accent, #1779ba);
-  outline-offset: 2px;
-}
-
-.vista-canchas__panel-cta:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-  transform: none;
-  box-shadow: none;
 }
 
 /* --- Visor a pantalla completa: foto en grande de la tarjeta activa,
@@ -733,8 +634,7 @@
   }
 
   .vista-canchas__cerrar:hover,
-  .cancha-card:hover,
-  .vista-canchas__panel-cta:hover:not(:disabled) {
+  .cancha-card:hover {
     transform: none;
   }
 }
@@ -745,9 +645,5 @@
 @media (max-width: 480px) {
   .vista-canchas__escenario-fondo {
     border-radius: 10px;
-  }
-
-  .vista-canchas__ocupacion {
-    width: 120px;
   }
 }
