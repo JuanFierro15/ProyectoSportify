@@ -127,22 +127,26 @@
   line-height: 24px; /* misma altura que el switch, para centrar el texto */
 }
 
-/* --- Switch "Solo disponibles hoy": rediseño propio sobre el checkbox real
-   de Foundation (mismo input, misma accesibilidad; solo se repinta). --- */
+/* --- Switch "Solo con horarios libres ese día": rediseño propio sobre el
+   checkbox real de Foundation (mismo input, misma accesibilidad; solo se
+   repinta). Los selectores llevan `.switch` para pesar más que los de
+   Foundation para `.switch.small` (pista de 3.5rem y perilla de 1.25rem):
+   sin eso la pista se desborda del contenedor de 44px y tapa el espacio
+   que separa el switch de su texto. --- */
 .vista-canchas__filtro .switch {
   width: 44px;
   height: 24px;
   margin: 0;
 }
 
-.vista-canchas__filtro .switch-paddle {
+.vista-canchas__filtro .switch .switch-paddle {
   width: 100%;
   height: 100%;
   border-radius: 999px;
   background: #d6d6d6;
 }
 
-.vista-canchas__filtro .switch-paddle::after {
+.vista-canchas__filtro .switch .switch-paddle::after {
   top: 3px;
   left: 3px;
   width: 18px;
@@ -150,11 +154,11 @@
   border-radius: 50%;
 }
 
-.vista-canchas__filtro .switch-input:checked ~ .switch-paddle {
+.vista-canchas__filtro .switch .switch-input:checked ~ .switch-paddle {
   background: var(--accent, #1779ba);
 }
 
-.vista-canchas__filtro .switch-input:checked ~ .switch-paddle::after {
+.vista-canchas__filtro .switch .switch-input:checked ~ .switch-paddle::after {
   left: 23px;
 }
 

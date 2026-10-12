@@ -1,10 +1,10 @@
+/* Sin fondo propio: las pills quedan directo sobre el degradado de la
+   ventana, igual que las pestañas de deporte. El espaciado lo da quien lo
+   contiene (.vista-canchas__modo). */
 .selector-modo {
   display: inline-flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  padding: 0.25rem;
-  background: #f1f5f9;
-  border-radius: 999px;
-  margin-bottom: 1.5rem;
 }
 
 .selector-modo__boton {
@@ -29,7 +29,7 @@
   background: var(--accent, #1779ba);
   border-color: var(--accent, #1779ba);
   color: var(--accent-contrast, #ffffff);
-  box-shadow: 0 2px 8px rgba(23, 121, 186, 0.3);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent, #1779ba) 30%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {
