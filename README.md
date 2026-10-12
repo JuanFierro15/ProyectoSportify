@@ -28,10 +28,11 @@ src/
 │   ├── layout/     Navbar, Footer (Bloque 1)
 │   ├── hero/       DeporteHero: heros por deporte con pinning GSAP/ScrollTrigger (Bloque 2.5)
 │   ├── canchas/    VistaCanchas: vista superpuesta con Depth Carousel (Bloque 3, rediseñado)
-│   ├── reactbits/  DepthCarousel: componente de React Bits usado por VistaCanchas
-│   ├── reservas/   ReservaModal: reserva de 1 a 3 horas seguidas por cancha, con descuento y pack de agua (Bloque 4)
-│   ├── eventos/    EventoCTA + EventoModal: torneos y cumpleaños (Bloque 5)
-│   ├── shared/     SelectorDia: tira de 7 días, usada por ambos modales
+│   ├── reactbits/  DepthCarousel y AccordionGallery: componentes de React Bits
+│   ├── reservas/   ModalReserva: un solo modal para cancha, torneo y cumpleaños, con carrusel,
+│   │               voucher en vivo y confirmación con QR (Bloques 4 y 5)
+│   ├── eventos/    EventoCTA: sección de eventos y torneos (Bloque 5)
+│   ├── shared/     SelectorDia: tira de 7 días del modal de reserva
 │   └── chatbot/    Chatbot (Bloque 6, pendiente)
 ├── context/
 │   ├── ReservasContext.jsx    Context + useReducer: disponibilidad por día (7 días);
@@ -43,8 +44,12 @@ src/
 │   ├── deportes.js    Nombre y colorAcento de cada deporte (fuente única)
 │   └── canchas.json   Semilla: horas base + ocupación por día de cada cancha
 ├── lib/
-│   ├── fechas.js      Helpers de fecha compartidos (etiquetas, meses...)
-│   └── canchas.js     Agrupar canchas por deporte, título corto de cada una
+│   ├── fechas.js         Helpers de fecha compartidos (etiquetas, meses...)
+│   ├── canchas.js        Agrupar canchas por deporte, título corto de cada una
+│   ├── precios.js        Reglas de precio (descuento desde 2 horas, eventos por cancha)
+│   ├── horarios.js       Selección de horas: bloque de hasta 3 o rango inicio-fin
+│   ├── codigoReserva.js  Código de reserva y texto del QR
+│   └── validacion.js     Nombre y teléfono del formulario
 ├── App.js          <ReservasProvider> + <VistaCanchasProvider> + Navbar + heros + evento + Footer
 └── index.js        Punto de entrada (importa el CSS de Foundation)
 ```
@@ -57,6 +62,22 @@ hoy y un carrusel 3D (o un grid, si el deporte tiene pocas canchas) con el
 panel de precio y horarios de cada una. La URL cambia junto con la vista
 (`#canchas-<deporte>`), así que se puede compartir un enlace directo a un
 deporte o usar "atrás" en el navegador para cerrarla.
+
+Tanto "Reservar" (desde una cancha) como "Reserva un evento" abren el mismo
+modal, con tres modos:
+
+- **Cancha**: se elige la cancha en el carrusel y de 1 a 3 horas seguidas;
+  desde 2 horas hay $5.000 menos por hora y un pack de agua gratis.
+- **Torneo / Cumpleaños**: se agregan una o varias canchas desde el carrusel
+  y se toca la hora de inicio y la de fin: quedan elegidas todas las de en
+  medio. El bloqueo es todo-o-nada y el precio sigue las mismas reglas por
+  cancha.
+
+Un voucher a la derecha muestra el total en vivo. Al confirmar se ve un
+código de reserva y un QR con los datos (tipo, fecha, horario, canchas, a
+nombre de quién y total) para mostrarlo al llegar. Sin backend, el QR lleva la
+información dentro; comprobarlo contra las reservas guardadas queda para el
+panel de administración.
 
 ## Avance por bloques
 
