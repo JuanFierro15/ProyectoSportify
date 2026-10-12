@@ -1,4 +1,4 @@
-import { calcularPrecio, finDeFranja } from './precios';
+import { calcularPrecio, calcularPrecioEvento, finDeFranja } from './precios';
 
 describe('calcularPrecio (cancha de 45.000 por hora)', () => {
   test('1 hora: sin descuento ni agua', () => {
@@ -21,6 +21,37 @@ describe('calcularPrecio (cancha de 45.000 por hora)', () => {
     expect(p.total).toBe(120000);
     expect(p.ahorro).toBe(15000);
     expect(p.aguaGratis).toBe(true);
+  });
+});
+
+describe('calcularPrecioEvento', () => {
+  test('dos canchas (45000 y 60000) por 1 hora: total 105000, ahorro 0, packsAgua 0, lineas.length 2', () => {
+    const canchas = [
+      { id: 'c1', nombre: 'Cancha 1', deporte: 'Fútbol', precioHora: 45000 },
+      { id: 'c2', nombre: 'Cancha 2', deporte: 'Tenis', precioHora: 60000 },
+    ];
+    const res = calcularPrecioEvento(canchas, 1);
+    expect(res.total).toBe(105000);
+    expect(res.ahorro).toBe(0);
+    expect(res.packsAgua).toBe(0);
+    expect(res.lineas.length).toBe(2);
+  });
+
+  test('dos canchas (45000 y 60000) por 3 horas: total 285000, ahorro 30000, packsAgua 2', () => {
+    const canchas = [
+      { id: 'c1', nombre: 'Cancha 1', deporte: 'Fútbol', precioHora: 45000 },
+      { id: 'c2', nombre: 'Cancha 2', deporte: 'Tenis', precioHora: 60000 },
+    ];
+    const res = calcularPrecioEvento(canchas, 3);
+    expect(res.total).toBe(285000);
+    expect(res.ahorro).toBe(30000);
+    expect(res.packsAgua).toBe(2);
+  });
+
+  test('sin canchas: total 0, lineas []', () => {
+    const res = calcularPrecioEvento([], 2);
+    expect(res.total).toBe(0);
+    expect(res.lineas).toEqual([]);
   });
 });
 

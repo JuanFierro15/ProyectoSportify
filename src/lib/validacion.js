@@ -1,7 +1,7 @@
 /**
- * Validaciones del formulario de contacto, compartidas por ReservaModal y
- * EventoModal. Ambos campos son opcionales: vacío es válido; si se escribe
- * algo, debe cumplir el formato.
+ * Validaciones del formulario de contacto, usadas por el modal de reserva.
+ * El nombre es obligatorio (errorNombreObligatorio) y el teléfono opcional
+ * (vacío es válido); si se escribe algo, debe cumplir el formato.
  */
 
 // Letras (con tildes, ñ, ü...) separadas por un solo espacio. Sin números ni
@@ -11,6 +11,7 @@ export const REGEX_NOMBRE = /^\p{L}+(?: \p{L}+)*$/u;
 // Celular colombiano: 10 dígitos que empiezan por 3.
 export const REGEX_TELEFONO = /^3\d{9}$/;
 
+export const MENSAJE_NOMBRE_VACIO = 'Escribe tu nombre.';
 export const MENSAJE_NOMBRE = 'Usa solo letras y espacios, sin números ni símbolos.';
 export const MENSAJE_TELEFONO = 'Debe empezar por 3 y tener 10 dígitos.';
 
@@ -29,6 +30,13 @@ export function limpiarTelefono(valor) {
 export function errorNombre(valor) {
   const v = valor.trim();
   return v === '' || REGEX_NOMBRE.test(v) ? '' : MENSAJE_NOMBRE;
+}
+
+export function errorNombreObligatorio(valor) {
+  if (valor.trim() === '') {
+    return MENSAJE_NOMBRE_VACIO;
+  }
+  return errorNombre(valor);
 }
 
 export function errorTelefono(valor) {

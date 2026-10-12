@@ -1,9 +1,11 @@
 import {
   MENSAJE_NOMBRE,
+  MENSAJE_NOMBRE_VACIO,
   MENSAJE_TELEFONO,
   limpiarNombre,
   limpiarTelefono,
   errorNombre,
+  errorNombreObligatorio,
   errorTelefono,
   empiezaMalTelefono,
 } from './validacion';
@@ -34,5 +36,18 @@ describe('nombre', () => {
   test('válido e inválido', () => {
     expect(errorNombre('José Núñez')).toBe('');
     expect(errorNombre('Ana1')).toBe(MENSAJE_NOMBRE);
+  });
+
+  test('errorNombreObligatorio: vacío y solo espacios devuelven MENSAJE_NOMBRE_VACIO', () => {
+    expect(errorNombreObligatorio('')).toBe(MENSAJE_NOMBRE_VACIO);
+    expect(errorNombreObligatorio('   ')).toBe(MENSAJE_NOMBRE_VACIO);
+  });
+
+  test('errorNombreObligatorio: nombre válido devuelve cadena vacía', () => {
+    expect(errorNombreObligatorio('Juan Pérez')).toBe('');
+  });
+
+  test('errorNombreObligatorio: nombre con números devuelve MENSAJE_NOMBRE', () => {
+    expect(errorNombreObligatorio('Juan3')).toBe(MENSAJE_NOMBRE);
   });
 });
