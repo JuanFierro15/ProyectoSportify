@@ -6,6 +6,12 @@
      anterior a ella usa la misma variable para que su degradado de salida
      termine exactamente en ese color y no quede una línea de corte. */
   --eventos-fondo: #0d0d0d;
+  /* Color base de la marca: el ámbar de eventos, footer y ubicación */
+  --color-marca: #f6a94b;
+  --color-marca-soft: color-mix(in srgb, var(--color-marca) 25%, white);
+  --color-marca-contraste: #141414;
+  /* Encima del navbar (1000) y de la vista de canchas (1001) */
+  --z-chatbot: 1100;
 }
 
 .App {

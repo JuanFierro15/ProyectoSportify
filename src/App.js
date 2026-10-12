@@ -5,6 +5,7 @@ import { DEPORTES } from './data/deportes';
 import Navbar from './components/layout/Navbar';
 import DeporteHero from './components/hero/DeporteHero';
 import VistaCanchas from './components/canchas/VistaCanchas';
+import Chatbot from './components/chatbot/Chatbot';
 import EventoCTA from './components/eventos/EventoCTA';
 import Ubicacion from './components/ubicacion/Ubicacion';
 import Footer from './components/layout/Footer';
@@ -28,6 +29,9 @@ const VIDEOS = {
  * superpuesta de canchas, Bloque 3 rediseñado). La vista de canchas
  * (`<VistaCanchas>`) no vive en el flujo de scroll: se monta siempre pero solo
  * se renderiza (vía portal a `document.body`) cuando el usuario la abre.
+ * El asistente (`<Chatbot>`) se monta una sola vez aquí, en un portal a
+ * `document.body`, para que la conversación se conserve al abrir y cerrar la
+ * vista de canchas.
  *
  * Los deportes (nombre + colorAcento) salen de `src/data/deportes.js`, misma
  * fuente para heros, cards y la vista de canchas -> continuidad visual.
@@ -63,6 +67,7 @@ function AppContenido() {
         {DEPORTES.map((d, i) => (
           <DeporteHero
             key={d.slug}
+            slug={d.slug}
             nombre={d.nombre}
             videoSrc={VIDEOS[d.slug]}
             tituloCTA={`Ver canchas de ${d.nombre.toLowerCase()}`}
@@ -82,6 +87,8 @@ function AppContenido() {
       <Footer />
 
       <VistaCanchas />
+
+      <Chatbot />
     </div>
   );
 }

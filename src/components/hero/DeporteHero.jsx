@@ -21,6 +21,7 @@ const SUAVIZADO = 0.3;
  *
  * Props:
  *  - nombre        {string}  nombre del deporte (ej. "Voley Playa")
+ *  - slug          {string}  slug del deporte; va en data-sport para que el chat sepa qué deporte se está viendo
  *  - videoSrc      {string}  ruta del video de fondo
  *  - tituloCTA     {string}  texto del botón
  *  - colorAcento   {string}  color de acento (hex) para el CTA y el "eyebrow"
@@ -48,6 +49,7 @@ const SUAVIZADO = 0.3;
  */
 function DeporteHero({
   nombre,
+  slug,
   videoSrc,
   tituloCTA,
   colorAcento,
@@ -145,6 +147,7 @@ function DeporteHero({
     <section
       className={`deporte-hero${ultimoDeporte ? ' deporte-hero--ultimo' : ''}`}
       ref={rootRef}
+      data-sport={slug}
       style={{ '--acento': colorAcento }}
     >
       <div className="deporte-hero__bg" aria-hidden="true">
