@@ -33,6 +33,9 @@ GEMINI.md
 skills-lock.json
 lighthouse-report*.json
 
+# Plan de trabajo local del chatbot (Bloque 6)
+PLAN_CHATBOT.md
+
 # Videos fuente en alta calidad de los heros: se guardan localmente, no en el
 # repo. En public/media/ solo van las versiones web ligeras (hero_*.mp4).
 public/media/fuente/
