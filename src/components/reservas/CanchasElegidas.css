@@ -1,0 +1,68 @@
+.canchas-elegidas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.canchas-elegidas__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: var(--accent-soft, #eaf4fb);
+  border: 1px solid var(--accent, #1779ba);
+  color: #1e1e1e;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.canchas-elegidas__quitar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.12);
+  color: #1e1e1e;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.canchas-elegidas__quitar:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.canchas-elegidas__todas {
+  padding: 0.2rem 0.4rem;
+  border: 0;
+  background: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1779ba;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.canchas-elegidas__todas:hover {
+  color: #125e90;
+}
+
+.canchas-elegidas__nota {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canchas-elegidas__quitar {
+    transition: none;
+  }
+}
