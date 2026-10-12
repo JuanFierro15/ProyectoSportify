@@ -7,8 +7,9 @@ import React, {
   useMemo,
 } from 'react';
 import semilla from '../data/canchas.json';
-import { calcularPrecio, MAX_HORAS_SEGUIDAS } from '../lib/precios';
+import { calcularPrecio, calcularPrecioEvento, MAX_HORAS_SEGUIDAS } from '../lib/precios';
 import { esHoraPasada } from '../lib/fechas';
+import { generarCodigo } from '../lib/codigoReserva';
 
 /**
  * ReservasContext — estado global de disponibilidad y reservas.
@@ -21,7 +22,11 @@ import { esHoraPasada } from '../lib/fechas';
  * - `reservas` mezcla dos clases de registro, distinguidas por `tipo`:
  *     - "individual": una cancha, de 1 a 3 horas seguidas (Bloque 4).
  *     - "evento": torneo o cumpleaños; varias canchas y/o varias horas
- *       consecutivas, bloqueadas todo-o-nada (Bloque 5).
+ *       consecutivas, bloqueadas todo-o-nada (Bloque 5). Guarda también su
+ *       `total` (mismas reglas de precio por cancha, ver calcularPrecioEvento).
+ *   Ambos tipos guardan un `codigo` corto (SPF-XXXXXX) que se muestra en el
+ *   QR de confirmación y ambos tipos se reservan desde un único modal
+ *   (ModalReserva).
  * - Sin backend: todo vive en memoria y se espeja al almacenamiento local.
  *
  * Consumir con el hook `useReservas()`.
@@ -221,6 +226,7 @@ function reducer(state, action) {
       const precio = calcularPrecio(cancha ? cancha.precioHora : 0, horas.length);
       const reserva = {
         id: `${canchaId}__${fecha}__${horas[0]}__${Date.now()}`,
+        codigo: action.payload.codigo || null,
         tipo: 'individual',
         canchaId,
         canchaNombre: cancha ? cancha.nombre : canchaId,
@@ -285,14 +291,23 @@ function reducer(state, action) {
         return c ? c.nombre : cid;
       });
 
+      const canchasEvento = canchaIds
+        .map((cid) => state.canchas.find((x) => x.id === cid))
+        .filter(Boolean);
+      const precio = calcularPrecioEvento(canchasEvento, horas.length);
+
       const evento = {
         id: `evento__${fecha}__${Date.now()}`,
+        codigo: action.payload.codigo || null,
         tipo: 'evento',
         subtipo, // 'torneo' | 'cumpleanos'
         fecha,
         canchaIds: [...canchaIds],
         canchaNombres,
         horas: [...horas],
+        total: precio.total,
+        ahorro: precio.ahorro,
+        packsAgua: precio.packsAgua,
         equipos: equipos != null ? equipos : null,
         canchasNecesarias: canchasNecesarias != null ? canchasNecesarias : null,
         invitados: invitados != null ? invitados : null,
@@ -337,20 +352,21 @@ export function ReservasProvider({ children }) {
     [state]
   );
 
-  // Reserva individual: valida y, si sigue libre, despacha. Devuelve { ok, error? }.
+  // Reserva individual: valida y, si sigue libre, despacha. Devuelve { ok, codigo?, error? }.
   const reservar = useCallback(
     (datos) => {
       if (!bloqueLibre(state, datos.canchaId, datos.fecha, horasDe(datos))) {
         return { ok: false, error: 'Ese horario ya está reservado. Elige otro.' };
       }
-      dispatch({ type: 'RESERVAR', payload: datos });
-      return { ok: true };
+      const codigo = generarCodigo();
+      dispatch({ type: 'RESERVAR', payload: { ...datos, codigo } });
+      return { ok: true, codigo };
     },
     [state]
   );
 
   // Evento (torneo / cumpleaños): valida TODAS las celdas antes de despachar.
-  // Devuelve { ok, error? }. Bloqueo todo-o-nada.
+  // Devuelve { ok, codigo?, error? }. Bloqueo todo-o-nada.
   const reservarEvento = useCallback(
     (datos) => {
       const { canchaIds, fecha, horas } = datos;
@@ -367,8 +383,9 @@ export function ReservasProvider({ children }) {
             'Alguna cancha u horario del evento ya no está disponible. No se reservó nada.',
         };
       }
-      dispatch({ type: 'RESERVAR_EVENTO', payload: datos });
-      return { ok: true };
+      const codigo = generarCodigo();
+      dispatch({ type: 'RESERVAR_EVENTO', payload: { ...datos, codigo } });
+      return { ok: true, codigo };
     },
     [state]
   );
