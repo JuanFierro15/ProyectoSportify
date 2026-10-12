@@ -27,12 +27,12 @@ src/
 ├── components/
 │   ├── layout/     Navbar, Footer (Bloque 1)
 │   ├── hero/       DeporteHero: heros por deporte con pinning GSAP/ScrollTrigger (Bloque 2.5)
-│   ├── canchas/    VistaCanchas: vista superpuesta con Depth Carousel (Bloque 3, rediseñado)
+│   ├── canchas/    VistaCanchas: ventana de reserva a pantalla completa con Depth Carousel (Bloques 3 a 5)
 │   ├── reactbits/  DepthCarousel y AccordionGallery: componentes de React Bits
-│   ├── reservas/   ModalReserva: un solo modal para cancha, torneo y cumpleaños, con carrusel,
-│   │               voucher en vivo y confirmación con QR (Bloques 4 y 5)
+│   ├── reservas/   useReserva + formulario, voucher en vivo y confirmación con QR,
+│   │               que usa la vista de canchas (Bloques 4 y 5)
 │   ├── eventos/    EventoCTA: sección de eventos y torneos (Bloque 5)
-│   ├── shared/     SelectorDia: tira de 7 días del modal de reserva
+│   ├── shared/     SelectorDia: tira de 7 días del formulario de reserva
 │   └── chatbot/    Chatbot (Bloque 6, pendiente)
 ├── context/
 │   ├── ReservasContext.jsx    Context + useReducer: disponibilidad por día (7 días);
@@ -56,15 +56,16 @@ src/
 
 ## Cómo se reservan las canchas
 
-Desde cada hero (o desde "Canchas" en el navbar/footer) se abre una vista a
-pantalla completa con pestañas por deporte, un filtro de disponibilidad de
-hoy y un carrusel 3D (o un grid, si el deporte tiene pocas canchas) con el
-panel de precio y horarios de cada una. La URL cambia junto con la vista
+Todo se reserva desde una sola ventana a pantalla completa: la vista de
+canchas. Se abre desde cada hero o desde "Canchas" en el navbar/footer (modo
+cancha), y desde "Reserva un evento" (modo torneo). Tiene pestañas por
+deporte, un filtro "Solo con horarios libres ese día", un carrusel 3D con la
+información de cada cancha, el formulario (día, horario, datos y contacto) y,
+a la derecha, el voucher. La URL cambia junto con la vista
 (`#canchas-<deporte>`), así que se puede compartir un enlace directo a un
 deporte o usar "atrás" en el navegador para cerrarla.
 
-Tanto "Reservar" (desde una cancha) como "Reserva un evento" abren el mismo
-modal, con tres modos:
+La ventana tiene tres modos:
 
 - **Cancha**: se elige la cancha en el carrusel y de 1 a 3 horas seguidas;
   desde 2 horas hay $5.000 menos por hora y un pack de agua gratis.
