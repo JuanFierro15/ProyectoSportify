@@ -44,7 +44,9 @@ src/
 │   ├── eventos/    EventoCTA: sección de eventos y torneos (Bloque 5)
 │   ├── ubicacion/  Ubicacion: sección "Visítanos" con dirección, teléfono, horario y mapa
 │   ├── shared/     SelectorDia: tira de 7 días del formulario de reserva
-│   └── chatbot/    Chatbot (Bloque 6, pendiente)
+│   └── chatbot/    Asistente (Bloque 6): botón flotante + panel en todas las vistas,
+│                   con useChatbot (conversación), useDeporteActivo (acento) y
+│                   useAccionesChat (botones que abren canchas, eventos o ubicación)
 ├── context/
 │   ├── ReservasContext.jsx    Context + useReducer: disponibilidad por día (7 días);
 │   │                          reservas "individual" y "evento" (bloqueo todo-o-nada),
@@ -62,6 +64,8 @@ src/
 │   ├── precios.js        Reglas de precio (descuento desde 2 horas, eventos por cancha)
 │   ├── horarios.js       Selección de horas: bloque de hasta 3 o rango inicio-fin
 │   ├── codigoReserva.js  Código de reserva y texto del QR
+│   ├── chat.js           Contexto que el chat envía (franjas libres de 7 días), historial
+│   │                     y validación de la respuesta
 │   ├── negocio.js        Teléfono del local (formato y enlace) y horario a partir de las franjas
 │   └── validacion.js     Nombre y teléfono (formulario y chat) y validación de una
 │                         reserva propuesta desde el chat
@@ -123,6 +127,14 @@ por su cuenta.
   confirma. Si algo no es válido, responde un mensaje fijo sin volver a llamar
   al modelo.
 
+En el sitio, el asistente es un botón flotante abajo a la derecha que abre un
+panel (a pantalla completa en el celular). Está disponible en todas las
+vistas, también encima de la ventana de reserva, y la conversación se
+conserva al abrir y cerrar esa ventana y al recargar la pestaña ("Nueva
+conversación" la borra). Toma el color del deporte que se está viendo y,
+cuando la respuesta lo amerita, muestra un botón para abrir las canchas, la
+reserva de eventos o la sección de ubicación.
+
 ### Configurar la key
 
 1. Crea una API key en [Google AI Studio](https://aistudio.google.com/apikey)
@@ -160,5 +172,5 @@ casos de prueba. No lo corras junto a `npm start`.
 3. ✅ Catálogo de canchas — vista superpuesta con Depth Carousel
 4. ✅ Sistema de reservas (horarios, validación de choques, `localStorage`)
 5. ✅ Modo evento especial: torneos y cumpleaños (varias canchas + franja consecutiva, bloqueo todo-o-nada)
-6. Chatbot ← en curso (6.1: datos del negocio y `/api/chat`)
+6. Chatbot ← en curso (6.1: datos del negocio y `/api/chat` · 6.2: widget en todas las vistas)
 7. Panel de estado/admin (opcional)
