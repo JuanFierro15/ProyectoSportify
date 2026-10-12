@@ -191,6 +191,22 @@
   opacity: 0.4;
 }
 
+/* Cancelar: botón secundario con contorno neutro. Foundation `.clear` lo
+   dejaba sin borde ni fondo y no se leía como botón. */
+.voucher-reserva__acciones .button.clear.secondary {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  font-weight: 600;
+}
+
+.voucher-reserva__acciones .button.clear.secondary:hover,
+.voucher-reserva__acciones .button.clear.secondary:focus {
+  border-color: #94a3b8;
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
 .voucher-reserva__bloqueo {
   margin: -0.15rem 0 0.5rem;
   font-size: 0.8rem;
