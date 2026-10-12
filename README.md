@@ -32,6 +32,7 @@ src/
 │   ├── reservas/   useReserva + formulario, voucher en vivo y confirmación con QR,
 │   │               que usa la vista de canchas (Bloques 4 y 5)
 │   ├── eventos/    EventoCTA: sección de eventos y torneos (Bloque 5)
+│   ├── ubicacion/  Ubicacion: sección "Visítanos" con dirección, teléfono, horario y mapa
 │   ├── shared/     SelectorDia: tira de 7 días del formulario de reserva
 │   └── chatbot/    Chatbot (Bloque 6, pendiente)
 ├── context/
@@ -42,15 +43,17 @@ src/
 │                                abierto), sincronizado con el hash de la URL
 ├── data/
 │   ├── deportes.js    Nombre y colorAcento de cada deporte (fuente única)
-│   └── canchas.json   Semilla: horas base + ocupación por día de cada cancha
+│   ├── canchas.json   Semilla: horas base + ocupación por día de cada cancha
+│   └── local.json     Dirección, teléfono, días de atención y mapa del local (fuente única)
 ├── lib/
 │   ├── fechas.js         Helpers de fecha compartidos (etiquetas, meses...)
 │   ├── canchas.js        Agrupar canchas por deporte, título corto de cada una
 │   ├── precios.js        Reglas de precio (descuento desde 2 horas, eventos por cancha)
 │   ├── horarios.js       Selección de horas: bloque de hasta 3 o rango inicio-fin
 │   ├── codigoReserva.js  Código de reserva y texto del QR
+│   ├── local.js          Teléfono del local (formato y enlace) y horario a partir de las franjas
 │   └── validacion.js     Nombre y teléfono del formulario
-├── App.js          <ReservasProvider> + <VistaCanchasProvider> + Navbar + heros + evento + Footer
+├── App.js          <ReservasProvider> + <VistaCanchasProvider> + Navbar + heros + evento + ubicación + Footer
 └── index.js        Punto de entrada (importa el CSS de Foundation)
 ```
 
@@ -79,6 +82,15 @@ código de reserva y un QR con los datos (tipo, fecha, horario, canchas, a
 nombre de quién y total) para mostrarlo al llegar. Sin backend, el QR lleva la
 información dentro; comprobarlo contra las reservas guardadas queda para el
 panel de administración.
+
+## Ubicación y contacto
+
+La sección "Visítanos" (`#ubicacion`, enlazada desde el navbar y el footer)
+muestra la dirección, el teléfono (con enlace para llamar), el horario y un
+mapa de Google con el botón "Cómo llegar". Los datos salen de
+`src/data/local.json` y el horario se calcula de las franjas de
+`canchas.json` (de la primera a la última hora reservable), así que el footer
+y la sección siempre coinciden.
 
 ## Avance por bloques
 
