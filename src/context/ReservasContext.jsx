@@ -7,9 +7,11 @@ import React, {
   useMemo,
 } from 'react';
 import semilla from '../data/canchas.json';
+import negocio from '../data/negocio.json';
 import { calcularPrecio, calcularPrecioEvento, MAX_HORAS_SEGUIDAS } from '../lib/precios';
 import { esHoraPasada } from '../lib/fechas';
 import { generarCodigo } from '../lib/codigoReserva';
+import { aplicarCancelacion, verificarCancelable } from '../lib/cancelacion';
 
 /**
  * ReservasContext — estado global de disponibilidad y reservas.
@@ -27,6 +29,9 @@ import { generarCodigo } from '../lib/codigoReserva';
  *   Ambos tipos guardan un `codigo` corto (SPF-XXXXXX) que se muestra en el
  *   QR de confirmación. Ambos tipos se reservan desde la misma ventana: la
  *   vista de canchas (VistaCanchas).
+ * - La acción CANCELAR quita una reserva individual y libera sus horas (no las
+ *   de la semilla ni las de eventos), respetando cancelacion.horasMinimas de
+ *   negocio.json; la usa el chat y la reutilizará el panel admin (Bloque 7).
  * - Sin backend: todo vive en memoria y se espeja al almacenamiento local.
  *
  * Consumir con el hook `useReservas()`.
@@ -324,6 +329,23 @@ function reducer(state, action) {
       };
     }
 
+    case 'CANCELAR': {
+      const { reservaId, ahora } = action.payload;
+      const res = aplicarCancelacion(
+        state,
+        reservaId,
+        new Date(ahora),
+        negocio.cancelacion.horasMinimas
+      );
+      if (res.error) {
+        return {
+          ...state,
+          error: res.error,
+        };
+      }
+      return res.state;
+    }
+
     case 'LIMPIAR_ERROR':
       return state.error ? { ...state, error: null } : state;
 
@@ -396,6 +418,25 @@ export function ReservasProvider({ children }) {
     [state]
   );
 
+  // Cancelación individual: valida el plazo y, si se puede, despacha. Devuelve { ok, error? }.
+  const cancelar = useCallback(
+    (reservaId) => {
+      const ahora = Date.now();
+      const reserva = state.reservas.find((r) => r.id === reservaId);
+      const v = verificarCancelable(
+        reserva,
+        new Date(ahora),
+        negocio.cancelacion.horasMinimas
+      );
+      if (!v.ok) {
+        return { ok: false, error: v.error };
+      }
+      dispatch({ type: 'CANCELAR', payload: { reservaId, ahora } });
+      return { ok: true };
+    },
+    [state]
+  );
+
   const limpiarError = useCallback(() => dispatch({ type: 'LIMPIAR_ERROR' }), []);
 
   const value = useMemo(
@@ -408,6 +449,7 @@ export function ReservasProvider({ children }) {
       reservar,
       reservarEvento,
       esHorarioDeEvento,
+      cancelar,
       limpiarError,
     }),
     [
@@ -419,6 +461,7 @@ export function ReservasProvider({ children }) {
       reservar,
       reservarEvento,
       esHorarioDeEvento,
+      cancelar,
       limpiarError,
     ]
   );
