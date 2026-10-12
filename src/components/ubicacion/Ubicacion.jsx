@@ -2,9 +2,9 @@ import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Clock, MapPin, Navigation, Phone } from 'lucide-react';
-import local from '../../data/local.json';
+import negocio from '../../data/negocio.json';
 import canchasData from '../../data/canchas.json';
-import { enlaceTelefono, formatoTelefono, textoHorario } from '../../lib/local';
+import { enlaceTelefono, formatoTelefono, textoHorario } from '../../lib/negocio';
 import './Ubicacion.css';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -13,7 +13,7 @@ gsap.registerPlugin(ScrollTrigger);
 function Ubicacion() {
   const rootRef = useRef(null);
   const mapaRef = useRef(null);
-  const { direccion, zona, ciudad, telefono, dias, mapaEmbed, mapaEnlace } = local;
+  const { direccion, zona, ciudad, telefono, dias, mapaEmbed, mapaEnlace } = negocio;
 
   useEffect(() => {
     const ctx = gsap.context(() => {

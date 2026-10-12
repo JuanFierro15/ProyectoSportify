@@ -1,6 +1,8 @@
 import { finDeFranja } from './precios';
 
-// Datos de contacto del local; única fuente para el footer, la sección de ubicación y el chatbot.
+// Datos del negocio (src/data/negocio.json): formato del teléfono y horario a
+// partir de las franjas. Única fuente para el footer, la sección de ubicación
+// y el chatbot.
 
 export function formatoTelefono(telefono) {
   const str = String(telefono ?? '');

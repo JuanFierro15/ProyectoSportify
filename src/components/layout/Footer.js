@@ -1,9 +1,9 @@
 import React from 'react';
 import { ArrowUp, Clock, Compass, Phone } from 'lucide-react';
 import { useVistaCanchas } from '../../context/VistaCanchasContext';
-import local from '../../data/local.json';
+import negocio from '../../data/negocio.json';
 import canchasData from '../../data/canchas.json';
-import { enlaceTelefono, formatoTelefono, textoHorario } from '../../lib/local';
+import { enlaceTelefono, formatoTelefono, textoHorario } from '../../lib/negocio';
 import './Footer.css';
 
 /**
@@ -13,7 +13,7 @@ import './Footer.css';
 function Footer() {
   const year = new Date().getFullYear();
   const { abrirVista } = useVistaCanchas();
-  const { direccion, zona, ciudad, telefono } = local;
+  const { direccion, zona, ciudad, telefono } = negocio;
 
   return (
     <footer className="footer" id="main-footer">
@@ -62,7 +62,7 @@ function Footer() {
               Horario
             </p>
             <div className="footer__horario">
-              <p className="footer__horario-dias">{local.dias}</p>
+              <p className="footer__horario-dias">{negocio.dias}</p>
               <p>{textoHorario(canchasData.horas)}</p>
             </div>
           </div>

@@ -5,16 +5,14 @@ import { useReservas } from '../../context/ReservasContext';
 import { useVistaCanchas } from '../../context/VistaCanchasContext';
 import { DEPORTES, deportePorSlug } from '../../data/deportes';
 import { canchasDelDeporte, imagenGrandeCancha } from '../../lib/canchas';
+import negocio from '../../data/negocio.json';
 import AccordionGallery from '../reactbits/AccordionGallery';
 import './EventoCTA.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const TIPOS_EVENTO = [
-  { slug: 'futbol', label: 'Torneos', detalle: 'Combina varias canchas en la misma franja, con trofeos y premiación.' },
-  { slug: 'voley-playa', label: 'Cumpleaños', detalle: 'Zonas sociales y vestuarios para ti y tus invitados.' },
-  { slug: 'padel', label: 'Eventos especiales', detalle: 'Fechas reservadas en exclusiva, con arbitraje y sonido a medida.' },
-];
+// Tipos de evento: textos en src/data/negocio.json, compartidos con el chatbot.
+const TIPOS_EVENTO = negocio.eventos;
 
 // Diseño en dos columnas: mensaje y cifras reales a la izquierda, y AccordionGallery con un
 // tipo de evento por deporte a la derecha. Colores desde deportes.js, cifras desde datos reales,
