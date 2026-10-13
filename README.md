@@ -9,7 +9,7 @@ con un **asistente conversacional** que también reserva y cancela.
 ![Foundation](https://img.shields.io/badge/Foundation-6.8-1779BA)
 ![GSAP](https://img.shields.io/badge/GSAP-3.13-88CE02)
 ![Gemini](https://img.shields.io/badge/Gemini-function%20calling-8E75B2?logo=googlegemini&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-91%20en%20verde-2EA44F)
+![Tests](https://img.shields.io/badge/tests-112%20en%20verde-2EA44F)
 
 ![Hero de voley playa con el video de fondo y el botón del asistente](docs/capturas/inicio.webp)
 
@@ -226,13 +226,22 @@ veces: antes de despachar la acción y otra vez dentro del reducer.
 
 **El asistente nunca escribe reservas.** En cada mensaje el navegador envía a
 `/api/chat` el historial reciente y una foto de la disponibilidad. La función
-hace **una sola llamada** a Gemini, con los datos del negocio, los precios y
+hace **una llamada** a Gemini, con los datos del negocio, los precios y
 la disponibilidad en las instrucciones. El modelo siempre responde llamando
 una de cuatro funciones: `responder`, `proponer_reserva`,
 `proponer_cancelacion` o `abrir_seccion`. El servidor valida los argumentos
 con `src/lib/validacion.js`, el mismo módulo del formulario, y devuelve una
 **acción propuesta**. Si los datos no son válidos, responde con un texto fijo
 sin volver a llamar al modelo.
+
+**Respaldo automático de modelo.** Si el modelo principal falla con un error
+transitorio (503, 500, 429, 404) o se cuelga, la función repite la consulta
+con los modelos de respaldo, dentro de un presupuesto de 17 s (el widget
+espera 20 s). El principal tiene hasta 7 s y cada respaldo hasta 6 s. Un
+modelo que acaba de fallar se deja de lado 60 s, para no esperarlo en cada
+mensaje durante una caída. Los errores 400, 401 y 403 no se reintentan,
+porque ningún modelo los resolvería. La lógica está en
+`src/lib/modelosChat.js`, con sus tests.
 
 ```mermaid
 sequenceDiagram
@@ -243,7 +252,7 @@ sequenceDiagram
   participant R as ReservasContext
   U->>W: "Resérvame las 5 y 6 p. m."
   W->>A: mensaje + disponibilidad
-  A->>G: una sola llamada
+  A->>G: una llamada (o el respaldo si falla)
   G-->>A: proponer_reserva(...)
   A->>A: valida los datos
   A-->>W: CONFIRMAR_RESERVA
@@ -261,7 +270,7 @@ sequenceDiagram
 | Petición | `POST` JSON (máx. 48 KB): `mensaje` (1-500 caracteres), `historial` (últimos 20 turnos) y `contexto` (fecha, hora, canchas y franjas libres de 7 días) |
 | Respuesta | Siempre `{ respuesta, sugerencias, accion }`, también en los errores |
 | Acciones | `CONFIRMAR_RESERVA`, `BUSCAR_CANCELACION`, `ABRIR_SECCION` o `null` |
-| Errores | 405 método, 400 petición inválida, 429 límite del modelo, 502/504 otros fallos o tiempo agotado (15 s) |
+| Errores | 405 método, 400 petición inválida y, cuando fallan todos los modelos: 429 si todos agotaron su cuota, 504 si alguno se colgó y 502 en los demás casos |
 
 ---
 
@@ -318,6 +327,7 @@ src/
 │   ├── horarios.js      Selección de horas (bloque de hasta 3 o rango)
 │   ├── validacion.js    Nombre, teléfono y reserva propuesta por el chat
 │   ├── cancelacion.js   Plazo de cancelación, estado resultante y búsqueda de reservas
+│   ├── modelosChat.js   Respaldo de modelo del asistente: orden, tiempos y respuesta final
 │   ├── chat.js          Contexto que envía el widget, historial, sí/no y textos fijos
 │   ├── codigoReserva.js Código de reserva y texto del QR
 │   ├── fechas.js        Etiquetas de fecha, horas a. m./p. m. y horas pasadas
@@ -358,7 +368,8 @@ probarlo en local:
 | Variable | Uso |
 |---|---|
 | `GEMINI_API_KEY` | Obligatoria para el asistente. Solo la lee `/api/chat` |
-| `GEMINI_MODEL` | Opcional. Modelo de Gemini (por defecto `gemini-3.5-flash-lite`) |
+| `GEMINI_MODEL` | Opcional. Modelo principal de Gemini (por defecto `gemini-3.5-flash-lite`) |
+| `GEMINI_MODELOS_RESPALDO` | Opcional. Modelos de respaldo separados por comas (por defecto `gemini-3.1-flash-lite,gemini-3.6-flash`). Vacía deja el chat sin respaldo. Deben aceptar `thinkingLevel: MINIMAL` |
 | `CHOKIDAR_USEPOLLING` | Opcional, solo desarrollo: evita que el servidor se caiga en Windows al copiar archivos en `public/media/` |
 
 > **Importante:** nunca pongas la key en una variable `REACT_APP_*`. Esas
@@ -370,7 +381,7 @@ probarlo en local:
 ## Pruebas
 
 ```bash
-npm test -- --watchAll=false      # 91 tests en 9 suites
+npm test -- --watchAll=false      # 112 tests en 10 suites
 npx eslint --ext .js,.jsx src     # lint (también corre dentro de start y build)
 npm run build                     # build de producción en /build
 ```
@@ -378,7 +389,8 @@ npm run build                     # build de producción en /build
 Las pruebas unitarias cubren la lógica pura de `src/lib/`: precios y
 descuentos, selección de horas, validación de nombre, teléfono y reservas
 propuestas, fechas, código y texto del QR, datos del negocio, plazo y búsqueda
-de cancelaciones, y el contexto, el historial y los textos fijos del chat.
+de cancelaciones, el contexto, el historial y los textos fijos del chat, y el
+respaldo de modelo (orden, tiempos por intento y respuesta final).
 `src/App.test.js` es un *smoke test* que monta la aplicación completa.
 
 El asistente tiene además un script con 10 casos contra la función real:
