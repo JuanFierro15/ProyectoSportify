@@ -71,6 +71,16 @@ const casos = [
     revisar: (r) => (r.accion === null && /nombre/i.test(r.respuesta) && /tel[eé]fono/i.test(r.respuesta) ? 'PASA' : 'REVISAR (debe pedir nombre y teléfono)'),
   },
   {
+    id: 'reservalo-varias',
+    historial: [
+      historialOferta[0],
+      { rol: 'bot', texto: `La Cancha Voley Playa 1 tiene libres hoy estas franjas: ${libresVoley1Hoy.slice(0, 3).map(amPm).join(', ')}.` },
+    ],
+    mensaje: 'resérvalo',
+    revisar: (r) =>
+      r.accion === null && /cu[aá]l|franja|horario|\bhoras?\b/i.test(r.respuesta) ? 'PASA' : 'REVISAR (debe preguntar cuál franja, no suponer una)',
+  },
+  {
     id: 'datos-validos',
     historial: [...historialOferta, { rol: 'usuario', texto: 'resérvalo' }, { rol: 'bot', texto: 'Claro. ¿A nombre de quién y con qué teléfono?' }],
     mensaje: 'Juan Pérez, 300 123 4567',
