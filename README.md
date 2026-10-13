@@ -196,25 +196,25 @@ pack de agua.
 ## Arquitectura
 
 ```mermaid
-flowchart LR
+flowchart TB
   subgraph Navegador
-    UI["Interfaz React<br/>heros, vista de canchas, eventos"]
-    CTX["ReservasContext<br/>Context + useReducer"]
-    LS[("localStorage")]
+    UI["Interfaz React"]
     CHAT["Widget del asistente"]
+    CTX["ReservasContext"]
+    LS[("localStorage")]
   end
   subgraph Vercel
-    API["Función /api/chat<br/>Node, sin estado"]
+    API["/api/chat (sin estado)"]
   end
-  GEM["Gemini<br/>function calling"]
+  GEM["Gemini"]
 
   UI <--> CTX
   CTX <--> LS
-  CHAT -- "mensaje, historial y franjas libres" --> API
-  API -- "instrucciones con datos del negocio" --> GEM
+  CHAT -- "mensaje + franjas libres" --> API
+  API -- "instrucciones + datos" --> GEM
   GEM -- "función elegida" --> API
-  API -- "respuesta y acción validada" --> CHAT
-  CHAT -- "reservar() o cancelar()<br/>solo si el usuario confirma" --> CTX
+  API -- "acción validada" --> CHAT
+  CHAT -- "reservar() / cancelar()<br/>si el usuario confirma" --> CTX
 ```
 
 **Estado sin base de datos.** `src/context/ReservasContext.jsx` es la única
@@ -241,22 +241,22 @@ sequenceDiagram
   participant A as /api/chat
   participant G as Gemini
   participant R as ReservasContext
-  U->>W: "Resérvame las 5 y 6 p. m. a nombre de Ana..."
-  W->>A: mensaje + historial + disponibilidad
-  A->>G: una llamada (instrucciones + datos del negocio)
-  G-->>A: proponer_reserva(cancha, fecha, horas, nombre, teléfono)
-  A->>A: valida con src/lib/validacion.js
-  A-->>W: acción CONFIRMAR_RESERVA
-  W-->>U: tarjeta con resumen y total
-  U->>W: Confirmar (o "sí")
-  W->>R: reservar(), todo o nada
+  U->>W: "Resérvame las 5 y 6 p. m."
+  W->>A: mensaje + disponibilidad
+  A->>G: una sola llamada
+  G-->>A: proponer_reserva(...)
+  A->>A: valida los datos
+  A-->>W: CONFIRMAR_RESERVA
+  W-->>U: tarjeta con el total
+  U->>W: Confirmar
+  W->>R: reservar()
   R-->>W: código SPF-XXXXXX
-  W-->>U: código, abono y comprobante con QR
+  W-->>U: código y QR
 ```
 
 **Contrato de `/api/chat`:**
 
-| | |
+| Parte | Detalle |
 |---|---|
 | Petición | `POST` JSON (máx. 48 KB): `mensaje` (1-500 caracteres), `historial` (últimos 20 turnos) y `contexto` (fecha, hora, canchas y franjas libres de 7 días) |
 | Respuesta | Siempre `{ respuesta, sugerencias, accion }`, también en los errores |
