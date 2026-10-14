@@ -2,7 +2,7 @@
 // allows you to do things like:
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 
 // jsdom no trae estas APIs del navegador.
 if (!window.matchMedia) {
@@ -37,3 +37,6 @@ if (!window.ResizeObserver) {
 window.HTMLMediaElement.prototype.load = () => {};
 window.HTMLMediaElement.prototype.play = () => Promise.resolve();
 window.HTMLMediaElement.prototype.pause = () => {};
+
+// jsdom tampoco implementa el scroll de la ventana.
+window.scrollTo = () => {};

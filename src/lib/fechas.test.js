@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { esHoraPasada, fechaCompleta, horaAmPm } from './fechas';
 
 describe('fechaCompleta', () => {
@@ -9,13 +10,13 @@ describe('fechaCompleta', () => {
 
 describe('esHoraPasada', () => {
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     // 11 de octubre de 2026, 15:30 (los meses empiezan en 0)
-    jest.setSystemTime(new Date(2026, 9, 11, 15, 30));
+    vi.setSystemTime(new Date(2026, 9, 11, 15, 30));
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test('hoy: las horas anteriores a la actual ya pasaron', () => {
