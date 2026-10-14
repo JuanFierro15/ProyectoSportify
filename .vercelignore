@@ -4,6 +4,8 @@
 !/src
 !/public
 !/api
+!/index.html
+!/vite.config.mjs
 !/vercel.json
 !/package.json
 !/package-lock.json

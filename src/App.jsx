@@ -15,11 +15,13 @@ import './App.css';
 // Son versiones web ligeras: 1080p, keyframe por frame (para que el scrubbing
 // por scroll sea fluido) y +faststart. Los originales en alta calidad están
 // en public/media/fuente/ (fuera del repo).
-const BASE = process.env.PUBLIC_URL;
+// BASE_URL de Vite ya termina en '/': con otra barra quedaría `//media/...`,
+// que el navegador interpreta como otro dominio.
+const BASE = import.meta.env.BASE_URL;
 const VIDEOS = {
-  'voley-playa': `${BASE}/media/hero_voleyplaya.mp4`,
-  padel: `${BASE}/media/hero_padel.mp4`,
-  futbol: `${BASE}/media/hero_futbol.mp4`,
+  'voley-playa': `${BASE}media/hero_voleyplaya.mp4`,
+  padel: `${BASE}media/hero_padel.mp4`,
+  futbol: `${BASE}media/hero_futbol.mp4`,
 };
 
 /**
