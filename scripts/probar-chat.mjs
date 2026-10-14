@@ -131,7 +131,7 @@ let fallos = 0;
 for (const caso of casos.filter((c) => FILTRO.length === 0 || FILTRO.includes(c.id))) {
   const inicio = Date.now();
   let estado = '-';
-  let cuerpo = null;
+  let cuerpo;
   try {
     const res = await fetch(`${BASE}/api/chat`, {
       method: 'POST',
