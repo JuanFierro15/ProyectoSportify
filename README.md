@@ -6,6 +6,7 @@ con un **asistente conversacional** que también reserva y cancela.
 
 [![Demo](https://img.shields.io/badge/demo-proyecto--sportify.vercel.app-000000?logo=vercel&logoColor=white)](https://proyecto-sportify.vercel.app)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
 ![Foundation](https://img.shields.io/badge/Foundation-6.8-1779BA)
 ![GSAP](https://img.shields.io/badge/GSAP-3.13-88CE02)
 ![Gemini](https://img.shields.io/badge/Gemini-function%20calling-8E75B2?logo=googlegemini&logoColor=white)
@@ -42,7 +43,7 @@ Surcolombiana, sexto semestre). El enunciado fija estas restricciones:
 
 | Restricción | Cómo se cumple |
 |---|---|
-| Frontend en React | Create React App 5 con React 19, componentes funcionales y Hooks |
+| Frontend en React con Vite | Vite 8 con React 19, componentes funcionales y Hooks |
 | Maquetación con Foundation | `foundation-sites` 6 (grid XY, botones, pestañas y utilidades) |
 | Sin base de datos | Estado de React (`Context` + `useReducer`) espejado en `localStorage`, más un JSON semilla |
 | Chatbot | Asistente con Gemini detrás de una función de servidor de Vercel (`/api/chat`), acotado al negocio |
@@ -278,13 +279,14 @@ sequenceDiagram
 
 | Área | Tecnología |
 |---|---|
-| Interfaz | React 19.2 · Create React App 5 (`react-scripts` 5.0.1) |
+| Interfaz | React 19.2 · Vite 8 (`@vitejs/plugin-react`) |
 | Maquetación | Foundation 6.8 (`foundation-sites`, solo CSS) |
 | Animación | GSAP 3.13 + ScrollTrigger |
 | Componentes de terceros | DepthCarousel y AccordionGallery de [React Bits](https://reactbits.dev), adaptados |
 | Íconos y QR | `lucide-react` · `qrcode.react` |
 | Asistente | `@google/genai` 2.28 (modelo `gemini-3.5-flash-lite` por defecto) en una Vercel Function de Node |
-| Pruebas | Jest 27 + Testing Library |
+| Pruebas | Vitest 5 + Testing Library (jsdom) |
+| Calidad de código | ESLint 10 (configuración plana) |
 | Hosting | Vercel (despliegue automático desde `main`) |
 
 ---
@@ -333,14 +335,19 @@ src/
 │   ├── fechas.js        Etiquetas de fecha, horas a. m./p. m. y horas pasadas
 │   ├── canchas.js       Agrupación por deporte, imágenes y estilo de acento
 │   └── negocio.js       Teléfono del local y horario a partir de las franjas
-└── App.js               Providers + Navbar + heros + eventos + ubicación + Footer + asistente
+├── App.jsx              Providers + Navbar + heros + eventos + ubicación + Footer + asistente
+└── main.jsx             Punto de entrada: CSS de Foundation, estilos globales y montaje de <App />
+index.html               Página base; carga src/main.jsx como módulo
+vite.config.mjs          Plugin de React, polling opcional del watcher y configuración de Vitest
+eslint.config.mjs        ESLint 10 en configuración plana
+vercel.json              Preset de Vite e includeFiles de la función /api/chat
 ```
 
 ---
 
 ## Instalación y uso local
 
-**Requisitos:** Node.js 20 o superior (el proyecto se desarrolló con Node 24)
+**Requisitos:** Node.js 22.12 o superior (el proyecto se desarrolló con Node 24)
 y npm. Para probar el asistente en local se necesita además la
 [CLI de Vercel](https://vercel.com/docs/cli) y una API key de Gemini.
 
@@ -348,10 +355,10 @@ y npm. Para probar el asistente en local se necesita además la
 git clone https://github.com/JuanFierro15/ProyectoSportify.git
 cd ProyectoSportify
 npm install
-npm start          # http://localhost:3000
+npm run dev        # http://localhost:5173
 ```
 
-`npm start` sirve el sitio completo, pero **no ejecuta** la función
+`npm run dev` sirve el sitio completo, pero **no ejecuta** la función
 `/api/chat`, así que el asistente responde con su mensaje de error. Para
 probarlo en local:
 
@@ -370,9 +377,9 @@ probarlo en local:
 | `GEMINI_API_KEY` | Obligatoria para el asistente. Solo la lee `/api/chat` |
 | `GEMINI_MODEL` | Opcional. Modelo principal de Gemini (por defecto `gemini-3.5-flash-lite`) |
 | `GEMINI_MODELOS_RESPALDO` | Opcional. Modelos de respaldo separados por comas (por defecto `gemini-3.1-flash-lite,gemini-3.6-flash`). Vacía deja el chat sin respaldo. Deben aceptar `thinkingLevel: MINIMAL` |
-| `CHOKIDAR_USEPOLLING` | Opcional, solo desarrollo: evita que el servidor se caiga en Windows al copiar archivos en `public/media/` |
+| `CHOKIDAR_USEPOLLING` | Opcional, solo desarrollo: con `true`, `vite.config.mjs` activa el polling del watcher de Vite, lo que evita que el servidor se caiga en Windows al copiar archivos en `public/media/` |
 
-> **Importante:** nunca pongas la key en una variable `REACT_APP_*`. Esas
+> **Importante:** nunca pongas la key en una variable `VITE_*`. Esas
 > variables quedan incrustadas en el JavaScript público del sitio. `.env` y
 > `.env.local` están en `.gitignore`.
 
@@ -381,17 +388,20 @@ probarlo en local:
 ## Pruebas
 
 ```bash
-npm test -- --watchAll=false      # 112 tests en 10 suites
-npx eslint --ext .js,.jsx src     # lint (también corre dentro de start y build)
-npm run build                     # build de producción en /build
+npm test                          # 112 tests en 10 archivos (Vitest)
+npm run lint                      # ESLint sobre src, api y scripts
+npm run build                     # build de producción en /dist
 ```
+
+El lint se corre aparte: ya no forma parte del build ni del servidor de
+desarrollo. `npm run test:watch` deja Vitest observando los cambios.
 
 Las pruebas unitarias cubren la lógica pura de `src/lib/`: precios y
 descuentos, selección de horas, validación de nombre, teléfono y reservas
 propuestas, fechas, código y texto del QR, datos del negocio, plazo y búsqueda
 de cancelaciones, el contexto, el historial y los textos fijos del chat, y el
 respaldo de modelo (orden, tiempos por intento y respuesta final).
-`src/App.test.js` es un *smoke test* que monta la aplicación completa.
+`src/App.test.jsx` es un *smoke test* que monta la aplicación completa.
 
 El asistente tiene además un script con 10 casos contra la función real:
 disponibilidad, "resérvalo" con una y con varias franjas, datos válidos e
@@ -412,12 +422,13 @@ El sitio está en Vercel y **cada push a `main` despliega a producción**.
 - **Variables de entorno:** `GEMINI_API_KEY` (sensible) y `GEMINI_MODEL`, en
   los entornos *Production* y *Preview*. Aplican desde el siguiente
   despliegue.
-- **`vercel.json`:** agrega `@google/genai/dist/node/index.cjs` a la función
-  con `includeFiles`. La función se compila a CommonJS y el rastreo de
-  archivos de Vercel solo incluía la versión ESM del paquete.
+- **`vercel.json`:** fija el preset de Vite (`"framework": "vite"`) y agrega
+  `@google/genai/dist/node/index.cjs` a la función con `includeFiles`. La
+  función se compila a CommonJS y el rastreo de archivos de Vercel solo
+  incluía la versión ESM del paquete.
 - **`.vercelignore`:** es una lista blanca (`src`, `public`, `api`,
-  `vercel.json` y los `package*.json`), así que los videos fuente y la
-  documentación no se suben al build.
+  `index.html`, `vite.config.mjs`, `vercel.json` y los `package*.json`), así
+  que los videos fuente y la documentación no se suben al build.
 
 ---
 
