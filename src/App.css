@@ -10,7 +10,7 @@
   --color-marca: #f6a94b;
   --color-marca-soft: color-mix(in srgb, var(--color-marca) 25%, white);
   --color-marca-contraste: #141414;
-  /* Encima del navbar (1000) y de la vista de canchas (1001) */
+  /* Encima del navbar (1000) */
   --z-chatbot: 1100;
 }
 
@@ -20,4 +20,4 @@
   min-height: 100vh;
 }
 
-/* Cada bloque (hero, vista de canchas, evento, footer, navbar) trae sus propios estilos. */
+/* Cada bloque (hero, página de reserva, evento, footer, navbar) trae sus propios estilos. */

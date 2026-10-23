@@ -12,10 +12,10 @@ import ConfirmacionReserva from '../reservas/ConfirmacionReserva';
 import './Chatbot.css';
 
 // Asistente Sportify: botón flotante + panel, en un portal a document.body.
-// Se monta una sola vez en App.js, así que la conversación (useChatbot) se
-// conserva al abrir y cerrar la vista de canchas. El acento sigue al deporte
-// activo (useDeporteActivo); sin deporte, los tokens de marca de App.css.
-// El panel sigue montado mientras anima su salida, como VistaCanchas.
+// Se monta una sola vez en App.jsx, así que la conversación (useChatbot) se
+// conserva al cambiar entre la página de inicio y la de reserva. El acento
+// sigue al deporte activo (useDeporteActivo); sin deporte, los tokens de marca
+// de App.css. El panel sigue montado mientras anima su salida.
 function Chatbot() {
   const {
     mensajes,
@@ -166,9 +166,7 @@ function Chatbot() {
     }
   }, [comprobante]);
 
-  // Escape: si hay comprobante abierto, lo cierra (y stopPropagation); si no,
-  // cierra el panel. stopPropagation evita que llegue al listener de window con
-  // el que la vista de canchas también se cierra con Escape.
+  // Escape: si hay comprobante abierto, lo cierra; si no, cierra el panel.
   const manejarKeyDown = (e) => {
     if (e.key === 'Escape') {
       e.stopPropagation();

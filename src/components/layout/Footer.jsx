@@ -1,19 +1,47 @@
 import React from 'react';
 import { ArrowUp, Clock, Compass, Phone } from 'lucide-react';
 import { useVistaCanchas } from '../../context/VistaCanchasContext';
+import { DEPORTES } from '../../data/deportes';
 import negocio from '../../data/negocio.json';
 import canchasData from '../../data/canchas.json';
 import { enlaceTelefono, formatoTelefono, textoHorario } from '../../lib/negocio';
+import { esClicNormal, rutaReserva } from '../../lib/rutas';
 import './Footer.css';
 
 /**
  * Pie de página.
  * Maquetado con el grid de Foundation (`grid-container`, `grid-x`, `grid-padding-x`, `cell`).
+ * Se muestra en las dos páginas: desde la de reserva, los enlaces a secciones
+ * vuelven al inicio (`irASeccion`) y "Canchas" sube al tope de la misma página.
  */
 function Footer() {
   const year = new Date().getFullYear();
-  const { abrirVista } = useVistaCanchas();
+  const { deporteAbierto, abrirVista, irASeccion } = useVistaCanchas();
   const { direccion, zona, ciudad, telefono } = negocio;
+
+  const manejarSeccion = (id) => (e) => {
+    if (deporteAbierto && esClicNormal(e)) {
+      e.preventDefault();
+      irASeccion(id);
+    }
+  };
+
+  const irACanchas = (e) => {
+    if (!esClicNormal(e)) return;
+    e.preventDefault();
+    if (deporteAbierto) {
+      const prefiereReducido =
+        typeof window !== 'undefined' &&
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollTo({
+        top: 0,
+        behavior: prefiereReducido ? 'auto' : 'smooth',
+      });
+    } else {
+      abrirVista(DEPORTES[0].slug);
+    }
+  };
 
   return (
     <footer className="footer" id="main-footer">
@@ -34,24 +62,28 @@ function Footer() {
             </p>
             <ul className="footer__nav">
               <li>
-                <a href="#hero-placeholder">Inicio</a>
+                <a href="#hero-placeholder" onClick={manejarSeccion('hero-placeholder')}>
+                  Inicio
+                </a>
               </li>
               <li>
                 <a
-                  href="#canchas-placeholder"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    abrirVista('voley-playa');
-                  }}
+                  href={rutaReserva(DEPORTES[0].slug)}
+                  aria-current={deporteAbierto ? 'page' : undefined}
+                  onClick={irACanchas}
                 >
                   Canchas
                 </a>
               </li>
               <li>
-                <a href="#eventos">Eventos especiales</a>
+                <a href="#eventos" onClick={manejarSeccion('eventos')}>
+                  Eventos especiales
+                </a>
               </li>
               <li>
-                <a href="#ubicacion">Ubicación</a>
+                <a href="#ubicacion" onClick={manejarSeccion('ubicacion')}>
+                  Ubicación
+                </a>
               </li>
             </ul>
           </div>
@@ -87,7 +119,11 @@ function Footer() {
             <p className="footer__copy">
               &copy; {year} Reservas Deportivas &middot; Proyecto universitario
             </p>
-            <a className="footer__volver" href="#hero-placeholder">
+            <a
+              className="footer__volver"
+              href="#hero-placeholder"
+              onClick={manejarSeccion('hero-placeholder')}
+            >
               Volver arriba
               <ArrowUp size={14} aria-hidden="true" />
             </a>

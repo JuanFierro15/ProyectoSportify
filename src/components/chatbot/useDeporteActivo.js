@@ -1,27 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useVistaCanchas } from '../../context/VistaCanchasContext';
 
-// Deporte activo para el acento del chat: el de la vista de canchas si está
-// abierta; si no, el de la sección [data-sport] (heros) que cruza el centro de
-// la pantalla, con IntersectionObserver (sin listener de scroll). Solo cuenta
-// lo que está dentro de #root: la vista y el visor viven en portales.
+// Deporte activo para el acento del chat: el de la página de reserva si se
+// está en ella; si no, el de la sección [data-sport] (heros del inicio) que
+// cruza el centro de la pantalla, con IntersectionObserver (sin listener de
+// scroll). Solo cuenta lo que está dentro de #root (el propio widget del chat
+// vive en un portal en document.body). Depende de `deporteAbierto` para volver
+// a observar los heros cuando se regresa a la página de inicio.
 export default function useDeporteActivo() {
   const { deporteAbierto } = useVistaCanchas();
   const [deporteScroll, setDeporteScroll] = useState(null);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !window.IntersectionObserver) {
-      return;
+    if (deporteAbierto || typeof window === 'undefined' || !window.IntersectionObserver) {
+      return undefined;
     }
 
     const rootElemento = document.getElementById('root');
     if (!rootElemento) {
-      return;
+      return undefined;
     }
 
     const elementos = rootElemento.querySelectorAll('[data-sport]');
     if (elementos.length === 0) {
-      return;
+      return undefined;
     }
 
     const visibles = new Map();
@@ -55,7 +57,7 @@ export default function useDeporteActivo() {
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [deporteAbierto]);
 
   return deporteAbierto || deporteScroll;
 }

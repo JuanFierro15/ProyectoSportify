@@ -1,53 +1,24 @@
 import React from 'react';
 import { ReservasProvider } from './context/ReservasContext';
 import { VistaCanchasProvider, useVistaCanchas } from './context/VistaCanchasContext';
-import { DEPORTES } from './data/deportes';
 import Navbar from './components/layout/Navbar';
-import DeporteHero from './components/hero/DeporteHero';
+import PaginaInicio from './components/layout/PaginaInicio';
 import VistaCanchas from './components/canchas/VistaCanchas';
 import Chatbot from './components/chatbot/Chatbot';
-import EventoCTA from './components/eventos/EventoCTA';
-import Ubicacion from './components/ubicacion/Ubicacion';
 import Footer from './components/layout/Footer';
 import './App.css';
 
-// Videos de fondo de los heros por deporte (en public/media/).
-// Son versiones web ligeras: 1080p, keyframe por frame (para que el scrubbing
-// por scroll sea fluido) y +faststart. Los originales en alta calidad están
-// en public/media/fuente/ (fuera del repo).
-// BASE_URL de Vite ya termina en '/': con otra barra quedaría `//media/...`,
-// que el navegador interpreta como otro dominio.
-const BASE = import.meta.env.BASE_URL;
-const VIDEOS = {
-  'voley-playa': `${BASE}media/hero_voleyplaya.mp4`,
-  padel: `${BASE}media/hero_padel.mp4`,
-  futbol: `${BASE}media/hero_futbol.mp4`,
-};
-
-/**
- * Esqueleto de la aplicación.
- * Navbar + heros por deporte (Bloque 2.5) + EventoCTA + Ubicacion + Footer, envuelto en
- * <ReservasProvider> (Bloque 4) y <VistaCanchasProvider> (estado de la vista
- * superpuesta de canchas, Bloque 3 rediseñado). La vista de canchas
- * (`<VistaCanchas>`) no vive en el flujo de scroll: se monta siempre pero solo
- * se renderiza (vía portal a `document.body`) cuando el usuario la abre.
- * El asistente (`<Chatbot>`) se monta una sola vez aquí, en un portal a
- * `document.body`, para que la conversación se conserve al abrir y cerrar la
- * vista de canchas.
- *
- * Los deportes (nombre + colorAcento) salen de `src/data/deportes.js`, misma
- * fuente para heros, cards y la vista de canchas -> continuidad visual.
- *
- * Ids que otros componentes referencian (sin tocarlos):
- *  - #hero-placeholder -> enlace "Inicio" del navbar
- *  - #eventos           -> enlace "Eventos especiales" del navbar/footer (lo lleva EventoCTA)
- *  - #ubicacion        -> enlace "Ubicación" del navbar/footer (lo lleva Ubicacion)
- *
- * `#canchas-placeholder` ya NO existe en el DOM: el catálogo dejó de vivir en
- * el flujo de scroll. Los botones "Ver canchas de..." de los DeporteHero y los
- * enlaces "Canchas" del navbar/footer abren la vista superpuesta con
- * `abrirVista(slug)` de VistaCanchasContext en vez de saltar a un ancla.
- */
+// Esqueleto de la aplicación.
+// Envuelve todo en <ReservasProvider> y <VistaCanchasProvider> (sincronizado
+// con la ruta `/` o `/reservar/<deporte>`). El Navbar, el Footer y el
+// asistente (<Chatbot>) quedan siempre montados; entre el Navbar y el Footer
+// se alterna la página de inicio (<PaginaInicio />) y la página de reserva
+// (<VistaCanchas key={apertura} />).
+//
+// Ids de anclaje de la página de inicio:
+//  - #hero-placeholder -> enlace "Inicio" del navbar/footer
+//  - #eventos          -> enlace "Eventos especiales" del navbar/footer (EventoCTA)
+//  - #ubicacion        -> enlace "Ubicación" del navbar/footer (Ubicacion)
 function App() {
   return (
     <ReservasProvider>
@@ -59,36 +30,15 @@ function App() {
 }
 
 function AppContenido() {
-  const { abrirVista } = useVistaCanchas();
+  const { deporteAbierto, apertura } = useVistaCanchas();
 
   return (
     <div className="App">
       <Navbar />
 
-      <div id="hero-placeholder">
-        {DEPORTES.map((d, i) => (
-          <DeporteHero
-            key={d.slug}
-            slug={d.slug}
-            nombre={d.nombre}
-            videoSrc={VIDEOS[d.slug]}
-            tituloCTA={`Ver canchas de ${d.nombre.toLowerCase()}`}
-            colorAcento={d.colorAcento}
-            eyebrow={d.eyebrow}
-            descripcion={d.descripcion}
-            onVerCanchas={() => abrirVista(d.slug)}
-            ultimoDeporte={i === DEPORTES.length - 1}
-          />
-        ))}
-      </div>
-
-      <EventoCTA />
-
-      <Ubicacion />
+      {deporteAbierto ? <VistaCanchas key={apertura} /> : <PaginaInicio />}
 
       <Footer />
-
-      <VistaCanchas />
 
       <Chatbot />
     </div>

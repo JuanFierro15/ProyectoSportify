@@ -5,6 +5,7 @@ import { useReservas } from '../../context/ReservasContext';
 import { useVistaCanchas } from '../../context/VistaCanchasContext';
 import { DEPORTES, deportePorSlug } from '../../data/deportes';
 import { canchasDelDeporte, imagenGrandeCancha } from '../../lib/canchas';
+import { esClicNormal, rutaReserva } from '../../lib/rutas';
 import negocio from '../../data/negocio.json';
 import AccordionGallery from '../reactbits/AccordionGallery';
 import './EventoCTA.css';
@@ -106,13 +107,18 @@ function EventoCTA() {
                 ))}
               </ul>
               <div className="evento-cta__accion evento-cta__anim">
-                <button
-                  type="button"
+                <a
                   className="button large evento-cta__boton"
-                  onClick={() => abrirVista(DEPORTES[0].slug, { modo: 'torneo' })}
+                  href={rutaReserva(DEPORTES[0].slug, 'torneo')}
+                  onClick={(e) => {
+                    if (esClicNormal(e)) {
+                      e.preventDefault();
+                      abrirVista(DEPORTES[0].slug, { modo: 'torneo' });
+                    }
+                  }}
                 >
                   Reserva un evento
-                </button>
+                </a>
               </div>
             </div>
             <div className="cell small-12 large-7">

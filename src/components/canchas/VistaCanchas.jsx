@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { X } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 import { useVistaCanchas } from '../../context/VistaCanchasContext';
 import { useReservas } from '../../context/ReservasContext';
 import { DEPORTES, deportePorSlug } from '../../data/deportes';
@@ -14,6 +13,7 @@ import {
 } from '../../lib/canchas';
 import { formatoPrecio } from '../../lib/precios';
 import { fechaCompleta } from '../../lib/fechas';
+import { esClicNormal, rutaReserva } from '../../lib/rutas';
 import DepthCarousel from '../reactbits/DepthCarousel';
 import useReserva from '../reservas/useReserva';
 import SelectorModo from '../reservas/SelectorModo';
@@ -166,58 +166,74 @@ function VisorCancha({
   );
 }
 
+// Página de reserva (`/reservar/<deporte>`): selector de modo, pestañas por
+// deporte, carrusel 3D de canchas con visor a pantalla completa, formulario
+// de fecha/horario/contacto y voucher lateral.
 function VistaCanchas() {
-  const { deporteAbierto, modoInicial, cambiarDeporte, cerrarVista, restaurarFoco } = useVistaCanchas();
+  const { deporteAbierto, modoInicial, cambiarDeporte, actualizarModo, cerrarVista } =
+    useVistaCanchas();
   const { canchas, dias, disponibilidad } = useReservas();
 
-  // El componente sigue montado (para poder animar la salida) un instante
-  // después de que `deporteAbierto` ya pasó a null.
-  const [montado, setMontado] = useState(false);
-  const [deporteMostrado, setDeporteMostrado] = useState(null);
   const [soloDisponibles, setSoloDisponibles] = useState(false);
   const [canchaActivaId, setCanchaActivaId] = useState(null);
   const [visorAbierto, setVisorAbierto] = useState(false);
 
   const reserva = useReserva({
-    activo: montado,
+    activo: true,
     modoInicial,
-    canchaInicial: deporteMostrado ? canchasDelDeporte(canchas, deporteMostrado)[0] || null : null,
+    canchaInicial: deporteAbierto ? canchasDelDeporte(canchas, deporteAbierto)[0] || null : null,
   });
 
   const rootRef = useRef(null);
-  const cerrarBtnRef = useRef(null);
-  const salirRef = useRef(null);
-  const montadoPrevioRef = useRef(false);
+  const tituloRef = useRef(null);
+
+  // Al entrar a la página se coloca el scroll arriba antes del primer pintado.
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  // Restaura el título original del documento al salir de la página de reserva.
+  useEffect(() => {
+    const tituloPrevio = document.title;
+    return () => {
+      document.title = tituloPrevio;
+    };
+  }, []);
 
   useEffect(() => {
-    if (deporteAbierto) {
-      setDeporteMostrado(deporteAbierto);
-      setMontado(true);
-    }
-  }, [deporteAbierto]);
+    document.title = `${reserva.modoInfo.titulo} · Sportify`;
+  }, [reserva.modoInfo.titulo]);
+
+  useEffect(() => {
+    tituloRef.current?.focus({ preventScroll: true });
+  }, []);
+
+  useEffect(() => {
+    actualizarModo(reserva.modo);
+  }, [reserva.modo, actualizarModo]);
 
   // Nuevo deporte -> se limpia el filtro, la selección de card y el visor.
   useEffect(() => {
     setSoloDisponibles(false);
     setCanchaActivaId(null);
     setVisorAbierto(false);
-  }, [deporteMostrado]);
+  }, [deporteAbierto]);
 
-  const infoDeporte = deporteMostrado ? deportePorSlug(deporteMostrado) : null;
+  const infoDeporte = deporteAbierto ? deportePorSlug(deporteAbierto) : null;
   const acento = infoDeporte ? infoDeporte.colorAcento : '#1779ba';
 
-  const totalDelDeporte = deporteMostrado
-    ? canchasDelDeporte(canchas, deporteMostrado).length
+  const totalDelDeporte = deporteAbierto
+    ? canchasDelDeporte(canchas, deporteAbierto).length
     : 0;
 
   const canchasFiltradas = useMemo(() => {
-    if (!deporteMostrado) return [];
-    const delDeporte = canchasDelDeporte(canchas, deporteMostrado);
+    if (!deporteAbierto) return [];
+    const delDeporte = canchasDelDeporte(canchas, deporteAbierto);
     if (!soloDisponibles) return delDeporte;
     return delDeporte.filter((c) =>
       disponibilidad(c.id, reserva.fecha).some((h) => h.disponible)
     );
-  }, [canchas, deporteMostrado, soloDisponibles, disponibilidad, reserva.fecha]);
+  }, [canchas, deporteAbierto, soloDisponibles, disponibilidad, reserva.fecha]);
 
   const idActivaPorDefecto = reserva.esEvento
     ? reserva.canchaIds.find((id) => canchasFiltradas.some((c) => c.id === id))
@@ -233,16 +249,15 @@ function VistaCanchas() {
   }, [reserva.esEvento]);
 
   // Modo cancha: la cancha elegida siempre es una de la pestaña visible. Si
-  // no lo es (se volvió de un evento con canchas de otro deporte, el filtro
-  // la ocultó, o la vista se reabrió con el estado de la sesión anterior),
-  // se elige la primera de la pestaña: manda la pestaña que el usuario mira.
+  // no lo es (se volvió de un evento con canchas de otro deporte o el filtro
+  // la ocultó), se elige la primera de la pestaña: manda la pestaña activa.
   const { modo: modoReserva, canchaSel: canchaReserva, elegirCancha } = reserva;
   useEffect(() => {
-    if (!montado || modoReserva !== 'cancha' || !canchasFiltradas[0]) return;
+    if (modoReserva !== 'cancha' || !canchasFiltradas[0]) return;
     if (!canchaReserva || !canchasFiltradas.some((c) => c.id === canchaReserva.id)) {
       elegirCancha(canchasFiltradas[0].id);
     }
-  }, [montado, modoReserva, canchaReserva, canchasFiltradas, elegirCancha]);
+  }, [modoReserva, canchaReserva, canchasFiltradas, elegirCancha]);
 
   // Precarga la foto en grande de la cancha activa así el visor no tiene que
   // esperar a que cargue cuando el usuario haga clic para abrirlo.
@@ -252,158 +267,89 @@ function VistaCanchas() {
     img.src = imagenGrandeCancha(canchaActiva.imagen);
   }, [canchaActiva]);
 
-  // Animación de entrada/salida (fade + scale del contenedor, stagger de
-  // pestañas y título). Respeta prefers-reduced-motion vía gsap.matchMedia().
+  // Animación de entrada del marco, las pestañas y el título (solo si no se
+  // prefiere movimiento reducido).
   useEffect(() => {
-    if (!montado) return undefined;
-    const root = rootRef.current;
-
     const mm = gsap.matchMedia();
     mm.add(
-      {
-        normal: '(prefers-reduced-motion: no-preference)',
-        reducida: '(prefers-reduced-motion: reduce)',
-      },
-      (ctx) => {
-        const { normal } = ctx.conditions;
-        const escala = normal ? 0.96 : 1;
-
-        // Opacity en vez de autoAlpha: autoAlpha deja `visibility: hidden` un
-        // instante al arrancar, y eso impide mover el foco al botón de cerrar
-        // justo después (el efecto de foco corre en el mismo ciclo).
-        gsap.set(root, { opacity: 0, scale: escala });
-        gsap.to(root, {
-          opacity: 1,
-          scale: 1,
-          duration: normal ? 0.4 : 0.15,
+      '(prefers-reduced-motion: no-preference)',
+      () => {
+        gsap.fromTo(
+          '.vista-canchas__marco',
+          { opacity: 0 },
+          { opacity: 1, duration: 0.3, ease: 'power2.out' }
+        );
+        gsap.from('.vista-canchas__tabs .tabs-title, .vista-canchas__titulo', {
+          opacity: 0,
+          y: 16,
+          duration: 0.35,
+          stagger: 0.06,
+          delay: 0.05,
           ease: 'power2.out',
         });
-        if (normal) {
-          gsap.from('.vista-canchas__tabs .tabs-title, .vista-canchas__titulo', {
-            opacity: 0,
-            y: 16,
-            duration: 0.35,
-            stagger: 0.06,
-            delay: 0.1,
-            ease: 'power2.out',
-          });
-        }
-
-        salirRef.current = (onDone) => {
-          gsap.to(root, {
-            opacity: 0,
-            scale: escala,
-            duration: normal ? 0.25 : 0.15,
-            ease: 'power2.in',
-            onComplete: onDone,
-          });
-        };
       },
       rootRef
     );
 
     return () => mm.revert();
-  }, [montado]);
+  }, []);
 
-  // La vista se cerró (deporteAbierto -> null): anima la salida y, al
-  // terminar, recién ahí desmonta.
+  // Al confirmar la reserva se sube al tope para que se vea el comprobante con QR.
   useEffect(() => {
-    if (deporteAbierto || !montado) return;
-    salirRef.current?.(() => setMontado(false));
-  }, [deporteAbierto, montado]);
-
-  // Foco al abrir (botón de cerrar) y de vuelta al hero cuando termina de
-  // cerrarse del todo.
-  useEffect(() => {
-    if (montado && !montadoPrevioRef.current) {
-      cerrarBtnRef.current?.focus();
-    } else if (!montado && montadoPrevioRef.current) {
-      restaurarFoco();
+    if (reserva.confirmado) {
+      window.scrollTo({ top: 0 });
     }
-    montadoPrevioRef.current = montado;
-  }, [montado, restaurarFoco]);
+  }, [reserva.confirmado]);
 
-  // Bloquea el scroll del body mientras está abierta, compensando el ancho
-  // de la barra de scroll con padding-right para no disparar un resize que
-  // recalcule los ScrollTrigger de los heros.
-  useEffect(() => {
-    if (!montado) return undefined;
-    const anchoBarra = window.innerWidth - document.documentElement.clientWidth;
-    const overflowPrevio = document.body.style.overflow;
-    const paddingPrevio = document.body.style.paddingRight;
-    document.body.style.overflow = 'hidden';
-    if (anchoBarra > 0) {
-      document.body.style.paddingRight = `${anchoBarra}px`;
-    }
-    return () => {
-      document.body.style.overflow = overflowPrevio;
-      document.body.style.paddingRight = paddingPrevio;
-    };
-  }, [montado]);
-
-  // El scroll de la PÁGINA ya queda bloqueado arriba mientras la vista está
-  // montada, pero `.vista-canchas` (este contenedor, `rootRef`) tiene su
-  // propio `overflow-y: auto` -- es el que de verdad hace scroll detrás del
-  // visor -- así que con el visor abierto se bloquea también a él, con el
-  // mismo truco de compensar el ancho de su propia barra con padding-right
-  // para que no haya salto de layout al aparecer/desaparecer. No se toca
-  // `scrollTop`: al volver a poner `overflow: auto` el navegador conserva la
-  // posición de scroll tal como estaba.
+  // Con el visor (<dialog> modal) abierto se bloquea el scroll del documento
+  // compensando el ancho de la barra con padding-right para que no haya salto.
   useEffect(() => {
     if (!visorAbierto) return undefined;
-    const el = rootRef.current;
-    if (!el) return undefined;
-    const anchoBarra = el.offsetWidth - el.clientWidth;
-    const overflowPrevio = el.style.overflow;
-    const paddingPrevio = el.style.paddingRight;
-    el.style.overflow = 'hidden';
+    const html = document.documentElement;
+    const anchoBarra = window.innerWidth - html.clientWidth;
+    const overflowPrevio = html.style.overflow;
+    const paddingPrevio = html.style.paddingRight;
+    html.style.overflow = 'hidden';
     if (anchoBarra > 0) {
-      el.style.paddingRight = `${anchoBarra}px`;
+      html.style.paddingRight = `${anchoBarra}px`;
     }
     return () => {
-      el.style.overflow = overflowPrevio;
-      el.style.paddingRight = paddingPrevio;
+      html.style.overflow = overflowPrevio;
+      html.style.paddingRight = paddingPrevio;
     };
   }, [visorAbierto]);
 
-  // Escape cierra la vista, salvo que el visor en grande esté abierto encima.
-  useEffect(() => {
-    if (!montado || visorAbierto) return undefined;
-    const onKey = (e) => {
-      if (e.key === 'Escape') cerrarVista();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [montado, visorAbierto, cerrarVista]);
-
-  if (!montado) return null;
-
   const idFiltro = 'vista-canchas-filtro-libres';
 
-  const contenido = (
-    <div
+  return (
+    <main
       className="vista-canchas"
       ref={rootRef}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="vista-canchas-titulo"
-      data-sport={deporteMostrado || undefined}
+      data-sport={deporteAbierto || undefined}
       style={estiloAcento(acento)}
     >
       <div className="vista-canchas__marco grid-container">
-        <button
-          type="button"
-          className="vista-canchas__cerrar"
-          aria-label="Cerrar vista de canchas"
-          onClick={cerrarVista}
-          ref={cerrarBtnRef}
+        <a
+          href="/"
+          className="vista-canchas__volver"
+          onClick={(e) => {
+            if (esClicNormal(e)) {
+              e.preventDefault();
+              cerrarVista();
+            }
+          }}
         >
-          <X size={20} aria-hidden="true" />
-        </button>
+          <ArrowLeft size={18} aria-hidden="true" /> Volver al inicio
+        </a>
 
-        <h2 id="vista-canchas-titulo" className="vista-canchas__titulo">
+        <h1
+          id="vista-canchas-titulo"
+          className="vista-canchas__titulo"
+          tabIndex={-1}
+          ref={tituloRef}
+        >
           {reserva.modoInfo.titulo}
-        </h2>
+        </h1>
 
         {!reserva.confirmado && (
           <div className="vista-canchas__modo">
@@ -426,17 +372,19 @@ function VistaCanchas() {
               {DEPORTES.map((d) => (
                 <li
                   key={d.slug}
-                  className={'tabs-title' + (deporteMostrado === d.slug ? ' is-active' : '')}
+                  className={'tabs-title' + (deporteAbierto === d.slug ? ' is-active' : '')}
                   style={{ '--acento': d.colorAcento }}
                 >
                   <a
-                    href={`#canchas-${d.slug}`}
+                    href={rutaReserva(d.slug, reserva.modo)}
                     role="tab"
-                    aria-selected={deporteMostrado === d.slug}
+                    aria-selected={deporteAbierto === d.slug}
                     onClick={(e) => {
                       e.preventDefault();
                       if (reserva.modo === 'cancha') {
-                        reserva.elegirCancha((canchasDelDeporte(canchas, d.slug)[0] || {}).id || null);
+                        reserva.elegirCancha(
+                          (canchasDelDeporte(canchas, d.slug)[0] || {}).id || null
+                        );
                       }
                       cambiarDeporte(d.slug);
                     }}
@@ -517,7 +465,7 @@ function VistaCanchas() {
                     </div>
                   ) : (
                     <DepthCarousel
-                      key={`${deporteMostrado}-${reserva.esEvento ? 'evento' : 'cancha'}`}
+                      key={`${deporteAbierto}-${reserva.esEvento ? 'evento' : 'cancha'}`}
                       items={canchasFiltradas.map((c) => {
                         const degradado = imagenPlaceholderCancha(acento);
                         return c.imagen
@@ -586,7 +534,7 @@ function VistaCanchas() {
                   <CanchasElegidas
                     canchas={reserva.canchasElegidas}
                     deporte={infoDeporte}
-                    idsDeporte={canchasDelDeporte(canchas, deporteMostrado).map((c) => c.id)}
+                    idsDeporte={canchasDelDeporte(canchas, deporteAbierto).map((c) => c.id)}
                     onQuitar={reserva.alternarCancha}
                     onAlternarDeporte={reserva.alternarDeporte}
                   />
@@ -641,10 +589,8 @@ function VistaCanchas() {
           }}
         />
       )}
-    </div>
+    </main>
   );
-
-  return createPortal(contenido, document.body);
 }
 
 export default VistaCanchas;

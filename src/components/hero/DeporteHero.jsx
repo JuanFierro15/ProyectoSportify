@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { esClicNormal, rutaReserva } from '../../lib/rutas';
 import './DeporteHero.css';
 
 // Registro idempotente del plugin.
@@ -181,10 +182,10 @@ function DeporteHero({
                 lectores de pantalla en cualquier tamaño. */}
             <a
               className="button large deporte-hero__cta"
-              href="#canchas-placeholder"
+              href={rutaReserva(slug)}
               aria-label={tituloCTA}
               onClick={(e) => {
-                if (onVerCanchas) {
+                if (onVerCanchas && esClicNormal(e)) {
                   e.preventDefault();
                   onVerCanchas();
                 }
