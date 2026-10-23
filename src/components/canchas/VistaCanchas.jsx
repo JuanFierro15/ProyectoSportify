@@ -22,7 +22,6 @@ import FormularioReserva from '../reservas/FormularioReserva';
 import VoucherReserva from '../reservas/VoucherReserva';
 import ConfirmacionReserva from '../reservas/ConfirmacionReserva';
 import TarjetaCanchaCarrusel from '../reservas/TarjetaCanchaCarrusel';
-import TexturaCancha from './TexturaCancha';
 import './VistaCanchas.css';
 
 // Por debajo de este número de canchas, el carrusel 3D no aporta nada (y se
@@ -35,11 +34,11 @@ const MINIMO_PARA_CARRUSEL = 3;
 const ANCHO_IMAGEN = 720;
 const ALTO_IMAGEN = 893;
 
-// `sizes` del <img> del carrusel: la tarjeta activa mide hasta 451px de
-// ancho real en pantallas anchas (min(88cqh, 560px) de alto por el aspect
-// ratio 720/893); en pantallas angostas ronda la mitad del viewport. Sirve
+// `sizes` del <img> del carrusel: la tarjeta activa mide hasta 612px de
+// ancho real en pantallas anchas (760px de alto como máximo por el aspect
+// ratio 720/893); en celular ronda el 82 % del ancho del viewport. Sirve
 // para que el navegador elija la foto de 720 o la de 1440 según densidad.
-const TAMANOS_IMAGEN_CARRUSEL = '(max-width: 640px) 50vw, 451px';
+const TAMANOS_IMAGEN_CARRUSEL = '(max-width: 639px) 82vw, 612px';
 
 // Texto alternativo de cada card del carrusel, ej. "Cancha 2 de vóley playa
 // con iluminación nocturna" (nombre corto + deporte + primera característica).
@@ -154,6 +153,9 @@ function VisorCancha({
                 </li>
               ))}
             </ul>
+          )}
+          {cancha.descripcion && (
+            <p className="vista-canchas__visor-descripcion">{cancha.descripcion}</p>
           )}
           <button type="button" className="button vista-canchas__visor-cta" onClick={onAccion}>
             {textoAccion}
@@ -467,17 +469,6 @@ function VistaCanchas() {
             <div className="vista-canchas__reserva">
               <div className="vista-canchas__principal">
                 <div className="vista-canchas__cuerpo">
-                  <div className="vista-canchas__escenario-fondo" aria-hidden="true">
-                    {canchaActiva && canchaActiva.imagen && (
-                      <div
-                        key={canchaActiva.id}
-                        className="vista-canchas__backdrop"
-                        style={{ backgroundImage: `url(${canchaActiva.imagen})` }}
-                      />
-                    )}
-                    <TexturaCancha deporte={deporteMostrado} />
-                  </div>
-
                   {canchasFiltradas.length === 0 ? (
                     <div className="vista-canchas__vacio">
                       <p>
@@ -547,13 +538,15 @@ function VistaCanchas() {
                         0,
                         canchasFiltradas.findIndex((c) => canchaActiva && c.id === canchaActiva.id)
                       )}
-                      cardWidth={240}
-                      cardHeight={300}
-                      radius={12}
+                      cardWidth={420}
+                      cardHeight={520}
+                      radius={16}
+                      spread={140}
                       tint={acento}
-                      falloff={0.32}
-                      blur={10}
+                      falloff={0.18}
+                      blur={3}
                       visibleCards={3}
+                      autoScale={false}
                       ariaLabel="Canchas"
                       prevLabel="Cancha anterior"
                       nextLabel="Cancha siguiente"

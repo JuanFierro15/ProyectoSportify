@@ -33,8 +33,10 @@
   /* Por encima del navbar (1000). */
   z-index: 1001;
   overflow-y: auto;
-  background: radial-gradient(circle at 50% 15%, var(--accent-soft, #eef3f8) 0%, #ffffff 60%);
-  transition: background 0.4s ease;
+  /* Respaldo de `overflow-x: clip` en `.vista-canchas__marco` para
+     navegadores sin `clip`. */
+  overflow-x: hidden;
+  background: #ffffff;
 }
 
 .vista-canchas__marco {
@@ -45,6 +47,12 @@
   min-height: 100dvh;
   padding-top: 4.5rem;
   padding-bottom: 3rem;
+  /* Las tarjetas laterales del carrusel que se salen por la derecha en
+     pantallas angostas se recortan en el borde de la ventana. Con `hidden`
+     en `.vista-canchas` el contenido seguía midiendo más que la ventana y
+     podía desplazarse de lado (p. ej. al enfocar algo); `clip` no crea un
+     contenedor de scroll, así que el voucher sticky sigue funcionando. */
+  overflow-x: clip;
 }
 
 .vista-canchas__cerrar {
@@ -169,77 +177,65 @@
 
 .vista-canchas__cuerpo {
   position: relative;
-  height: clamp(420px, 62vh, 620px);
+  height: clamp(380px, 112vw, 600px);
   margin-bottom: 1rem;
   container-type: size;
 }
 
-/* Tarjeta activa del carrusel dimensionada por el alto real del escenario
-   (container query) en vez de los cardWidth/cardHeight fijos que se le
-   siguen pasando a DepthCarousel: esos quedan solo como valor de fallback
-   (navegadores sin soporte de container queries) y como referencia para su
-   propio cálculo interno de escala al arrastrar/ajustar al ancho, que no se
-   toca. */
+/* Desde tablet, el carrusel nunca mide más que lo que queda de la ventana
+   debajo de la cabecera de la vista (título, modos, pestañas y filtro: unos
+   275 px): así la tarjeta activa, con su botón al pie, entra completa sin
+   desplazarse. */
+@media screen and (min-width: 40em) {
+  .vista-canchas__cuerpo {
+    height: clamp(480px, min(74vh, 100vh - 250px), 800px);
+    height: clamp(480px, min(74vh, 100dvh - 250px), 800px);
+  }
+}
+
+@media screen and (min-width: 64em) {
+  .vista-canchas__cuerpo {
+    height: clamp(480px, min(78vh, 100vh - 250px), 820px);
+    height: clamp(480px, min(78vh, 100dvh - 250px), 820px);
+  }
+}
+
+/* Tarjeta activa del carrusel dimensionada por el alto y el ancho reales de
+   `.vista-canchas__cuerpo` (container queries) en vez de los
+   cardWidth/cardHeight fijos que se le siguen pasando a DepthCarousel: esos
+   quedan solo como respaldo (navegadores sin soporte de container queries)
+   y como referencia del paso de arrastre/rueda. Por eso el carrusel se
+   monta con `autoScale={false}`: su escala automática con transform no
+   achica la caja de layout y en celular dejaba la tarjeta diminuta con
+   huecos arriba y abajo. En celular el límite por ancho (102cqw) deja la
+   tarjeta en un 82 % del ancho aprox. */
 .vista-canchas__cuerpo .depth-carousel__card {
   width: auto;
-  height: min(88cqh, 560px);
+  height: min(92cqh, 102cqw, 760px);
   aspect-ratio: 720 / 893;
+  box-shadow: 0 28px 50px -28px rgba(15, 23, 42, 0.55), 0 10px 22px -14px rgba(15, 23, 42, 0.35);
 }
 
-/* --- Escenario: degradado + backdrop difuminado + textura de líneas de
-   cancha, detrás del carrusel/grid. Todo decorativo (aria-hidden,
-   pointer-events: none), contenido en su propio stacking context para que
-   el blur no se salga ni deje scroll horizontal. --- */
-.vista-canchas__escenario-fondo {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  isolation: isolate;
-  overflow: hidden;
-  border-radius: 16px;
-  pointer-events: none;
-}
-
-.vista-canchas__backdrop {
-  position: absolute;
-  inset: -60px;
-  z-index: -1;
-  background-size: cover;
-  background-position: center;
-  filter: blur(50px) saturate(1.3);
-  opacity: 0.35;
-  animation: vista-canchas-backdrop-in 0.5s ease both;
-}
-
-@keyframes vista-canchas-backdrop-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 0.35;
+@media screen and (min-width: 40em) {
+  .vista-canchas__cuerpo .depth-carousel__card {
+    height: min(92cqh, 92cqw, 760px);
   }
 }
 
-.vista-canchas__textura {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  stroke: var(--accent, #1779ba);
-  opacity: 0.07;
+/* Puntos del carrusel debajo de la tarjeta (no encima de la foto) y con
+   colores pensados para el fondo blanco de la vista. */
+.vista-canchas__cuerpo .depth-carousel__dots {
+  bottom: 2px;
+  background: rgba(15, 23, 42, 0.06);
+  backdrop-filter: none;
 }
 
-/* El contenido real (vacío / grid / carrusel) siempre por encima del
-   escenario de fondo, sea cual sea la rama activa. */
-.vista-canchas__vacio,
-.vista-canchas__grid-estatico {
-  position: relative;
-  z-index: 1;
+.vista-canchas__cuerpo .depth-carousel__dot {
+  background: rgba(15, 23, 42, 0.25);
 }
 
-.vista-canchas__cuerpo > .depth-carousel {
-  position: relative;
-  z-index: 1;
+.vista-canchas__cuerpo .depth-carousel__dot.is-active {
+  background: var(--accent, #1779ba);
 }
 
 .vista-canchas__vacio {
@@ -325,11 +321,7 @@
 }
 
 .vista-canchas__cuerpo .tarjeta-cancha__nombre {
-  font-size: clamp(1.2rem, 4.5cqh, 1.75rem);
-}
-
-.vista-canchas__cuerpo .tarjeta-cancha__descripcion {
-  font-size: clamp(0.85rem, 2.4cqh, 1rem);
+  font-size: clamp(1.25rem, 4.2cqh, 2rem);
 }
 
 .vista-canchas__reserva {
@@ -475,11 +467,11 @@
 
 /* Fondo compartido -- una sola capa para todo el visor, no una por elemento
    -- con la misma foto de la cancha en su versión liviana de 720, muy
-   difuminada y oscurecida (misma idea que el backdrop del carrusel): así las
-   franjas que deja `object-fit: contain` y, en horizontal, la columna de
-   información, no se ven vacías. `.vista-canchas__visor-imagen-wrap` y
-   `.vista-canchas__visor-info` son "positioned" (ver más abajo), así que se
-   pintan por encima de esta capa aunque vaya antes en el DOM. */
+   difuminada y oscurecida: así las franjas que deja `object-fit: contain`
+   y, en horizontal, la columna de información, no se ven vacías.
+   `.vista-canchas__visor-imagen-wrap` y `.vista-canchas__visor-info` son
+   "positioned" (ver más abajo), así que se pintan por encima de esta capa
+   aunque vaya antes en el DOM. */
 .vista-canchas__visor-fondo {
   position: absolute;
   inset: -40px;
@@ -574,6 +566,13 @@
   border: 1px solid color-mix(in srgb, var(--accent-soft, #eef3f8) 45%, transparent);
 }
 
+.vista-canchas__visor-descripcion {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+}
+
 .vista-canchas__visor-cta {
   margin: 0;
   background: var(--accent, #1779ba);
@@ -625,8 +624,8 @@
   }
 }
 
-/* Respeta prefers-reduced-motion: sin fade del backdrop, sin deslizamiento
-   del switch/tabs, sin transición de color entre deportes ni hover-lift. */
+/* Respeta prefers-reduced-motion: sin deslizamiento del switch/tabs, sin
+   transición de color entre deportes ni hover-lift. */
 @media (prefers-reduced-motion: reduce) {
   .vista-canchas,
   .vista-canchas *,
@@ -640,14 +639,5 @@
   .vista-canchas__cerrar:hover,
   .cancha-card:hover {
     transform: none;
-  }
-}
-
-/* En pantallas angostas el backdrop/textura no deben forzar scroll
-   horizontal: quedan contenidos por overflow: hidden del propio escenario,
-   pero se reduce el radio para que no se note el recorte en esquinas. */
-@media (max-width: 480px) {
-  .vista-canchas__escenario-fondo {
-    border-radius: 10px;
   }
 }

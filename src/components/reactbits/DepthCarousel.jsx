@@ -50,6 +50,11 @@ const DepthCarousel = ({
   // degradado de respaldo).
   onOpenViewer,
   getViewerLabel,
+  // Adición manual: con `false` el carrusel no se escala solo con transform
+  // según el ancho (scale fijo en 1), porque el consumidor ya dimensiona las
+  // tarjetas con CSS (container queries). Con `true` (por defecto) el
+  // comportamiento es idéntico al original.
+  autoScale = true,
   className = ''
 }) => {
   const data = useMemo(() => (Array.isArray(items) ? items : []).map(normalizeItem), [items]);
@@ -90,7 +95,8 @@ const DepthCarousel = ({
     ease,
     loop,
     cardWidth,
-    autoplayDelay
+    autoplayDelay,
+    autoScale
   };
 
   const layout = useCallback(pos => {
@@ -197,7 +203,7 @@ const DepthCarousel = ({
       const w = entries[0].contentRect.width;
       const cfg = cfgRef.current;
       const needed = cfg.cardWidth + Math.abs(cfg.spread) * 2 + 120;
-      scaleRef.current = clamp(w / needed, 0.4, 1);
+      scaleRef.current = cfg.autoScale ? clamp(w / needed, 0.4, 1) : 1;
       layout(posRef.current);
     });
     ro.observe(root);

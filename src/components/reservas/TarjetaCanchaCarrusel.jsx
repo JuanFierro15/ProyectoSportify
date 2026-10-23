@@ -6,9 +6,10 @@ import './TarjetaCanchaCarrusel.css';
 
 /**
  * TarjetaCanchaCarrusel — contenido que se pinta encima de cada tarjeta del
- * carrusel de la vista de reserva (VistaCanchas, vía `renderOverlay` de DepthCarousel): deporte,
- * nombre y, en la tarjeta activa, características, descripción, precio y
- * disponibilidad del día.
+ * carrusel de la vista de reserva (VistaCanchas, vía `renderOverlay` de
+ * DepthCarousel): deporte, nombre y, en la tarjeta activa, precio,
+ * disponibilidad del día y la acción; las características y la descripción
+ * están en el visor en grande.
  *
  * Props: cancha, deporte (de DEPORTES), modo ('cancha' | 'evento'), activa,
  * marcada (elegida en un evento), libresDia, totalDia, onAlternar (agregar o
@@ -26,7 +27,6 @@ function TarjetaCanchaCarrusel({
 }) {
   if (!cancha) return null;
 
-  const caracteristicasVisibles = (cancha.caracteristicas || []).slice(0, 3);
   const textoDisponibilidad =
     libresDia === 0
       ? 'Sin horarios libres ese día'
@@ -53,20 +53,6 @@ function TarjetaCanchaCarrusel({
 
         {activa && (
           <>
-            {caracteristicasVisibles.length > 0 && (
-              <div className="tarjeta-cancha__badges">
-                {caracteristicasVisibles.map((item) => (
-                  <span key={item} className="tarjeta-cancha__badge">
-                    {item}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {cancha.descripcion && (
-              <p className="tarjeta-cancha__descripcion">{cancha.descripcion}</p>
-            )}
-
             <div className="tarjeta-cancha__pie">
               <span className="tarjeta-cancha__precio">
                 <Tag size={13} aria-hidden="true" />
