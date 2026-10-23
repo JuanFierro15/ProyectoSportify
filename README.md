@@ -10,7 +10,7 @@ con un **asistente conversacional** que también reserva y cancela.
 ![Foundation](https://img.shields.io/badge/Foundation-6.8-1779BA)
 ![GSAP](https://img.shields.io/badge/GSAP-3.13-88CE02)
 ![Gemini](https://img.shields.io/badge/Gemini-function%20calling-8E75B2?logo=googlegemini&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-112%20en%20verde-2EA44F)
+![Tests](https://img.shields.io/badge/tests-121%20en%20verde-2EA44F)
 
 ![Hero de voley playa con el video de fondo y el botón del asistente](docs/capturas/inicio.webp)
 
@@ -58,24 +58,26 @@ Surcolombiana, sexto semestre). El enunciado fija estas restricciones:
 Cada deporte tiene su sección a pantalla completa con un video de fondo que
 avanza con el scroll: la sección queda fija (*pinning* de ScrollTrigger) y el
 `currentTime` del video sigue a la rueda del mouse. Cada una tiene su color de
-acento, que después usan la vista de canchas y el asistente.
+acento, que después usan la página de reserva y el asistente.
 
 | Voley playa | Pádel | Fútbol |
 |:---:|:---:|:---:|
 | <img src="docs/capturas/inicio.webp" alt="Hero de voley playa" width="300"> | <img src="docs/capturas/hero-padel.webp" alt="Hero de pádel" width="300"> | <img src="docs/capturas/hero-futbol.webp" alt="Hero de fútbol" width="300"> |
 
-### Vista de canchas: la ventana de reserva
+### Página de reserva
 
-Todo se reserva desde una sola vista a pantalla completa. Se abre desde
-"Ver canchas de…" en cada hero o desde "Canchas" en el menú. Tiene:
+Todo se reserva desde una página propia del sitio (`/reservar/<deporte>`). Se
+abre desde "Ver canchas de…" en cada hero o desde "Canchas" en el menú. Tiene:
 
 - **Pestañas por deporte** y el filtro *Solo con horarios libres ese día*.
 - **Carrusel 3D** con las fotos de las canchas en grande, el precio y cuántos
-  horarios libres tiene cada una el día elegido.
+  horarios libres tiene cada una el día elegido. En fútbol la foto muestra
+  también las características y la descripción.
 - **Visor en grande** de la foto, con las características, la descripción y
   su propio botón para elegir horario (o agregar la cancha al evento).
-- **URL compartible:** la vista cambia el hash (`#canchas-padel`), así que un
-  enlace abre directo un deporte y el botón "atrás" del navegador la cierra.
+- **URL compartible:** la página tiene su dirección (`/reservar/padel`, y
+  `/reservar/padel?modo=torneo` en modo torneo), se puede abrir en otra pestaña
+  y el botón "atrás" vuelve al inicio donde estabas.
 
 ![Vista de canchas de pádel con el carrusel 3D y el voucher](docs/capturas/vista-canchas.webp)
 
@@ -97,7 +99,7 @@ puede descargar para mostrarlo al llegar.
 
 ### Torneos y cumpleaños
 
-La misma vista tiene los modos **Cancha · Torneo · Cumpleaños**. En los de
+La misma página tiene los modos **Cancha · Torneo · Cumpleaños**. En los de
 evento:
 
 - se agregan **varias canchas**, incluso de distintos deportes;
@@ -127,9 +129,9 @@ footer y el asistente siempre coinciden.
 ### Asistente conversacional
 
 Un botón flotante abre el **Asistente Sportify**, disponible en todas las
-vistas. Responde sobre horarios libres, precios, servicios, pagos, política de
-cancelación y ubicación. Cuando la respuesta lo amerita, ofrece un botón para
-abrir las canchas, la reserva de eventos o la ubicación.
+páginas del sitio. Responde sobre horarios libres, precios, servicios, pagos,
+política de cancelación y ubicación. Cuando la respuesta lo amerita, ofrece un
+botón para abrir las canchas, la reserva de eventos o la ubicación.
 
 | Consulta de disponibilidad | Reserva propuesta |
 |:---:|:---:|
@@ -307,9 +309,9 @@ scripts/
 └── probar-chat.mjs      Casos de prueba de /api/chat (local o producción)
 src/
 ├── components/
-│   ├── layout/          Navbar y Footer
+│   ├── layout/          Navbar, Footer y PaginaInicio
 │   ├── hero/            DeporteHero: heros por deporte con video y pinning
-│   ├── canchas/         VistaCanchas: la ventana de reserva a pantalla completa
+│   ├── canchas/         VistaCanchas: la página de reserva (/reservar/<deporte>)
 │   ├── reservas/        useReserva, formulario, voucher, selector de modo y confirmación con QR
 │   ├── eventos/         EventoCTA: sección de eventos y torneos
 │   ├── ubicacion/       Ubicacion: dirección, teléfono, horario y mapa
@@ -320,7 +322,7 @@ src/
 │                        useAccionesChat y useDeporteActivo
 ├── context/
 │   ├── ReservasContext.jsx      Estado de reservas (RESERVAR, RESERVAR_EVENTO, CANCELAR)
-│   └── VistaCanchasContext.jsx  Qué vista está abierta, sincronizada con el hash
+│   └── VistaCanchasContext.jsx  Navegación entre el inicio y la página de reserva, sincronizada con la URL
 ├── data/
 │   ├── canchas.json     Semilla: horas, ocupación por día y catálogo de cada cancha
 │   ├── negocio.json     Datos del local: contacto, mapa, pagos, cancelación, servicios
@@ -335,13 +337,14 @@ src/
 │   ├── codigoReserva.js Código de reserva y texto del QR
 │   ├── fechas.js        Etiquetas de fecha, horas a. m./p. m. y horas pasadas
 │   ├── canchas.js       Agrupación por deporte, imágenes y estilo de acento
+│   ├── rutas.js         Construcción y lectura de las rutas del sitio (/ y /reservar/<deporte>)
 │   └── negocio.js       Teléfono del local y horario a partir de las franjas
-├── App.jsx              Providers + Navbar + heros + eventos + ubicación + Footer + asistente
+├── App.jsx              Providers + Navbar + página activa (inicio o reserva) + Footer + asistente
 └── main.jsx             Punto de entrada: CSS de Foundation, estilos globales y montaje de <App />
 index.html               Página base; carga src/main.jsx como módulo
 vite.config.mjs          Plugin de React, polling opcional del watcher y configuración de Vitest
 eslint.config.mjs        ESLint 10 en configuración plana
-vercel.json              Preset de Vite e includeFiles de la función /api/chat
+vercel.json              Preset de Vite, rewrite de /reservar/* e includeFiles de la función /api/chat
 ```
 
 ---
@@ -389,7 +392,7 @@ probarlo en local:
 ## Pruebas
 
 ```bash
-npm test                          # 112 tests en 10 archivos (Vitest)
+npm test                          # 121 tests en 11 archivos (Vitest)
 npm run lint                      # ESLint sobre src, api y scripts
 npm run build                     # build de producción en /dist
 ```
@@ -399,10 +402,10 @@ desarrollo. `npm run test:watch` deja Vitest observando los cambios.
 
 Las pruebas unitarias cubren la lógica pura de `src/lib/`: precios y
 descuentos, selección de horas, validación de nombre, teléfono y reservas
-propuestas, fechas, código y texto del QR, datos del negocio, plazo y búsqueda
-de cancelaciones, el contexto, el historial y los textos fijos del chat, y el
-respaldo de modelo (orden, tiempos por intento y respuesta final).
-`src/App.test.jsx` es un *smoke test* que monta la aplicación completa.
+propuestas, fechas, código y texto del QR, datos del negocio, rutas del sitio,
+plazo y búsqueda de cancelaciones, el contexto, el historial y los textos fijos
+del chat, y el respaldo de modelo (orden, tiempos por intento y respuesta final).
+`src/App.test.jsx` monta la aplicación en la página de inicio y en `/reservar/padel`.
 
 El asistente tiene además un script con 10 casos contra la función real:
 disponibilidad, "resérvalo" con una y con varias franjas, datos válidos e
@@ -423,10 +426,11 @@ El sitio está en Vercel y **cada push a `main` despliega a producción**.
 - **Variables de entorno:** `GEMINI_API_KEY` (sensible) y `GEMINI_MODEL`, en
   los entornos *Production* y *Preview*. Aplican desde el siguiente
   despliegue.
-- **`vercel.json`:** fija el preset de Vite (`"framework": "vite"`) y agrega
-  `@google/genai/dist/node/index.cjs` a la función con `includeFiles`. La
-  función se compila a CommonJS y el rastreo de archivos de Vercel solo
-  incluía la versión ESM del paquete.
+- **`vercel.json`:** fija el preset de Vite (`"framework": "vite"`), redirige
+  `/reservar/:path*` a `/index.html` para que las rutas de reserva funcionen al
+  recargar o compartir, y agrega `@google/genai/dist/node/index.cjs` a la
+  función con `includeFiles`. La función se compila a CommonJS y el rastreo de
+  archivos de Vercel solo incluía la versión ESM del paquete.
 - **`.vercelignore`:** es una lista blanca (`src`, `public`, `api`,
   `index.html`, `vite.config.mjs`, `vercel.json` y los `package*.json`), así
   que los videos fuente y la documentación no se suben al build.
@@ -457,7 +461,7 @@ El sitio está en Vercel y **cada push a `main` despliega a producción**.
 |---|---|
 | 1. Estructura base con Foundation (navbar, footer, grid) | ✅ |
 | 2. Heros por deporte con GSAP y ScrollTrigger | ✅ |
-| 3. Catálogo de canchas: vista a pantalla completa con carrusel 3D | ✅ |
+| 3. Catálogo de canchas: página de reserva con carrusel 3D | ✅ |
 | 4. Sistema de reservas: 1 a 3 horas, descuento, validación de choques | ✅ |
 | 5. Modo evento: torneos y cumpleaños, todo o nada | ✅ |
 | 6. Asistente: función `/api/chat`, widget y reservas o cancelaciones desde el chat | ✅ |
