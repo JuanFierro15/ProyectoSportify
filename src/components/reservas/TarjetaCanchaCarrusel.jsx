@@ -4,17 +4,11 @@ import { estiloAcento, tituloCancha } from '../../lib/canchas';
 import { formatoPrecio } from '../../lib/precios';
 import './TarjetaCanchaCarrusel.css';
 
-/**
- * TarjetaCanchaCarrusel — contenido que se pinta encima de cada tarjeta del
- * carrusel de la vista de reserva (VistaCanchas, vía `renderOverlay` de
- * DepthCarousel): deporte, nombre y, en la tarjeta activa, precio,
- * disponibilidad del día y la acción; las características y la descripción
- * están en el visor en grande.
- *
- * Props: cancha, deporte (de DEPORTES), modo ('cancha' | 'evento'), activa,
- * marcada (elegida en un evento), libresDia, totalDia, onAlternar (agregar o
- * quitar del evento).
- */
+// Contenido superpuesto en cada tarjeta del carrusel de la página de reserva
+// (VistaCanchas, vía `renderOverlay` de DepthCarousel): deporte, nombre y, en
+// la tarjeta activa, precio, disponibilidad del día, la acción y —cuando el
+// deporte lo indica con `detalleEnTarjeta`— hasta tres características y la
+// descripción. El detalle completo de cualquier cancha sigue en el visor.
 function TarjetaCanchaCarrusel({
   cancha,
   deporte,
@@ -53,6 +47,23 @@ function TarjetaCanchaCarrusel({
 
         {activa && (
           <>
+            {deporte?.detalleEnTarjeta && (
+              <>
+                {cancha.caracteristicas?.length > 0 && (
+                  <div className="tarjeta-cancha__badges">
+                    {cancha.caracteristicas.slice(0, 3).map((item) => (
+                      <span key={item} className="tarjeta-cancha__badge">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {cancha.descripcion && (
+                  <p className="tarjeta-cancha__descripcion">{cancha.descripcion}</p>
+                )}
+              </>
+            )}
+
             <div className="tarjeta-cancha__pie">
               <span className="tarjeta-cancha__precio">
                 <Tag size={13} aria-hidden="true" />

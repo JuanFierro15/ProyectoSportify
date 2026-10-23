@@ -1,7 +1,7 @@
 /**
  * Metadatos de cada deporte, compartidos por toda la app para mantener
  * continuidad visual: mismo nombre y mismo `colorAcento` en los DeporteHero,
- * en la sección de transición y en las cards del catálogo.
+ * en la página de reserva y en el asistente.
  */
 export const DEPORTES = [
   {
@@ -30,6 +30,9 @@ export const DEPORTES = [
     descripcion:
       'Arma tu partido en canchas rápidas con amortiguación de última tecnología, arcos reglamentarios y visibilidad LED óptima para jugar con tu equipo.',
     superficie: 'Césped sintético con shock pad',
+    // Muestra características y descripción sobre la foto del carrusel de
+    // reserva; los demás deportes solo llevan nombre, precio y disponibilidad.
+    detalleEnTarjeta: true,
   },
 ];
 
