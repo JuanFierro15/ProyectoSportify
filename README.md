@@ -70,9 +70,10 @@ Todo se reserva desde una sola vista a pantalla completa. Se abre desde
 "Ver canchas de…" en cada hero o desde "Canchas" en el menú. Tiene:
 
 - **Pestañas por deporte** y el filtro *Solo con horarios libres ese día*.
-- **Carrusel 3D** con la foto, las características, el precio y cuántos
-  horarios libres tiene cada cancha el día elegido.
-- **Visor en grande** de la foto, con su propio botón para elegir horario.
+- **Carrusel 3D** con las fotos de las canchas en grande, el precio y cuántos
+  horarios libres tiene cada una el día elegido.
+- **Visor en grande** de la foto, con las características, la descripción y
+  su propio botón para elegir horario (o agregar la cancha al evento).
 - **URL compartible:** la vista cambia el hash (`#canchas-padel`), así que un
   enlace abre directo un deporte y el botón "atrás" del navegador la cierra.
 
