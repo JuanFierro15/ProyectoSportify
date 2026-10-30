@@ -1,8 +1,8 @@
-# Reporte — Etapa 1: GEMINI.md para el equipo
+# Reporte — Etapa 3: GEMINI.md para el equipo
 
 - GEMINI.md no se versiona (se envía a mano). Commit de esta etapa:
   `docs: planificación por etapas compartida con el equipo`.
-- Bloque A (agy, gemini-3.8-flash-high): un intento, 306 s; terminó en
+- Bloque g1 (agy, gemini-3.8-flash-high): un intento, 306 s; terminó en
   `ERROR` ("stream interrupted") después de entregar el archivo completo.
 - Ajustes del coordinador: quitada una regla inventada que prohibía
   comentarios en el código (contradice el código existente), suavizada una
