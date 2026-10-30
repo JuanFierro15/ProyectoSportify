@@ -9,7 +9,7 @@ import './VoucherReserva.css';
  *
  * Props: tipoEtiqueta, fechaTexto, horas (bloque elegido), precio (resultado
  * de calcularPrecioEvento), puedeConfirmar, motivoBloqueo (por qué aún no se
- * puede confirmar), onConfirmar, onCancelar.
+ * puede confirmar), onConfirmar, onCancelar, torneo (opcional).
  */
 function VoucherReserva({
   tipoEtiqueta,
@@ -20,6 +20,7 @@ function VoucherReserva({
   motivoBloqueo,
   onConfirmar,
   onCancelar,
+  torneo = null,
 }) {
   const n = horas.length;
   const lineas = precio?.lineas || [];
@@ -48,6 +49,28 @@ function VoucherReserva({
           <span className="voucher-reserva__etiqueta">Horario</span>
           <span className="voucher-reserva__valor">{textoHorario}</span>
         </div>
+        {torneo && (
+          <>
+            <div className="voucher-reserva__fila">
+              <span className="voucher-reserva__etiqueta">Formato</span>
+              <span className="voucher-reserva__valor">
+                {`${torneo.equipos} equipos (${torneo.partidos ? torneo.partidos.length : torneo.equipos - 1} partidos)`}
+              </span>
+            </div>
+            <div className="voucher-reserva__fila">
+              <span className="voucher-reserva__etiqueta">Duración est.</span>
+              <span className="voucher-reserva__valor">
+                {`${torneo.minutosRequeridos} min (${torneo.duracionPartido}m + desempate + transición)`}
+              </span>
+            </div>
+            <div className="voucher-reserva__fila">
+              <span className="voucher-reserva__etiqueta">Desempate</span>
+              <span className="voucher-reserva__valor">
+                {torneo.desempate?.etiqueta || torneo.desempate?.metodo || '5 min'}
+              </span>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="voucher-reserva__cuerpo" aria-live="polite">

@@ -55,12 +55,14 @@
 .voucher-reserva__etiqueta {
   color: #64748b;
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 .voucher-reserva__valor {
   color: #1e293b;
   font-weight: 600;
   text-align: right;
+  word-break: break-word;
 }
 
 .voucher-reserva__cuerpo {

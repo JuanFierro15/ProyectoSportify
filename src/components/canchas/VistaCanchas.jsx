@@ -412,7 +412,7 @@ function VistaCanchas() {
         )}
 
         {reserva.confirmado ? (
-          <div className="vista-canchas__confirmacion">
+          <div className={'vista-canchas__confirmacion' + (reserva.confirmado?.resumen?.torneo ? ' vista-canchas__confirmacion--torneo' : '')}>
             <ConfirmacionReserva
               codigo={reserva.confirmado.codigo}
               textoQr={reserva.confirmado.textoQr}
@@ -604,6 +604,7 @@ function VistaCanchas() {
                 motivoBloqueo={reserva.motivoBloqueo}
                 onConfirmar={reserva.confirmar}
                 onCancelar={cerrarVista}
+                torneo={reserva.modo === 'torneo' ? reserva.torneoPlan : null}
               />
             </div>
           </>
