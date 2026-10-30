@@ -29,6 +29,7 @@ CLAUDE.md
 GEMINI.md
 .mcp.json
 .claude.json
+planificacion/**/logs/
 .agents/
 skills-lock.json
 lighthouse-report*.json
