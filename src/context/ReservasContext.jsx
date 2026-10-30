@@ -267,6 +267,7 @@ function reducer(state, action) {
         invitados,
         nombre,
         telefono,
+        torneo,
       } = action.payload;
 
       // Todo-o-nada: si alguna celda (cancha × hora) no está libre, no se
@@ -316,6 +317,7 @@ function reducer(state, action) {
         equipos: equipos != null ? equipos : null,
         canchasNecesarias: canchasNecesarias != null ? canchasNecesarias : null,
         invitados: invitados != null ? invitados : null,
+        torneo: torneo || null,
         nombre: nombre || null,
         telefono: telefono || null,
         creadaEn: new Date().toISOString(),

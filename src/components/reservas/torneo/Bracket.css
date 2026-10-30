@@ -1,0 +1,336 @@
+/* ==========================================================================
+   Modo Torneo - Estilos de Componentes Visuales
+   AlertaTiempo, AsignacionManual y Bracket
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. AlertaTiempo (FR-006)
+   -------------------------------------------------------------------------- */
+.alerta-tiempo {
+  margin-bottom: 1.25rem;
+  border-radius: 12px;
+  border-left: 4px solid #f59e0b;
+  background-color: #fffbeb;
+  color: #78350f;
+  padding: 1rem 1.25rem;
+}
+
+.alerta-tiempo__header {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.4rem;
+}
+
+.alerta-tiempo__icono {
+  flex-shrink: 0;
+  color: #d97706;
+}
+
+.alerta-tiempo__titulo {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #92400e;
+  line-height: 1.35;
+}
+
+.alerta-tiempo__detalle {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  color: #78350f;
+  line-height: 1.45;
+}
+
+.alerta-tiempo__sugerencias {
+  margin: 0.5rem 0 0 1.25rem;
+  padding: 0;
+  font-size: 0.85rem;
+  color: #92400e;
+  list-style-type: disc;
+}
+
+.alerta-tiempo__sugerencias li {
+  margin-bottom: 0.25rem;
+}
+
+/* --------------------------------------------------------------------------
+   2. AsignacionManual (FR-004)
+   -------------------------------------------------------------------------- */
+.asignacion-manual {
+  margin-bottom: 1.25rem;
+}
+
+.asignacion-manual__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.85rem;
+}
+
+.asignacion-manual__tarjeta {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.asignacion-manual__tarjeta-titulo {
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: #64748b;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.asignacion-manual__partido {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.asignacion-manual__select {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.85rem;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background-color: #f8fafc;
+  color: #1e293b;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.asignacion-manual__select:focus {
+  border-color: var(--accent, #1779ba);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #1779ba) 25%, transparent);
+  outline: none;
+}
+
+.asignacion-manual__vs {
+  font-weight: 800;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.asignacion-manual__error {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+}
+
+/* --------------------------------------------------------------------------
+   3. Bracket y Cronograma (FR-005, FR-007)
+   -------------------------------------------------------------------------- */
+.bracket-torneo {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.bracket-torneo__vacio {
+  margin: 0;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.9rem;
+  padding: 2rem 1rem;
+}
+
+.bracket-torneo__rondas {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.75rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.bracket-torneo__columna {
+  flex: 1 0 240px;
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+}
+
+.bracket-torneo__ronda-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--accent-soft, #eef3f8);
+  text-align: center;
+}
+
+.bracket-torneo__trophy {
+  color: #eab308;
+  flex-shrink: 0;
+}
+
+.bracket-torneo__lista-partidos {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  flex: 1;
+  gap: 1rem;
+  min-height: 100%;
+}
+
+.bracket-torneo__partido {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.bracket-torneo__partido:hover {
+  border-color: var(--accent, #1779ba);
+  box-shadow: 0 6px 14px -3px color-mix(in srgb, var(--accent, #1779ba) 22%, transparent);
+  transform: translateY(-1px);
+}
+
+.bracket-torneo__partido-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.08);
+}
+
+.bracket-torneo__partido-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bracket-torneo__badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent, #1779ba);
+  background: var(--accent-soft, #eef3f8);
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+}
+
+.bracket-torneo__turno {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.bracket-torneo__partido-detalles {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  flex-wrap: wrap;
+}
+
+.bracket-torneo__horario,
+.bracket-torneo__cancha {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.bracket-torneo__horario svg,
+.bracket-torneo__cancha svg {
+  color: color-mix(in srgb, var(--accent, #1779ba) 70%, #1a1a1a);
+  flex-shrink: 0;
+}
+
+.bracket-torneo__equipos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.bracket-torneo__equipo {
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  background: #f8fafc;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bracket-torneo__equipo-nombre {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bracket-torneo__vs {
+  align-self: center;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  margin: -0.15rem 0;
+}
+
+/* --------------------------------------------------------------------------
+   4. Variante Compacta
+   -------------------------------------------------------------------------- */
+.bracket-torneo--compacto {
+  padding: 0.75rem;
+}
+
+.bracket-torneo--compacto .bracket-torneo__rondas {
+  gap: 0.85rem;
+}
+
+.bracket-torneo--compacto .bracket-torneo__columna {
+  min-width: 175px;
+  flex: 1 0 175px;
+}
+
+.bracket-torneo--compacto .bracket-torneo__ronda-titulo {
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.bracket-torneo--compacto .bracket-torneo__partido {
+  padding: 0.45rem 0.55rem;
+}
+
+.bracket-torneo--compacto .bracket-torneo__equipo {
+  padding: 0.25rem 0.35rem;
+  font-size: 0.78rem;
+}
+
+.bracket-torneo--compacto .bracket-torneo__partido-meta {
+  font-size: 0.7rem;
+  margin-bottom: 0.35rem;
+  padding-bottom: 0.35rem;
+}
+
+/* --------------------------------------------------------------------------
+   5. Accesibilidad y Preferencias de Movimiento
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .bracket-torneo__partido,
+  .asignacion-manual__select {
+    transition: none !important;
+    transform: none !important;
+  }
+}

@@ -29,6 +29,7 @@ export function textoQr({
   nombre,
   telefono,
   total,
+  torneo = null,
 }) {
   const lineas = [
     'SPORTIFY · RESERVA',
@@ -42,6 +43,13 @@ export function textoQr({
 
   if (telefono && telefono.trim() !== '') {
     lineas.push(`Teléfono: ${telefono.trim()}`);
+  }
+
+  if (torneo && torneo.equipos) {
+    const numPartidos = torneo.partidos ? torneo.partidos.length : torneo.equipos - 1;
+    lineas.push(
+      `Torneo: ${torneo.equipos} equipos · ${numPartidos} partidos (${torneo.duracionPartido} min)`
+    );
   }
 
   lineas.push(`Total: ${formatoPrecio.format(total)}`);

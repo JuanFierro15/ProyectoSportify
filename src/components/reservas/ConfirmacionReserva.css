@@ -93,6 +93,43 @@
   color: #0f172a;
 }
 
+/* Modo Torneo en confirmación */
+.confirmacion-reserva__torneo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.45rem 0;
+  margin: 0.2rem 0;
+  border-top: 1px dashed #e2e8f0;
+  border-bottom: 1px dashed #e2e8f0;
+  font-size: 0.85rem;
+}
+
+.confirmacion-reserva__torneo-equipos {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.confirmacion-reserva__torneo-tiempo {
+  color: #475569;
+}
+
+.confirmacion-reserva__torneo-desempate {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.confirmacion-reserva__bracket {
+  width: 100%;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  padding: 0.75rem;
+  box-sizing: border-box;
+}
+
 .confirmacion-reserva__total strong {
   font-size: 1.05rem;
   color: #0f172a;

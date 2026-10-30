@@ -1,6 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useContext, useRef } from 'react';
 import { CheckCircle2, Download, Gift } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
+import ReservasContext from '../../context/ReservasContext';
+import Bracket from './torneo/Bracket';
 import { formatoPrecio } from '../../lib/precios';
 import './ConfirmacionReserva.css';
 
@@ -10,18 +12,21 @@ import './ConfirmacionReserva.css';
  * resumen y opción de descargar el QR como imagen.
  *
  * Props: codigo, textoQr, resumen ({ tipoEtiqueta, fechaTexto, horario,
- * canchas, total, packsAgua }), onListo.
+ * canchas, total, packsAgua, torneo }), onListo.
  */
 function ConfirmacionReserva({ codigo, textoQr, resumen = {}, onListo }) {
   const qrRef = useRef(null);
+  const reservasCtx = useContext(ReservasContext);
+  const canchas = reservasCtx?.canchas || [];
 
   const {
     tipoEtiqueta,
     fechaTexto,
     horario,
-    canchas = [],
+    canchas: nombresCanchas = [],
     total = 0,
     packsAgua = 0,
+    torneo = null,
   } = resumen;
 
   const descargarQr = () => {
@@ -77,8 +82,24 @@ function ConfirmacionReserva({ codigo, textoQr, resumen = {}, onListo }) {
           <p className="confirmacion-reserva__meta">{lineaMeta}</p>
         )}
 
-        {canchas.length > 0 && (
-          <p className="confirmacion-reserva__canchas">{canchas.join(' · ')}</p>
+        {nombresCanchas.length > 0 && (
+          <p className="confirmacion-reserva__canchas">{nombresCanchas.join(' · ')}</p>
+        )}
+
+        {torneo && (
+          <div className="confirmacion-reserva__torneo">
+            <p className="confirmacion-reserva__torneo-equipos">
+              {`${torneo.equipos} equipos · Eliminación directa (${torneo.partidos?.length || torneo.equipos - 1} partidos)`}
+            </p>
+            <p className="confirmacion-reserva__torneo-tiempo">
+              {`Tiempo estimado (peor caso): ${torneo.minutosRequeridos} min (${torneo.duracionPartido} min/partido)`}
+            </p>
+            {torneo.desempate && (
+              <p className="confirmacion-reserva__torneo-desempate">
+                {`Desempate: ${torneo.desempate.descripcion}`}
+              </p>
+            )}
+          </div>
         )}
 
         <p className="confirmacion-reserva__total">
@@ -94,6 +115,12 @@ function ConfirmacionReserva({ codigo, textoQr, resumen = {}, onListo }) {
           </p>
         )}
       </div>
+
+      {torneo && (
+        <div className="confirmacion-reserva__bracket">
+          <Bracket partidos={torneo.partidos || []} canchas={canchas} compacto />
+        </div>
+      )}
 
       <div className="confirmacion-reserva__acciones">
         <button
