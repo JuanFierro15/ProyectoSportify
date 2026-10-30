@@ -12,6 +12,22 @@ import {
   limpiarTelefono,
 } from '../../lib/validacion';
 import { canchasDelDeporte } from '../../lib/canchas';
+import {
+  OPCIONES_EQUIPOS,
+  TRANSICION_MIN,
+  MAX_CANCHAS_TORNEO,
+  armarTorneo,
+  desempateDe,
+  minutosPorTurno,
+  minutosRequeridos,
+  programarTorneo,
+  sortearEquipos,
+  sugerenciasTiempo,
+  turnosPorRonda,
+  validarCanchasTorneo,
+  validarCrucesManuales,
+  validarFranja,
+} from '../../lib/torneo';
 
 export const MODOS = [
   { valor: 'cancha', etiqueta: 'Cancha', titulo: 'Reserva tu cancha', tipoEtiqueta: 'Reserva de cancha' },
@@ -36,7 +52,10 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
   const [canchaId, setCanchaId] = useState(canchaInicial ? canchaInicial.id : null);
   const [canchaIds, setCanchaIds] = useState([]);
   const [horasSel, setHorasSel] = useState([]);
-  const [equipos, setEquipos] = useState('');
+  const [equipos, setEquiposState] = useState(8);
+  const [duracionPartido, setDuracionPartidoState] = useState(20);
+  const [emparejamiento, setEmparejamiento] = useState('aleatorio');
+  const [ordenEquipos, setOrdenEquipos] = useState(() => sortearEquipos(8));
   const [invitados, setInvitados] = useState('');
   const [nombre, setNombre] = useState('');
   const [telefono, setTelefono] = useState('');
@@ -52,7 +71,10 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     setCanchaId(canchaInicial ? canchaInicial.id : null);
     setCanchaIds([]);
     setHorasSel([]);
-    setEquipos('');
+    setEquiposState(8);
+    setDuracionPartidoState(20);
+    setEmparejamiento('aleatorio');
+    setOrdenEquipos(sortearEquipos(8));
     setInvitados('');
     setNombre('');
     setTelefono('');
@@ -127,15 +149,143 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
   const verErrNombre = tocado.nombre && !!errNombre;
   const verErrTelefono = !!errTelefono && (tocado.telefono || empiezaMalTelefono(telefono));
 
+  const cambiarEquiposTorneo = useCallback(
+    (nuevoEquipos) => {
+      const n = Number(nuevoEquipos);
+      setEquiposState(n);
+      if (OPCIONES_EQUIPOS.includes(n)) {
+        setOrdenEquipos(
+          emparejamiento === 'aleatorio'
+            ? sortearEquipos(n)
+            : Array.from({ length: n }, (_, i) => i + 1)
+        );
+      }
+    },
+    [emparejamiento]
+  );
+
+  const setEquipos = cambiarEquiposTorneo;
+
+  const setDuracionPartido = useCallback((min) => {
+    setDuracionPartidoState(Number(min));
+  }, []);
+
+  const cambiarEmparejamiento = useCallback(
+    (nuevoModo) => {
+      setEmparejamiento(nuevoModo);
+      if (nuevoModo === 'aleatorio') {
+        setOrdenEquipos(sortearEquipos(Number(equipos)));
+      }
+    },
+    [equipos]
+  );
+
+  const resortearTorneo = useCallback(() => {
+    setOrdenEquipos(sortearEquipos(Number(equipos)));
+  }, [equipos]);
+
+  const cambiarCruceManual = useCallback((indice, valor) => {
+    setOrdenEquipos((prev) => {
+      const copia = [...prev];
+      copia[indice] = valor ? Number(valor) : null;
+      return copia;
+    });
+  }, []);
+
+  const torneoPlan = useMemo(() => {
+    const deporteTorneo = canchasElegidas[0]?.deporte || (canchaSel?.deporte ?? 'futbol');
+    const desempate = desempateDe(deporteTorneo);
+    const minutosTurno = minutosPorTurno(duracionPartido, deporteTorneo);
+    const numCanchas = Math.max(1, canchaIds.length);
+    const turnosRonda = turnosPorRonda(Number(equipos), numCanchas);
+    const turnosTotales = turnosRonda.reduce((a, b) => a + b, 0);
+    const minRequeridos = minutosRequeridos({
+      equipos: Number(equipos),
+      canchas: numCanchas,
+      minutosTurno,
+    });
+    const validacionFranja = validarFranja(minRequeridos, horasSel.length);
+    const sugerencias =
+      horasSel.length > 0
+        ? sugerenciasTiempo({
+            equipos: Number(equipos),
+            canchas: numCanchas,
+            duracionPartido: Number(duracionPartido),
+            deporte: deporteTorneo,
+            horasReservadas: horasSel.length,
+          })
+        : [];
+    const errorCanchas = validarCanchasTorneo(canchasElegidas);
+    const errorCruces =
+      emparejamiento === 'manual'
+        ? validarCrucesManuales(ordenEquipos, Number(equipos))
+        : '';
+    const partidos = programarTorneo({
+      orden: ordenEquipos,
+      canchaIds,
+      horaInicio: horasSel[0] || null,
+      minutosTurno,
+    });
+
+    return {
+      deporte: deporteTorneo,
+      desempate,
+      equipos: Number(equipos),
+      duracionPartido: Number(duracionPartido),
+      transicion: TRANSICION_MIN,
+      minutosTurno,
+      turnosTotales,
+      minutosRequeridos: minRequeridos,
+      validacionFranja,
+      sugerencias,
+      errorCanchas,
+      errorCruces,
+      emparejamiento,
+      ordenEquipos,
+      partidos,
+    };
+  }, [
+    canchasElegidas,
+    canchaSel,
+    duracionPartido,
+    canchaIds,
+    equipos,
+    horasSel,
+    emparejamiento,
+    ordenEquipos,
+  ]);
+
   const motivoBloqueo = useMemo(() => {
+    if (modo === 'torneo') {
+      if (torneoPlan.errorCanchas) {
+        return torneoPlan.errorCanchas;
+      }
+      if (horasSel.length === 0) {
+        return 'Elige el horario.';
+      }
+      if (!OPCIONES_EQUIPOS.includes(Number(equipos))) {
+        return 'Elige 4, 8 o 16 equipos.';
+      }
+      if (torneoPlan.errorCruces) {
+        return torneoPlan.errorCruces;
+      }
+      if (!torneoPlan.validacionFranja.alcanza) {
+        return `La franja elegida no alcanza para el torneo (faltan ${torneoPlan.validacionFranja.deficit} min).`;
+      }
+      if (errNombre) {
+        return 'Escribe tu nombre para confirmar.';
+      }
+      if (errTelefono) {
+        return 'Revisa el teléfono.';
+      }
+      return '';
+    }
+
     if (esEvento ? canchaIds.length === 0 : !canchaSel) {
       return esEvento ? 'Elige al menos una cancha.' : 'Elige una cancha.';
     }
     if (horasSel.length === 0) {
       return 'Elige el horario.';
-    }
-    if (modo === 'torneo' && Number(equipos) < 2) {
-      return 'Indica cuántos equipos participan (mínimo 2).';
     }
     if (modo === 'cumpleanos' && Number(invitados) < 1) {
       return 'Indica cuántos invitados vienen.';
@@ -147,7 +297,18 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
       return 'Revisa el teléfono.';
     }
     return '';
-  }, [esEvento, canchaIds.length, canchaSel, horasSel.length, modo, equipos, invitados, errNombre, errTelefono]);
+  }, [
+    modo,
+    torneoPlan,
+    horasSel.length,
+    equipos,
+    errNombre,
+    errTelefono,
+    esEvento,
+    canchaIds.length,
+    canchaSel,
+    invitados,
+  ]);
 
   const puedeConfirmar = motivoBloqueo === '' && !confirmado;
 
@@ -164,17 +325,37 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     }
   }, [horasSel, esLibre, esEvento, canchaIds.length]);
 
-  const cambiarModo = useCallback((nuevo) => {
-    if (nuevo === modo) return;
-    if (modo === 'cancha' && nuevo !== 'cancha') {
-      setCanchaIds(canchaSel ? [canchaSel.id] : []);
-    } else if (modo !== 'cancha' && nuevo === 'cancha') {
-      setCanchaId(canchaIds[0] || (canchaSel ? canchaSel.id : null));
-    }
-    setModo(nuevo);
-    setHorasSel([]);
-    setError(null);
-  }, [modo, canchaSel, canchaIds]);
+  const cambiarModo = useCallback(
+    (nuevo) => {
+      if (nuevo === modo) return;
+      if (nuevo === 'torneo') {
+        if (modo === 'cancha') {
+          setCanchaIds(canchaSel ? [canchaSel.id] : []);
+        } else if (modo === 'cumpleanos') {
+          setCanchaIds((prevIds) => {
+            if (prevIds.length === 0) return [];
+            const canchasActuales = prevIds
+              .map((id) => canchas.find((c) => c.id === id))
+              .filter(Boolean);
+            if (canchasActuales.length === 0) return [];
+            const primerDeporte = canchasActuales[0].deporte;
+            const filtradas = canchasActuales
+              .filter((c) => c.deporte === primerDeporte)
+              .slice(0, MAX_CANCHAS_TORNEO);
+            return filtradas.map((c) => c.id);
+          });
+        }
+      } else if (modo === 'cancha' && nuevo !== 'cancha') {
+        setCanchaIds(canchaSel ? [canchaSel.id] : []);
+      } else if (modo !== 'cancha' && nuevo === 'cancha') {
+        setCanchaId(canchaIds[0] || (canchaSel ? canchaSel.id : null));
+      }
+      setModo(nuevo);
+      setHorasSel([]);
+      setError(null);
+    },
+    [modo, canchaSel, canchaIds, canchas]
+  );
 
   const elegirCancha = useCallback((id) => {
     setCanchaId(id);
@@ -189,23 +370,29 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     setError(null);
   }, []);
 
-  const alternarDeporte = useCallback((slug) => {
-    const ids = canchasDelDeporte(canchas, slug).map((c) => c.id);
-    setCanchaIds((prev) =>
-      ids.every((id) => prev.includes(id))
-        ? prev.filter((id) => !ids.includes(id))
-        : [...prev, ...ids.filter((id) => !prev.includes(id))]
-    );
-    setError(null);
-  }, [canchas]);
+  const alternarDeporte = useCallback(
+    (slug) => {
+      const ids = canchasDelDeporte(canchas, slug).map((c) => c.id);
+      setCanchaIds((prev) =>
+        ids.every((id) => prev.includes(id))
+          ? prev.filter((id) => !ids.includes(id))
+          : [...prev, ...ids.filter((id) => !prev.includes(id))]
+      );
+      setError(null);
+    },
+    [canchas]
+  );
 
-  const elegirHora = useCallback((hora) => {
-    const r = esEvento
-      ? seleccionarRango(horasSel, hora, horasBase, esLibre)
-      : alternarHoraIndividual(horasSel, hora, horasBase);
-    setHorasSel(r.sel);
-    setError(r.error);
-  }, [esEvento, horasSel, horasBase, esLibre]);
+  const elegirHora = useCallback(
+    (hora) => {
+      const r = esEvento
+        ? seleccionarRango(horasSel, hora, horasBase, esLibre)
+        : alternarHoraIndividual(horasSel, hora, horasBase);
+      setHorasSel(r.sel);
+      setError(r.error);
+    },
+    [esEvento, horasSel, horasBase, esLibre]
+  );
 
   const cambiarFecha = useCallback((iso) => {
     setFecha(iso);
@@ -245,6 +432,19 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     if (!puedeConfirmar) return;
 
     let res;
+    const datosTorneo =
+      modo === 'torneo'
+        ? armarTorneo({
+            deporte: torneoPlan.deporte,
+            equipos: Number(equipos),
+            duracionPartido: Number(duracionPartido),
+            emparejamiento,
+            orden: ordenEquipos,
+            canchaIds,
+            horaInicio: horasSel[0] || null,
+          })
+        : null;
+
     if (modo === 'cancha') {
       res = reservar({
         canchaId: canchaSel.id,
@@ -262,6 +462,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
         equipos: modo === 'torneo' ? Number(equipos) : null,
         canchasNecesarias: modo === 'torneo' ? canchaIds.length : null,
         invitados: modo === 'cumpleanos' ? Number(invitados) : null,
+        torneo: datosTorneo,
         nombre: nombre.trim(),
         telefono: telefono.trim(),
       });
@@ -290,6 +491,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
         nombre: nombre.trim(),
         telefono: telefono.trim(),
         total: precio.total,
+        torneo: datosTorneo,
       }),
       resumen: {
         tipoEtiqueta,
@@ -298,20 +500,25 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
         canchas: nombresCanchas,
         total: precio.total,
         packsAgua: precio.packsAgua,
+        torneo: datosTorneo,
       },
     });
   }, [
     puedeConfirmar,
     modo,
+    torneoPlan.deporte,
+    equipos,
+    duracionPartido,
+    emparejamiento,
+    ordenEquipos,
+    canchaIds,
+    horasSel,
     reservar,
     canchaSel,
     fecha,
-    horasSel,
     nombre,
     telefono,
     reservarEvento,
-    canchaIds,
-    equipos,
     invitados,
     canchasElegidas,
     precio,
@@ -356,5 +563,14 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     marcarTocado,
     confirmar,
     reiniciar,
+    duracionPartido,
+    setDuracionPartido,
+    emparejamiento,
+    cambiarEmparejamiento,
+    ordenEquipos,
+    cambiarEquiposTorneo,
+    resortearTorneo,
+    cambiarCruceManual,
+    torneoPlan,
   };
 }
