@@ -229,34 +229,51 @@ describe('Modo Torneo - Pruebas de integración', () => {
 
     const seccionCuartos = screen.getByLabelText('Fase 1: Cuartos de final');
     const seccionSemi = screen.getByLabelText('Fase 2: Semifinal');
+    const seccionFinal = screen.getByLabelText('Fase 3: Final');
 
-    // Programar Cuartos en el día 3 (dias[2]) a las 14:00
+    // Programar Cuartos en el tercer día (dias[2])
     const btnDia2Cuartos = within(seccionCuartos).getAllByRole('button')[2];
     fireEvent.click(btnDia2Cuartos);
-    fireEvent.click(screen.getByRole('button', { name: 'Cuartos de final 14:00' }));
 
-    // Programar Semifinal en el día 2 (dias[1]) a las 15:00 (fecha anterior a Cuartos)
-    const btnDia1Semi = within(seccionSemi).getAllByRole('button')[1];
-    fireEvent.click(btnDia1Semi);
-    fireEvent.click(screen.getByRole('button', { name: 'Semifinal 15:00' }));
+    // Los botones de días anteriores (dias[0] y dias[1]) en Semifinal y Final quedan disabled y muestran "bloqueado"
+    const diasSemi = within(seccionSemi).getAllByRole('button').slice(0, 7);
+    expect(diasSemi[0]).toBeDisabled();
+    expect(diasSemi[0]).toHaveTextContent(/bloqueado/i);
+    expect(diasSemi[1]).toBeDisabled();
+    expect(diasSemi[1]).toHaveTextContent(/bloqueado/i);
 
-    // Se muestra la alerta de orden cronológico en Semifinal y se bloquea la confirmación
-    expect(
-      screen.getAllByText(/Semifinal debe jugarse después de que termine Cuartos de final/i).length
-    ).toBeGreaterThanOrEqual(1);
+    // La fecha seleccionada en Semifinal avanza en cascada a dias[2]
+    expect(diasSemi[2]).not.toBeDisabled();
+    expect(diasSemi[2]).toHaveAttribute('aria-pressed', 'true');
 
-    const btnConfirmar = screen.getByRole('button', { name: /Confirmar reserva/i });
-    expect(btnConfirmar).toBeDisabled();
+    // En Final también quedan bloqueados los días anteriores y avanza a dias[2]
+    const diasFinal = within(seccionFinal).getAllByRole('button').slice(0, 7);
+    expect(diasFinal[0]).toBeDisabled();
+    expect(diasFinal[0]).toHaveTextContent(/bloqueado/i);
+    expect(diasFinal[1]).toBeDisabled();
+    expect(diasFinal[1]).toHaveTextContent(/bloqueado/i);
+    expect(diasFinal[2]).not.toBeDisabled();
+    expect(diasFinal[2]).toHaveAttribute('aria-pressed', 'true');
 
-    // Mover Semifinal al día 4 (dias[3], fecha posterior a Cuartos) a las 15:00
-    const btnDia3Semi = within(seccionSemi).getAllByRole('button')[3];
-    fireEvent.click(btnDia3Semi);
-    fireEvent.click(screen.getByRole('button', { name: 'Semifinal 15:00' }));
+    // Cuartos de final selecciona 14:00 en dias[2]
+    const btnHoraCuartos14 = screen.getByRole('button', { name: 'Cuartos de final 14:00' });
+    fireEvent.click(btnHoraCuartos14);
 
-    // La alerta de orden cronológico desaparece
+    // En Semifinal (mismo día dias[2]), los botones de hora <= 14:00 están disabled
+    const btnHoraSemi14 = screen.getByRole('button', { name: 'Semifinal 14:00' });
+    expect(btnHoraSemi14).toBeDisabled();
+
+    // Semifinal 15:00 está habilitado y permite programar la fase sin errores
+    const btnHoraSemi15 = screen.getByRole('button', { name: 'Semifinal 15:00' });
+    expect(btnHoraSemi15).not.toBeDisabled();
+    fireEvent.click(btnHoraSemi15);
+    expect(btnHoraSemi15).toHaveAttribute('aria-pressed', 'true');
+
+    // Sin alertas de orden cronológico en Semifinal ni en el resto del formulario
     expect(
       screen.queryByText(/Semifinal debe jugarse después de que termine Cuartos de final/i)
     ).not.toBeInTheDocument();
+    expect(within(seccionSemi).queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('4. Emparejamiento manual y validación de equipos repetidos (AC-006, FR-004)', () => {
