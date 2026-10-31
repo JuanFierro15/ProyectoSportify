@@ -1,4 +1,9 @@
-import { calcularPrecio, calcularPrecioEvento, finDeFranja } from './precios';
+import {
+  calcularPrecio,
+  calcularPrecioEvento,
+  calcularPrecioJornadas,
+  finDeFranja,
+} from './precios';
 
 describe('calcularPrecio (cancha de 45.000 por hora)', () => {
   test('1 hora: sin descuento ni agua', () => {
@@ -52,6 +57,78 @@ describe('calcularPrecioEvento', () => {
     const res = calcularPrecioEvento([], 2);
     expect(res.total).toBe(0);
     expect(res.lineas).toEqual([]);
+  });
+});
+
+describe('calcularPrecioJornadas (AC-013, DD-012)', () => {
+  const canchasCatalogo = [
+    { id: 'c1', nombre: 'Cancha 1', deporte: 'futbol', precioHora: 45000 },
+    { id: 'c2', nombre: 'Cancha 2', deporte: 'futbol', precioHora: 45000 },
+    { id: 'c3', nombre: 'Cancha 3', deporte: 'futbol', precioHora: 45000 },
+  ];
+
+  test('8 equipos con 3 canchas cobra canchas efectivas (3 en Cuartos, 2 en Semis, 1 en Final)', () => {
+    // Cuartos: 3 canchas, 2 horas (con descuento: 40.000 * 2 = 80.000 cada una -> 240.000, 3 packs de agua)
+    // Semifinal: 2 canchas (canchas efectivas), 1 hora (45.000 * 1 = 45.000 cada una -> 90.000, sin agua)
+    // Final: 1 cancha (cancha efectiva), 1 hora (45.000 * 1 -> 45.000, sin agua)
+    const bloques = [
+      {
+        ronda: 1,
+        nombreRonda: 'Cuartos de final',
+        fecha: '2026-11-01',
+        horas: ['08:00', '09:00'],
+        canchaIds: ['c1', 'c2', 'c3'],
+      },
+      {
+        ronda: 2,
+        nombreRonda: 'Semifinal',
+        fecha: '2026-11-02',
+        horas: ['10:00'],
+        canchaIds: ['c1', 'c2'],
+      },
+      {
+        ronda: 3,
+        nombreRonda: 'Final',
+        fecha: '2026-11-03',
+        horas: ['14:00'],
+        canchaIds: ['c1'],
+      },
+    ];
+
+    const res = calcularPrecioJornadas(bloques, canchasCatalogo);
+
+    // Total líneas = 3 (cuartos) + 2 (semis) + 1 (final) = 6 líneas
+    expect(res.lineas).toHaveLength(6);
+    expect(res.nHoras).toBe(4); // 2h + 1h + 1h
+    expect(res.subtotal).toBe(3 * (45000 * 2) + 2 * (45000 * 1) + 1 * (45000 * 1)); // 270.000 + 90.000 + 45.000 = 405.000
+    expect(res.ahorro).toBe(3 * (5000 * 2)); // 30.000
+    expect(res.total).toBe(240000 + 90000 + 45000); // 375.000
+    expect(res.packsAgua).toBe(3); // Solo en la jornada de 2 horas (Cuartos)
+
+    // Formato de canchaId y nombre compuesto
+    expect(res.lineas[0].canchaId).toBe('R1-c1');
+    expect(res.lineas[0].nombre).toBe('Cuartos de final · Cancha 1');
+    expect(res.lineas[5].canchaId).toBe('R3-c1');
+    expect(res.lineas[5].nombre).toBe('Final · Cancha 1');
+  });
+
+  test('sin bloques o bloques vacíos devuelve ceros y arreglo vacío', () => {
+    expect(calcularPrecioJornadas([], canchasCatalogo)).toEqual({
+      nHoras: 0,
+      lineas: [],
+      subtotal: 0,
+      total: 0,
+      ahorro: 0,
+      packsAgua: 0,
+    });
+    expect(calcularPrecioJornadas(null, canchasCatalogo)).toEqual({
+      nHoras: 0,
+      lineas: [],
+      subtotal: 0,
+      total: 0,
+      ahorro: 0,
+      packsAgua: 0,
+    });
   });
 });
 

@@ -46,4 +46,30 @@ describe('textoQr', () => {
 
     expect(texto).not.toContain('Teléfono:');
   });
+
+  test('con torneo y jornadas incluye la línea de cada fase con su fecha y rango de horas', () => {
+    const texto = textoQr({
+      codigo: 'SPF-TORNEO',
+      tipo: 'Torneo',
+      fecha: '01 de noviembre de 2026',
+      horario: '3 jornadas',
+      canchas: ['Cancha 1', 'Cancha 2', 'Cancha 3'],
+      nombre: 'Carlos',
+      telefono: '3001234567',
+      total: 375000,
+      torneo: {
+        equipos: 8,
+        duracionPartido: 20,
+        jornadas: [
+          { nombreRonda: 'Cuartos de final', fecha: '2026-11-01', horas: ['08:00', '09:00'] },
+          { nombreRonda: 'Semifinal', fecha: '2026-11-02', horas: ['10:00'] },
+          { nombreRonda: 'Final', fecha: '2026-11-03', horas: ['14:00'] },
+        ],
+      },
+    });
+
+    expect(texto).toContain('Fase Cuartos de final: 2026-11-01 (08:00 a 10:00)');
+    expect(texto).toContain('Fase Semifinal: 2026-11-02 (10:00 a 11:00)');
+    expect(texto).toContain('Fase Final: 2026-11-03 (14:00 a 15:00)');
+  });
 });

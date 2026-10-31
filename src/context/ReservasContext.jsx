@@ -8,7 +8,12 @@ import React, {
 } from 'react';
 import semilla from '../data/canchas.json';
 import negocio from '../data/negocio.json';
-import { calcularPrecio, calcularPrecioEvento, MAX_HORAS_SEGUIDAS } from '../lib/precios';
+import {
+  calcularPrecio,
+  calcularPrecioEvento,
+  calcularPrecioJornadas,
+  MAX_HORAS_SEGUIDAS,
+} from '../lib/precios';
 import { esHoraPasada } from '../lib/fechas';
 import { generarCodigo } from '../lib/codigoReserva';
 import { aplicarCancelacion, verificarCancelable } from '../lib/cancelacion';
@@ -176,11 +181,20 @@ function horaDeEvento(state, canchaId, fecha, hora) {
   return state.reservas.some(
     (r) =>
       r.tipo === 'evento' &&
-      r.fecha === fecha &&
-      Array.isArray(r.canchaIds) &&
-      r.canchaIds.includes(canchaId) &&
-      Array.isArray(r.horas) &&
-      r.horas.includes(hora)
+      ((r.fecha === fecha &&
+        Array.isArray(r.canchaIds) &&
+        r.canchaIds.includes(canchaId) &&
+        Array.isArray(r.horas) &&
+        r.horas.includes(hora)) ||
+        (Array.isArray(r.bloques) &&
+          r.bloques.some(
+            (b) =>
+              b.fecha === fecha &&
+              Array.isArray(b.canchaIds) &&
+              b.canchaIds.includes(canchaId) &&
+              Array.isArray(b.horas) &&
+              b.horas.includes(hora)
+          )))
   );
 }
 
@@ -258,6 +272,7 @@ function reducer(state, action) {
 
     case 'RESERVAR_EVENTO': {
       const {
+        bloques,
         subtipo,
         fecha,
         canchaIds,
@@ -269,6 +284,106 @@ function reducer(state, action) {
         telefono,
         torneo,
       } = action.payload;
+
+      if (Array.isArray(bloques) && bloques.length > 0) {
+        const bloquesValidos = bloques.every(
+          (b) =>
+            b &&
+            b.fecha &&
+            Array.isArray(b.canchaIds) &&
+            b.canchaIds.length > 0 &&
+            Array.isArray(b.horas) &&
+            b.horas.length > 0
+        );
+        if (!bloquesValidos) {
+          return {
+            ...state,
+            error:
+              'Alguna cancha u horario del evento ya no está disponible. No se reservó nada.',
+          };
+        }
+
+        const celdasVistas = new Set();
+        let hayConflicto = false;
+        for (const b of bloques) {
+          for (const cid of b.canchaIds) {
+            for (const h of b.horas) {
+              const clave = `${cid}__${b.fecha}__${h}`;
+              if (celdasVistas.has(clave) || !horaLibre(state, cid, b.fecha, h)) {
+                hayConflicto = true;
+                break;
+              }
+              celdasVistas.add(clave);
+            }
+            if (hayConflicto) break;
+          }
+          if (hayConflicto) break;
+        }
+
+        if (hayConflicto) {
+          return {
+            ...state,
+            error:
+              'Alguna cancha u horario del evento ya no está disponible. No se reservó nada.',
+          };
+        }
+
+        const ocupados = { ...state.ocupados };
+        bloques.forEach((b) => {
+          b.canchaIds.forEach((cid) => {
+            const previas = (ocupados[cid] && ocupados[cid][b.fecha]) || [];
+            ocupados[cid] = {
+              ...ocupados[cid],
+              [b.fecha]: [...previas, ...b.horas],
+            };
+          });
+        });
+
+        const precio = calcularPrecioJornadas(bloques, state.canchas);
+
+        const todosCanchaIds =
+          Array.isArray(canchaIds) && canchaIds.length > 0
+            ? canchaIds
+            : Array.from(new Set(bloques.flatMap((b) => b.canchaIds)));
+
+        const canchaNombres = todosCanchaIds.map((cid) => {
+          const c = state.canchas.find((x) => x.id === cid);
+          return c ? c.nombre : cid;
+        });
+
+        const evento = {
+          id: `evento__${bloques[0].fecha}__${Date.now()}`,
+          codigo: action.payload.codigo || null,
+          tipo: 'evento',
+          subtipo, // 'torneo' | 'cumpleanos'
+          fecha: bloques[0].fecha,
+          canchaIds: [...todosCanchaIds],
+          canchaNombres,
+          horas: [...bloques[0].horas],
+          bloques: bloques.map((b) => ({
+            ...b,
+            canchaIds: [...b.canchaIds],
+            horas: [...b.horas],
+          })),
+          total: precio.total,
+          ahorro: precio.ahorro,
+          packsAgua: precio.packsAgua,
+          equipos: equipos != null ? equipos : null,
+          canchasNecesarias: canchasNecesarias != null ? canchasNecesarias : null,
+          invitados: invitados != null ? invitados : null,
+          torneo: torneo || null,
+          nombre: nombre || null,
+          telefono: telefono || null,
+          creadaEn: new Date().toISOString(),
+        };
+
+        return {
+          ...state,
+          ocupados,
+          reservas: [...state.reservas, evento],
+          error: null,
+        };
+      }
 
       // Todo-o-nada: si alguna celda (cancha × hora) no está libre, no se
       // reserva nada.
@@ -393,7 +508,56 @@ export function ReservasProvider({ children }) {
   // Devuelve { ok, codigo?, error? }. Bloqueo todo-o-nada.
   const reservarEvento = useCallback(
     (datos) => {
-      const { canchaIds, fecha, horas } = datos;
+      const { bloques, canchaIds, fecha, horas } = datos;
+
+      if (Array.isArray(bloques) && bloques.length > 0) {
+        const bloquesValidos = bloques.every(
+          (b) =>
+            b &&
+            b.fecha &&
+            Array.isArray(b.canchaIds) &&
+            b.canchaIds.length > 0 &&
+            Array.isArray(b.horas) &&
+            b.horas.length > 0
+        );
+        if (!bloquesValidos) {
+          return {
+            ok: false,
+            error:
+              'Alguna cancha u horario del evento ya no está disponible. No se reservó nada.',
+          };
+        }
+
+        const celdasVistas = new Set();
+        let hayConflicto = false;
+        for (const b of bloques) {
+          for (const cid of b.canchaIds) {
+            for (const h of b.horas) {
+              const clave = `${cid}__${b.fecha}__${h}`;
+              if (celdasVistas.has(clave) || !horaLibre(state, cid, b.fecha, h)) {
+                hayConflicto = true;
+                break;
+              }
+              celdasVistas.add(clave);
+            }
+            if (hayConflicto) break;
+          }
+          if (hayConflicto) break;
+        }
+
+        if (hayConflicto) {
+          return {
+            ok: false,
+            error:
+              'Alguna cancha u horario del evento ya no está disponible. No se reservó nada.',
+          };
+        }
+
+        const codigo = generarCodigo();
+        dispatch({ type: 'RESERVAR_EVENTO', payload: { ...datos, codigo } });
+        return { ok: true, codigo };
+      }
+
       if (!canchaIds || canchaIds.length === 0 || !horas || horas.length === 0) {
         return { ok: false, error: 'Faltan datos del evento.' };
       }
