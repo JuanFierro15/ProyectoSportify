@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { finDeFranja, formatoPrecio } from '../../lib/precios';
+import { fechaCorta } from './torneo/Bracket';
 import './VoucherReserva.css';
 
 /**
@@ -8,7 +9,7 @@ import './VoucherReserva.css';
  * aplica), packs de agua, ahorro, total y los botones de confirmar/cancelar.
  *
  * Props: tipoEtiqueta, fechaTexto, horas (bloque elegido), precio (resultado
- * de calcularPrecioEvento), puedeConfirmar, motivoBloqueo (por qué aún no se
+ * de calcularPrecioEvento o calcularPrecioJornadas), puedeConfirmar, motivoBloqueo (por qué aún no se
  * puede confirmar), onConfirmar, onCancelar, torneo (opcional).
  */
 function VoucherReserva({
@@ -24,12 +25,64 @@ function VoucherReserva({
 }) {
   const n = horas.length;
   const lineas = precio?.lineas || [];
-  const sinSeleccion = lineas.length === 0 || n === 0;
+  const esModoTorneo = !!torneo;
+  const sinSeleccion = esModoTorneo
+    ? lineas.length === 0
+    : lineas.length === 0 || n === 0;
 
   const textoHorario =
     n > 0
       ? `${horas[0]} a ${finDeFranja(horas[n - 1])} · ${n} ${n === 1 ? 'hora' : 'horas'}`
       : 'Sin elegir';
+
+  const jornadasConfiguradas = useMemo(() => {
+    if (!torneo) return [];
+
+    if (Array.isArray(torneo.fases) && torneo.fases.length > 0) {
+      const jMap = torneo.jornadas || {};
+      return torneo.fases
+        .map((fase) => {
+          const j = Array.isArray(jMap)
+            ? jMap.find((x) => x.ronda === fase.ronda)
+            : jMap[fase.ronda];
+          const horasFase = Array.isArray(j?.horas) ? j.horas : [];
+          if (horasFase.length === 0) return null;
+          const fechaStr = fechaCorta(j.fecha);
+          const franja = `${horasFase[0]} a ${finDeFranja(horasFase[horasFase.length - 1])}`;
+          const cCount = fase.canchasEfectivas;
+          const cTxt = `${cCount} ${cCount === 1 ? 'cancha' : 'canchas'}`;
+          return {
+            ronda: fase.ronda,
+            nombreRonda: fase.nombreRonda,
+            texto: `${fase.nombreRonda}: ${fechaStr} · ${franja} (${cTxt})`,
+          };
+        })
+        .filter(Boolean);
+    }
+
+    if (Array.isArray(torneo.jornadas) && torneo.jornadas.length > 0) {
+      return torneo.jornadas
+        .map((j) => {
+          const horasFase = Array.isArray(j?.horas) ? j.horas : [];
+          if (horasFase.length === 0) return null;
+          const fechaStr = fechaCorta(j.fecha);
+          const franja = `${horasFase[0]} a ${finDeFranja(horasFase[horasFase.length - 1])}`;
+          const cCount =
+            j.canchasEfectivas ||
+            (Array.isArray(j.canchaIds) ? j.canchaIds.length : 1);
+          const cTxt = `${cCount} ${cCount === 1 ? 'cancha' : 'canchas'}`;
+          const nom = j.nombreRonda || `Fase ${j.ronda}`;
+          return {
+            ronda: j.ronda,
+            nombreRonda: nom,
+            texto: `${nom}: ${fechaStr} · ${franja} (${cTxt})`,
+          };
+        })
+        .filter(Boolean);
+    }
+
+    return [];
+  }, [torneo]);
 
   return (
     <aside className="voucher-reserva" aria-label="Resumen de tu reserva">
@@ -41,14 +94,30 @@ function VoucherReserva({
       </div>
 
       <div className="voucher-reserva__meta">
-        <div className="voucher-reserva__fila">
-          <span className="voucher-reserva__etiqueta">Fecha</span>
-          <span className="voucher-reserva__valor">{fechaTexto || 'Sin elegir'}</span>
-        </div>
-        <div className="voucher-reserva__fila">
-          <span className="voucher-reserva__etiqueta">Horario</span>
-          <span className="voucher-reserva__valor">{textoHorario}</span>
-        </div>
+        {jornadasConfiguradas.length > 0 ? (
+          <div className="voucher-reserva__jornadas">
+            {jornadasConfiguradas.map((j) => (
+              <div
+                key={j.ronda}
+                className="voucher-reserva__fila voucher-reserva__fila--fase"
+              >
+                <span className="voucher-reserva__fase-item">{j.texto}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <>
+            <div className="voucher-reserva__fila">
+              <span className="voucher-reserva__etiqueta">Fecha</span>
+              <span className="voucher-reserva__valor">{fechaTexto || 'Sin elegir'}</span>
+            </div>
+            <div className="voucher-reserva__fila">
+              <span className="voucher-reserva__etiqueta">Horario</span>
+              <span className="voucher-reserva__valor">{textoHorario}</span>
+            </div>
+          </>
+        )}
+
         {torneo && (
           <>
             <div className="voucher-reserva__fila">
@@ -81,28 +150,31 @@ function VoucherReserva({
         ) : (
           <>
             <div className="voucher-reserva__lineas">
-              {lineas.map((l) => (
-                <div key={l.canchaId} className="voucher-reserva__linea">
-                  <div className="voucher-reserva__linea-info">
-                    <span className="voucher-reserva__linea-nombre">{l.nombre}</span>
-                    <span className="voucher-reserva__linea-calculo">
-                      {`${n} h × ${formatoPrecio.format(l.precioHoraFinal)}`}
-                      {l.descuentoHora > 0 &&
-                        ` (−${formatoPrecio.format(l.descuentoHora)}/h)`}
-                    </span>
+              {lineas.map((l) => {
+                const horasLinea = l.nHoras != null ? l.nHoras : n;
+                return (
+                  <div key={l.canchaId} className="voucher-reserva__linea">
+                    <div className="voucher-reserva__linea-info">
+                      <span className="voucher-reserva__linea-nombre">{l.nombre}</span>
+                      <span className="voucher-reserva__linea-calculo">
+                        {`${horasLinea} h × ${formatoPrecio.format(l.precioHoraFinal)}`}
+                        {l.descuentoHora > 0 &&
+                          ` (−${formatoPrecio.format(l.descuentoHora)}/h)`}
+                      </span>
+                    </div>
+                    <div className="voucher-reserva__linea-precio">
+                      {l.descuentoHora > 0 && (
+                        <s className="voucher-reserva__linea-tachado">
+                          {formatoPrecio.format(l.subtotal)}
+                        </s>
+                      )}
+                      <span className="voucher-reserva__linea-total">
+                        {formatoPrecio.format(l.total)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="voucher-reserva__linea-precio">
-                    {l.descuentoHora > 0 && (
-                      <s className="voucher-reserva__linea-tachado">
-                        {formatoPrecio.format(l.subtotal)}
-                      </s>
-                    )}
-                    <span className="voucher-reserva__linea-total">
-                      {formatoPrecio.format(l.total)}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="voucher-reserva__separador" />

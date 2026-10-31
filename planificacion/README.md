@@ -32,6 +32,9 @@ planificacion/
 | `2-carrusel-y-pagina-de-reserva` | Fotos protagonistas en el carrusel, detalle sobre la foto en fútbol y la reserva como página propia (23-10) | Juan Fierro | no | no | sí | c1, k1, p1 |
 | `3-gemini-md` | `GEMINI.md` para el equipo y planificación compartida (30-10) | Juan Fierro | sí | no | sí | g1 |
 | `4-organizar-planificacion` | Esta estructura: etapas históricas, herramientas y el índice (30-10) | Juan Fierro | sí | no | sí | (sin agy) |
+| `5-torneo-multidia` | Torneos multi-día por fases (jornadas), canchas efectivas por fase y validación cronológica (30-10) | Miguel Medina | sí | no | sí | t1, t2, t3 |
+| `6-bloqueo-cronologico-torneo` | Bloqueo cronológico preventivo de días y horas entre fases del torneo (31-10) | Miguel Medina | sí | no | sí | b1 |
+| `7-auditoria-usabilidad` | Auditoría integral de usabilidad (`impeccable`) y mejoras de prevención de errores, A11y y móvil (planificado para `usability-improve` tras merge de PR #2) | Equipo / Miguel Medina | sí | no | pendiente | u1, u2, u3, u4 |
 
 Antes del flujo por etapas (sin plan ni reporte, solo commits):
 
@@ -68,6 +71,14 @@ inicio).
 | Carrusel y página | `k1-capturas` | Script de capturas por CDP y capturas del carrusel | `68542dc` | `k1.log` |
 | Carrusel y página | `p1-pagina-de-reserva` | Detalle en fútbol y reserva como página propia (`ERROR` tras entregar) | `f33b29a`, `1a3dc54` | `p1.log` |
 | GEMINI.md | `g1-gemini-md` | `GEMINI.md` a partir de la guía local (`ERROR` tras entregar; ajustes del coordinador) | (no se versiona) | `g1.log` |
+| Torneo multi-día | `t1-dominio-jornadas` | Dominio (`torneo.js`, `precios.js`, `codigoReserva.js`), `ReservasContext` multi-bloque y `useReserva` con jornadas por fase | `5c5c5e0` | `t1.log` |
+| Torneo multi-día | `t2-calendario-y-bracket` | Componente `CalendarioTorneo.jsx` y fechas por fase en `Bracket.jsx` / `Bracket.css` | `a97d9f4` | `t2.log` |
+| Torneo multi-día | `t3-integracion-vistas-y-tests` | Integración en `FormularioReserva`, `VoucherReserva`, `ConfirmacionReserva`, `VistaCanchas` y pruebas en `Torneo.test.jsx` | `7d85c28` | `t3.log` |
+| Bloqueo cronológico torneo | `b1-bloqueo-cronologico-fases` | Bloqueo preventivo de días y horas anteriores entre fases en `SelectorDia`, `useReserva`, `CalendarioTorneo` y `Torneo.test.jsx` | `fc9f6ed`, `1d5ecdb` | `b1.log` |
+| Auditoría de usabilidad | `u1-prevencion-errores-reservas` | Prevención de tope de canchas, swap automático en cruces manuales, resumen horario en vivo y acciones rápidas en `AlertaTiempo` | (pendiente) | `u1.log` |
+| Auditoría de usabilidad | `u2-contacto-mis-reservas-y-voucher` | Consulta/cancelación por código (`Mis reservas`), botón copiar código, políticas en confirmación y limpiar selección en voucher | (pendiente) | `u2.log` |
+| Auditoría de usabilidad | `u3-accesibilidad-contraste-y-tokens` | Contraste WCAG AA (`--accent-text`), `:focus-visible`, `prefers-reduced-motion`, `scroll-snap` y eliminación de `side-tab` | (pendiente) | `u3.log` |
+| Auditoría de usabilidad | `u4-carrusel-touch-targets-y-perf` | Desbloqueo de scroll vertical en `DepthCarousel`, touch targets `>=44px`, detalles en Vóley/Pádel y `poster` en videos | (pendiente) | `u4.log` |
 
 ## Cómo trabajar en equipo
 

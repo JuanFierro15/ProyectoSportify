@@ -77,6 +77,123 @@ export function validarFranja(requeridos, horasReservadas) {
   };
 }
 
+export function fasesDelTorneo({ equipos, canchaIds = [], minutosTurno = 30 }) {
+  const ids = Array.isArray(canchaIds) ? canchaIds : [];
+  const rondas = partidosPorRonda(equipos);
+  return rondas.map((partidos, idx) => {
+    const ronda = idx + 1;
+    const numCanchasFase = ids.length > 0 ? Math.min(ids.length, partidos) : 1;
+    const canchasFase = ids.slice(0, numCanchasFase);
+    const turnos = Math.ceil(partidos / numCanchasFase);
+    const minutos = turnos * Number(minutosTurno);
+    return {
+      ronda,
+      nombreRonda: nombreRonda(partidos),
+      partidos,
+      canchasEfectivas: numCanchasFase,
+      canchaIds: canchasFase,
+      turnos,
+      minutosRequeridos: minutos,
+      horasMinimas: Math.ceil(minutos / 60),
+    };
+  });
+}
+
+export function validarJornadas(fases, jornadas = {}) {
+  if (!Array.isArray(fases)) return [];
+  let finPrevio = null;
+  const jMap = jornadas || {};
+
+  return fases.map((fase) => {
+    const j = jMap[fase.ronda] || {};
+    const fecha = j.fecha || null;
+    const horas = Array.isArray(j.horas) ? j.horas : [];
+
+    if (!fecha || horas.length === 0) {
+      return {
+        ronda: fase.ronda,
+        nombreRonda: fase.nombreRonda,
+        completa: false,
+        alcanza: false,
+        ordenValido: true,
+        disponibles: 0,
+        deficit: fase.minutosRequeridos,
+        error: `Elige el día y el horario para ${fase.nombreRonda}.`,
+      };
+    }
+
+    const validacion = validarFranja(fase.minutosRequeridos, horas.length);
+    const horaInicio = horas[0];
+    const horaFin = sumarMinutos(horas[horas.length - 1], 60);
+    const ordenValido =
+      !finPrevio ||
+      fecha > finPrevio.fecha ||
+      (fecha === finPrevio.fecha && horaInicio >= finPrevio.horaFin);
+
+    let error = null;
+    if (!ordenValido) {
+      error = `${fase.nombreRonda} debe jugarse después de que termine ${finPrevio.nombreRonda} (${finPrevio.fecha} a las ${finPrevio.horaFin}).`;
+    } else if (!validacion.alcanza) {
+      error = `La franja de ${fase.nombreRonda} no alcanza (faltan ${validacion.deficit} min).`;
+    }
+
+    finPrevio = { fecha, horaFin, nombreRonda: fase.nombreRonda };
+
+    return {
+      ronda: fase.ronda,
+      nombreRonda: fase.nombreRonda,
+      completa: true,
+      alcanza: validacion.alcanza,
+      ordenValido,
+      disponibles: validacion.disponibles,
+      deficit: validacion.deficit,
+      error,
+    };
+  });
+}
+
+export function sugerenciasTiempoFase({
+  fase,
+  canchasTotales,
+  duracionPartido,
+  deporte,
+  horasReservadas,
+}) {
+  if (!fase) return [];
+  const validacion = validarFranja(fase.minutosRequeridos, horasReservadas);
+  if (validacion.alcanza) {
+    return [];
+  }
+
+  const sugerencias = [];
+  const horasMin = fase.horasMinimas;
+  sugerencias.push(
+    `Amplía la franja de ${fase.nombreRonda} a al menos ${horasMin} ${horasMin === 1 ? 'hora' : 'horas'} (${horasMin * 60} min).`
+  );
+
+  const maxCanchas = Math.min(MAX_CANCHAS_TORNEO, fase.partidos);
+  if (Number(canchasTotales) < maxCanchas) {
+    const minTurnoActual = minutosPorTurno(duracionPartido, deporte);
+    const turnosConMax = Math.ceil(fase.partidos / maxCanchas);
+    const minConMax = turnosConMax * minTurnoActual;
+    sugerencias.push(
+      `Agrega más canchas del mismo deporte (con ${maxCanchas} canchas en paralelo tomaría ${minConMax} min).`
+    );
+  }
+
+  if (Number(duracionPartido) > OPCIONES_DURACION[0]) {
+    const minTurnoCorto = minutosPorTurno(OPCIONES_DURACION[0], deporte);
+    const cEfectivas = Math.max(1, fase.canchasEfectivas || 1);
+    const turnosCorto = Math.ceil(fase.partidos / cEfectivas);
+    const minCorto = turnosCorto * minTurnoCorto;
+    sugerencias.push(
+      `Reduce la duración por partido a ${OPCIONES_DURACION[0]} min (tomaría ${minCorto} min).`
+    );
+  }
+
+  return sugerencias;
+}
+
 export function sugerenciasTiempo({
   equipos,
   canchas,
@@ -198,6 +315,7 @@ export function programarTorneo({
   canchaIds = [],
   horaInicio = null,
   minutosTurno = 30,
+  jornadas = null,
 }) {
   const ids = Array.isArray(canchaIds) ? canchaIds : [];
   const c = Math.max(1, ids.length);
@@ -215,14 +333,32 @@ export function programarTorneo({
     const nomRonda = nombreRonda(numPartidos);
     const partidosEstaRonda = [];
 
+    const numCanchasFase =
+      jornadas && ids.length > 0
+        ? Math.min(ids.length, numPartidos)
+        : (ids.length > 0 ? ids.length : 1);
+    const canchasFase =
+      jornadas && ids.length > 0 ? ids.slice(0, numCanchasFase) : ids;
+
+    const j = (jornadas && jornadas[ronda]) || {};
+    const fechaFase = j.fecha || null;
+    const horaInicioFase =
+      Array.isArray(j.horas) && j.horas.length > 0 ? j.horas[0] : horaInicio;
+
     for (let i = 0; i < numPartidos; i += 1) {
       const id = `R${ronda}-P${i + 1}`;
-      const turnoDentroDeRonda = Math.floor(i / c) + 1;
-      const turno = turnoBase + turnoDentroDeRonda;
-      const canchaId = ids.length > 0 ? ids[i % ids.length] : null;
-      const inicio = horaInicio
-        ? sumarMinutos(horaInicio, (turno - 1) * minutosTurno)
-        : null;
+      const turnoDentroDeRonda = Math.floor(i / (jornadas ? numCanchasFase : c)) + 1;
+      const turno = jornadas ? turnoDentroDeRonda : turnoBase + turnoDentroDeRonda;
+      const canchaId = jornadas
+        ? (canchasFase.length > 0 ? canchasFase[i % canchasFase.length] : null)
+        : (ids.length > 0 ? ids[i % ids.length] : null);
+      const inicio = jornadas
+        ? (horaInicioFase
+            ? sumarMinutos(horaInicioFase, (turnoDentroDeRonda - 1) * minutosTurno)
+            : null)
+        : (horaInicio
+            ? sumarMinutos(horaInicio, (turno - 1) * minutosTurno)
+            : null);
 
       let local;
       let visitante;
@@ -255,13 +391,16 @@ export function programarTorneo({
         canchaId,
         turno,
         inicio,
+        ...(jornadas ? { fecha: fechaFase } : {}),
       };
 
       partidosEstaRonda.push(partido);
       partidos.push(partido);
     }
 
-    const turnosEstaRonda = Math.ceil(numPartidos / c);
+    const turnosEstaRonda = Math.ceil(
+      numPartidos / (jornadas ? numCanchasFase : c)
+    );
     turnoBase += turnosEstaRonda;
     partidosPrevios = partidosEstaRonda;
   });
@@ -277,10 +416,31 @@ export function armarTorneo({
   orden,
   canchaIds = [],
   horaInicio = null,
+  jornadas = null,
 }) {
   const d = desempateDe(deporte);
   const minutosTurno = minutosPorTurno(duracionPartido, deporte);
-  return {
+
+  let jornadasResumen = null;
+  if (jornadas) {
+    const fases = fasesDelTorneo({ equipos, canchaIds, minutosTurno });
+    jornadasResumen = fases.map((fase) => {
+      const j = jornadas[fase.ronda] || {};
+      return {
+        ronda: fase.ronda,
+        nombreRonda: fase.nombreRonda,
+        fecha: j.fecha || null,
+        horas: Array.isArray(j.horas) ? j.horas : [],
+        canchaIds: fase.canchaIds,
+        canchasEfectivas: fase.canchasEfectivas,
+        partidos: fase.partidos,
+        turnos: fase.turnos,
+        minutosRequeridos: fase.minutosRequeridos,
+      };
+    });
+  }
+
+  const res = {
     deporte,
     equipos: Number(equipos),
     duracionPartido: Number(duracionPartido),
@@ -299,6 +459,18 @@ export function armarTorneo({
       canchas: canchaIds.length,
       minutosTurno,
     }),
-    partidos: programarTorneo({ orden, canchaIds, horaInicio, minutosTurno }),
+    partidos: programarTorneo({
+      orden,
+      canchaIds,
+      horaInicio,
+      minutosTurno,
+      jornadas,
+    }),
   };
+
+  if (jornadasResumen) {
+    res.jornadas = jornadasResumen;
+  }
+
+  return res;
 }

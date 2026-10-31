@@ -2,8 +2,8 @@ import React, { useContext, useRef } from 'react';
 import { CheckCircle2, Download, Gift } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import ReservasContext from '../../context/ReservasContext';
-import Bracket from './torneo/Bracket';
-import { formatoPrecio } from '../../lib/precios';
+import Bracket, { fechaCorta } from './torneo/Bracket';
+import { finDeFranja, formatoPrecio } from '../../lib/precios';
 import './ConfirmacionReserva.css';
 
 /**
@@ -42,6 +42,18 @@ function ConfirmacionReserva({ codigo, textoQr, resumen = {}, onListo }) {
   const lineaMeta = [tipoEtiqueta, fechaTexto, horario]
     .filter(Boolean)
     .join(' · ');
+
+  const tieneJornadas =
+    torneo?.jornadas &&
+    (Array.isArray(torneo.jornadas)
+      ? torneo.jornadas.length > 0
+      : Object.keys(torneo.jornadas).length > 0);
+
+  const listaJornadas = tieneJornadas
+    ? Array.isArray(torneo.jornadas)
+      ? torneo.jornadas
+      : Object.values(torneo.jornadas)
+    : [];
 
   return (
     <div className="confirmacion-reserva">
@@ -98,6 +110,32 @@ function ConfirmacionReserva({ codigo, textoQr, resumen = {}, onListo }) {
               <p className="confirmacion-reserva__torneo-desempate">
                 {`Desempate: ${torneo.desempate.descripcion}`}
               </p>
+            )}
+
+            {listaJornadas.length > 0 && (
+              <div className="confirmacion-reserva__torneo-jornadas">
+                <span className="confirmacion-reserva__torneo-jornadas-titulo">
+                  Programación por fases:
+                </span>
+                <ul className="confirmacion-reserva__torneo-jornadas-lista">
+                  {listaJornadas.map((j, idx) => {
+                    const horasTxt =
+                      Array.isArray(j.horas) && j.horas.length > 0
+                        ? `${j.horas[0]} a ${finDeFranja(j.horas[j.horas.length - 1])}`
+                        : 'Horario por definir';
+                    const cCount =
+                      j.canchasEfectivas ||
+                      (Array.isArray(j.canchaIds) ? j.canchaIds.length : 1);
+                    const cTxt = `${cCount} ${cCount === 1 ? 'cancha efectiva' : 'canchas efectivas'}`;
+                    const nom = j.nombreRonda || `Fase ${j.ronda || idx + 1}`;
+                    return (
+                      <li key={j.ronda || idx} className="confirmacion-reserva__torneo-jornada-item">
+                        <strong>{nom}:</strong> {fechaCorta(j.fecha)} · {horasTxt} ({cTxt})
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             )}
           </div>
         )}

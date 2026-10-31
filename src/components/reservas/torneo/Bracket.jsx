@@ -1,8 +1,18 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { gsap } from 'gsap';
-import { Trophy, Clock, MapPin } from 'lucide-react';
+import { Trophy, Clock, MapPin, Calendar } from 'lucide-react';
+import { aDate, DIA_SEMANA, MES_CORTO } from '../../../lib/fechas';
 import { tituloCancha } from '../../../lib/canchas';
 import './Bracket.css';
+
+export function fechaCorta(iso) {
+  if (!iso || typeof iso !== 'string') return '';
+  const d = aDate(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const dia = DIA_SEMANA[d.getDay()];
+  const mes = MES_CORTO[d.getMonth()];
+  return `${dia} ${d.getDate()} ${mes}`;
+}
 
 function resolverNombreCancha(canchaId, canchas) {
   if (canchaId === null || canchaId === undefined || canchaId === '') {
@@ -38,6 +48,7 @@ export function Bracket({
       .map(([ronda, lista]) => ({
         ronda: Number(ronda),
         nombreRonda: lista[0]?.nombreRonda || `Ronda ${ronda}`,
+        fecha: lista[0]?.fecha || null,
         partidos: lista,
       }));
   }, [partidos]);
@@ -81,16 +92,26 @@ export function Bracket({
                 className="bracket-torneo__columna"
                 data-ronda={grupo.ronda}
               >
-                <h4 className="bracket-torneo__ronda-titulo">
-                  {esFinal && (
-                    <Trophy
-                      size={16}
-                      aria-hidden="true"
-                      className="bracket-torneo__trophy"
-                    />
+                <div className="bracket-torneo__ronda-titulo">
+                  <div className="bracket-torneo__ronda-nombre">
+                    {esFinal && (
+                      <Trophy
+                        size={16}
+                        aria-hidden="true"
+                        className="bracket-torneo__trophy"
+                      />
+                    )}
+                    <h4 className="bracket-torneo__ronda-heading">
+                      {grupo.nombreRonda}
+                    </h4>
+                  </div>
+                  {grupo.fecha && (
+                    <span className="bracket-torneo__ronda-fecha">
+                      <Calendar size={12} aria-hidden="true" />
+                      <span>{fechaCorta(grupo.fecha)}</span>
+                    </span>
                   )}
-                  <span>{grupo.nombreRonda}</span>
-                </h4>
+                </div>
 
                 <div className="bracket-torneo__lista-partidos">
                   {grupo.partidos.map((p) => {

@@ -69,6 +69,62 @@ export function calcularPrecioEvento(canchas, nHoras) {
   };
 }
 
+export function calcularPrecioJornadas(bloques = [], canchasCatalogo = []) {
+  if (!Array.isArray(bloques) || bloques.length === 0) {
+    return {
+      nHoras: 0,
+      lineas: [],
+      subtotal: 0,
+      total: 0,
+      ahorro: 0,
+      packsAgua: 0,
+    };
+  }
+
+  const lineas = [];
+  let nHoras = 0;
+
+  bloques.forEach((b) => {
+    const horasBloque = Array.isArray(b.horas) ? b.horas : [];
+    const nH = horasBloque.length;
+    nHoras += nH;
+
+    if (nH > 0 && Array.isArray(b.canchaIds)) {
+      b.canchaIds.forEach((id) => {
+        const c = Array.isArray(canchasCatalogo)
+          ? canchasCatalogo.find((x) => x.id === id)
+          : null;
+        if (c) {
+          const p = calcularPrecio(c.precioHora, nH);
+          lineas.push({
+            canchaId: b.ronda ? `R${b.ronda}-${c.id}` : `${b.fecha}-${c.id}`,
+            ronda: b.ronda || null,
+            nombreRonda: b.nombreRonda || null,
+            fecha: b.fecha || null,
+            nombre: b.nombreRonda ? `${b.nombreRonda} · ${c.nombre}` : c.nombre,
+            deporte: c.deporte,
+            ...p,
+          });
+        }
+      });
+    }
+  });
+
+  const subtotal = lineas.reduce((acc, l) => acc + l.subtotal, 0);
+  const total = lineas.reduce((acc, l) => acc + l.total, 0);
+  const ahorro = lineas.reduce((acc, l) => acc + l.ahorro, 0);
+  const packsAgua = lineas.filter((l) => l.aguaGratis).length;
+
+  return {
+    nHoras,
+    lineas,
+    subtotal,
+    total,
+    ahorro,
+    packsAgua,
+  };
+}
+
 // Hora en la que termina una franja de 1 h que empieza en `hora` ("20:00" ->
 // "21:00").
 export function finDeFranja(hora) {

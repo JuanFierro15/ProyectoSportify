@@ -5,7 +5,7 @@
  * cualquier cámara.
  */
 
-import { formatoPrecio } from './precios';
+import { formatoPrecio, finDeFranja } from './precios';
 
 // Sin 0/O ni 1/I para que el código se pueda dictar sin confusiones.
 const ALFABETO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -50,6 +50,16 @@ export function textoQr({
     lineas.push(
       `Torneo: ${torneo.equipos} equipos · ${numPartidos} partidos (${torneo.duracionPartido} min)`
     );
+  }
+
+  if (torneo && Array.isArray(torneo.jornadas) && torneo.jornadas.length > 0) {
+    torneo.jornadas.forEach((j) => {
+      if (j && j.fecha && Array.isArray(j.horas) && j.horas.length > 0) {
+        lineas.push(
+          `Fase ${j.nombreRonda}: ${j.fecha} (${j.horas[0]} a ${finDeFranja(j.horas[j.horas.length - 1])})`
+        );
+      }
+    });
   }
 
   lineas.push(`Total: ${formatoPrecio.format(total)}`);

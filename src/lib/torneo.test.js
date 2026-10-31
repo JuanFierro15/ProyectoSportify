@@ -19,6 +19,9 @@ import {
   sumarMinutos,
   programarTorneo,
   armarTorneo,
+  fasesDelTorneo,
+  validarJornadas,
+  sugerenciasTiempoFase,
 } from './torneo';
 
 describe('Constantes y métodos de desempate', () => {
@@ -427,5 +430,374 @@ describe('programarTorneo y armarTorneo (AC-007)', () => {
     expect(torneo.emparejamiento).toBe('aleatorio');
     expect(torneo.minutosRequeridos).toBe(120);
     expect(torneo.partidos).toHaveLength(7);
+  });
+});
+
+describe('fasesDelTorneo (AC-009, DD-011, DD-012)', () => {
+  test('8 equipos con 3 canchas genera 3 fases con canchas efectivas 3, 2 y 1', () => {
+    const fases = fasesDelTorneo({
+      equipos: 8,
+      canchaIds: ['c1', 'c2', 'c3'],
+      minutosTurno: 30,
+    });
+
+    expect(fases).toHaveLength(3);
+
+    // Cuartos de final: 4 partidos, 3 canchas efectivas, 2 turnos -> 60 min
+    expect(fases[0]).toEqual({
+      ronda: 1,
+      nombreRonda: 'Cuartos de final',
+      partidos: 4,
+      canchasEfectivas: 3,
+      canchaIds: ['c1', 'c2', 'c3'],
+      turnos: 2,
+      minutosRequeridos: 60,
+      horasMinimas: 1,
+    });
+
+    // Semifinal: 2 partidos, 2 canchas efectivas (min(3, 2)), 1 turno -> 30 min
+    expect(fases[1]).toEqual({
+      ronda: 2,
+      nombreRonda: 'Semifinal',
+      partidos: 2,
+      canchasEfectivas: 2,
+      canchaIds: ['c1', 'c2'],
+      turnos: 1,
+      minutosRequeridos: 30,
+      horasMinimas: 1,
+    });
+
+    // Final: 1 partido, 1 cancha efectiva (min(3, 1)), 1 turno -> 30 min
+    expect(fases[2]).toEqual({
+      ronda: 3,
+      nombreRonda: 'Final',
+      partidos: 1,
+      canchasEfectivas: 1,
+      canchaIds: ['c1'],
+      turnos: 1,
+      minutosRequeridos: 30,
+      horasMinimas: 1,
+    });
+  });
+
+  test('4 equipos con 2 canchas genera Semifinal y Final', () => {
+    const fases = fasesDelTorneo({
+      equipos: 4,
+      canchaIds: ['c1', 'c2'],
+      minutosTurno: 30,
+    });
+
+    expect(fases).toHaveLength(2);
+    expect(fases[0].nombreRonda).toBe('Semifinal');
+    expect(fases[0].canchasEfectivas).toBe(2);
+    expect(fases[0].turnos).toBe(1);
+    expect(fases[1].nombreRonda).toBe('Final');
+    expect(fases[1].canchasEfectivas).toBe(1);
+  });
+
+  test('16 equipos con 2 canchas calcula horasMinimas según turnos', () => {
+    const fases = fasesDelTorneo({
+      equipos: 16,
+      canchaIds: ['c1', 'c2'],
+      minutosTurno: 30,
+    });
+
+    expect(fases).toHaveLength(4);
+    // Octavos: 8 partidos en 2 canchas -> 4 turnos -> 120 min -> 2 horasMinimas
+    expect(fases[0].nombreRonda).toBe('Octavos de final');
+    expect(fases[0].partidos).toBe(8);
+    expect(fases[0].canchasEfectivas).toBe(2);
+    expect(fases[0].turnos).toBe(4);
+    expect(fases[0].minutosRequeridos).toBe(120);
+    expect(fases[0].horasMinimas).toBe(2);
+  });
+
+  test('sin canchas usa fallback de 1 cancha y equipos no válidos devuelve arreglo vacío', () => {
+    const fasesSinCancha = fasesDelTorneo({ equipos: 4, canchaIds: [] });
+    expect(fasesSinCancha[0].canchasEfectivas).toBe(1);
+    expect(fasesSinCancha[0].canchaIds).toEqual([]);
+
+    expect(fasesDelTorneo({ equipos: 6 })).toEqual([]);
+    expect(fasesDelTorneo({ equipos: 0 })).toEqual([]);
+  });
+});
+
+describe('validarJornadas (AC-010, AC-011, DD-013)', () => {
+  const fases8eq = [
+    { ronda: 1, nombreRonda: 'Cuartos de final', minutosRequeridos: 60, horasMinimas: 1 },
+    { ronda: 2, nombreRonda: 'Semifinal', minutosRequeridos: 30, horasMinimas: 1 },
+    { ronda: 3, nombreRonda: 'Final', minutosRequeridos: 30, horasMinimas: 1 },
+  ];
+
+  test('AC-010: valida exitosamente jornadas con fecha, horas suficientes y orden correcto', () => {
+    const jornadas = {
+      1: { fecha: '2026-11-01', horas: ['08:00'] }, // 60 min requeridos, 60 disponibles (fin 09:00)
+      2: { fecha: '2026-11-01', horas: ['09:00'] }, // 30 min requeridos, 60 disponibles (fin 10:00)
+      3: { fecha: '2026-11-02', horas: ['10:00'] }, // al día siguiente
+    };
+
+    const validaciones = validarJornadas(fases8eq, jornadas);
+    expect(validaciones).toHaveLength(3);
+
+    expect(validaciones[0]).toMatchObject({
+      ronda: 1,
+      nombreRonda: 'Cuartos de final',
+      completa: true,
+      alcanza: true,
+      ordenValido: true,
+      error: null,
+    });
+    expect(validaciones[1]).toMatchObject({
+      ronda: 2,
+      nombreRonda: 'Semifinal',
+      completa: true,
+      alcanza: true,
+      ordenValido: true,
+      error: null,
+    });
+    expect(validaciones[2]).toMatchObject({
+      ronda: 3,
+      nombreRonda: 'Final',
+      completa: true,
+      alcanza: true,
+      ordenValido: true,
+      error: null,
+    });
+  });
+
+  test('detecta fase incompleta (sin fecha o sin horas)', () => {
+    const jornadas = {
+      1: { fecha: '2026-11-01', horas: ['08:00'] },
+      2: { fecha: '2026-11-01', horas: [] },
+      3: { fecha: null, horas: ['10:00'] },
+    };
+
+    const validaciones = validarJornadas(fases8eq, jornadas);
+    expect(validaciones[1]).toEqual({
+      ronda: 2,
+      nombreRonda: 'Semifinal',
+      completa: false,
+      alcanza: false,
+      ordenValido: true,
+      disponibles: 0,
+      deficit: 30,
+      error: 'Elige el día y el horario para Semifinal.',
+    });
+    expect(validaciones[2]).toEqual({
+      ronda: 3,
+      nombreRonda: 'Final',
+      completa: false,
+      alcanza: false,
+      ordenValido: true,
+      disponibles: 0,
+      deficit: 30,
+      error: 'Elige el día y el horario para Final.',
+    });
+  });
+
+  test('detecta déficit de tiempo en una fase', () => {
+    const faseOctavos = [
+      { ronda: 1, nombreRonda: 'Octavos de final', minutosRequeridos: 120, horasMinimas: 2 },
+    ];
+    const jornadas = {
+      1: { fecha: '2026-11-01', horas: ['08:00'] }, // 60 min disponibles vs 120 req
+    };
+
+    const [v] = validarJornadas(faseOctavos, jornadas);
+    expect(v.completa).toBe(true);
+    expect(v.alcanza).toBe(false);
+    expect(v.deficit).toBe(60);
+    expect(v.error).toBe('La franja de Octavos de final no alcanza (faltan 60 min).');
+  });
+
+  test('AC-011: detecta violación de orden cronológico el mismo día', () => {
+    const jornadas = {
+      1: { fecha: '2026-11-01', horas: ['08:00', '09:00'] }, // fin 10:00
+      2: { fecha: '2026-11-01', horas: ['09:00'] }, // inicio 09:00 < fin 10:00
+    };
+
+    const validaciones = validarJornadas(fases8eq.slice(0, 2), jornadas);
+    expect(validaciones[1].ordenValido).toBe(false);
+    expect(validaciones[1].error).toBe(
+      'Semifinal debe jugarse después de que termine Cuartos de final (2026-11-01 a las 10:00).'
+    );
+  });
+
+  test('AC-011: detecta violación de orden cronológico en días invertidos', () => {
+    const jornadas = {
+      1: { fecha: '2026-11-02', horas: ['08:00'] }, // fin 09:00 el 2 de nov
+      2: { fecha: '2026-11-01', horas: ['10:00'] }, // 1 de nov (anterior a R1)
+    };
+
+    const validaciones = validarJornadas(fases8eq.slice(0, 2), jornadas);
+    expect(validaciones[1].ordenValido).toBe(false);
+    expect(validaciones[1].error).toBe(
+      'Semifinal debe jugarse después de que termine Cuartos de final (2026-11-02 a las 09:00).'
+    );
+  });
+});
+
+describe('sugerenciasTiempoFase', () => {
+  test('devuelve vacío si la franja de la fase alcanza', () => {
+    const fase = { ronda: 1, nombreRonda: 'Semifinal', partidos: 2, canchasEfectivas: 2, minutosRequeridos: 30, horasMinimas: 1 };
+    expect(
+      sugerenciasTiempoFase({
+        fase,
+        canchasTotales: 2,
+        duracionPartido: 20,
+        deporte: 'futbol',
+        horasReservadas: 1,
+      })
+    ).toEqual([]);
+  });
+
+  test('devuelve sugerencias accionables para la fase con déficit', () => {
+    const fase = { ronda: 1, nombreRonda: 'Octavos de final', partidos: 8, canchasEfectivas: 1, minutosRequeridos: 240, horasMinimas: 4 };
+    const sugs = sugerenciasTiempoFase({
+      fase,
+      canchasTotales: 1,
+      duracionPartido: 20,
+      deporte: 'futbol',
+      horasReservadas: 1,
+    });
+
+    expect(sugs.length).toBe(3);
+    expect(sugs[0]).toBe('Amplía la franja de Octavos de final a al menos 4 horas (240 min).');
+    expect(sugs[1]).toContain('Agrega más canchas del mismo deporte');
+    expect(sugs[2]).toContain('Reduce la duración por partido a 15 min');
+  });
+});
+
+describe('programarTorneo y armarTorneo con jornadas (DD-011, DD-012, DD-014)', () => {
+  test('programarTorneo asigna canchas efectivas, turnos dentro de ronda y fechas por fase', () => {
+    const orden = [1, 2, 3, 4, 5, 6, 7, 8];
+    const canchaIds = ['cancha-1', 'cancha-2', 'cancha-3'];
+    const jornadas = {
+      1: { fecha: '2026-11-01', horas: ['08:00', '09:00'] },
+      2: { fecha: '2026-11-02', horas: ['10:00'] },
+      3: { fecha: '2026-11-03', horas: ['14:00'] },
+    };
+
+    const partidos = programarTorneo({
+      orden,
+      canchaIds,
+      minutosTurno: 30,
+      jornadas,
+    });
+
+    expect(partidos).toHaveLength(7);
+
+    // R1 (Cuartos): 4 partidos, canchas efectivas = min(3, 4) = 3 -> ['cancha-1', 'cancha-2', 'cancha-3']
+    const r1 = partidos.filter((p) => p.ronda === 1);
+    expect(r1).toHaveLength(4);
+    expect(r1[0]).toMatchObject({
+      id: 'R1-P1',
+      canchaId: 'cancha-1',
+      turno: 1,
+      inicio: '08:00',
+      fecha: '2026-11-01',
+    });
+    expect(r1[1]).toMatchObject({
+      id: 'R1-P2',
+      canchaId: 'cancha-2',
+      turno: 1,
+      inicio: '08:00',
+      fecha: '2026-11-01',
+    });
+    expect(r1[2]).toMatchObject({
+      id: 'R1-P3',
+      canchaId: 'cancha-3',
+      turno: 1,
+      inicio: '08:00',
+      fecha: '2026-11-01',
+    });
+    expect(r1[3]).toMatchObject({
+      id: 'R1-P4',
+      canchaId: 'cancha-1',
+      turno: 2,
+      inicio: '08:30',
+      fecha: '2026-11-01',
+    });
+
+    // R2 (Semifinal): 2 partidos, canchas efectivas = min(3, 2) = 2 -> ['cancha-1', 'cancha-2']
+    const r2 = partidos.filter((p) => p.ronda === 2);
+    expect(r2).toHaveLength(2);
+    expect(r2[0]).toMatchObject({
+      id: 'R2-P1',
+      canchaId: 'cancha-1',
+      turno: 1,
+      inicio: '10:00',
+      fecha: '2026-11-02',
+    });
+    expect(r2[1]).toMatchObject({
+      id: 'R2-P2',
+      canchaId: 'cancha-2',
+      turno: 1,
+      inicio: '10:00',
+      fecha: '2026-11-02',
+    });
+
+    // R3 (Final): 1 partido, canchas efectivas = min(3, 1) = 1 -> ['cancha-1']
+    const r3 = partidos.filter((p) => p.ronda === 3);
+    expect(r3).toHaveLength(1);
+    expect(r3[0]).toMatchObject({
+      id: 'R3-P1',
+      canchaId: 'cancha-1',
+      turno: 1,
+      inicio: '14:00',
+      fecha: '2026-11-03',
+    });
+  });
+
+  test('armarTorneo con jornadas genera resumen de jornadas en la propiedad torneo.jornadas', () => {
+    const jornadas = {
+      1: { fecha: '2026-11-01', horas: ['08:00'] },
+      2: { fecha: '2026-11-02', horas: ['09:00'] },
+      3: { fecha: '2026-11-03', horas: ['10:00'] },
+    };
+
+    const torneo = armarTorneo({
+      deporte: 'futbol',
+      equipos: 8,
+      duracionPartido: 20,
+      emparejamiento: 'aleatorio',
+      orden: [1, 2, 3, 4, 5, 6, 7, 8],
+      canchaIds: ['c1', 'c2', 'c3'],
+      jornadas,
+    });
+
+    expect(torneo.jornadas).toBeDefined();
+    expect(torneo.jornadas).toHaveLength(3);
+    expect(torneo.jornadas[0]).toMatchObject({
+      ronda: 1,
+      nombreRonda: 'Cuartos de final',
+      fecha: '2026-11-01',
+      horas: ['08:00'],
+      canchasEfectivas: 3,
+      canchaIds: ['c1', 'c2', 'c3'],
+      partidos: 4,
+      turnos: 2,
+      minutosRequeridos: 60,
+    });
+    expect(torneo.jornadas[1]).toMatchObject({
+      ronda: 2,
+      nombreRonda: 'Semifinal',
+      fecha: '2026-11-02',
+      canchasEfectivas: 2,
+      canchaIds: ['c1', 'c2'],
+      partidos: 2,
+      turnos: 1,
+      minutosRequeridos: 30,
+    });
+    expect(torneo.jornadas[2]).toMatchObject({
+      ronda: 3,
+      nombreRonda: 'Final',
+      fecha: '2026-11-03',
+      canchasEfectivas: 1,
+      canchaIds: ['c1'],
+      partidos: 1,
+      turnos: 1,
+      minutosRequeridos: 30,
+    });
   });
 });

@@ -119,6 +119,38 @@
   font-size: 0.8rem;
 }
 
+.confirmacion-reserva__torneo-jornadas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+  text-align: left;
+}
+
+.confirmacion-reserva__torneo-jornadas-titulo {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #334155;
+}
+
+.confirmacion-reserva__torneo-jornadas-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.confirmacion-reserva__torneo-jornada-item {
+  font-size: 0.8rem;
+  color: #475569;
+  background: #ffffff;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
 .confirmacion-reserva__bracket {
   width: 100%;
   margin-bottom: 1.5rem;
