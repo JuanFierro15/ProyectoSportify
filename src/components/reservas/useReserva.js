@@ -63,6 +63,66 @@ function inicializarJornadas(nEquipos, fechaPorDefecto, previas = {}) {
   return resultado;
 }
 
+function normalizarJornadasCascada(jornadasActuales, fases = [], dias = [], horasBase = []) {
+  const copia = { ...jornadasActuales };
+  let fechaMin = dias[0] || '';
+  let horaFinEnFechaMin = null;
+
+  fases.forEach((fase) => {
+    const r = fase.ronda;
+    const actual = copia[r] || { fecha: fechaMin, horas: [] };
+    let nuevaFecha = actual.fecha || fechaMin;
+    let nuevasHoras = Array.isArray(actual.horas) ? [...actual.horas] : [];
+
+    if (fechaMin && nuevaFecha < fechaMin) {
+      nuevaFecha = fechaMin;
+      nuevasHoras = [];
+    }
+
+    if (nuevaFecha === fechaMin && horaFinEnFechaMin != null) {
+      const horasRestantes =
+        Array.isArray(horasBase) && horasBase.length > 0
+          ? horasBase.filter((h) => h >= horaFinEnFechaMin).length
+          : Infinity;
+      const minReqHoras = Math.max(1, Number(fase.horasMinimas) || 1);
+
+      if (horasRestantes < minReqHoras) {
+        const idxDia = Array.isArray(dias) ? dias.indexOf(fechaMin) : -1;
+        if (idxDia >= 0 && idxDia + 1 < dias.length) {
+          nuevaFecha = dias[idxDia + 1];
+        }
+        nuevasHoras = [];
+      } else if (nuevasHoras.length > 0 && nuevasHoras[0] < horaFinEnFechaMin) {
+        nuevasHoras = [];
+      }
+    }
+
+    copia[r] = {
+      ...actual,
+      fecha: nuevaFecha,
+      horas: nuevasHoras,
+    };
+
+    if (nuevaFecha > fechaMin) {
+      fechaMin = nuevaFecha;
+      horaFinEnFechaMin =
+        nuevasHoras.length > 0
+          ? finDeFranja(nuevasHoras[nuevasHoras.length - 1])
+          : null;
+    } else {
+      fechaMin = nuevaFecha;
+      if (nuevasHoras.length > 0) {
+        const finActual = finDeFranja(nuevasHoras[nuevasHoras.length - 1]);
+        if (!horaFinEnFechaMin || finActual > horaFinEnFechaMin) {
+          horaFinEnFechaMin = finActual;
+        }
+      }
+    }
+  });
+
+  return copia;
+}
+
 /**
  * Hook de lógica de reserva (cancha individual, torneo y cumpleaños).
  *
@@ -196,6 +256,28 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
       );
       if (!libreEnCanchas) return false;
 
+      // Bloqueo cronológico preventivo: no permitir horas anteriores o iguales al fin
+      // de una fase previa que se juegue el mismo día (ni fechas anteriores).
+      for (let rPrev = 1; rPrev < numRonda; rPrev += 1) {
+        const jPrevia = jornadas[rPrev];
+        if (!jPrevia || !jPrevia.fecha) continue;
+        if (fechaFase < jPrevia.fecha) {
+          return false;
+        }
+        if (
+          fechaFase === jPrevia.fecha &&
+          Array.isArray(jPrevia.horas) &&
+          jPrevia.horas.length > 0
+        ) {
+          const horaFinPrevia = finDeFranja(
+            jPrevia.horas[jPrevia.horas.length - 1]
+          );
+          if (hora < horaFinPrevia) {
+            return false;
+          }
+        }
+      }
+
       const otraRondaSolapada = Object.keys(jornadas).some((rKey) => {
         const otraRonda = Number(rKey);
         if (otraRonda === numRonda) return false;
@@ -214,6 +296,58 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
       return !otraRondaSolapada;
     },
     [fases, jornadas, fecha, disponibilidad]
+  );
+
+  const esDiaBloqueadoFase = useCallback(
+    (ronda) => {
+      const numRonda = Number(ronda);
+      if (numRonda <= 1) {
+        return () => false;
+      }
+
+      const faseActual = fases.find((f) => f.ronda === numRonda);
+      let fechaMin = '';
+      let horaFinEnFechaMin = null;
+
+      for (let rPrev = 1; rPrev < numRonda; rPrev += 1) {
+        const jPrevia = jornadas[rPrev];
+        const fPrev = (jPrevia && jPrevia.fecha) || fecha || '';
+        if (!fPrev) continue;
+
+        if (!fechaMin || fPrev > fechaMin) {
+          fechaMin = fPrev;
+          horaFinEnFechaMin =
+            jPrevia && Array.isArray(jPrevia.horas) && jPrevia.horas.length > 0
+              ? finDeFranja(jPrevia.horas[jPrevia.horas.length - 1])
+              : null;
+        } else if (
+          fPrev === fechaMin &&
+          jPrevia &&
+          Array.isArray(jPrevia.horas) &&
+          jPrevia.horas.length > 0
+        ) {
+          const finPrev = finDeFranja(jPrevia.horas[jPrevia.horas.length - 1]);
+          if (!horaFinEnFechaMin || finPrev > horaFinEnFechaMin) {
+            horaFinEnFechaMin = finPrev;
+          }
+        }
+      }
+
+      const minReqHoras = Math.max(1, Number(faseActual?.horasMinimas) || 1);
+      const mismoDiaAgotado =
+        horaFinEnFechaMin != null &&
+        Array.isArray(horasBase) &&
+        horasBase.length > 0 &&
+        horasBase.filter((h) => h >= horaFinEnFechaMin).length < minReqHoras;
+
+      return (iso) => {
+        if (!fechaMin) return false;
+        if (iso < fechaMin) return true;
+        if (iso === fechaMin && mismoDiaAgotado) return true;
+        return false;
+      };
+    },
+    [fases, jornadas, fecha, horasBase]
   );
 
   const contarLibresFase = useCallback(
@@ -282,21 +416,25 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     });
   }, []);
 
-  const cambiarFechaFase = useCallback((ronda, iso) => {
-    const numRonda = Number(ronda);
-    setJornadas((prev) => {
-      const jActual = prev[numRonda] || { fecha: iso, horas: [] };
-      return {
-        ...prev,
-        [numRonda]: {
-          ...jActual,
-          fecha: iso,
-          horas: [],
-        },
-      };
-    });
-    setError(null);
-  }, []);
+  const cambiarFechaFase = useCallback(
+    (ronda, iso) => {
+      const numRonda = Number(ronda);
+      setJornadas((prev) => {
+        const jActual = prev[numRonda] || { fecha: iso, horas: [] };
+        const siguiente = {
+          ...prev,
+          [numRonda]: {
+            ...jActual,
+            fecha: iso,
+            horas: [],
+          },
+        };
+        return normalizarJornadasCascada(siguiente, fases, dias, horasBase);
+      });
+      setError(null);
+    },
+    [fases, dias, horasBase]
+  );
 
   const elegirHoraFase = useCallback(
     (ronda, hora) => {
@@ -315,16 +453,17 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
         } else {
           setError(null);
         }
-        return {
+        const siguiente = {
           ...prev,
           [numRonda]: {
             ...jActual,
             horas: res.sel,
           },
         };
+        return normalizarJornadasCascada(siguiente, fases, dias, horasBase);
       });
     },
-    [fecha, horasBase, esLibreFase]
+    [fecha, horasBase, esLibreFase, fases, dias]
   );
 
   const torneoPlan = useMemo(() => {
@@ -858,5 +997,6 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     elegirHoraFase,
     esLibreFase,
     contarLibresFase,
+    esDiaBloqueadoFase,
   };
 }

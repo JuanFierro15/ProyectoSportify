@@ -270,6 +270,7 @@ function FormularioReserva({ reserva, dias }) {
               onElegirHoraFase={reserva.elegirHoraFase}
               esLibreFase={reserva.esLibreFase}
               contarLibresFase={reserva.contarLibresFase}
+              esDiaBloqueadoFase={reserva.esDiaBloqueadoFase}
             />
           </div>
 

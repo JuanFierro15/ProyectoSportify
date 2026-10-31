@@ -26,6 +26,7 @@ export function CalendarioTorneo({
   onElegirHoraFase,
   esLibreFase,
   contarLibresFase,
+  esDiaBloqueadoFase,
 }) {
   const rootRef = useRef(null);
 
@@ -123,6 +124,11 @@ export function CalendarioTorneo({
                 }
                 contarLibres={
                   contarLibresFase ? contarLibresFase(fase.ronda) : undefined
+                }
+                esDiaBloqueado={
+                  esDiaBloqueadoFase
+                    ? esDiaBloqueadoFase(fase.ronda)
+                    : undefined
                 }
               />
             </div>

@@ -48,6 +48,25 @@
   opacity: 0.5;
 }
 
+.selector-dia__opcion--bloqueado,
+.selector-dia__opcion:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  border-style: dashed;
+  color: #64748b;
+  transform: none;
+  box-shadow: none;
+}
+
+.selector-dia__opcion--bloqueado:hover,
+.selector-dia__opcion:disabled:hover {
+  border-color: #cbd5e1;
+  transform: none;
+  box-shadow: none;
+}
+
 .selector-dia__sem {
   font-size: 0.7rem;
   text-transform: uppercase;
