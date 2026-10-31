@@ -65,6 +65,23 @@
   word-break: break-word;
 }
 
+.voucher-reserva__jornadas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.voucher-reserva__fila--fase {
+  font-size: 0.85rem;
+  color: #334155;
+}
+
+.voucher-reserva__fase-item {
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.35;
+}
+
 .voucher-reserva__cuerpo {
   margin-bottom: 1.15rem;
 }

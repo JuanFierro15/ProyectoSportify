@@ -6,6 +6,7 @@ import {
   DESCUENTO_POR_HORA,
   MAX_HORAS_SEGUIDAS,
   MIN_HORAS_BENEFICIO,
+  finDeFranja,
   formatoPrecio,
 } from '../../lib/precios';
 import {
@@ -15,7 +16,8 @@ import {
 } from '../../lib/torneo';
 import AlertaTiempo from './torneo/AlertaTiempo';
 import AsignacionManual from './torneo/AsignacionManual';
-import Bracket from './torneo/Bracket';
+import Bracket, { fechaCorta } from './torneo/Bracket';
+import CalendarioTorneo from './torneo/CalendarioTorneo';
 import './FormularioReserva.css';
 
 /**
@@ -43,68 +45,72 @@ function FormularioReserva({ reserva, dias }) {
         </div>
       )}
 
-      <fieldset className="formulario-reserva__campo">
-        <legend>Día</legend>
-        <SelectorDia
-          dias={dias}
-          valor={reserva.fecha}
-          onChange={reserva.cambiarFecha}
-          contarLibres={reserva.contarLibresDia}
-        />
-      </fieldset>
+      {reserva.modo !== 'torneo' && (
+        <>
+          <fieldset className="formulario-reserva__campo">
+            <legend>Día</legend>
+            <SelectorDia
+              dias={dias}
+              valor={reserva.fecha}
+              onChange={reserva.cambiarFecha}
+              contarLibres={reserva.contarLibresDia}
+            />
+          </fieldset>
 
-      <fieldset id="reserva-horario" className="formulario-reserva__campo">
-        <legend>Horario</legend>
-        <p className="formulario-reserva__promo">
-          <Gift size={16} aria-hidden="true" />
-          <span>
-            Desde {MIN_HORAS_BENEFICIO} horas seguidas:{' '}
-            <strong>
-              {formatoPrecio.format(DESCUENTO_POR_HORA)} menos por hora
-            </strong>{' '}
-            y un <strong>pack de agua gratis</strong>
-            {reserva.esEvento ? ' por cancha' : ''}.
-          </span>
-        </p>
-        <p className="formulario-reserva__ayuda">
-          {reserva.esEvento
-            ? 'Toca la hora de inicio y luego la de fin: se eligen todas las horas de en medio.'
-            : `Elige una hora o hasta ${MAX_HORAS_SEGUIDAS} horas seguidas.`}
-        </p>
-        {reserva.esEvento && reserva.canchaIds.length === 0 && (
-          <p className="formulario-reserva__nota">
-            Elige al menos una cancha para ver los horarios libres.
-          </p>
-        )}
-        <div className="formulario-reserva__horas">
-          {reserva.horasBase.map((hora) => {
-            const libre = reserva.esLibre(hora);
-            const sel = reserva.horasSel.includes(hora);
-            return (
-              <button
-                key={hora}
-                type="button"
-                className={
-                  'button small formulario-reserva__hora' +
-                  (libre ? '' : ' formulario-reserva__hora--ocupado') +
-                  (sel ? ' formulario-reserva__hora--sel' : ' hollow')
-                }
-                disabled={!libre}
-                aria-pressed={sel}
-                onClick={() => reserva.elegirHora(hora)}
-              >
-                {hora}
-                {!libre && (!reserva.esEvento || reserva.canchaIds.length > 0) && (
-                  <span className="formulario-reserva__hora-tag">
-                    {' '}
-                    · {reserva.esEvento ? 'ocupado' : 'reservado'}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </fieldset>
+          <fieldset id="reserva-horario" className="formulario-reserva__campo">
+            <legend>Horario</legend>
+            <p className="formulario-reserva__promo">
+              <Gift size={16} aria-hidden="true" />
+              <span>
+                Desde {MIN_HORAS_BENEFICIO} horas seguidas:{' '}
+                <strong>
+                  {formatoPrecio.format(DESCUENTO_POR_HORA)} menos por hora
+                </strong>{' '}
+                y un <strong>pack de agua gratis</strong>
+                {reserva.esEvento ? ' por cancha' : ''}.
+              </span>
+            </p>
+            <p className="formulario-reserva__ayuda">
+              {reserva.esEvento
+                ? 'Toca la hora de inicio y luego la de fin: se eligen todas las horas de en medio.'
+                : `Elige una hora o hasta ${MAX_HORAS_SEGUIDAS} horas seguidas.`}
+            </p>
+            {reserva.esEvento && reserva.canchaIds.length === 0 && (
+              <p className="formulario-reserva__nota">
+                Elige al menos una cancha para ver los horarios libres.
+              </p>
+            )}
+            <div className="formulario-reserva__horas">
+              {reserva.horasBase.map((hora) => {
+                const libre = reserva.esLibre(hora);
+                const sel = reserva.horasSel.includes(hora);
+                return (
+                  <button
+                    key={hora}
+                    type="button"
+                    className={
+                      'button small formulario-reserva__hora' +
+                      (libre ? '' : ' formulario-reserva__hora--ocupado') +
+                      (sel ? ' formulario-reserva__hora--sel' : ' hollow')
+                    }
+                    disabled={!libre}
+                    aria-pressed={sel}
+                    onClick={() => reserva.elegirHora(hora)}
+                  >
+                    {hora}
+                    {!libre && (!reserva.esEvento || reserva.canchaIds.length > 0) && (
+                      <span className="formulario-reserva__hora-tag">
+                        {' '}
+                        · {reserva.esEvento ? 'ocupado' : 'reservado'}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+        </>
+      )}
 
       {reserva.modo === 'torneo' && (
         <fieldset className="formulario-reserva__campo formulario-reserva__torneo">
@@ -249,11 +255,31 @@ function FormularioReserva({ reserva, dias }) {
 
           <div className="formulario-reserva__seccion-torneo">
             <span className="formulario-reserva__subtitulo">
+              Programación por fases (días y horarios)
+            </span>
+            <CalendarioTorneo
+              fases={reserva.torneoPlan?.fases || []}
+              jornadas={reserva.torneoPlan?.jornadas || {}}
+              validacionesJornadas={reserva.torneoPlan?.validacionesJornadas || []}
+              sugerenciasPorFase={reserva.torneoPlan?.sugerenciasPorFase || {}}
+              dias={dias}
+              horasBase={reserva.horasBase}
+              canchas={canchas}
+              canchaIds={reserva.canchaIds}
+              onCambiarFechaFase={reserva.cambiarFechaFase}
+              onElegirHoraFase={reserva.elegirHoraFase}
+              esLibreFase={reserva.esLibreFase}
+              contarLibresFase={reserva.contarLibresFase}
+            />
+          </div>
+
+          <div className="formulario-reserva__seccion-torneo">
+            <span className="formulario-reserva__subtitulo">
               Capacidad y tiempo estimado
             </span>
             <div className="formulario-reserva__metricas">
               <span className="formulario-reserva__metrica">
-                {`Canchas en paralelo: ${reserva.canchaIds.length || 1} (hasta ${(reserva.canchaIds.length || 1) * 2} equipos simultáneos)`}
+                {`Canchas seleccionadas: ${reserva.canchaIds.length || 1} (hasta ${(reserva.canchaIds.length || 1) * 2} equipos simultáneos)`}
               </span>
               <span className="formulario-reserva__metrica">
                 {`Turnos requeridos: ${reserva.torneoPlan?.turnosTotales ?? 0}`}
@@ -262,6 +288,24 @@ function FormularioReserva({ reserva, dias }) {
                 {`Tiempo estimado (peor caso): ${reserva.torneoPlan?.minutosRequeridos ?? 0} min`}
               </span>
             </div>
+
+            {reserva.torneoPlan?.fases && reserva.torneoPlan.fases.length > 0 && (
+              <div className="formulario-reserva__fases-detalle">
+                <span className="formulario-reserva__fases-titulo">
+                  Canchas efectivas por fase:
+                </span>
+                <div className="formulario-reserva__fases-pills">
+                  {reserva.torneoPlan.fases.map((fase) => {
+                    const nombreCorto = fase.nombreRonda.replace(/ de final$/i, '');
+                    return (
+                      <span key={fase.ronda} className="formulario-reserva__metrica">
+                        {`${nombreCorto}: ${fase.canchasEfectivas} ${fase.canchasEfectivas === 1 ? 'cancha' : 'canchas'}`}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {reserva.horasSel.length > 0 &&
               reserva.torneoPlan?.validacionFranja &&
@@ -302,6 +346,17 @@ function FormularioReserva({ reserva, dias }) {
                     t.torneo?.desempate?.etiqueta ||
                     t.torneo?.desempate?.metodo ||
                     '';
+                  const tieneJornadas =
+                    t.torneo?.jornadas &&
+                    (Array.isArray(t.torneo.jornadas)
+                      ? t.torneo.jornadas.length > 0
+                      : Object.keys(t.torneo.jornadas).length > 0);
+                  const listaJornadas = tieneJornadas
+                    ? Array.isArray(t.torneo.jornadas)
+                      ? t.torneo.jornadas
+                      : Object.values(t.torneo.jornadas)
+                    : [];
+
                   return (
                     <div
                       key={t.codigo || t.id}
@@ -318,6 +373,30 @@ function FormularioReserva({ reserva, dias }) {
                           {desempateTexto && ` · Desempate: ${desempateTexto}`}
                         </span>
                       </div>
+                      {listaJornadas.length > 0 && (
+                        <div className="formulario-reserva__torneo-guardado-jornadas">
+                          {listaJornadas.map((j, idx) => {
+                            const horasTxt =
+                              Array.isArray(j.horas) && j.horas.length > 0
+                                ? `${j.horas[0]} a ${finDeFranja(j.horas[j.horas.length - 1])}`
+                                : '';
+                            const numC =
+                              j.canchasEfectivas ||
+                              (Array.isArray(j.canchaIds) ? j.canchaIds.length : null);
+                            return (
+                              <span
+                                key={j.ronda || idx}
+                                className="formulario-reserva__torneo-guardado-jornada-item"
+                              >
+                                <strong>{j.nombreRonda || `Fase ${j.ronda || idx + 1}`}:</strong>{' '}
+                                {fechaCorta(j.fecha)}
+                                {horasTxt && ` · ${horasTxt}`}
+                                {numC && ` (${numC} ${numC === 1 ? 'cancha' : 'canchas'})`}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
                       {t.torneo?.partidos && (
                         <Bracket
                           partidos={t.torneo.partidos}

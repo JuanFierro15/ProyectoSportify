@@ -224,6 +224,25 @@
   border: 1px solid #e2e8f0;
 }
 
+.formulario-reserva__fases-detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+.formulario-reserva__fases-titulo {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.formulario-reserva__fases-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .formulario-reserva__torneos-guardados {
   margin-top: 0.5rem;
   border: 1px solid #e2e8f0;
@@ -271,6 +290,22 @@
 
 .formulario-reserva__torneo-guardado-meta {
   color: #64748b;
+}
+
+.formulario-reserva__torneo-guardado-jornadas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.65rem;
+  font-size: 0.82rem;
+  color: #475569;
+  background: #f1f5f9;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+}
+
+.formulario-reserva__torneo-guardado-jornada-item {
+  line-height: 1.35;
 }
 
 /* Contacto y datos */
