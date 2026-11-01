@@ -230,7 +230,7 @@ function VoucherReserva({
           className="button clear secondary expanded"
           onClick={onCancelar}
         >
-          Cancelar
+          Limpiar selección
         </button>
       </div>
     </aside>

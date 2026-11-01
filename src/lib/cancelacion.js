@@ -25,6 +25,20 @@ export function normalizarComparacion(texto) {
     .replace(/\s+/g, ' ');
 }
 
+// Normaliza el código de reserva (sin espacios, mayúsculas, antepone SPF- si falta).
+export function normalizarCodigo(codigo) {
+  if (typeof codigo !== 'string') return '';
+  const limpio = codigo.toUpperCase().replace(/\s+/g, '');
+  if (!limpio) return '';
+  if (limpio.startsWith('SPF-')) {
+    return limpio;
+  }
+  if (limpio.startsWith('SPF')) {
+    return `SPF-${limpio.slice(3).replace(/^-+/, '')}`;
+  }
+  return `SPF-${limpio}`;
+}
+
 export function horasDeReserva(reserva) {
   if (!reserva) {
     return [];
@@ -226,4 +240,63 @@ export function buscarReservasCancelables({
   }
 
   return { cancelables, enVentana };
+}
+
+// Búsqueda pura por código: normaliza el código (acepta spf-abc123, SPF ABC123 o
+// ABC123 y antepone SPF- si falta) y devuelve la reserva con ese código o null.
+// Sirve para ambos tipos (individual y evento).
+export function buscarReservaPorCodigo(reservas, codigo) {
+  if (!Array.isArray(reservas) || !codigo) {
+    return null;
+  }
+  const codigoNorm = normalizarCodigo(codigo);
+  if (!codigoNorm) {
+    return null;
+  }
+  return reservas.find((r) => r && r.codigo === codigoNorm) || null;
+}
+
+// Reservas futuras de una persona (cualquier tipo: individual o evento): mismo
+// teléfono normalizado y mismo nombre normalizado, ordenadas por inicio.
+// Las reservas sin teléfono no coinciden.
+export function buscarReservasDePersona({
+  reservas = [],
+  nombre,
+  telefono,
+  ahora = new Date(),
+} = {}) {
+  if (!nombre || !telefono || !Array.isArray(reservas)) {
+    return [];
+  }
+
+  const normNombre = normalizarComparacion(nombre);
+  const normTel = normalizarTelefono(telefono);
+  if (!normNombre || !normTel) {
+    return [];
+  }
+
+  const candidatas = [];
+
+  for (const r of reservas) {
+    if (!r || !r.telefono) {
+      continue;
+    }
+    if (normalizarTelefono(r.telefono) !== normTel) {
+      continue;
+    }
+    if (normalizarComparacion(r.nombre) !== normNombre) {
+      continue;
+    }
+
+    const inicio = inicioReserva(r);
+    if (!inicio || inicio.getTime() <= ahora.getTime()) {
+      continue;
+    }
+
+    candidatas.push({ reserva: r, inicio });
+  }
+
+  candidatas.sort((a, b) => a.inicio.getTime() - b.inicio.getTime());
+
+  return candidatas.map((c) => c.reserva);
 }

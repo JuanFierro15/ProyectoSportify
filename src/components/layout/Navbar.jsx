@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Trophy } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Ticket, Trophy } from 'lucide-react';
 import { useVistaCanchas } from '../../context/VistaCanchasContext';
 import { DEPORTES } from '../../data/deportes';
 import { esClicNormal, rutaReserva } from '../../lib/rutas';
+import MisReservas from './MisReservas';
 import './Navbar.css';
 
 /**
@@ -26,6 +28,8 @@ function Navbar() {
   const { deporteAbierto, abrirVista, irASeccion } = useVistaCanchas();
   const [visible, setVisible] = useState(true);
   const [sobreHero, setSobreHero] = useState(() => !deporteAbierto);
+  const [misReservasAbierto, setMisReservasAbierto] = useState(false);
+  const botonMisReservasRef = useRef(null);
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
@@ -126,7 +130,7 @@ function Navbar() {
             <span className="site-header__brand-icon" aria-hidden="true">
               <Trophy size={22} />
             </span>
-            <span className="site-header__brand-text">Reservas Deportivas</span>
+            <span className="site-header__brand-text">Sportify</span>
           </a>
         </div>
         <div className="top-bar-right">
@@ -146,7 +150,7 @@ function Navbar() {
               </a>
             </li>
             <li>
-              {/* En móvil se acorta a "Eventos" para que los cuatro enlaces
+              {/* En móvil se acorta a "Eventos" para que los enlaces
                   quepan en una sola fila. */}
               <a href="#eventos" onClick={manejarSeccion('eventos')}>
                 <span className="show-for-medium">Eventos especiales</span>
@@ -158,9 +162,31 @@ function Navbar() {
                 Ubicación
               </a>
             </li>
+            <li>
+              <button
+                type="button"
+                ref={botonMisReservasRef}
+                className="site-header__btn-mis-reservas"
+                onClick={() => setMisReservasAbierto(true)}
+                aria-label="Mis reservas"
+              >
+                <Ticket size={18} aria-hidden="true" />
+                <span className="show-for-medium">Mis reservas</span>
+              </button>
+            </li>
           </ul>
         </div>
       </div>
+
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <MisReservas
+            abierto={misReservasAbierto}
+            onCerrar={() => setMisReservasAbierto(false)}
+            botonDisparadorRef={botonMisReservasRef}
+          />,
+          document.body
+        )}
     </header>
   );
 }

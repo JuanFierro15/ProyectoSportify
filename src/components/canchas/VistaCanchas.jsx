@@ -558,7 +558,7 @@ function VistaCanchas() {
                 puedeConfirmar={reserva.puedeConfirmar}
                 motivoBloqueo={reserva.motivoBloqueo}
                 onConfirmar={reserva.confirmar}
-                onCancelar={cerrarVista}
+                onCancelar={reserva.reiniciar}
                 torneo={reserva.modo === 'torneo' ? reserva.torneoPlan : null}
               />
             </div>
