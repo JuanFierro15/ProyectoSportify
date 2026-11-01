@@ -24,6 +24,15 @@
   color: #1e293b;
 }
 
+.selector-modo__boton:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.selector-modo__boton:focus-visible {
+  outline: 2px solid var(--accent-text, var(--accent, #1779ba));
+  outline-offset: 2px;
+}
+
 .selector-modo__boton--activo,
 .selector-modo__boton--activo:hover {
   background: var(--accent, #1779ba);

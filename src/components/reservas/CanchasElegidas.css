@@ -10,6 +10,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  min-height: 2.375rem;
   padding: 0.25rem 0.65rem;
   border-radius: 999px;
   background: var(--accent-soft, #eaf4fb);
@@ -23,8 +24,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 1.75rem;
+  height: 1.75rem;
   padding: 0;
   border: none;
   border-radius: 50%;
@@ -38,6 +39,17 @@
 
 .canchas-elegidas__quitar:hover {
   background: rgba(0, 0, 0, 0.25);
+}
+
+.canchas-elegidas__quitar:focus:not(:focus-visible),
+.canchas-elegidas__todas:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.canchas-elegidas__quitar:focus-visible,
+.canchas-elegidas__todas:focus-visible {
+  outline: 2px solid var(--accent-text, var(--accent, #1779ba));
+  outline-offset: 2px;
 }
 
 .canchas-elegidas__todas {
