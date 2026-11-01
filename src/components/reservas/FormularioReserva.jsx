@@ -18,6 +18,7 @@ import AlertaTiempo from './torneo/AlertaTiempo';
 import AsignacionManual from './torneo/AsignacionManual';
 import Bracket, { fechaCorta } from './torneo/Bracket';
 import CalendarioTorneo from './torneo/CalendarioTorneo';
+import { MAX_INVITADOS } from './useReserva';
 import './FormularioReserva.css';
 
 /**
@@ -58,7 +59,14 @@ function FormularioReserva({ reserva, dias }) {
           </fieldset>
 
           <fieldset id="reserva-horario" className="formulario-reserva__campo">
-            <legend>Horario</legend>
+            <legend>
+              Horario
+              {reserva.horasSel.length > 0 && (
+                <span className="formulario-reserva__rango" aria-live="polite">
+                  {` · ${reserva.horasSel[0]} a ${finDeFranja(reserva.horasSel[reserva.horasSel.length - 1])} (${reserva.horasSel.length} h)`}
+                </span>
+              )}
+            </legend>
             <p className="formulario-reserva__promo">
               <Gift size={16} aria-hidden="true" />
               <span>
@@ -266,6 +274,8 @@ function FormularioReserva({ reserva, dias }) {
               horasBase={reserva.horasBase}
               canchas={canchas}
               canchaIds={reserva.canchaIds}
+              duracionPartido={reserva.duracionPartido}
+              onCambiarDuracion={reserva.setDuracionPartido}
               onCambiarFechaFase={reserva.cambiarFechaFase}
               onElegirHoraFase={reserva.elegirHoraFase}
               esLibreFase={reserva.esLibreFase}
@@ -318,6 +328,8 @@ function FormularioReserva({ reserva, dias }) {
                   disponibles={reserva.torneoPlan.validacionFranja.disponibles}
                   deficit={reserva.torneoPlan.validacionFranja.deficit}
                   sugerencias={reserva.torneoPlan.sugerencias}
+                  duracionPartido={reserva.duracionPartido}
+                  onCambiarDuracion={reserva.setDuracionPartido}
                 />
               )}
           </div>
@@ -427,6 +439,8 @@ function FormularioReserva({ reserva, dias }) {
                 name="invitados"
                 type="number"
                 min="1"
+                max={MAX_INVITADOS}
+                placeholder="Ej. 20"
                 className="formulario-reserva__input"
                 value={reserva.invitados}
                 onChange={(e) => reserva.setInvitados(e.target.value)}

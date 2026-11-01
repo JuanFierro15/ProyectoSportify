@@ -12,12 +12,14 @@ import './CanchasElegidas.css';
  * @param {string[]} props.idsDeporte IDs de las canchas del deporte activo
  * @param {Function} props.onQuitar Callback para quitar una cancha por ID
  * @param {Function} props.onAlternarDeporte Callback para alternar todas las canchas de un deporte
+ * @param {boolean} [props.bloqueadoTodas=false] Si es true, deshabilita elegir todas por restricción de deporte
  * @returns {React.ReactElement}
  */
 function CanchasElegidas({
   canchas = [],
   deporte = null,
   idsDeporte = [],
+  bloqueadoTodas = false,
   onQuitar,
   onAlternarDeporte,
 }) {
@@ -56,10 +58,13 @@ function CanchasElegidas({
       {deporte && (
         <button
           type="button"
+          disabled={bloqueadoTodas}
           className="canchas-elegidas__todas"
           onClick={() => onAlternarDeporte(deporte.slug)}
         >
-          {todas
+          {bloqueadoTodas
+            ? 'Solo un deporte por torneo'
+            : todas
             ? `Quitar todas de ${deporte.nombre}`
             : `Elegir todas de ${deporte.nombre}`}
         </button>

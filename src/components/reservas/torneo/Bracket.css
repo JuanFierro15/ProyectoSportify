@@ -467,3 +467,8 @@
     transform: none !important;
   }
 }
+
+/* Acción rápida de la alerta de tiempo (bajar la duración por partido). */
+.alerta-tiempo__accion {
+  margin: 0.5rem 0 0;
+}

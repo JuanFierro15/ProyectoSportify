@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import SelectorDia from '../../shared/SelectorDia';
 import AlertaTiempo from './AlertaTiempo';
 import { tituloCancha } from '../../../lib/canchas';
+import { finDeFranja } from '../../../lib/precios';
 import './Bracket.css';
 
 /**
@@ -22,6 +23,8 @@ export function CalendarioTorneo({
   horasBase = [],
   canchas = [],
   canchaIds = [],
+  duracionPartido,
+  onCambiarDuracion,
   onCambiarFechaFase,
   onElegirHoraFase,
   esLibreFase,
@@ -136,7 +139,17 @@ export function CalendarioTorneo({
             <div className="calendario-torneo__campo">
               <span className="calendario-torneo__etiqueta">
                 Horario de {fase.nombreRonda}
+                {horasFase.length > 0 && (
+                  <span className="formulario-reserva__rango" aria-live="polite">
+                    {` · ${horasFase[0]} a ${finDeFranja(horasFase[horasFase.length - 1])} (${horasFase.length} h)`}
+                  </span>
+                )}
               </span>
+              {fase.ronda === 1 && (
+                <p className="formulario-reserva__nota">
+                  Para elegir 2 o más horas seguidas, toca la hora de inicio y luego la hora final.
+                </p>
+              )}
               <div className="formulario-reserva__horas">
                 {horasBase.map((hora) => {
                   const libre = esLibreFase ? esLibreFase(fase.ronda, hora) : false;
@@ -190,6 +203,8 @@ export function CalendarioTorneo({
                     disponibles={val.disponibles}
                     deficit={val.deficit}
                     sugerencias={sugerenciasPorFase[fase.ronda] || []}
+                    duracionPartido={duracionPartido}
+                    onCambiarDuracion={onCambiarDuracion}
                   />
                 )}
               </>

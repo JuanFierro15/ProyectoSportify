@@ -341,3 +341,9 @@
     transition: none;
   }
 }
+
+/* Resumen en vivo de la franja elegida, junto a la etiqueta de horario. */
+.formulario-reserva__rango {
+  font-weight: 400;
+  color: var(--accent, #1779ba);
+}

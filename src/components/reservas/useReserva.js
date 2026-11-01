@@ -16,6 +16,7 @@ import {
   limpiarTelefono,
 } from '../../lib/validacion';
 import { canchasDelDeporte } from '../../lib/canchas';
+import { deportePorSlug } from '../../data/deportes';
 import {
   OPCIONES_EQUIPOS,
   TRANSICION_MIN,
@@ -42,6 +43,8 @@ export const MODOS = [
   { valor: 'torneo', etiqueta: 'Torneo', titulo: 'Reserva tu torneo', tipoEtiqueta: 'Torneo' },
   { valor: 'cumpleanos', etiqueta: 'Cumpleaños', titulo: 'Reserva tu cumpleaños', tipoEtiqueta: 'Cumpleaños' },
 ];
+
+export const MAX_INVITADOS = 100;
 
 function inicializarJornadas(nEquipos, fechaPorDefecto, previas = {}) {
   const rondas = partidosPorRonda(nEquipos);
@@ -121,6 +124,23 @@ function normalizarJornadasCascada(jornadasActuales, fases = [], dias = [], hora
   });
 
   return copia;
+}
+
+function calcularMotivoNoAgregable(id, modoActual, idsActuales, todasLasCanchas) {
+  if (modoActual !== 'torneo' || idsActuales.includes(id)) {
+    return null;
+  }
+  if (idsActuales.length > 0) {
+    const primera = todasLasCanchas.find((c) => c.id === idsActuales[0]);
+    const target = todasLasCanchas.find((c) => c.id === id);
+    if (primera && target && target.deporte !== primera.deporte) {
+      return `Solo canchas de ${deportePorSlug(primera.deporte)?.nombre}`;
+    }
+  }
+  if (idsActuales.length >= MAX_CANCHAS_TORNEO) {
+    return `Máx. ${MAX_CANCHAS_TORNEO} canchas`;
+  }
+  return null;
 }
 
 /**
@@ -355,7 +375,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
       const numRonda = Number(ronda);
       const fase = fases.find((f) => f.ronda === numRonda);
       if (!fase || fase.canchaIds.length === 0) {
-        return () => 0;
+        return undefined;
       }
       return (iso) =>
         horasBase.filter((hora) =>
@@ -409,9 +429,14 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
   }, [equipos]);
 
   const cambiarCruceManual = useCallback((indice, valor) => {
+    const num = valor === '' || valor == null ? null : Number(valor);
     setOrdenEquipos((prev) => {
       const copia = [...prev];
-      copia[indice] = valor ? Number(valor) : null;
+      if (num != null) {
+        const idxPrevio = prev.findIndex((v, i) => i !== indice && Number(v) === num);
+        if (idxPrevio !== -1) copia[idxPrevio] = prev[indice] ?? null; // intercambia o mueve
+      }
+      copia[indice] = num;
       return copia;
     });
   }, []);
@@ -655,8 +680,13 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     if (horasSel.length === 0) {
       return 'Elige el horario.';
     }
-    if (modo === 'cumpleanos' && Number(invitados) < 1) {
-      return 'Indica cuántos invitados vienen.';
+    if (modo === 'cumpleanos') {
+      if (Number(invitados) < 1) {
+        return 'Indica cuántos invitados vienen.';
+      }
+      if (Number(invitados) > MAX_INVITADOS) {
+        return `Máximo ${MAX_INVITADOS} invitados.`;
+      }
     }
     if (errNombre) {
       return 'Escribe tu nombre para confirmar.';
@@ -731,24 +761,66 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     setError(null);
   }, []);
 
-  const alternarCancha = useCallback((id) => {
-    setCanchaIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-    setError(null);
-  }, []);
+  const motivoNoAgregable = useCallback(
+    (id) => calcularMotivoNoAgregable(id, modo, canchaIds, canchas),
+    [modo, canchaIds, canchas]
+  );
+
+  const topeCanchasAlcanzado =
+    modo === 'torneo' && canchaIds.length >= MAX_CANCHAS_TORNEO;
+
+  const deporteBloqueado = useCallback(
+    (slug) => {
+      if (modo !== 'torneo' || canchaIds.length === 0) return false;
+      const primera = canchas.find((c) => c.id === canchaIds[0]);
+      return Boolean(primera && primera.deporte !== slug);
+    },
+    [modo, canchaIds, canchas]
+  );
+
+  const alternarCancha = useCallback(
+    (id) => {
+      setCanchaIds((prev) => {
+        if (prev.includes(id)) {
+          return prev.filter((x) => x !== id);
+        }
+        const motivo = calcularMotivoNoAgregable(id, modo, prev, canchas);
+        if (motivo !== null) {
+          return prev;
+        }
+        return [...prev, id];
+      });
+      setError(null);
+    },
+    [modo, canchas]
+  );
 
   const alternarDeporte = useCallback(
     (slug) => {
       const ids = canchasDelDeporte(canchas, slug).map((c) => c.id);
-      setCanchaIds((prev) =>
-        ids.every((id) => prev.includes(id))
+      setCanchaIds((prev) => {
+        if (modo === 'torneo') {
+          if (prev.length > 0) {
+            const primera = canchas.find((c) => c.id === prev[0]);
+            if (primera && primera.deporte !== slug) {
+              return prev;
+            }
+          }
+          const todasSeleccionadas = ids.every((id) => prev.includes(id));
+          if (todasSeleccionadas) {
+            return prev.filter((id) => !ids.includes(id));
+          }
+          const nuevos = ids.filter((id) => !prev.includes(id));
+          const cupoDisponible = Math.max(0, MAX_CANCHAS_TORNEO - prev.length);
+          return [...prev, ...nuevos.slice(0, cupoDisponible)];
+        }
+        return ids.every((id) => prev.includes(id))
           ? prev.filter((id) => !ids.includes(id))
-          : [...prev, ...ids.filter((id) => !prev.includes(id))]
-      );
+          : [...prev, ...ids.filter((id) => !prev.includes(id))];
+      });
       setError(null);
     },
-    [canchas]
+    [canchas, modo]
   );
 
   const elegirHora = useCallback(
@@ -970,6 +1042,9 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     precio,
     motivoBloqueo,
     puedeConfirmar,
+    motivoNoAgregable,
+    topeCanchasAlcanzado,
+    deporteBloqueado,
     esLibre,
     contarLibresDia,
     cambiarModo,
