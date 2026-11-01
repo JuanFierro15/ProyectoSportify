@@ -1,5 +1,17 @@
 'use client';
 
+/*
+ * DepthCarousel — de React Bits (reactbits.dev), adaptado para Sportify.
+ * Cambios agregados a mano:
+ * - initialIndex: tarjeta inicial centrada al montar.
+ * - renderOverlay: contenido superpuesto (nombre, disponibilidad, badges) sobre cada card.
+ * - onOpenViewer / getViewerLabel: botón accesible en la card activa para abrir visor en grande.
+ * - autoScale={false}: evita escalado con transform para dimensionamiento vía CSS (container queries).
+ * - Dots accesibles: contenedor role="group" con aria-label="Elegir cancha" y botones con aria-pressed.
+ * - Rueda del ratón: no previene el scroll vertical nativo (P0-02); solo mueve el carrusel con
+ *   gesto horizontal o con Shift + rueda (con Shift usa deltaY como desplazamiento).
+ */
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
 import './DepthCarousel.css';
@@ -36,7 +48,7 @@ const DepthCarousel = ({
   prevLabel = 'Previous slide',
   nextLabel = 'Next slide',
   getSlideLabel = (i, n) => `${i + 1} of ${n}`,
-  getDotLabel = (i) => `Go to slide ${i + 1}`,
+  getDotLabel = (i, n) => (n ? `Ir a la cancha ${i + 1} de ${n}` : `Ir a la cancha ${i + 1}`),
   // Adición manual sobre el componente descargado del registro de React Bits:
   // permite pintar contenido propio (nombre de cancha, acento del deporte...)
   // encima de cada card sin tocar el resto del layout 3D. Opcional: si no se
@@ -216,9 +228,14 @@ const DepthCarousel = ({
     const onWheel = e => {
       const cfg = cfgRef.current;
       if (cfg.count < 2) return;
+      // Permite el scroll vertical normal si no está pulsado Shift (P0-02)
+      if (Math.abs(e.deltaY) >= Math.abs(e.deltaX) && !e.shiftKey) return;
       e.preventDefault();
       tweenRef.current?.kill();
-      const raw = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      // Con Shift usa deltaY (o deltaX si el navegador ya lo tradujo); con trackpad horizontal usa deltaX
+      const raw = e.shiftKey
+        ? (e.deltaY !== 0 ? e.deltaY : e.deltaX)
+        : (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY);
       const delta = e.deltaMode === 1 ? raw * 24 : raw;
       const step = clamp(delta / (cfg.cardWidth * 0.9), -0.6, 0.6);
       posRef.current += step;
@@ -495,14 +512,13 @@ const DepthCarousel = ({
       )}
 
       {showIndicators && count > 1 && (
-        <div className="depth-carousel__dots" role="tablist" aria-label="Slides">
+        <div className="depth-carousel__dots" role="group" aria-label="Elegir cancha">
           {data.map((_, i) => (
             <button
               key={i}
               type="button"
-              role="tab"
-              aria-selected={active === i}
-              aria-label={getDotLabel(i)}
+              aria-pressed={active === i}
+              aria-label={getDotLabel ? getDotLabel(i, count) : `Ir a la cancha ${i + 1} de ${count}`}
               className={`depth-carousel__dot${active === i ? ' is-active' : ''}`}
               onClick={() => setFocus(i, true)}
             />

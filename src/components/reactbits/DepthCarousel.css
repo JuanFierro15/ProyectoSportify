@@ -47,7 +47,7 @@
   box-shadow:
     0 30px 60px -20px rgba(0, 0, 0, 0.65),
     0 8px 20px -10px rgba(0, 0, 0, 0.5);
-  will-change: transform, opacity, filter;
+  will-change: transform, opacity;
   cursor: pointer;
   transform: translate(-50%, -50%);
 }
@@ -123,8 +123,8 @@
   top: 50%;
   transform: translateY(-50%);
   z-index: 3000;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -146,6 +146,12 @@
 
 .depth-carousel__arrow:active {
   transform: translateY(-50%) scale(0.94);
+}
+
+.depth-carousel__arrow:focus-visible,
+.depth-carousel__dot:focus-visible {
+  outline: 2px solid var(--accent, #1779ba);
+  outline-offset: 2px;
 }
 
 .depth-carousel__arrow--prev {
@@ -171,19 +177,31 @@
 }
 
 .depth-carousel__dot {
-  width: 7px;
-  height: 7px;
+  min-width: 28px;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0;
   border: none;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.32);
+  background: transparent;
   cursor: pointer;
+}
+
+.depth-carousel__dot::after {
+  content: '';
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.32);
   transition:
     width 0.25s ease,
     background 0.25s ease;
 }
 
-.depth-carousel__dot.is-active {
+.depth-carousel__dot.is-active::after {
   width: 20px;
   background: #fff;
 }
@@ -193,7 +211,8 @@
     will-change: auto;
   }
   .depth-carousel__arrow,
-  .depth-carousel__dot {
+  .depth-carousel__dot,
+  .depth-carousel__dot::after {
     transition: none;
   }
   .depth-carousel__img--activa {
