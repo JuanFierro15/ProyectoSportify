@@ -21,6 +21,11 @@ const VIDEOS = {
   padel: `${BASE}media/hero_padel.mp4`,
   futbol: `${BASE}media/hero_futbol.mp4`,
 };
+const POSTERS = {
+  'voley-playa': `${BASE}media/hero_voleyplaya-poster.webp`,
+  padel: `${BASE}media/hero_padel-poster.webp`,
+  futbol: `${BASE}media/hero_futbol-poster.webp`,
+};
 
 // Contenido de la página de inicio (`/`): heros por deporte, sección de
 // eventos y ubicación. Al volver desde la página de reserva, espera a que los
@@ -101,6 +106,7 @@ function PaginaInicio() {
             slug={d.slug}
             nombre={d.nombre}
             videoSrc={VIDEOS[d.slug]}
+            posterSrc={POSTERS[d.slug]}
             tituloCTA={`Ver canchas de ${d.nombre.toLowerCase()}`}
             colorAcento={d.colorAcento}
             eyebrow={d.eyebrow}

@@ -149,12 +149,19 @@
   transition: transform 0.15s ease, filter 0.15s ease, background-color 0.15s ease;
 }
 
-.tarjeta-cancha__boton:hover {
+.tarjeta-cancha__boton:hover:not(:disabled) {
   filter: brightness(1.08);
 }
 
-.tarjeta-cancha__boton:active {
+.tarjeta-cancha__boton:active:not(:disabled) {
   transform: scale(0.98);
+}
+
+.tarjeta-cancha__boton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: none;
+  transform: none;
 }
 
 .tarjeta-cancha__boton--marcada {
@@ -165,7 +172,7 @@
   -webkit-backdrop-filter: blur(6px);
 }
 
-.tarjeta-cancha__boton--marcada:hover {
+.tarjeta-cancha__boton--marcada:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.24);
   border-color: rgba(255, 255, 255, 0.7);
 }

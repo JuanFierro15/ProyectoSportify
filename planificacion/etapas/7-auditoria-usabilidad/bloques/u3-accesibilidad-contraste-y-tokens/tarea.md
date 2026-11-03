@@ -1,62 +1,89 @@
+# Tarea: contraste WCAG AA, foco visible, movimiento reducido y antipatrón `side-tab` (`u3-accesibilidad-contraste-y-tokens`)
 
-# Tarea: accesibilidad WCAG AA, contraste de acentos, `:focus-visible` y limpieza de antipatrón (`u3-accesibilidad-contraste-y-tokens`)
+> Versión corregida (31-10) contra el código real de la rama `usability-improve`. Reemplaza al
+> borrador (`instruccion-borrador.md`). Cambios frente al borrador: no existe el detector
+> `impeccable` en esta máquina (se verifica con búsqueda), la regla de movimiento reducido **no**
+> puede forzar `transform: none` (rompería el carrusel) y los tamaños táctiles del carrusel y del
+> chat van en u4.
 
 ## Objetivo
 
-Resolver los hallazgos `P1-01`, `P1-03`, `P1-05`, `P1-08` (parte CSS) y `P2-06` de la auditoría de usabilidad (`impeccable`):
-1. Añadir el token `--accent-text` en `estiloAcento()` (`src/lib/canchas.js`) usando `color-mix(in srgb, ${color} 50%, #0f172a)` para garantizar un contraste `>= 4.5:1` (WCAG AA) cuando se usa el color del deporte como texto sobre fondos claros (`P1-01`).
-2. Añadir `:focus-visible { outline: 2px solid var(--accent, #1779ba); outline-offset: 2px; }` en los botones de hora, día y modo (`P1-03`).
-3. Corregir la regla `@media (prefers-reduced-motion: reduce)` en `VistaCanchas.css` para que desactive las transformaciones espaciales sin anular con `0.001ms !important` las transiciones de color/opacidad de todos los descendientes (`P1-05`).
-4. Eliminar el antipatrón `side-tab` (`border-left: 4px solid #f59e0b`) en `src/components/reservas/torneo/Bracket.css` para que `impeccable detect --json src` devuelva `0` hallazgos (`P2-06`).
-5. Subir el tamaño táctil de `.canchas-elegidas__quitar` a `28×28px` y `.vista-canchas__visor-cerrar` a `44×44px` (`P1-02` parcial) y añadir `scroll-snap-type: x proximity` en `.selector-dia` y `.bracket-torneo__rondas` (`P2-04`).
+Hallazgos `P1-01`, `P1-03`, `P1-05`, `P2-04` (parte de `SelectorDia` y `Bracket`) y `P2-06`.
 
 ## Rutas
 
-- Modificar:
-  - `src/lib/canchas.js`
-  - `src/components/reservas/torneo/Bracket.css`
-  - `src/components/reservas/FormularioReserva.css`
-  - `src/components/reservas/CanchasElegidas.css`
-  - `src/components/reservas/SelectorModo.css`
-  - `src/components/canchas/VistaCanchas.css`
-  - `src/components/shared/SelectorDia.css`
-- Prohibido modificar cualquier otro archivo fuera de la lista "Modificar".
+- Modificar: `src/lib/canchas.js`, `src/lib/canchas.test.js` (solo si ya prueba `estiloAcento`, o
+  agrega el caso), `src/components/reservas/torneo/Bracket.css`,
+  `src/components/reservas/FormularioReserva.css`, `src/components/reservas/CanchasElegidas.css`,
+  `src/components/reservas/SelectorModo.css`, `src/components/canchas/VistaCanchas.css`,
+  `src/components/shared/SelectorDia.css`.
+- No modifiques ningún otro archivo (otros agentes trabajan a la vez en `VistaCanchas.jsx`,
+  `DepthCarousel.*`, `Chatbot.css`, el navbar y la confirmación).
 
-## Diseño detallado
+## Diseño
 
-### 1. `src/lib/canchas.js`
+### 1. Token de texto con contraste: `src/lib/canchas.js`
 
-- En `estiloAcento(color)`:
-  - Añade `'--accent-text': 'color-mix(in srgb, ' + color + ' 50%, #0f172a)'` al objeto devuelto.
+- `estiloAcento(acento)` es la única función que arma el estilo del acento. Agrega
+  `'--accent-text': color-mix(in srgb, ${color} 50%, #0f172a)` al objeto. Con los tres acentos de
+  `src/data/deportes.js` (`#f6a94b`, `#3fa9f5`, `#5bd67d`) y con el azul por defecto, da más de
+  4,5:1 sobre blanco.
+- Test en `canchas.test.js`: `estiloAcento('#5bd67d')['--accent-text']` contiene `color-mix` y
+  `#0f172a`.
+- `src/App.css` no está en tus rutas: no definas el token en `:root`. Usa siempre el respaldo
+  `var(--accent-text, var(--accent, #1779ba))`.
 
-### 2. `src/components/reservas/torneo/Bracket.css`
+### 2. Usar `--accent-text` cuando el acento es texto sobre fondo claro
 
-- En `.alerta-tiempo`:
-  - Reemplaza `border-left: 4px solid #f59e0b;` por `border: 1px solid rgba(245, 158, 11, 0.45);` y `box-shadow: inset 0 2px 0 rgba(245, 158, 11, 0.35);` (sin `border-left` >= 3px para cumplir `impeccable detect`).
-- En `.bracket-torneo__badge`, `.bracket-torneo__ronda-fecha` y `.calendario-torneo__badge`:
-  - Usa `color: var(--accent-text, var(--accent, #1779ba));`.
-- En `.bracket-torneo__rondas`:
-  - Añade `scroll-snap-type: x proximity;` y `scroll-snap-align: start;` en `.bracket-torneo__ronda`.
+Busca con `grep -n "color: var(--accent" src/components` dentro de tus archivos. Cambia a
+`var(--accent-text, var(--accent))` solo cuando el texto va sobre fondo blanco o `--accent-soft`:
+`.vista-canchas__badge`, `.bracket-torneo__badge`, `.bracket-torneo__ronda-fecha`,
+`.calendario-torneo__badge`, `.formulario-reserva .button.hollow` (texto y borde), y
+`.formulario-reserva__rango` (agregado en u1). No lo cambies en fondos oscuros ni en el texto sobre
+el propio acento (ahí va `--accent-contrast`).
 
-### 3. `src/components/reservas/FormularioReserva.css`, `SelectorModo.css`, `CanchasElegidas.css` y `SelectorDia.css`
+### 3. Foco visible (P1-03)
 
-- En `FormularioReserva.css`:
-  - En `.formulario-reserva .button.hollow`: usa `color: var(--accent-text, var(--accent, #1779ba));`.
-  - En `.formulario-reserva__hora:focus-visible`: añade `outline: 2px solid var(--accent, #1779ba); outline-offset: 2px;`.
-  - En `.formulario-reserva__input:focus`: usa `border-color: var(--accent, #1779ba); box-shadow: 0 0 0 3px var(--accent-soft, rgba(23, 121, 186, 0.14));`.
-- En `SelectorModo.css` y `SelectorDia.css`:
-  - Añade `:focus-visible { outline: 2px solid var(--accent, #1779ba); outline-offset: 2px; }`.
-  - En `.selector-dia` añade `scroll-snap-type: x proximity;` y en `.selector-dia__opcion` añade `scroll-snap-align: start;`.
-- En `CanchasElegidas.css`:
-  - Sube `.canchas-elegidas__quitar` a `width: 1.75rem; height: 1.75rem;`.
+- Busca `outline: none` / `outline: 0` en tus archivos. Donde exista, conserva el quitar el
+  contorno solo para `:focus:not(:focus-visible)` y agrega
+  `:focus-visible { outline: 2px solid var(--accent-text, var(--accent, #1779ba)); outline-offset: 2px; }`.
+- Como mínimo: `.formulario-reserva__hora`, `.selector-dia__opcion`, los botones de
+  `SelectorModo`, `.canchas-elegidas__quitar`, `.canchas-elegidas__todas` y
+  `.vista-canchas__visor-cerrar`.
+- `.formulario-reserva__input:focus`: `border-color: var(--accent, #1779ba)` y
+  `box-shadow: 0 0 0 3px var(--accent-soft, rgba(23, 121, 186, 0.14))` en vez de los colores fijos.
 
-### 4. `src/components/canchas/VistaCanchas.css`
+### 4. Movimiento reducido (P1-05): `VistaCanchas.css`
 
-- En `.vista-canchas__badge`: usa `color: var(--accent-text, var(--accent));`.
-- En `.vista-canchas__visor-cerrar`: sube `width: 2.75rem; height: 2.75rem;` (`44×44px`).
-- En `@media (prefers-reduced-motion: reduce)`: reemplaza el selector universal `.vista-canchas *` con `0.001ms !important` por reglas específicas que desactiven `transform` sin romper las transiciones suaves de color/opacidad.
+- El bloque `@media (prefers-reduced-motion: reduce)` (cerca de la línea 637) pone
+  `transition-duration: 0.001ms !important` a todos los descendientes. Cámbialo así:
+  - Conserva `animation-duration: 0.001ms !important` y `animation-iteration-count: 1 !important`
+    (para el Ken Burns y cualquier keyframe).
+  - Quita el `transition-duration` universal y, en su lugar, limita las transiciones a color y
+    opacidad: `transition-property: color, background-color, border-color, opacity, box-shadow !important;`.
+  - **No** pongas `transform: none` en selectores generales: `DepthCarousel` posiciona las tarjetas
+    con `transform` en línea y se rompería. Deja las reglas puntuales que ya existen
+    (`.cancha-card:hover { transform: none; }`).
+
+### 5. Antipatrón `side-tab` (P2-06): `Bracket.css`
+
+- `.alerta-tiempo` (cerca de la línea 12) usa `border-left: 4px solid #f59e0b`. Cámbialo por
+  `border: 1px solid rgba(245, 158, 11, 0.45)` y `border-radius` coherente con los callouts.
+  Verifica que no quede ningún `border-left` de 3 px o más en tus archivos:
+  `grep -rnE "border-(left|right): *[3-9]px" src`.
+
+### 6. Tiras horizontales y chips (P2-04, P1-02 parcial)
+
+- `.selector-dia`: `scroll-snap-type: x proximity`; `.selector-dia__opcion`: `scroll-snap-align: start`.
+- `.bracket-torneo__rondas`: `scroll-snap-type: x proximity`; `.bracket-torneo__ronda`:
+  `scroll-snap-align: start`.
+- `.canchas-elegidas__quitar`: área de 28×28 px (`width/height: 1.75rem`, centrado con flex) dentro
+  de chips de `min-height: 2.375rem`.
+- `.vista-canchas__visor-cerrar`: 44×44 px (`2.75rem`).
 
 ## Verificación al terminar
 
-- Ejecuta `& "C:\Users\MIGUEL ANGEL\.gemini\antigravity-cli\skills\impeccable\scripts\impeccable.cmd" detect --json src` y verifica que devuelva `[]` (exit code `0`).
-- Ejecuta `npx vitest run` y `npm run lint`.
+- `npm test` (todas en verde) y `npm run lint` (0 errores, 0 warnings).
+- `grep -rnE "border-(left|right): *[3-9]px" src` sin resultados en tus archivos.
+- No ejecutes `npm run dev` ni `npm run preview`.
+- Responde con la lista de archivos cambiados y un resumen por punto (1 a 6).

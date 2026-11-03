@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { OPCIONES_DURACION } from '../../../lib/torneo';
 
 export function AlertaTiempo({
   equipos,
@@ -8,6 +9,8 @@ export function AlertaTiempo({
   disponibles,
   deficit,
   sugerencias = [],
+  duracionPartido,
+  onCambiarDuracion,
 }) {
   if (!deficit || deficit <= 0) {
     return null;
@@ -32,6 +35,15 @@ export function AlertaTiempo({
             <li key={idx}>{sug}</li>
           ))}
         </ul>
+      )}
+      {onCambiarDuracion && Number(duracionPartido) > OPCIONES_DURACION[0] && (
+        <button
+          type="button"
+          className="button small hollow alerta-tiempo__accion"
+          onClick={() => onCambiarDuracion(OPCIONES_DURACION[0])}
+        >
+          {`Cambiar a ${OPCIONES_DURACION[0]} min por partido`}
+        </button>
       )}
     </div>
   );

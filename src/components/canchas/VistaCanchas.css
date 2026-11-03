@@ -76,8 +76,13 @@
   font-weight: 700;
 }
 
-.vista-canchas__titulo:focus {
+.vista-canchas__titulo:focus:not(:focus-visible) {
   outline: none;
+}
+
+.vista-canchas__titulo:focus-visible {
+  outline: 2px solid var(--accent-text, var(--accent, #1779ba));
+  outline-offset: 2px;
 }
 
 .vista-canchas__modo {
@@ -384,7 +389,7 @@
   border-radius: 999px;
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--accent, #1779ba);
+  color: var(--accent-text, var(--accent, #1779ba));
   background: color-mix(in srgb, var(--accent, #1779ba) 14%, transparent);
   transition: color 0.35s ease, background-color 0.35s ease;
 }
@@ -500,8 +505,8 @@
   z-index: 2;
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 2.75rem;
+  height: 2.75rem;
   border: none;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.14);
@@ -512,6 +517,15 @@
 
 .vista-canchas__visor-cerrar:hover {
   background: rgba(255, 255, 255, 0.26);
+}
+
+.vista-canchas__visor-cerrar:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.vista-canchas__visor-cerrar:focus-visible {
+  outline: 2px solid var(--accent-text, var(--accent, #1779ba));
+  outline-offset: 2px;
 }
 
 /* La imagen nunca se escala por encima de su resolución real (1440px de
@@ -641,10 +655,23 @@
   .vista-canchas *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
+    transition-property: color, background-color, border-color, opacity, box-shadow !important;
   }
 
   .cancha-card:hover {
     transform: none;
   }
+}
+
+/* Motivo por el que una cancha no se puede agregar al torneo (grid estático). */
+.vista-canchas__card-motivo {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.vista-canchas__card-estatica:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }

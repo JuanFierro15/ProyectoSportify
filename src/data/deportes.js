@@ -12,6 +12,7 @@ export const DEPORTES = [
     descripcion:
       'Siente la arena fina bajo tus pies en canchas con drenaje de alto rendimiento, red reglamentaria e iluminación nocturna para disfrutar cada punto al aire libre.',
     superficie: 'Arena de cuarzo profesional',
+    detalleEnTarjeta: true,
   },
   {
     slug: 'padel',
@@ -21,6 +22,7 @@ export const DEPORTES = [
     descripcion:
       'Juega con máxima precisión en pistas con césped monofilamento, cerramientos de cristal templado y rebote uniforme en cada rincón.',
     superficie: 'Cristal templado y césped',
+    detalleEnTarjeta: true,
   },
   {
     slug: 'futbol',
@@ -31,7 +33,7 @@ export const DEPORTES = [
       'Arma tu partido en canchas rápidas con amortiguación de última tecnología, arcos reglamentarios y visibilidad LED óptima para jugar con tu equipo.',
     superficie: 'Césped sintético con shock pad',
     // Muestra características y descripción sobre la foto del carrusel de
-    // reserva; los demás deportes solo llevan nombre, precio y disponibilidad.
+    // reserva en la tarjeta activa (para todos los deportes).
     detalleEnTarjeta: true,
   },
 ];

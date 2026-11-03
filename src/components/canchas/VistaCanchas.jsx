@@ -439,10 +439,12 @@ function VistaCanchas() {
                         const esActiva = reserva.esEvento
                           ? reserva.canchaIds.includes(c.id)
                           : !!reserva.canchaSel && reserva.canchaSel.id === c.id;
+                        const motivoGrid = reserva.esEvento ? reserva.motivoNoAgregable(c.id) : null;
                         return (
                           <div key={c.id} className="cell small-12 medium-6 vista-canchas__grid-celda">
                             <button
                               type="button"
+                              disabled={reserva.esEvento && motivoGrid !== null}
                               className={
                                 'card cancha-card vista-canchas__card-estatica' +
                                 (esActiva ? ' vista-canchas__card-estatica--activa' : '')
@@ -458,6 +460,9 @@ function VistaCanchas() {
                               }}
                             >
                               <span className="vista-canchas__card-nombre">{tituloCancha(c)}</span>
+                              {reserva.esEvento && motivoGrid !== null && (
+                                <small className="vista-canchas__card-motivo">{motivoGrid}</small>
+                              )}
                             </button>
                           </div>
                         );
@@ -522,6 +527,7 @@ function VistaCanchas() {
                             marcada={reserva.esEvento ? reserva.canchaIds.includes(c.id) : false}
                             libresDia={horarios.filter((h) => h.disponible).length}
                             totalDia={horarios.length}
+                            motivoBloqueo={reserva.motivoNoAgregable(c.id)}
                             onAlternar={() => reserva.alternarCancha(c.id)}
                           />
                         );
@@ -535,6 +541,7 @@ function VistaCanchas() {
                     canchas={reserva.canchasElegidas}
                     deporte={infoDeporte}
                     idsDeporte={canchasDelDeporte(canchas, deporteAbierto).map((c) => c.id)}
+                    bloqueadoTodas={reserva.deporteBloqueado(deporteAbierto)}
                     onQuitar={reserva.alternarCancha}
                     onAlternarDeporte={reserva.alternarDeporte}
                   />
@@ -551,7 +558,7 @@ function VistaCanchas() {
                 puedeConfirmar={reserva.puedeConfirmar}
                 motivoBloqueo={reserva.motivoBloqueo}
                 onConfirmar={reserva.confirmar}
-                onCancelar={cerrarVista}
+                onCancelar={reserva.reiniciar}
                 torneo={reserva.modo === 'torneo' ? reserva.torneoPlan : null}
               />
             </div>
@@ -568,14 +575,17 @@ function VistaCanchas() {
           onCerrar={() => setVisorAbierto(false)}
           textoAccion={
             reserva.esEvento
-              ? reserva.canchaIds.includes(canchaActiva.id)
-                ? 'Quitar del evento'
-                : 'Agregar al evento'
+              ? reserva.motivoNoAgregable(canchaActiva.id) ||
+                (reserva.canchaIds.includes(canchaActiva.id)
+                  ? 'Quitar del evento'
+                  : 'Agregar al evento')
               : 'Elegir horario'
           }
           onAccion={() => {
             if (reserva.esEvento) {
-              reserva.alternarCancha(canchaActiva.id);
+              if (!reserva.motivoNoAgregable(canchaActiva.id)) {
+                reserva.alternarCancha(canchaActiva.id);
+              }
               setVisorAbierto(false);
             } else {
               setVisorAbierto(false);

@@ -11,7 +11,8 @@ import './SelectorDia.css';
  *  - valor          {string}    fecha ISO seleccionada
  *  - onChange       {(iso) => void}
  *  - contarLibres   {(iso) => number}  opcional; si se pasa, muestra "N libres" /
- *                   "completo" bajo cada día
+ *                   "completo" bajo cada día. Si el día está lleno (0 libres) y no
+ *                   está seleccionado, el botón se deshabilita preventivamente.
  *  - esDiaBloqueado {(iso) => boolean} opcional; si retorna true para un día,
  *                   lo deshabilita y muestra "bloqueado"
  */
@@ -24,19 +25,32 @@ function SelectorDia({ dias, valor, onChange, contarLibres, esDiaBloqueado }) {
         const bloqueado = esDiaBloqueado ? Boolean(esDiaBloqueado(iso)) : false;
         const libres = contarLibres ? contarLibres(iso) : null;
         const lleno = libres === 0;
+        const deshabilitado = Boolean(bloqueado || (lleno && !sel));
+
+        let estadoAria = '';
+        if (bloqueado) {
+          estadoAria = ', bloqueado';
+        } else if (lleno) {
+          estadoAria = ', sin horarios libres';
+        } else if (libres != null) {
+          estadoAria = `, ${libres} libres`;
+        }
+        const textoAria = `${etiquetaDia(iso, dias)} ${d.getDate()} de ${MES_CORTO[d.getMonth()]}${estadoAria}`;
+
         return (
           <button
             key={iso}
             type="button"
-            disabled={bloqueado}
+            disabled={deshabilitado}
+            aria-label={textoAria}
+            aria-pressed={sel}
             className={
               'selector-dia__opcion' +
               (sel ? ' selector-dia__opcion--sel' : '') +
               (lleno ? ' selector-dia__opcion--lleno' : '') +
               (bloqueado ? ' selector-dia__opcion--bloqueado' : '')
             }
-            aria-pressed={sel}
-            onClick={() => !bloqueado && onChange(iso)}
+            onClick={() => !deshabilitado && onChange(iso)}
           >
             <span className="selector-dia__sem">{etiquetaDia(iso, dias)}</span>
             <span className="selector-dia__num">{d.getDate()}</span>

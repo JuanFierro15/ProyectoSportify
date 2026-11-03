@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, renderHook, act } from '@testing-library/react';
 import { ReservasProvider, useReservas } from '../../context/ReservasContext';
 import useReserva from './useReserva';
 import FormularioReserva from './FormularioReserva';
 import VoucherReserva from './VoucherReserva';
 import ConfirmacionReserva from './ConfirmacionReserva';
+import AlertaTiempo from './torneo/AlertaTiempo';
 import { fechaCompleta } from '../../lib/fechas';
 
 // En los tests de integración de torneos, las 3 canchas de fútbol se configuran
@@ -276,7 +277,7 @@ describe('Modo Torneo - Pruebas de integración', () => {
     expect(within(seccionSemi).queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('4. Emparejamiento manual y validación de equipos repetidos (AC-006, FR-004)', () => {
+  it('4. Emparejamiento manual con intercambio automático y validación de incompletos (AC-006, FR-004)', () => {
     render(
       <ReservasProvider>
         <FlujoTorneoPrueba
@@ -300,13 +301,23 @@ describe('Modo Torneo - Pruebas de integración', () => {
     expect(selectorLocalR1P1).toBeInTheDocument();
     expect(selectorVisitanteR1P1).toBeInTheDocument();
 
-    // Asignar el mismo equipo en dos posiciones (Equipo 1 contra Equipo 1)
-    fireEvent.change(selectorLocalR1P1, { target: { value: '1' } });
-    fireEvent.change(selectorVisitanteR1P1, { target: { value: '1' } });
+    const valLocalInicial = selectorLocalR1P1.value;
+    const valVisitanteInicial = selectorVisitanteR1P1.value;
 
-    // Aparece el mensaje de error y el botón Confirmar reserva está disabled
-    const errores = screen.getAllByText('Hay equipos repetidos en los cruces.');
-    expect(errores.length).toBeGreaterThanOrEqual(1);
+    // Poner en R1-P1 local el equipo que está en el visitante -> se intercambian
+    fireEvent.change(selectorLocalR1P1, { target: { value: valVisitanteInicial } });
+
+    expect(selectorLocalR1P1.value).toBe(valVisitanteInicial);
+    expect(selectorVisitanteR1P1.value).toBe(valLocalInicial);
+    expect(screen.queryByText('Hay equipos repetidos en los cruces.')).not.toBeInTheDocument();
+
+    // Dejar una posición vacía ('') -> aparece el error de cruces incompletos
+    fireEvent.change(selectorLocalR1P1, { target: { value: '' } });
+
+    const erroresIncompletos = screen.getAllByText(
+      'Asigna un equipo en cada posición de la primera ronda.'
+    );
+    expect(erroresIncompletos.length).toBeGreaterThanOrEqual(1);
 
     const btnConfirmar = screen.getByRole('button', { name: /Confirmar reserva/i });
     expect(btnConfirmar).toBeDisabled();
@@ -439,5 +450,100 @@ describe('Modo Torneo - Pruebas de integración', () => {
     expect(dentroTorneo.getByText('R2-P1')).toBeInTheDocument();
     expect(dentroTorneo.getByText('R2-P2')).toBeInTheDocument();
     expect(dentroTorneo.getByText('R3-P1')).toBeInTheDocument();
+  });
+
+  it('6. En torneo con fútbol, cancha de pádel queda bloqueada y no se agrega', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(
+      () => useReserva({ activo: true, modoInicial: 'torneo' }),
+      { wrapper }
+    );
+
+    act(() => {
+      result.current.alternarCancha('futbol-1');
+    });
+
+    expect(result.current.canchaIds).toEqual(['futbol-1']);
+    expect(result.current.motivoNoAgregable('padel-1')).toBe('Solo canchas de Fútbol');
+
+    act(() => {
+      result.current.alternarCancha('padel-1');
+    });
+
+    expect(result.current.canchaIds).toEqual(['futbol-1']);
+  });
+
+  it('7. Sin canchas elegidas, contarLibresFase retorna undefined y ningún día queda lleno', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(
+      () => useReserva({ activo: true, modoInicial: 'torneo' }),
+      { wrapper }
+    );
+
+    expect(result.current.canchaIds).toEqual([]);
+    expect(result.current.contarLibresFase(1)).toBeUndefined();
+  });
+
+  it('8. AlertaTiempo con duracionPartido={20} y onCambiarDuracion muestra botón de cambio rápido a 15 min', () => {
+    const onCambiarDuracion = vi.fn();
+
+    const { rerender } = render(
+      <AlertaTiempo
+        equipos={8}
+        canchasCount={1}
+        minutosRequeridos={120}
+        disponibles={60}
+        deficit={60}
+        duracionPartido={20}
+        onCambiarDuracion={onCambiarDuracion}
+      />
+    );
+
+    const btnAccion = screen.getByRole('button', { name: 'Cambiar a 15 min por partido' });
+    expect(btnAccion).toBeInTheDocument();
+    fireEvent.click(btnAccion);
+    expect(onCambiarDuracion).toHaveBeenCalledWith(15);
+
+    rerender(
+      <AlertaTiempo
+        equipos={8}
+        canchasCount={1}
+        minutosRequeridos={120}
+        disponibles={60}
+        deficit={60}
+        duracionPartido={15}
+        onCambiarDuracion={onCambiarDuracion}
+      />
+    );
+
+    expect(
+      screen.queryByRole('button', { name: 'Cambiar a 15 min por partido' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('9. En cumpleaños, 150 invitados bloquea con "Máximo 100 invitados."', () => {
+    let diasRef = [];
+    function ProbarHook() {
+      const { dias } = useReservas();
+      diasRef = dias;
+      return useReserva({ activo: true, modoInicial: 'cumpleanos' });
+    }
+
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => ProbarHook(), { wrapper });
+
+    act(() => {
+      result.current.cambiarFecha(diasRef[1]);
+      result.current.alternarCancha('futbol-1');
+    });
+
+    act(() => {
+      result.current.elegirHora('14:00');
+      result.current.setInvitados('150');
+    });
+
+    expect(result.current.horasSel).toEqual(['14:00']);
+    expect(result.current.motivoBloqueo).toBe('Máximo 100 invitados.');
+    expect(result.current.puedeConfirmar).toBe(false);
   });
 });

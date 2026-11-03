@@ -34,7 +34,7 @@
   transform-origin: center center;
   background: #0a0713;
   box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.8);
-  will-change: flex-grow, transform;
+  will-change: transform;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -60,7 +60,7 @@
   width: var(--ag-media-size);
   height: 100%;
   filter: grayscale(var(--ag-gray));
-  will-change: transform, filter;
+  will-change: transform;
 }
 
 .accordion-gallery--vertical .ag-panel__media {

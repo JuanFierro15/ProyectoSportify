@@ -48,7 +48,10 @@ function Footer() {
       <div className="grid-container">
         <div className="grid-x grid-padding-x footer__cuerpo">
           <div className="cell small-12 large-4 footer__col">
-            <p className="footer__marca">Reservas Deportivas</p>
+            <p className="footer__marca">
+              Sportify
+              <span className="footer__marca-sub">Reservas deportivas</span>
+            </p>
             <p className="footer__bajada">
               Reserva canchas de voley playa, pádel y fútbol. Organizamos
               torneos, cumpleaños y eventos especiales.
@@ -117,7 +120,7 @@ function Footer() {
         <div className="footer__inferior">
           <div className="footer__inferior-fila">
             <p className="footer__copy">
-              &copy; {year} Reservas Deportivas &middot; Proyecto universitario
+              &copy; {year} Sportify &middot; Proyecto universitario
             </p>
             <a
               className="footer__volver"

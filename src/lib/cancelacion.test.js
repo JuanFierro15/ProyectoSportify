@@ -1,9 +1,12 @@
 import {
   MENSAJES_CANCELACION,
   normalizarComparacion,
+  normalizarCodigo,
   verificarCancelable,
   aplicarCancelacion,
   buscarReservasCancelables,
+  buscarReservaPorCodigo,
+  buscarReservasDePersona,
 } from './cancelacion';
 
 describe('lógica de cancelación de reservas', () => {
@@ -25,6 +28,7 @@ describe('lógica de cancelación de reservas', () => {
 
   const e1 = {
     id: 'e1',
+    codigo: 'SPF-EVT001',
     tipo: 'evento',
     canchaIds: ['padel-1'],
     fecha: '2026-10-13',
@@ -174,5 +178,114 @@ describe('lógica de cancelación de reservas', () => {
 
   test('normalizarComparacion limpia tildes, mayúsculas y espacios repetidos', () => {
     expect(normalizarComparacion('José  PEÑA ')).toBe('jose pena');
+  });
+
+  describe('normalizarCodigo y buscarReservaPorCodigo', () => {
+    test('normalizarCodigo limpia espacios, pasa a mayúsculas y antepone SPF- si falta', () => {
+      expect(normalizarCodigo('spf-abcdef')).toBe('SPF-ABCDEF');
+      expect(normalizarCodigo('SPF ABCDEF')).toBe('SPF-ABCDEF');
+      expect(normalizarCodigo('ABCDEF')).toBe('SPF-ABCDEF');
+      expect(normalizarCodigo('  spf - abcdef  ')).toBe('SPF-ABCDEF');
+      expect(normalizarCodigo('')).toBe('');
+      expect(normalizarCodigo(null)).toBe('');
+    });
+
+    test('buscarReservaPorCodigo encuentra reservas individuales y eventos con diversas variantes de formato', () => {
+      const reservas = [r1, e1, r2];
+
+      expect(buscarReservaPorCodigo(reservas, 'spf-abcdef')).toBe(r1);
+      expect(buscarReservaPorCodigo(reservas, 'SPF ABCDEF')).toBe(r1);
+      expect(buscarReservaPorCodigo(reservas, 'ABCDEF')).toBe(r1);
+      expect(buscarReservaPorCodigo(reservas, '  spf - evt001 ')).toBe(e1);
+      expect(buscarReservaPorCodigo(reservas, 'EVT001')).toBe(e1);
+    });
+
+    test('buscarReservaPorCodigo devuelve null si no existe o si los argumentos son inválidos', () => {
+      const reservas = [r1, e1];
+      expect(buscarReservaPorCodigo(reservas, 'INEXISTENTE')).toBeNull();
+      expect(buscarReservaPorCodigo(reservas, '')).toBeNull();
+      expect(buscarReservaPorCodigo(null, 'ABCDEF')).toBeNull();
+    });
+  });
+
+  describe('buscarReservasDePersona', () => {
+    test('devuelve reservas futuras de cualquier tipo ordenadas por inicio', () => {
+      const reservas = [e1, r1, r2]; // e1 es a las 14:00, r1 es a las 09:00 del mismo día 2026-10-13
+
+      const encontradas = buscarReservasDePersona({
+        reservas,
+        nombre: 'jose pena',
+        telefono: '3001234567',
+        ahora: ahoraBase, // 2026-10-12 10:00
+      });
+
+      // Debe incluir r1 (individual) y e1 (evento), ordenados: r1 (09:00) primero, luego e1 (14:00)
+      expect(encontradas).toEqual([r1, e1]);
+    });
+
+    test('reserva sin teléfono nunca coincide', () => {
+      const reservas = [r2]; // r2 tiene telefono: null
+      const encontradas = buscarReservasDePersona({
+        reservas,
+        nombre: 'José Peña',
+        telefono: '3001234567',
+        ahora: ahoraBase,
+      });
+      expect(encontradas).toEqual([]);
+    });
+
+    test('teléfono diferente no coincide', () => {
+      const reservas = [r1, e1];
+      const encontradas = buscarReservasDePersona({
+        reservas,
+        nombre: 'José Peña',
+        telefono: '3119998877',
+        ahora: ahoraBase,
+      });
+      expect(encontradas).toEqual([]);
+    });
+
+    test('excluye reservas pasadas', () => {
+      const reservas = [r1, e1];
+      const ahoraTarde = new Date(2026, 9, 13, 11, 0); // Después de r1 (09:00), antes de e1 (14:00)
+
+      const encontradas = buscarReservasDePersona({
+        reservas,
+        nombre: 'José Peña',
+        telefono: '3001234567',
+        ahora: ahoraTarde,
+      });
+
+      expect(encontradas).toEqual([e1]);
+    });
+
+    test('devuelve array vacío ante parámetros vacíos o inválidos', () => {
+      expect(
+        buscarReservasDePersona({
+          reservas: [r1],
+          nombre: '',
+          telefono: '3001234567',
+          ahora: ahoraBase,
+        })
+      ).toEqual([]);
+
+      expect(
+        buscarReservasDePersona({
+          reservas: [r1],
+          nombre: 'José Peña',
+          telefono: '',
+          ahora: ahoraBase,
+        })
+      ).toEqual([]);
+
+      expect(
+        buscarReservasDePersona({
+          reservas: null,
+          nombre: 'José Peña',
+          telefono: '3001234567',
+          ahora: ahoraBase,
+        })
+      ).toEqual([]);
+    });
   });
 });

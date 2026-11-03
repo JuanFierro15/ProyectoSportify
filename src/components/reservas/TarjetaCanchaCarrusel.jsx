@@ -17,6 +17,7 @@ function TarjetaCanchaCarrusel({
   marcada,
   libresDia,
   totalDia,
+  motivoBloqueo = null,
   onAlternar,
 }) {
   if (!cancha) return null;
@@ -76,6 +77,7 @@ function TarjetaCanchaCarrusel({
             {modo === 'evento' ? (
               <button
                 type="button"
+                disabled={Boolean(!marcada && motivoBloqueo)}
                 className={`tarjeta-cancha__boton${marcada ? ' tarjeta-cancha__boton--marcada' : ''}`}
                 aria-pressed={marcada}
                 onPointerDown={(e) => e.stopPropagation()}
@@ -84,7 +86,11 @@ function TarjetaCanchaCarrusel({
                   onAlternar?.();
                 }}
               >
-                {marcada ? 'Quitar del evento' : 'Agregar al evento'}
+                {marcada
+                  ? 'Quitar del evento'
+                  : motivoBloqueo
+                  ? motivoBloqueo
+                  : 'Agregar al evento'}
               </button>
             ) : (
               <span className="tarjeta-cancha__elegida">

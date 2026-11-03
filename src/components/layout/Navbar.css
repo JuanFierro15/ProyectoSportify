@@ -55,7 +55,8 @@
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7));
 }
 
-.site-header--transparent .menu a {
+.site-header--transparent .menu a,
+.site-header--transparent .site-header__btn-mis-reservas {
   color: #ffffff !important;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
   font-size: 1.08rem !important;
@@ -67,7 +68,9 @@
 }
 
 .site-header--transparent .menu a:hover,
-.site-header--transparent .menu a:focus-visible {
+.site-header--transparent .menu a:focus-visible,
+.site-header--transparent .site-header__btn-mis-reservas:hover,
+.site-header--transparent .site-header__btn-mis-reservas:focus-visible {
   color: #ffffff !important;
   background-color: rgba(255, 255, 255, 0.2) !important;
   backdrop-filter: blur(6px);
@@ -106,7 +109,8 @@
   filter: none;
 }
 
-.site-header--scrolled .menu a {
+.site-header--scrolled .menu a,
+.site-header--scrolled .site-header__btn-mis-reservas {
   color: #0c5484 !important; /* Ratio > 7:1 contra blanco */
   font-size: 1.05rem !important;
   font-weight: 700 !important;
@@ -117,7 +121,9 @@
 }
 
 .site-header--scrolled .menu a:hover,
-.site-header--scrolled .menu a:focus-visible {
+.site-header--scrolled .menu a:focus-visible,
+.site-header--scrolled .site-header__btn-mis-reservas:hover,
+.site-header--scrolled .site-header__btn-mis-reservas:focus-visible {
   color: #083b5d !important;
   background-color: #f1f5f9 !important;
   outline: 2px solid #0c5484;
@@ -161,6 +167,18 @@
   list-style: none;
 }
 
+.site-header__btn-mis-reservas {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: inherit;
+  margin: 0;
+}
+
 /* Espacio de anclaje para no tapar títulos con la barra fija */
 #hero-placeholder,
 #eventos {
@@ -177,7 +195,9 @@
   }
 
   .site-header--transparent .menu a,
-  .site-header--scrolled .menu a {
+  .site-header--scrolled .menu a,
+  .site-header--transparent .site-header__btn-mis-reservas,
+  .site-header--scrolled .site-header__btn-mis-reservas {
     padding: 0.45rem 0.65rem !important;
     font-size: 0.92rem !important;
   }

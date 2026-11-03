@@ -20,56 +20,82 @@ cumpleaños, eventos especiales y un chatbot.
 - No ejecutes `npm run dev`, `vercel dev` ni `npm run preview` a la vez: el
   equipo tiene poca RAM.
 - Al terminar, responde con un resumen de qué archivos cambiaste.
+# Tarea: scroll vertical sobre el carrusel, objetivos táctiles, ARIA, posters y `will-change` (`u4-carrusel-touch-targets-y-perf`)
 
-# Tarea: scroll vertical en carrusel, touch targets, posters de video y `will-change` (`u4-carrusel-touch-targets-y-perf`)
+> Versión corregida (31-10) contra el código real de la rama `usability-improve`. Reemplaza al
+> borrador (`instruccion-borrador.md`). Cambios: la página de inicio está en
+> `src/components/layout/PaginaInicio.jsx` (no en `src/pages/`), los posters ya existen (no hay
+> "galería" en `deportes.js`) y el detalle en la tarjeta pasa a los tres deportes por decisión de
+> Juan (31-10).
 
 ## Objetivo
 
-Resolver los hallazgos `P0-02`, `P1-02`, `P1-08` (en `DepthCarousel`), `P2-01` y `P3-01` de la auditoría de usabilidad:
-1. Permitir el scroll vertical nativo de la página cuando el cursor está sobre `DepthCarousel`, interceptando el evento `wheel` únicamente cuando el gesto sea horizontal (`Math.abs(e.deltaX) > Math.abs(e.deltaY)`) o con `e.shiftKey` (`P0-02`).
-2. Corregir la semántica ARIA de los indicadores de `DepthCarousel` (`role="group"` + `aria-pressed` en lugar de `role="tablist"` sin `tabpanel`) y ampliar el área táctil de los dots y flechas (`P1-02`, `P1-08`).
-3. Subir el botón de cierre del Chatbot (`.chatbot__cabecera-boton`) a `44×44px` (`P1-02`).
-4. Activar `detalleEnTarjeta: true` para todos los deportes en `src/data/deportes.js` para que las características de las canchas de Vóley Playa y Pádel también sean visibles en el carrusel (`P2-01`).
-5. Añadir el atributo `poster` a los videos de `DeporteHero.jsx` y limpiar las propiedades costosas (`flex-grow`, `filter`) de `will-change` en `AccordionGallery.css` y `DepthCarousel.css` (`P3-01`).
+Hallazgos `P0-02`, `P1-02` (carrusel y chat), `P1-08` (dots), `P2-01` y `P3-01`.
 
 ## Rutas
 
-- Modificar:
-  - `src/components/reactbits/DepthCarousel.jsx`
-  - `src/components/reactbits/DepthCarousel.css`
-  - `src/components/reactbits/AccordionGallery.css`
-  - `src/components/chatbot/Chatbot.css`
-  - `src/components/hero/DeporteHero.jsx`
-  - `src/pages/PaginaInicio.jsx`
-  - `src/data/deportes.js`
-- Prohibido modificar cualquier otro archivo fuera de la lista "Modificar".
+- Modificar: `src/components/reactbits/DepthCarousel.jsx`, `DepthCarousel.css`,
+  `src/components/reactbits/AccordionGallery.css`, `src/components/chatbot/Chatbot.css`,
+  `src/components/hero/DeporteHero.jsx`, `src/components/layout/PaginaInicio.jsx`,
+  `src/data/deportes.js`.
+- Ya existen (no los generes): `public/media/hero_futbol-poster.webp`,
+  `public/media/hero_padel-poster.webp`, `public/media/hero_voleyplaya-poster.webp` (primer cuadro
+  de cada video, 1280 px).
+- No modifiques ningún otro archivo (otros agentes trabajan a la vez en `VistaCanchas.*`, el
+  formulario, el navbar y la confirmación).
 
-## Diseño detallado
+## Diseño
 
-### 1. `src/components/reactbits/DepthCarousel.jsx` y `DepthCarousel.css`
+### 1. Rueda del ratón sobre el carrusel (P0-02): `DepthCarousel.jsx`
 
-- En `DepthCarousel.jsx`:
-  - En el listener `onWheel`:
-    - Calcula `const esGestoHorizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey;`.
-    - Si `!esGestoHorizontal`, retorna inmediatamente sin llamar a `e.preventDefault()`, permitiendo que la página haga scroll vertical normalmente.
-  - En `.depth-carousel__dots`:
-    - Usa `role="group"` en vez de `role="tablist"`, y en cada botón dot usa `aria-pressed={i === active}` en vez de `role="tab"` y `aria-selected`.
-- En `DepthCarousel.css`:
-  - Sube `.depth-carousel__arrow` en `@media (max-width: 640px)` a `width: 44px; height: 44px;`.
-  - Amplía el área táctil de `.depth-carousel__dot` (`min-width: 28px; min-height: 28px; display: inline-flex; align-items: center; justify-content: center; background: transparent;`) dibujando el indicador visual en `.depth-carousel__dot::after`.
-  - En `.depth-carousel__card`, cambia `will-change: transform, opacity, filter;` por `will-change: transform, opacity;`.
+- En `onWheel` (cerca de la línea 216): antes de `e.preventDefault()`, si el gesto es vertical
+  (`Math.abs(e.deltaY) >= Math.abs(e.deltaX)`) y no está pulsado `e.shiftKey`, `return` sin
+  prevenir: la página baja normalmente. Con gesto horizontal (trackpad) o Shift + rueda, el
+  carrusel se mueve como hoy (con Shift usa `deltaY` como desplazamiento).
+- Actualiza el comentario de cabecera del archivo (lista de "agregados a mano") con este cambio.
 
-### 2. `src/components/reactbits/AccordionGallery.css` y `src/components/chatbot/Chatbot.css`
+### 2. Dots accesibles y objetivos táctiles (P1-08, P1-02)
 
-- En `AccordionGallery.css`: elimina `will-change: flex-grow;` en reposo de `.ag-panel`.
-- En `Chatbot.css`: sube `.chatbot__cabecera-boton` a `width: 2.75rem; height: 2.75rem;` (`44×44px`).
+- `DepthCarousel.jsx` (cerca de la línea 498): el contenedor de dots pasa de `role="tablist"` a
+  `role="group"` con `aria-label="Elegir cancha"`; cada dot deja `role="tab"`/`aria-selected` y usa
+  `aria-pressed={active === i}` y un `aria-label` "Ir a la cancha N de M" (si ya tiene uno con
+  sentido, consérvalo).
+- `DepthCarousel.css`:
+  - `.depth-carousel__dot`: área clicable de mínimo 28×28 px (`min-width/min-height: 28px`,
+    `display: inline-flex`, centrado, fondo transparente) y el punto visual de 8 px en `::after`
+    (el estado activo cambia el `::after`). Conserva el aspecto actual del punto.
+  - `.depth-carousel__arrow`: 44×44 px en todas las pantallas (revisa la regla de
+    `max-width: 640px`).
+  - `:focus-visible` con `outline: 2px solid var(--accent, #1779ba); outline-offset: 2px` en dots y
+    flechas.
+- `Chatbot.css`: `.chatbot__cabecera-boton` a 44×44 px (`2.75rem`), sin descuadrar la cabecera.
 
-### 3. `src/data/deportes.js`, `src/components/hero/DeporteHero.jsx` y `src/pages/PaginaInicio.jsx`
+### 3. Detalle en la tarjeta para los tres deportes (P2-01): `deportes.js`
 
-- En `src/data/deportes.js`: añade `detalleEnTarjeta: true` también en `voley-playa` y `padel`, y añade una propiedad `poster` en cada deporte apuntando a la primera imagen de su galería.
-- En `DeporteHero.jsx` y `PaginaInicio.jsx`: pasa `poster={deporte.poster}` al elemento `<video>` de `DeporteHero`.
+- Agrega `detalleEnTarjeta: true` también a `voley-playa` y `padel` (fútbol ya lo tiene) y
+  actualiza el comentario que dice que es solo para fútbol. Revisa en
+  `src/components/reservas/TarjetaCanchaCarrusel.jsx` (solo leer) que no haga falta nada más.
+
+### 4. Posters de los heros (P3-01): `PaginaInicio.jsx` y `DeporteHero.jsx`
+
+- `PaginaInicio.jsx`: junto a `VIDEOS` (cerca de la línea 19), un mapa `POSTERS` con
+  `${BASE}media/hero_<nombre>-poster.webp` (mismos nombres de archivo que los videos), y pasar
+  `posterSrc={POSTERS[d.slug]}` a cada `<DeporteHero>`.
+- `DeporteHero.jsx`: prop nueva `posterSrc` (documentada en el comentario de props) y
+  `poster={posterSrc}` en el `<video>`. No toques la lógica de scroll ni de `currentTime`.
+
+### 5. `will-change` en reposo (P3-01)
+
+- `AccordionGallery.css` (línea 37): `will-change: flex-grow, transform` → `will-change: transform`.
+  Línea 63: `will-change: transform, filter` → `will-change: transform`.
+- `DepthCarousel.css` (línea 50): `will-change: transform, opacity, filter` →
+  `will-change: transform, opacity`.
+- Actualiza el comentario de cabecera de `AccordionGallery` si lista estos agregados.
 
 ## Verificación al terminar
 
-- Ejecuta `npx vitest run`, `npm run lint` y `npm run build`.
-- Ejecuta `& "C:\Users\MIGUEL ANGEL\.gemini\antigravity-cli\skills\impeccable\scripts\impeccable.cmd" detect --json src` y verifica `0` hallazgos.
+- `npm test` (todas en verde), `npm run lint` (0 errores, 0 warnings) y `npm run build`.
+- No ejecutes `npm run dev` ni `npm run preview`.
+- Responde con la lista de archivos cambiados y un resumen por punto (1 a 5).
+
+> Nota: otros agentes editan otros archivos del proyecto al mismo tiempo. Si un test falla en un archivo que no es tuyo, menciónalo en tu respuesta y no lo arregles.

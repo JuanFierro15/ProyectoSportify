@@ -1,0 +1,386 @@
+/* ==========================================================================
+   MisReservas Modal Dialog
+   ========================================================================== */
+
+.mis-reservas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  margin: 0;
+  padding: 1rem;
+  border: none;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.mis-reservas:not([open]) {
+  display: none;
+}
+
+.mis-reservas::backdrop {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+}
+
+.mis-reservas__contenido {
+  position: relative;
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 34rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 2rem 1.75rem 1.75rem;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.22);
+  box-sizing: border-box;
+}
+
+.mis-reservas__cerrar {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #64748b;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.mis-reservas__cerrar:hover,
+.mis-reservas__cerrar:focus-visible {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  outline: 2px solid var(--color-marca, #f6a94b);
+  outline-offset: 2px;
+}
+
+.mis-reservas__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1.25rem;
+}
+
+.mis-reservas__icono-titulo {
+  color: var(--color-marca, #f6a94b);
+  flex-shrink: 0;
+}
+
+.mis-reservas__titulo {
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.015em;
+}
+
+/* Pestañas de método de búsqueda */
+.mis-reservas__pestanas {
+  display: flex;
+  background: #f1f5f9;
+  border-radius: 10px;
+  padding: 0.25rem;
+  margin-bottom: 1.5rem;
+  gap: 0.25rem;
+}
+
+.mis-reservas__pestana {
+  flex: 1;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.mis-reservas__pestana:hover {
+  color: #0f172a;
+}
+
+.mis-reservas__pestana--activa {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.mis-reservas__form {
+  margin-bottom: 1.25rem;
+}
+
+.mis-reservas__campo {
+  margin-bottom: 1rem;
+}
+
+.mis-reservas__etiqueta {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.35rem;
+}
+
+.mis-reservas__input-con-boton {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.mis-reservas__input {
+  margin: 0 !important;
+  border-radius: 8px !important;
+  border: 1px solid #cbd5e1 !important;
+  font-size: 0.95rem !important;
+  padding: 0.55rem 0.75rem !important;
+  height: auto !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mis-reservas__input:focus {
+  border-color: var(--color-marca, #f6a94b) !important;
+  box-shadow: 0 0 0 2px var(--color-marca-soft, rgba(246, 169, 75, 0.25)) !important;
+  outline: none;
+}
+
+.mis-reservas__input.is-invalid-input {
+  border-color: #cc4b37 !important;
+}
+
+.mis-reservas__btn-buscar {
+  margin: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 8px;
+  background: var(--color-marca, #f6a94b) !important;
+  color: var(--color-marca-contraste, #1a1a1a) !important;
+  font-weight: 700;
+  padding: 0.55rem 1rem !important;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mis-reservas__btn-buscar:hover,
+.mis-reservas__btn-buscar:focus-visible {
+  filter: brightness(0.95);
+}
+
+.mis-reservas__btn-buscar-datos {
+  margin-top: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 8px;
+  background: var(--color-marca, #f6a94b) !important;
+  color: var(--color-marca-contraste, #1a1a1a) !important;
+  font-weight: 700;
+  padding: 0.65rem 1rem !important;
+  border: none;
+  cursor: pointer;
+}
+
+.mis-reservas__btn-buscar-datos:hover,
+.mis-reservas__btn-buscar-datos:focus-visible {
+  filter: brightness(0.95);
+}
+
+.mis-reservas__alerta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+}
+
+.mis-reservas__resultados {
+  margin-top: 1rem;
+}
+
+.mis-reservas__vacio {
+  margin: 1.5rem 0 0.5rem;
+  text-align: center;
+  font-size: 0.95rem;
+  color: #64748b;
+  padding: 1.5rem 1rem;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px dashed #cbd5e1;
+}
+
+.mis-reservas__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mis-reservas__tarjeta {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: border-color 0.15s ease;
+}
+
+.mis-reservas__tarjeta-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.mis-reservas__tarjeta-tipo {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin-right: 0.5rem;
+}
+
+.mis-reservas__tarjeta-codigo {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.06em;
+}
+
+.mis-reservas__tarjeta-precio {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+.mis-reservas__tarjeta-detalles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.88rem;
+}
+
+.mis-reservas__tarjeta-canchas {
+  margin: 0;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.mis-reservas__tarjeta-fecha {
+  margin: 0;
+  color: #64748b;
+}
+
+.mis-reservas__qr-caja {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-top: 0.25rem;
+}
+
+.mis-reservas__qr-aviso {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.mis-reservas__confirmar {
+  margin: 0.25rem 0 0 !important;
+  border-radius: 8px !important;
+  padding: 0.75rem 0.85rem !important;
+}
+
+.mis-reservas__confirmar-texto {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #78350f;
+}
+
+.mis-reservas__confirmar-acciones {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.mis-reservas__confirmar-acciones .button {
+  margin: 0 !important;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.mis-reservas__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 0.25rem;
+}
+
+.mis-reservas__btn-qr,
+.mis-reservas__btn-cancelar {
+  margin: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.mis-reservas__no-cancelable {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+/* Pantalla completa en móviles (< 640px) */
+@media (max-width: 639px) {
+  .mis-reservas {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .mis-reservas__contenido {
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    padding: 1.25rem 1rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mis-reservas__cerrar {
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+}

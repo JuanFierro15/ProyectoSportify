@@ -68,11 +68,25 @@
     background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
+.formulario-reserva__hora:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.formulario-reserva__hora:focus-visible {
+  outline: 2px solid var(--accent-text, var(--accent, #1779ba));
+  outline-offset: 2px;
+}
+
 /* Horas libres (botón hollow de Foundation): borde y texto del deporte. */
+.formulario-reserva .button.hollow {
+  border-color: var(--accent-text, var(--accent, #1779ba));
+  color: var(--accent-text, var(--accent, #1779ba));
+}
+
 .formulario-reserva__hora.button.hollow,
 .formulario-reserva__hora.button.hollow:disabled {
-  border-color: var(--accent, #1779ba);
-  color: color-mix(in srgb, var(--accent, #1779ba) 55%, #1a1a1a);
+  border-color: var(--accent-text, var(--accent, #1779ba));
+  color: var(--accent-text, var(--accent, #1779ba));
 }
 
 .formulario-reserva__hora.button.hollow:hover:not(:disabled),
@@ -136,8 +150,8 @@
 }
 
 .formulario-reserva__pill.button.hollow {
-  border-color: var(--accent, #1779ba);
-  color: color-mix(in srgb, var(--accent, #1779ba) 55%, #1a1a1a);
+  border-color: var(--accent-text, var(--accent, #1779ba));
+  color: var(--accent-text, var(--accent, #1779ba));
 }
 
 .formulario-reserva__pill.button.hollow:hover,
@@ -255,7 +269,15 @@
   font-weight: 700;
   color: #1e293b;
   cursor: pointer;
+}
+
+.formulario-reserva__torneos-guardados summary:focus:not(:focus-visible) {
   outline: none;
+}
+
+.formulario-reserva__torneos-guardados summary:focus-visible {
+  outline: 2px solid var(--accent-text, var(--accent, #1779ba));
+  outline-offset: 2px;
 }
 
 .formulario-reserva__torneos-guardados[open] summary {
@@ -328,9 +350,17 @@
 }
 
 .formulario-reserva__input:focus {
-  border-color: #1779ba;
-  box-shadow: 0 0 0 3px rgba(23, 121, 186, 0.2);
+  border-color: var(--accent, #1779ba);
+  box-shadow: 0 0 0 3px var(--accent-soft, rgba(23, 121, 186, 0.14));
+}
+
+.formulario-reserva__input:focus:not(:focus-visible) {
   outline: none;
+}
+
+.formulario-reserva__input:focus-visible {
+  outline: 2px solid var(--accent-text, var(--accent, #1779ba));
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -340,4 +370,10 @@
   .formulario-reserva__input {
     transition: none;
   }
+}
+
+/* Resumen en vivo de la franja elegida, junto a la etiqueta de horario. */
+.formulario-reserva__rango {
+  font-weight: 400;
+  color: var(--accent-text, var(--accent, #1779ba));
 }

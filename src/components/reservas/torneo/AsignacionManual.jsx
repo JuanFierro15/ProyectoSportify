@@ -11,6 +11,9 @@ export function AsignacionManual({
 
   return (
     <div className="asignacion-manual">
+      <p className="formulario-reserva__nota">
+        Si eliges un equipo que ya está en otra llave, los dos cambian de lugar.
+      </p>
       <div className="asignacion-manual__grid">
         {Array.from({ length: numPartidos }, (_, m) => {
           const indiceLocal = 2 * m;
@@ -42,7 +45,7 @@ export function AsignacionManual({
                     return (
                       <option key={num} value={num}>
                         Equipo {num}
-                        {enUso ? ' (en uso)' : ''}
+                        {enUso ? ' (en otra llave)' : ''}
                       </option>
                     );
                   })}
@@ -69,7 +72,7 @@ export function AsignacionManual({
                     return (
                       <option key={num} value={num}>
                         Equipo {num}
-                        {enUso ? ' (en uso)' : ''}
+                        {enUso ? ' (en otra llave)' : ''}
                       </option>
                     );
                   })}

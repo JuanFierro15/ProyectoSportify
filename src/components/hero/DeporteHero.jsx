@@ -24,6 +24,7 @@ const SUAVIZADO = 0.3;
  *  - nombre        {string}  nombre del deporte (ej. "Voley Playa")
  *  - slug          {string}  slug del deporte; va en data-sport para que el chat sepa qué deporte se está viendo
  *  - videoSrc      {string}  ruta del video de fondo
+ *  - posterSrc     {string}  ruta de la imagen de respaldo (poster) del video
  *  - tituloCTA     {string}  texto del botón
  *  - colorAcento   {string}  color de acento (hex) para el CTA y el "eyebrow"
  *  - ultimoDeporte {bool}    true solo en el último hero del listado: agrega
@@ -52,6 +53,7 @@ function DeporteHero({
   nombre,
   slug,
   videoSrc,
+  posterSrc,
   tituloCTA,
   colorAcento,
   eyebrow = 'Nuestras canchas',
@@ -156,6 +158,7 @@ function DeporteHero({
           ref={videoRef}
           className="deporte-hero__video"
           src={videoSrc}
+          poster={posterSrc}
           muted
           playsInline
           preload={preload}
