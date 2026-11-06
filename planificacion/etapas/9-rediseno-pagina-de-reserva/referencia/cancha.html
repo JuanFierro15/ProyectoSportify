@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sportify: reserva de cancha</title>
+<style>
+body{margin:0;background:#0d0d0d}
+a{color:#f2f2f2}a:hover{color:#ffffff}
+button{font:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #f2f2f2;outline-offset:2px}
+input::placeholder{color:#8f8f8f}
+</style>
+</head>
+<body>
+<div style="min-height: 1480px; background: #0d0d0d; color: #f2f2f2; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; font-size: 16px; line-height: 1.5">
+
+<header style="position: relative; z-index: 2; border-bottom: 1px solid #262626; background: #0d0d0d">
+<div style="max-width: 1200px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+<a href="#" style="display: flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 700; font-size: 20px; color: #f2f2f2">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f6a94b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
+Sportify</a>
+<nav aria-label="Principal" style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 28px; font-size: 15px; font-weight: 600">
+<a href="#" style="text-decoration: none">Inicio</a>
+<a href="#" style="text-decoration: none">Canchas</a>
+<a href="#" style="text-decoration: none">Eventos especiales</a>
+<a href="#" style="text-decoration: none">Ubicación</a>
+<a href="#" style="text-decoration: none; padding: 8px 14px; border: 1px solid #4a4a4a; border-radius: 8px">Mis reservas</a>
+</nav>
+</div>
+</header>
+
+<section style="position: relative; height: 320px; overflow: hidden">
+<img src="../../../../public/img/canchas/futbol-1-lg.webp" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 40%">
+<div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(13,13,13,0.55) 0%, rgba(13,13,13,0.78) 55%, #0d0d0d 100%)"></div>
+<div style="position: relative; max-width: 1200px; height: 100%; margin: 0 auto; padding: 28px 24px 32px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; gap: 14px">
+<a href="#" style="align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #d6d6d6; text-decoration: none">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+Volver al inicio</a>
+<h1 style="margin: 0; font-size: 52px; line-height: 1.05; font-weight: 700; letter-spacing: -0.5px">Reserva tu cancha</h1>
+<p style="margin: 0; max-width: 560px; color: #d0d0d0; font-size: 17px">Elige la cancha, el día y hasta 3 horas seguidas. Desde 2 horas, cada hora baja $ 5.000 y el agua va por la casa.</p>
+<div role="group" aria-label="Tipo de reserva" style="display: flex; flex-wrap: wrap; gap: 4px; align-self: flex-start; padding: 4px; background: rgba(20,20,20,0.85); border: 1px solid #333333; border-radius: 12px">
+<a href="#" aria-current="page" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 9px; background: #f2f2f2; color: #0d0d0d; font-weight: 700; font-size: 15px; text-decoration: none">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M12 4v16"></path><circle cx="12" cy="12" r="3"></circle></svg>
+Cancha</a>
+<a href="torneo.html" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 9px; color: #e6e6e6; font-weight: 600; font-size: 15px; text-decoration: none">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
+Torneo</a>
+<a href="#" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 9px; color: #e6e6e6; font-weight: 600; font-size: 15px; text-decoration: none">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"></path><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"></path><path d="M2 21h20"></path><path d="M7 8v3"></path><path d="M12 8v3"></path><path d="M17 8v3"></path></svg>
+Cumpleaños</a>
+</div>
+</div>
+</section>
+
+<div style="max-width: 1200px; margin: 0 auto; padding: 0 24px 64px; box-sizing: border-box">
+
+<div role="tablist" aria-label="Deporte" style="display: flex; flex-wrap: wrap; gap: 4px 28px; border-bottom: 1px solid #262626; margin-bottom: 28px">
+
+
+
+<button type="button" role="tab" aria-selected="false" style="min-height: 48px; padding: 0 2px; background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px; color: #a8a8a8; font-weight: 600; font-size: 16px; cursor: pointer">Voley Playa</button>
+
+
+
+
+<button type="button" role="tab" aria-selected="false" style="min-height: 48px; padding: 0 2px; background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px; color: #a8a8a8; font-weight: 600; font-size: 16px; cursor: pointer">Pádel</button>
+
+
+
+<button type="button" role="tab" aria-selected="true" style="min-height: 48px; padding: 0 2px; background: none; border: 0; border-bottom: 3px solid #5bd67d; margin-bottom: -1px; color: #f2f2f2; font-weight: 700; font-size: 16px; cursor: pointer">Fútbol</button>
+
+
+
+<label style="margin-left: auto; display: flex; align-items: center; gap: 10px; min-height: 48px; color: #c4c4c4; font-size: 14px">
+<input type="checkbox" style="width: 18px; height: 18px; accent-color: #5bd67d">
+Solo con horarios libres ese día</label>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start">
+
+<div style="flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+
+<div style="position: relative; display: flex; align-items: center; justify-content: center; gap: 0; height: 500px">
+<div aria-hidden="true" style="width: 210px; height: 300px; border-radius: 16px; overflow: hidden; opacity: 0.4; margin-right: -40px; flex-shrink: 0">
+<img src="../../../../public/img/canchas/futbol-3.webp" alt="" style="width: 100%; height: 100%; object-fit: cover">
+</div>
+<div style="position: relative; z-index: 1; width: 380px; height: 480px; border-radius: 16px; overflow: hidden; border: 1px solid #333333; flex-shrink: 0">
+<img src="../../../../public/img/canchas/futbol-1-lg.webp" alt="Cancha 1 de fútbol" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover">
+<div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(13,13,13,0) 30%, rgba(13,13,13,0.92) 78%)"></div>
+<span style="position: absolute; top: 16px; left: 16px; padding: 4px 10px; border-radius: 999px; background: #5bd67d; color: #0d0d0d; font-size: 13px; font-weight: 700">Fútbol</span>
+<div style="position: absolute; left: 20px; right: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 28px; font-weight: 700">Cancha 1</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+
+<span style="padding: 3px 10px; border-radius: 999px; border: 1px solid #555555; background: rgba(13,13,13,0.6); font-size: 12px; color: #e6e6e6">Fútbol 11</span>
+
+<span style="padding: 3px 10px; border-radius: 999px; border: 1px solid #555555; background: rgba(13,13,13,0.6); font-size: 12px; color: #e6e6e6">Césped monofilamento</span>
+
+<span style="padding: 3px 10px; border-radius: 999px; border: 1px solid #555555; background: rgba(13,13,13,0.6); font-size: 12px; color: #e6e6e6">Foco córner</span>
+
+</div>
+<p style="margin: 0; font-size: 14px; color: #d0d0d0">Cancha sintética de fútbol 11 con césped monofilamento e iluminación desde las esquinas.</p>
+<div style="display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap">
+<span style="font-size: 20px; font-weight: 700">$ 120.000</span><span style="font-size: 13px; color: #b3b3b3">por hora</span>
+<span style="font-size: 13px; color: #b3b3b3">8 de 13 horarios libres</span>
+</div>
+</div>
+</div>
+<div aria-hidden="true" style="width: 210px; height: 300px; border-radius: 16px; overflow: hidden; opacity: 0.4; margin-left: -40px; flex-shrink: 0">
+<img src="../../../../public/img/canchas/futbol-2.webp" alt="" style="width: 100%; height: 100%; object-fit: cover">
+</div>
+<button type="button" aria-label="Cancha anterior" style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 50%; border: 1px solid #444444; background: #1c1c1c; color: #f2f2f2; display: flex; align-items: center; justify-content: center; cursor: pointer">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></button>
+<button type="button" aria-label="Cancha siguiente" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 50%; border: 1px solid #444444; background: #1c1c1c; color: #f2f2f2; display: flex; align-items: center; justify-content: center; cursor: pointer">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></button>
+</div>
+
+<section aria-labelledby="t-dia" style="background: #161616; border: 1px solid #2a2a2a; border-radius: 16px; padding: 24px">
+<h2 id="t-dia" style="margin: 0 0 16px; font-size: 18px; font-weight: 700">Día</h2>
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px">
+
+
+<button type="button" aria-pressed="true" style="min-height: 88px; border-radius: 12px; border: 2px solid #5bd67d; background: #1f1f1f; color: #f2f2f2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer">
+<span style="font-size: 13px; color: #5bd67d; font-weight: 700">Hoy</span><span style="font-size: 24px; font-weight: 700; line-height: 1.1">6</span><span style="font-size: 12px; color: #b3b3b3">8 libres</span></button>
+
+
+
+
+
+<button type="button" aria-pressed="false" style="min-height: 88px; border-radius: 12px; border: 1px solid #333333; background: #1a1a1a; color: #f2f2f2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer">
+<span style="font-size: 13px; color: #b3b3b3; font-weight: 600">Sáb</span><span style="font-size: 24px; font-weight: 700; line-height: 1.1">7</span><span style="font-size: 12px; color: #9a9a9a">11 libres</span></button>
+
+
+
+
+<button type="button" aria-pressed="false" style="min-height: 88px; border-radius: 12px; border: 1px solid #333333; background: #1a1a1a; color: #f2f2f2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer">
+<span style="font-size: 13px; color: #b3b3b3; font-weight: 600">Dom</span><span style="font-size: 24px; font-weight: 700; line-height: 1.1">8</span><span style="font-size: 12px; color: #9a9a9a">7 libres</span></button>
+
+
+
+
+<button type="button" aria-pressed="false" style="min-height: 88px; border-radius: 12px; border: 1px solid #333333; background: #1a1a1a; color: #f2f2f2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer">
+<span style="font-size: 13px; color: #b3b3b3; font-weight: 600">Lun</span><span style="font-size: 24px; font-weight: 700; line-height: 1.1">9</span><span style="font-size: 12px; color: #9a9a9a">11 libres</span></button>
+
+
+
+
+<button type="button" aria-pressed="false" style="min-height: 88px; border-radius: 12px; border: 1px solid #333333; background: #1a1a1a; color: #f2f2f2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer">
+<span style="font-size: 13px; color: #b3b3b3; font-weight: 600">Mar</span><span style="font-size: 24px; font-weight: 700; line-height: 1.1">10</span><span style="font-size: 12px; color: #9a9a9a">13 libres</span></button>
+
+
+
+
+<button type="button" aria-pressed="false" style="min-height: 88px; border-radius: 12px; border: 1px solid #333333; background: #1a1a1a; color: #f2f2f2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer">
+<span style="font-size: 13px; color: #b3b3b3; font-weight: 600">Mié</span><span style="font-size: 24px; font-weight: 700; line-height: 1.1">11</span><span style="font-size: 12px; color: #9a9a9a">10 libres</span></button>
+
+
+
+
+<button type="button" aria-pressed="false" style="min-height: 88px; border-radius: 12px; border: 1px solid #333333; background: #1a1a1a; color: #f2f2f2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer">
+<span style="font-size: 13px; color: #b3b3b3; font-weight: 600">Jue</span><span style="font-size: 24px; font-weight: 700; line-height: 1.1">12</span><span style="font-size: 12px; color: #9a9a9a">8 libres</span></button>
+
+
+</div>
+</section>
+
+<section aria-labelledby="t-hora" style="background: #161616; border: 1px solid #2a2a2a; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px">
+<h2 id="t-hora" style="margin: 0; font-size: 18px; font-weight: 700">Horario</h2>
+<p style="margin: 0; font-size: 14px; color: #b3b3b3">Una hora o hasta 3 seguidas</p>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px">
+<span style="width: 72px; font-size: 13px; font-weight: 600; color: #b3b3b3">Mañana</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 400px">
+
+
+<button type="button" disabled="disabled" aria-label="08:00, reservada" style="width: 84px; min-height: 44px; border-radius: 10px; border: 1px dashed #3a3a3a; background: transparent; color: #7a7a7a; text-decoration: line-through; font-size: 15px; cursor: not-allowed">08:00</button>
+
+
+
+
+
+<button type="button" disabled="disabled" aria-label="09:00, reservada" style="width: 84px; min-height: 44px; border-radius: 10px; border: 1px dashed #3a3a3a; background: transparent; color: #7a7a7a; text-decoration: line-through; font-size: 15px; cursor: not-allowed">09:00</button>
+
+
+
+
+
+
+
+<button type="button" aria-pressed="false" style="width: 84px; min-height: 44px; border-radius: 10px; border: 1px solid #4a4a4a; background: #1f1f1f; color: #f2f2f2; font-size: 15px; cursor: pointer">10:00</button>
+
+
+
+
+
+<button type="button" aria-pressed="false" style="width: 84px; min-height: 44px; border-radius: 10px; border: 1px solid #4a4a4a; background: #1f1f1f; color: #f2f2f2; font-size: 15px; cursor: pointer">11:00</button>
+
+
+</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px">
+<span style="width: 72px; font-size: 13px; font-weight: 600; color: #b3b3b3">Tarde</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 400px">
+
+
+<button type="button" disabled="disabled" aria-label="12:00, reservada" style="width: 84px; min-height: 44px; border-radius: 10px; border: 1px dashed #3a3a3a; background: transparent; color: #7a7a7a; text-decoration: line-through; font-size: 15px; cursor: not-allowed">12:00</button>
+
+
+
+
+
+
+
+<button type="button" aria-pressed="false" style="width: 84px; min-height: 44px; border-radius: 10px; border: 1px solid #4a4a4a; background: #1f1f1f; color: #f2f2f2; font-size: 15px; cursor: pointer">13:00</button>
+
+
+
+
+<button type="button" aria-pressed="true" style="width: 84px; min-height: 44px; border-radius: 10px; border: 1px solid #5bd67d; background: #5bd67d; color: #0d0d0d; font-weight: 700; font-size: 15px; cursor: pointer">14:00</button>
+
+
+
+
+
+<button type="button" aria-pressed="true" style="width: 84px; min-height: 44px; border-radius: 10px; border: 1px solid #5bd67d; background: #5bd67d; color: #0d0d0d; font-weight: 700; font-size: 15px; cursor: pointer">15:00</button>
+
+
+
+
+
+
+<button type="button" aria-pressed="false" style="width: 84px; min-height: 44px; border-radius: 10px; border: 1px solid #4a4a4a; background: #1f1f1f; color: #f2f2f2; font-size: 15px; cursor: pointer">16:00</button>
+
+
+
+<button type="button" disabled="disabled" aria-label="17:00, reservada" style="width: 84px; min-height: 44px; border-radius: 10px; border: 1px dashed #3a3a3a; background: transparent; color: #7a7a7a; text-decoration: line-through; font-size: 15px; cursor: not-allowed">17:00</button>
+
+
+
+
+</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px">
+<span style="width: 72px; font-size: 13px; font-weight: 600; color: #b3b3b3">Noche</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 400px">
+
+
+<button type="button" disabled="disabled" aria-label="18:00, reservada" style="width: 84px; min-height: 44px; border-radius: 10px; border: 1px dashed #3a3a3a; background: transparent; color: #7a7a7a; text-decoration: line-through; font-size: 15px; cursor: not-allowed">18:00</button>
+
+
+
+
+
+
+
+<button type="button" aria-pressed="false" style="width: 84px; min-height: 44px; border-radius: 10px; border: 1px solid #4a4a4a; background: #1f1f1f; color: #f2f2f2; font-size: 15px; cursor: pointer">19:00</button>
+
+
+
+
+
+<button type="button" aria-pressed="false" style="width: 84px; min-height: 44px; border-radius: 10px; border: 1px solid #4a4a4a; background: #1f1f1f; color: #f2f2f2; font-size: 15px; cursor: pointer">20:00</button>
+
+
+</div>
+</div>
+
+<p style="margin: 0; display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; color: #b3b3b3">
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; border-radius: 4px; border: 1px solid #4a4a4a; background: #1f1f1f"></span>Libre</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; border-radius: 4px; background: #5bd67d"></span>Elegida</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; border-radius: 4px; border: 1px dashed #4a4a4a"></span>Reservada</span>
+</p>
+</section>
+
+<section aria-labelledby="t-datos" style="background: #161616; border: 1px solid #2a2a2a; border-radius: 16px; padding: 24px">
+<h2 id="t-datos" style="margin: 0 0 16px; font-size: 18px; font-weight: 700">Tus datos</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600; color: #d6d6d6">Nombre
+<input type="text" placeholder="Ana Gómez" style="height: 46px; padding: 0 14px; border-radius: 10px; border: 1px solid #444444; background: #0f0f0f; color: #f2f2f2; font-size: 15px; font-weight: 400"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600; color: #d6d6d6">Teléfono (opcional)
+<input type="tel" placeholder="300 123 4567" style="height: 46px; padding: 0 14px; border-radius: 10px; border: 1px solid #444444; background: #0f0f0f; color: #f2f2f2; font-size: 15px; font-weight: 400"></label>
+</div>
+<p style="margin: 12px 0 0; font-size: 13px; color: #a8a8a8">Con el teléfono puedes cancelar desde el chat. Sin él, solo con el código de la reserva.</p>
+</section>
+
+</div>
+
+<aside aria-label="Tu reserva" style="flex: 1 1 320px; max-width: 380px; position: sticky; top: 24px">
+<div style="position: relative; background: #1a1a1a; border: 1px solid #333333; border-radius: 18px">
+<div style="padding: 24px 24px 20px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 700">Tu reserva</h2>
+<span style="padding: 3px 10px; border-radius: 999px; border: 1px solid #5bd67d; color: #5bd67d; font-size: 12px; font-weight: 700">Fútbol</span>
+</div>
+<dl style="margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; font-size: 15px">
+<dt style="color: #a8a8a8">Cancha</dt><dd style="margin: 0; text-align: right; font-weight: 600">Cancha 1</dd>
+<dt style="color: #a8a8a8">Fecha</dt><dd style="margin: 0; text-align: right; font-weight: 600">Viernes 6 de noviembre</dd>
+<dt style="color: #a8a8a8">Horario</dt><dd style="margin: 0; text-align: right; font-weight: 600">14:00 a 16:00</dd>
+</dl>
+</div>
+<div aria-hidden="true" style="position: relative; height: 24px; display: flex; align-items: center">
+<span style="position: absolute; left: -13px; width: 24px; height: 24px; border-radius: 50%; background: #0d0d0d; border-right: 1px solid #333333"></span>
+<span style="flex: 1; margin: 0 20px; border-top: 2px dashed #3a3a3a"></span>
+<span style="position: absolute; right: -13px; width: 24px; height: 24px; border-radius: 50%; background: #0d0d0d; border-left: 1px solid #333333"></span>
+</div>
+<div style="padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 12px">
+
+<div style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #c4c4c4">
+<div style="display: flex; justify-content: space-between; gap: 12px"><span>2 horas de $ 120.000</span><span>$ 240.000</span></div>
+
+<div style="display: flex; justify-content: space-between; gap: 12px; color: #5bd67d"><span>Descuento por horas seguidas</span><span style="white-space: nowrap">- $ 10.000</span></div>
+<div style="display: flex; justify-content: space-between; gap: 12px; color: #5bd67d"><span>Pack de agua</span><span>Gratis</span></div>
+
+</div>
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding-top: 6px">
+<span style="font-size: 15px; color: #d6d6d6">Total</span>
+<span style="font-size: 32px; font-weight: 700; letter-spacing: -0.5px">$ 230.000</span>
+</div>
+
+
+<button type="button" style="min-height: 50px; border-radius: 12px; border: 0; background: #5bd67d; color: #0d0d0d; font-weight: 700; font-size: 16px; cursor: pointer">Confirmar reserva</button>
+<button type="button" style="min-height: 44px; border-radius: 12px; border: 1px solid #444444; background: transparent; color: #e6e6e6; font-weight: 600; font-size: 15px; cursor: pointer">Limpiar selección</button>
+</div>
+</div>
+</aside>
+
+</div>
+</div>
+</div>
+</body>
+</html>

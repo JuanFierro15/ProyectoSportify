@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sportify: reserva de torneo</title>
+<style>
+body{margin:0;background:#0d0d0d}
+a{color:#f2f2f2}a:hover{color:#ffffff}
+button{font:inherit}
+button:focus-visible,a:focus-visible{outline:2px solid #f2f2f2;outline-offset:2px}
+</style>
+</head>
+<body>
+<div style="min-height: 1300px; background: #0d0d0d; color: #f2f2f2; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; font-size: 16px; line-height: 1.5">
+
+<header style="position: relative; z-index: 2; border-bottom: 1px solid #262626; background: #0d0d0d">
+<div style="max-width: 1200px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+<a href="#" style="display: flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 700; font-size: 20px; color: #f2f2f2">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f6a94b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
+Sportify</a>
+<nav aria-label="Principal" style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 28px; font-size: 15px; font-weight: 600">
+<a href="#" style="text-decoration: none">Inicio</a>
+<a href="#" style="text-decoration: none">Canchas</a>
+<a href="#" style="text-decoration: none">Eventos especiales</a>
+<a href="#" style="text-decoration: none">Ubicación</a>
+<a href="#" style="text-decoration: none; padding: 8px 14px; border: 1px solid #4a4a4a; border-radius: 8px">Mis reservas</a>
+</nav>
+</div>
+</header>
+
+<section style="position: relative; height: 260px; overflow: hidden">
+<img src="../../../../public/img/canchas/futbol-2.webp" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 35%">
+<div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(13,13,13,0.55) 0%, rgba(13,13,13,0.8) 55%, #0d0d0d 100%)"></div>
+<div style="position: relative; max-width: 1200px; height: 100%; margin: 0 auto; padding: 24px 24px 28px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; gap: 14px">
+<h1 style="margin: 0; font-size: 52px; line-height: 1.05; font-weight: 700; letter-spacing: -0.5px">Reserva tu torneo</h1>
+<div role="group" aria-label="Tipo de reserva" style="display: flex; flex-wrap: wrap; gap: 4px; align-self: flex-start; padding: 4px; background: rgba(20,20,20,0.85); border: 1px solid #333333; border-radius: 12px">
+<a href="cancha.html" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 9px; color: #e6e6e6; font-weight: 600; font-size: 15px; text-decoration: none">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M12 4v16"></path><circle cx="12" cy="12" r="3"></circle></svg>
+Cancha</a>
+<a href="#" aria-current="page" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 9px; background: #f2f2f2; color: #0d0d0d; font-weight: 700; font-size: 15px; text-decoration: none">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
+Torneo</a>
+<a href="#" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 9px; color: #e6e6e6; font-weight: 600; font-size: 15px; text-decoration: none">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"></path><path d="M2 21h20"></path><path d="M7 8v3"></path><path d="M12 8v3"></path><path d="M17 8v3"></path></svg>
+Cumpleaños</a>
+</div>
+</div>
+</section>
+
+<div style="max-width: 1200px; margin: 0 auto; padding: 0 24px 64px; box-sizing: border-box">
+
+<ol aria-label="Pasos del torneo" style="list-style: none; margin: 0 0 28px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px">
+<li style="display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 12px; background: #161616; border: 1px solid #2a2a2a; color: #c4c4c4; font-size: 14px; font-weight: 600">
+<span style="width: 24px; height: 24px; border-radius: 50%; background: #23402c; color: #5bd67d; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span>
+Canchas</li>
+<li style="display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 12px; background: #161616; border: 1px solid #2a2a2a; color: #c4c4c4; font-size: 14px; font-weight: 600">
+<span style="width: 24px; height: 24px; border-radius: 50%; background: #23402c; color: #5bd67d; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span>
+Formato</li>
+<li style="display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 12px; background: #161616; border: 1px solid #2a2a2a; color: #c4c4c4; font-size: 14px; font-weight: 600">
+<span style="width: 24px; height: 24px; border-radius: 50%; background: #23402c; color: #5bd67d; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span>
+Fechas por fase</li>
+<li aria-current="step" style="display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 12px; background: #1c1c1c; border: 1px solid #5bd67d; color: #f2f2f2; font-size: 14px; font-weight: 700">
+<span style="width: 24px; height: 24px; border-radius: 50%; background: #5bd67d; color: #0d0d0d; display: flex; align-items: center; justify-content: center; font-size: 13px">4</span>
+Llaves</li>
+<li style="display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 12px; border: 1px solid #2a2a2a; color: #a8a8a8; font-size: 14px; font-weight: 600">
+<span style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid #555555; display: flex; align-items: center; justify-content: center; font-size: 13px">5</span>
+Tus datos</li>
+</ol>
+
+<div style="display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start">
+
+<section aria-labelledby="t-llaves" style="flex: 1 1 100%; min-width: 0; background: #161616; border: 1px solid #2a2a2a; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+<div>
+<h2 id="t-llaves" style="margin: 0; font-size: 20px; font-weight: 700">Llaves del torneo</h2>
+<p style="margin: 4px 0 0; font-size: 14px; color: #b3b3b3">8 equipos, 7 partidos de 20 minutos. Empate: penales.</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+<div role="group" aria-label="Emparejamiento" style="display: flex; padding: 3px; border: 1px solid #333333; border-radius: 10px; background: #0f0f0f">
+<button type="button" aria-pressed="true" style="min-height: 38px; padding: 0 14px; border: 0; border-radius: 8px; background: #2a2a2a; color: #f2f2f2; font-weight: 700; font-size: 14px; cursor: pointer">Aleatorio</button>
+<button type="button" aria-pressed="false" style="min-height: 38px; padding: 0 14px; border: 0; border-radius: 8px; background: transparent; color: #b3b3b3; font-weight: 600; font-size: 14px; cursor: pointer">Manual</button>
+</div>
+<button type="button" style="display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 1px solid #444444; border-radius: 10px; background: transparent; color: #e6e6e6; font-weight: 600; font-size: 14px; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 14 4 4-4 4"></path><path d="m18 2 4 4-4 4"></path><path d="M2 18h1.97a4 4 0 0 0 3.3-1.7l5.46-8.6a4 4 0 0 1 3.3-1.7H22"></path><path d="M2 6h1.97a4 4 0 0 1 3.3 1.7l.68 1.07"></path><path d="m15.4 16.4.6.9a4 4 0 0 0 3.3 1.7H22"></path></svg>
+Volver a sortear</button>
+</div>
+</div>
+
+<div style="overflow-x: auto; padding-bottom: 4px">
+<div style="width: 1102px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px">
+
+<div style="display: grid; grid-template-columns: repeat(5, 190px); column-gap: 38px">
+<div style="text-align: left"><h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #f2f2f2">Cuartos de final</h3><p style="margin: 0; font-size: 13px; color: #a8a8a8">Vie 6 nov, 8:00 a 10:00</p></div>
+<div style="text-align: left"><h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #f2f2f2">Semifinal</h3><p style="margin: 0; font-size: 13px; color: #a8a8a8">Sáb 7 nov, 9:00 a 10:00</p></div>
+<div style="text-align: center"><h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #5bd67d">Final</h3><p style="margin: 0; font-size: 13px; color: #a8a8a8">Dom 8 nov, 11:00</p></div>
+<div style="text-align: right"><h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #f2f2f2">Semifinal</h3><p style="margin: 0; font-size: 13px; color: #a8a8a8">Sáb 7 nov, 9:00 a 10:00</p></div>
+<div style="text-align: right"><h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #f2f2f2">Cuartos de final</h3><p style="margin: 0; font-size: 13px; color: #a8a8a8">Vie 6 nov, 8:00 a 10:00</p></div>
+</div>
+
+<div style="position: relative; width: 1102px; height: 250px">
+<div aria-hidden="true" style="position: absolute; left: 190px; top: 61px; width: 19px; height: 2px; background: #3a3a3a"></div>
+<div aria-hidden="true" style="position: absolute; left: 190px; top: 189px; width: 19px; height: 2px; background: #3a3a3a"></div>
+<div aria-hidden="true" style="position: absolute; left: 208px; top: 61px; width: 2px; height: 130px; background: #3a3a3a"></div>
+<div aria-hidden="true" style="position: absolute; left: 209px; top: 125px; width: 19px; height: 2px; background: #3a3a3a"></div>
+<div aria-hidden="true" style="position: absolute; left: 418px; top: 125px; width: 38px; height: 2px; background: #5bd67d"></div>
+<div aria-hidden="true" style="position: absolute; left: 646px; top: 125px; width: 38px; height: 2px; background: #5bd67d"></div>
+<div aria-hidden="true" style="position: absolute; left: 874px; top: 125px; width: 19px; height: 2px; background: #3a3a3a"></div>
+<div aria-hidden="true" style="position: absolute; left: 892px; top: 61px; width: 2px; height: 130px; background: #3a3a3a"></div>
+<div aria-hidden="true" style="position: absolute; left: 893px; top: 61px; width: 19px; height: 2px; background: #3a3a3a"></div>
+<div aria-hidden="true" style="position: absolute; left: 893px; top: 189px; width: 19px; height: 2px; background: #3a3a3a"></div>
+
+
+<div style="position: absolute; left: 0px; top: 4px; width: 190px; font-size: 12px; color: #a8a8a8; text-align: left">Partido 1, 8:00</div>
+<div style="position: absolute; left: 0px; top: 24px; width: 190px; height: 76px; box-sizing: border-box; border-radius: 10px; border: 1px solid #333333; background: #1f1f1f; display: flex; flex-direction: column">
+<div style="flex: 1; display: flex; align-items: center; justify-content: flex-start; padding: 0 12px; border-bottom: 1px solid #2c2c2c; font-size: 14px; font-weight: 600; color: #f2f2f2">Equipo 4</div>
+<div style="flex: 1; display: flex; align-items: center; justify-content: flex-start; padding: 0 12px; font-size: 14px; font-weight: 600; color: #f2f2f2">Equipo 5</div>
+</div>
+
+<div style="position: absolute; left: 0px; top: 132px; width: 190px; font-size: 12px; color: #a8a8a8; text-align: left">Partido 2, 8:30</div>
+<div style="position: absolute; left: 0px; top: 152px; width: 190px; height: 76px; box-sizing: border-box; border-radius: 10px; border: 1px solid #333333; background: #1f1f1f; display: flex; flex-direction: column">
+<div style="flex: 1; display: flex; align-items: center; justify-content: flex-start; padding: 0 12px; border-bottom: 1px solid #2c2c2c; font-size: 14px; font-weight: 600; color: #f2f2f2">Equipo 7</div>
+<div style="flex: 1; display: flex; align-items: center; justify-content: flex-start; padding: 0 12px; font-size: 14px; font-weight: 600; color: #f2f2f2">Equipo 6</div>
+</div>
+
+<div style="position: absolute; left: 912px; top: 4px; width: 190px; font-size: 12px; color: #a8a8a8; text-align: right">Partido 3, 9:00</div>
+<div style="position: absolute; left: 912px; top: 24px; width: 190px; height: 76px; box-sizing: border-box; border-radius: 10px; border: 1px solid #333333; background: #1f1f1f; display: flex; flex-direction: column">
+<div style="flex: 1; display: flex; align-items: center; justify-content: flex-end; padding: 0 12px; border-bottom: 1px solid #2c2c2c; font-size: 14px; font-weight: 600; color: #f2f2f2">Equipo 3</div>
+<div style="flex: 1; display: flex; align-items: center; justify-content: flex-end; padding: 0 12px; font-size: 14px; font-weight: 600; color: #f2f2f2">Equipo 2</div>
+</div>
+
+<div style="position: absolute; left: 912px; top: 132px; width: 190px; font-size: 12px; color: #a8a8a8; text-align: right">Partido 4, 9:30</div>
+<div style="position: absolute; left: 912px; top: 152px; width: 190px; height: 76px; box-sizing: border-box; border-radius: 10px; border: 1px solid #333333; background: #1f1f1f; display: flex; flex-direction: column">
+<div style="flex: 1; display: flex; align-items: center; justify-content: flex-end; padding: 0 12px; border-bottom: 1px solid #2c2c2c; font-size: 14px; font-weight: 600; color: #f2f2f2">Equipo 1</div>
+<div style="flex: 1; display: flex; align-items: center; justify-content: flex-end; padding: 0 12px; font-size: 14px; font-weight: 600; color: #f2f2f2">Equipo 8</div>
+</div>
+
+<div style="position: absolute; left: 228px; top: 68px; width: 190px; font-size: 12px; color: #a8a8a8; text-align: left">Partido 5, 9:00</div>
+<div style="position: absolute; left: 228px; top: 88px; width: 190px; height: 76px; box-sizing: border-box; border-radius: 10px; border: 1px solid #333333; background: #1f1f1f; display: flex; flex-direction: column">
+<div style="flex: 1; display: flex; align-items: center; justify-content: flex-start; padding: 0 12px; border-bottom: 1px solid #2c2c2c; font-size: 14px; font-weight: 400; color: #a8a8a8">Ganador del partido 1</div>
+<div style="flex: 1; display: flex; align-items: center; justify-content: flex-start; padding: 0 12px; font-size: 14px; font-weight: 400; color: #a8a8a8">Ganador del partido 2</div>
+</div>
+
+<div style="position: absolute; left: 684px; top: 68px; width: 190px; font-size: 12px; color: #a8a8a8; text-align: right">Partido 6, 9:30</div>
+<div style="position: absolute; left: 684px; top: 88px; width: 190px; height: 76px; box-sizing: border-box; border-radius: 10px; border: 1px solid #333333; background: #1f1f1f; display: flex; flex-direction: column">
+<div style="flex: 1; display: flex; align-items: center; justify-content: flex-end; padding: 0 12px; border-bottom: 1px solid #2c2c2c; font-size: 14px; font-weight: 400; color: #a8a8a8">Ganador del partido 3</div>
+<div style="flex: 1; display: flex; align-items: center; justify-content: flex-end; padding: 0 12px; font-size: 14px; font-weight: 400; color: #a8a8a8">Ganador del partido 4</div>
+</div>
+
+
+<div style="position: absolute; left: 456px; top: 20px; width: 190px; display: flex; flex-direction: column; align-items: center; gap: 2px; color: #5bd67d; font-size: 12px">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
+<span style="color: #a8a8a8">Partido 7, 11:00</span>
+</div>
+<div style="position: absolute; left: 456px; top: 78px; width: 190px; height: 96px; box-sizing: border-box; border-radius: 12px; border: 2px solid #5bd67d; background: #15251a; display: flex; flex-direction: column">
+<div style="flex: 1; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #2c4a33; font-size: 14px; color: #a6dfb6">Ganador del partido 5</div>
+<div style="flex: 1; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #a6dfb6">Ganador del partido 6</div>
+</div>
+<p style="position: absolute; left: 456px; top: 184px; width: 190px; margin: 0; font-size: 13px; color: #b3b3b3; text-align: center">Trofeo y premiación al terminar.</p>
+
+</div>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="t-datos" style="flex: 999 1 640px; min-width: 0; background: #161616; border: 1px solid #2a2a2a; border-radius: 16px; padding: 24px">
+<h2 id="t-datos" style="margin: 0 0 16px; font-size: 18px; font-weight: 700">Tus datos</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600; color: #d6d6d6">Nombre
+<input type="text" placeholder="Ana Gómez" style="height: 46px; padding: 0 14px; border-radius: 10px; border: 1px solid #444444; background: #0f0f0f; color: #f2f2f2; font-size: 15px; font-weight: 400"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600; color: #d6d6d6">Teléfono (opcional)
+<input type="tel" placeholder="300 123 4567" style="height: 46px; padding: 0 14px; border-radius: 10px; border: 1px solid #444444; background: #0f0f0f; color: #f2f2f2; font-size: 15px; font-weight: 400"></label>
+</div>
+</section>
+
+<aside aria-label="Tu reserva" style="flex: 1 1 320px; max-width: 380px; position: static">
+<div style="position: relative; background: #1a1a1a; border: 1px solid #333333; border-radius: 18px">
+<div style="padding: 24px 24px 20px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 700">Tu torneo</h2>
+<span style="padding: 3px 10px; border-radius: 999px; border: 1px solid #5bd67d; color: #5bd67d; font-size: 12px; font-weight: 700">Fútbol</span>
+</div>
+<dl style="margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; font-size: 15px">
+<dt style="color: #a8a8a8">Formato</dt><dd style="margin: 0; text-align: right; font-weight: 600">8 equipos, 7 partidos</dd>
+<dt style="color: #a8a8a8">Cancha</dt><dd style="margin: 0; text-align: right; font-weight: 600">Cancha 1</dd>
+<dt style="color: #a8a8a8">Cuartos</dt><dd style="margin: 0; text-align: right; font-weight: 600">Vie 6 nov, 8:00 a 10:00</dd>
+<dt style="color: #a8a8a8">Semifinal</dt><dd style="margin: 0; text-align: right; font-weight: 600">Sáb 7 nov, 9:00 a 10:00</dd>
+<dt style="color: #a8a8a8">Final</dt><dd style="margin: 0; text-align: right; font-weight: 600">Dom 8 nov, 11:00 a 12:00</dd>
+</dl>
+</div>
+<div aria-hidden="true" style="position: relative; height: 24px; display: flex; align-items: center">
+<span style="position: absolute; left: -13px; width: 24px; height: 24px; border-radius: 50%; background: #0d0d0d; border-right: 1px solid #333333"></span>
+<span style="flex: 1; margin: 0 20px; border-top: 2px dashed #3a3a3a"></span>
+<span style="position: absolute; right: -13px; width: 24px; height: 24px; border-radius: 50%; background: #0d0d0d; border-left: 1px solid #333333"></span>
+</div>
+<div style="padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #c4c4c4">
+<div style="display: flex; justify-content: space-between; gap: 12px"><span>Cuartos, 2 horas</span><span>$ 230.000</span></div>
+<div style="display: flex; justify-content: space-between; gap: 12px"><span>Semifinal, 1 hora</span><span>$ 120.000</span></div>
+<div style="display: flex; justify-content: space-between; gap: 12px"><span>Final, 1 hora</span><span>$ 120.000</span></div>
+<div style="display: flex; justify-content: space-between; gap: 12px; color: #5bd67d"><span>Descuento en cuartos</span><span style="white-space: nowrap">- $ 10.000</span></div>
+<div style="display: flex; justify-content: space-between; gap: 12px; color: #5bd67d"><span>Pack de agua</span><span>Gratis</span></div>
+</div>
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding-top: 6px">
+<span style="font-size: 15px; color: #d6d6d6">Total</span>
+<span style="font-size: 32px; font-weight: 700; letter-spacing: -0.5px">$ 470.000</span>
+</div>
+<button type="button" style="min-height: 50px; border-radius: 12px; border: 0; background: #5bd67d; color: #0d0d0d; font-weight: 700; font-size: 16px; cursor: pointer">Seguir con tus datos</button>
+<button type="button" style="min-height: 44px; border-radius: 12px; border: 1px solid #444444; background: transparent; color: #e6e6e6; font-weight: 600; font-size: 15px; cursor: pointer">Limpiar selección</button>
+</div>
+</div>
+</aside>
+
+</div>
+</div>
+</div>
+</body>
+</html>
