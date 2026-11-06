@@ -546,4 +546,106 @@ describe('Modo Torneo - Pruebas de integración', () => {
     expect(result.current.motivoBloqueo).toBe('Máximo 100 invitados.');
     expect(result.current.puedeConfirmar).toBe(false);
   });
+
+  it('10. En cumpleaños muestra la cantidad de invitados en voucher y confirmación; en cancha y torneo no', () => {
+    function FlujoModosPrueba({ modoInicial }) {
+      const { dias, canchas } = useReservas();
+      const reserva = useReserva({
+        activo: true,
+        modoInicial,
+        canchaInicial: canchas.find((c) => c.id === 'futbol-1') || null,
+      });
+
+      const initRef = useRef(false);
+      useEffect(() => {
+        if (!initRef.current) {
+          initRef.current = true;
+          reserva.cambiarFecha(dias[1]);
+          if (modoInicial !== 'cancha') {
+            reserva.alternarCancha('futbol-1');
+          }
+        }
+      }, [dias, modoInicial, reserva]);
+
+      return (
+        <div>
+          {reserva.confirmado ? (
+            <ConfirmacionReserva
+              codigo={reserva.confirmado.codigo}
+              textoQr={reserva.confirmado.textoQr}
+              resumen={reserva.confirmado.resumen}
+              onListo={reserva.reiniciar}
+            />
+          ) : (
+            <>
+              <FormularioReserva reserva={reserva} dias={dias} />
+              <VoucherReserva
+                tipoEtiqueta={reserva.modoInfo.tipoEtiqueta}
+                fechaTexto={fechaCompleta(reserva.fecha)}
+                horas={reserva.horasSel}
+                precio={reserva.precio}
+                puedeConfirmar={reserva.puedeConfirmar}
+                motivoBloqueo={reserva.motivoBloqueo}
+                onConfirmar={reserva.confirmar}
+                onCancelar={reserva.reiniciar}
+                torneo={reserva.modo === 'torneo' ? reserva.torneoPlan : null}
+                invitados={reserva.modo === 'cumpleanos' ? reserva.invitados : null}
+              />
+            </>
+          )}
+        </div>
+      );
+    }
+
+    // 1) Cumpleaños: muestra Invitados en voucher y confirmación
+    const { unmount: unmountCumple } = render(
+      <ReservasProvider>
+        <FlujoModosPrueba modoInicial="cumpleanos" />
+      </ReservasProvider>
+    );
+
+    const inputInvitados = screen.getByLabelText(/^Invitados$/i);
+    fireEvent.change(inputInvitados, { target: { value: '20' } });
+    fireEvent.click(screen.getByRole('button', { name: /14:00/i }));
+    fireEvent.change(screen.getByLabelText(/Nombre/i), { target: { value: 'Ana Gómez' } });
+
+    const voucherCumple = screen.getByLabelText('Resumen de tu reserva');
+    expect(within(voucherCumple).getByText('Invitados')).toBeInTheDocument();
+    expect(within(voucherCumple).getByText('20')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar reserva/i }));
+    expect(screen.getByText('Reserva confirmada')).toBeInTheDocument();
+    expect(screen.getByText(/Invitados:/i)).toHaveTextContent('Invitados: 20');
+    unmountCumple();
+
+    // 2) Cancha: no muestra Invitados en voucher ni en confirmación
+    window.localStorage.clear();
+    const { unmount: unmountCancha } = render(
+      <ReservasProvider>
+        <FlujoModosPrueba modoInicial="cancha" />
+      </ReservasProvider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /14:00/i }));
+    fireEvent.change(screen.getByLabelText(/Nombre/i), { target: { value: 'Ana Gómez' } });
+
+    const voucherCancha = screen.getByLabelText('Resumen de tu reserva');
+    expect(within(voucherCancha).queryByText('Invitados')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar reserva/i }));
+    expect(screen.getByText('Reserva confirmada')).toBeInTheDocument();
+    expect(screen.queryByText(/Invitados:/i)).not.toBeInTheDocument();
+    unmountCancha();
+
+    // 3) Torneo: no muestra Invitados en voucher ni en confirmación
+    window.localStorage.clear();
+    render(
+      <ReservasProvider>
+        <FlujoTorneoPrueba canchasIniciales={['futbol-1', 'futbol-2', 'futbol-3']} />
+      </ReservasProvider>
+    );
+
+    const voucherTorneo = screen.getByLabelText('Resumen de tu reserva');
+    expect(within(voucherTorneo).queryByText('Invitados')).not.toBeInTheDocument();
+  });
 });

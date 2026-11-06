@@ -991,6 +991,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
         canchas: nombresCanchas,
         total: precio.total,
         packsAgua: precio.packsAgua,
+        invitados: modo === 'cumpleanos' ? Number(invitados) : null,
         torneo: datosTorneo,
       },
     });

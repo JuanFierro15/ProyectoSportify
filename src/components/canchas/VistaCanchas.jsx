@@ -560,6 +560,7 @@ function VistaCanchas() {
                 onConfirmar={reserva.confirmar}
                 onCancelar={reserva.reiniciar}
                 torneo={reserva.modo === 'torneo' ? reserva.torneoPlan : null}
+                invitados={reserva.modo === 'cumpleanos' ? reserva.invitados : null}
               />
             </div>
           </>
