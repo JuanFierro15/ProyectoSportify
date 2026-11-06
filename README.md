@@ -1,8 +1,9 @@
 # Sportify · Reservas Deportivas
 
 Sitio web de un local deportivo en Neiva para reservar canchas de **voley
-playa, pádel y fútbol**, organizar **torneos y cumpleaños**, y resolver dudas
-con un **asistente conversacional** que también reserva y cancela.
+playa, pádel y fútbol**, organizar **torneos por fases y cumpleaños**,
+consultar o cancelar reservas con código QR y resolver dudas con un **asistente
+conversacional** que también reserva y cancela.
 
 [![Demo](https://img.shields.io/badge/demo-proyecto--sportify.vercel.app-000000?logo=vercel&logoColor=white)](https://proyecto-sportify.vercel.app)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
@@ -10,7 +11,7 @@ con un **asistente conversacional** que también reserva y cancela.
 ![Foundation](https://img.shields.io/badge/Foundation-6.8-1779BA)
 ![GSAP](https://img.shields.io/badge/GSAP-3.13-88CE02)
 ![Gemini](https://img.shields.io/badge/Gemini-function%20calling-8E75B2?logo=googlegemini&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-121%20en%20verde-2EA44F)
+![Tests](https://img.shields.io/badge/tests-192%20en%20verde-2EA44F)
 
 ![Hero de voley playa con el video de fondo y el botón del asistente](docs/capturas/inicio.webp)
 
@@ -69,10 +70,11 @@ acento, que después usan la página de reserva y el asistente.
 Todo se reserva desde una página propia del sitio (`/reservar/<deporte>`). Se
 abre desde "Ver canchas de…" en cada hero o desde "Canchas" en el menú. Tiene:
 
-- **Pestañas por deporte** y el filtro *Solo con horarios libres ese día*.
-- **Carrusel 3D** con las fotos de las canchas en grande, el precio y cuántos
-  horarios libres tiene cada una el día elegido. En fútbol la foto muestra
-  también las características y la descripción.
+- **Pestañas por deporte** (con navegación por teclado mediante flechas) y el
+  filtro *Solo con horarios libres ese día*.
+- **Carrusel 3D** con las fotos de las canchas en grande, el precio, cuántos
+  horarios libres tiene cada una el día elegido, las características y la
+  descripción sobre la tarjeta en los tres deportes.
 - **Visor en grande** de la foto, con las características, la descripción y
   su propio botón para elegir horario (o agregar la cancha al evento).
 - **URL compartible:** la página tiene su dirección (`/reservar/padel`, y
@@ -91,25 +93,56 @@ puede confirmar.
 
 ![Formulario con dos horas elegidas y el voucher con el descuento](docs/capturas/reserva-voucher.webp)
 
-Al confirmar se genera un **código de reserva** (`SPF-XXXXXX`) y un **QR** con
-los datos de la reserva (tipo, fecha, horario, cancha, nombre y total), que se
-puede descargar para mostrarlo al llegar.
+Al confirmar se genera un **código de reserva** (`SPF-XXXXXX`, con botón para
+copiarlo en un clic) y un **QR** con los datos de la reserva (tipo, fecha,
+horario, cancha, nombre y total), que se puede descargar para mostrarlo al
+llegar, además del resumen de las condiciones de abono y cancelación y acceso
+directo a **Mis reservas**.
 
 ![Reserva confirmada con el código y el QR](docs/capturas/confirmacion-qr.webp)
 
+### Mis reservas
+
+Desde el botón **Mis reservas** de la barra de navegación (o desde la pantalla
+de confirmación) cualquier persona puede consultar sus reservas vigentes sin
+necesidad de cuenta:
+
+- **Búsqueda por código** (`SPF-XXXXXX`, sin importar mayúsculas o minúsculas)
+  o por **nombre y teléfono** (ignora tildes y espacios).
+- Permite volver a **ver el código QR** en cualquier momento y **cancelar sin
+  costo** reservas individuales hasta 6 horas antes de que empiecen, liberando
+  de inmediato los horarios en el calendario.
+
+![Modal Mis reservas con consulta por código, QR y cancelación](docs/capturas/mis-reservas.webp)
+
 ### Torneos y cumpleaños
 
-La misma página tiene los modos **Cancha · Torneo · Cumpleaños**. En los de
-evento:
+La misma página tiene los modos **Cancha · Torneo · Cumpleaños**, adaptados a
+cada tipo de reserva:
 
-- se agregan **varias canchas**, incluso de distintos deportes;
-- se elige un **rango de horas**: inicio y fin, y quedan elegidas todas las de
-  en medio;
-- el bloqueo es **todo o nada**: si una sola celda cancha × hora está ocupada,
-  no se reserva nada;
-- el precio es la suma por cancha, con las mismas reglas de descuento.
+- **Torneos por fases (eliminación directa):**
+  - se eligen de **1 a 3 canchas de un mismo deporte**;
+  - se configura el formato de **4, 8 o 16 equipos** (de 2 a 4 fases: octavos,
+    cuartos, semifinal y final), la duración de cada partido (**15, 30, 45, 60
+    o 90 min**), el desempate (**5 min** o **penales**) y el emparejamiento
+    (**sorteo aleatorio** o **cruces manuales** editables en la primera ronda);
+  - cada fase se programa en su propio día y rango de horas dentro de la
+    ventana de 7 días (en fechas crecientes o el mismo día después de cerrar la
+    fase previa), con alertas si el tiempo elegido no alcanza y acción rápida
+    para pasar a formato relámpago de 15 min;
+  - incluye un **bracket interactivo** en vivo que también se conserva en el
+    comprobante al confirmar.
+- **Cumpleaños:**
+  - permite combinar **varias canchas**, incluso de **distintos deportes**;
+  - se elige un **rango de horas** consecutivas (inicio y fin) y la cantidad de
+    **invitados** (hasta 100), que se muestra en el voucher y en el comprobante.
+- En ambos modos el bloqueo es **todo o nada** (si una sola celda cancha × hora
+  está ocupada, no se reserva nada) y el precio suma cada cancha y jornada con
+  las mismas reglas de descuento.
 
-![Modo torneo con dos canchas de pádel y cuatro horas](docs/capturas/modo-torneo.webp)
+| Programación por fases del torneo | Bracket interactivo del torneo |
+|:---:|:---:|
+| <img src="docs/capturas/modo-torneo.webp" alt="Modo torneo con programación por fases y voucher" width="440"> | <img src="docs/capturas/torneo-bracket.webp" alt="Bracket de 8 equipos con fases y fechas programadas" width="440"> |
 
 La sección **Eventos y torneos** de la página muestra cifras reales del local
 (deportes, canchas, días y horario, con un conteo animado) y una galería por
@@ -130,8 +163,9 @@ footer y el asistente siempre coinciden.
 
 Un botón flotante abre el **Asistente Sportify**, disponible en todas las
 páginas del sitio. Responde sobre horarios libres, precios, servicios, pagos,
-política de cancelación y ubicación. Cuando la respuesta lo amerita, ofrece un
-botón para abrir las canchas, la reserva de eventos o la ubicación.
+política de cancelación, torneos por fases y ubicación. Cuando la respuesta lo
+amerita, ofrece un botón para abrir las canchas, la reserva de eventos o la
+ubicación.
 
 | Consulta de disponibilidad | Reserva propuesta |
 |:---:|:---:|
@@ -144,21 +178,25 @@ el usuario confirma y el código valida y ejecuta*.
   una tarjeta con el resumen y el total. La reserva se hace solo al tocar
   *Confirmar* o responder "sí", con la misma función del formulario. Si la
   franja se ocupó entretanto, no reserva nada y ofrece las otras libres.
-- **Cancelar:** busca las reservas futuras con el mismo nombre y teléfono y,
-  tras confirmar, libera la franja. No cancela eventos ni reservas a menos de
-  6 horas de empezar.
+- **Cancelar:** busca las reservas individuales futuras con el mismo nombre y
+  teléfono y, tras confirmar, libera la franja. Si la persona tiene su código
+  `SPF-XXXXXX` o reservó desde el formulario sin teléfono, el asistente la
+  orienta a **"Mis reservas"** en el menú superior (donde también puede
+  consultar torneos y cumpleaños). No cancela eventos ni reservas a menos de 6
+  horas de empezar.
 
 <p align="center">
   <img src="docs/capturas/chat-reserva.gif" alt="Reserva completa desde el asistente: consulta, tarjeta, confirmación y comprobante con QR" width="380">
 </p>
 
 El asistente toma el color del deporte que se está viendo. La conversación se
-conserva al recargar la pestaña, y "Nueva conversación" la borra.
+conserva al cambiar de página o recargar la pestaña, y "Nueva conversación" la
+borra.
 
 ### Versión móvil
 
-Todo el sitio funciona en el celular. El asistente se abre a pantalla
-completa y respeta las zonas seguras de la pantalla.
+Todo el sitio funciona en el celular. El asistente y el modal de **Mis
+reservas** se adaptan a pantallas pequeñas y respetan las zonas seguras.
 
 <p align="center">
   <img src="docs/capturas/movil-inicio.webp" alt="Hero de voley playa en el celular" width="260">
@@ -170,19 +208,21 @@ completa y respeta las zonas seguras de la pantalla.
 
 ## Reglas del negocio
 
-Los datos salen de `src/data/canchas.json`, `src/data/negocio.json` y
-`src/lib/precios.js`; ningún componente los escribe a mano.
+Los datos salen de `src/data/canchas.json`, `src/data/negocio.json`,
+`src/lib/precios.js` y `src/lib/torneo.js`; ningún componente los escribe a
+mano.
 
 | Regla | Valor |
 |---|---|
 | Horario | Lunes a domingo, 8:00 a 21:00 (13 franjas de una hora) |
 | Ventana de reserva | Hoy y los 6 días siguientes; las horas de hoy que ya empezaron no se pueden reservar |
 | Reserva de cancha | De 1 a 3 horas seguidas |
-| Beneficio | Desde 2 horas seguidas: $5.000 menos por hora y un pack de agua gratis (por cancha en los eventos) |
-| Eventos | Varias canchas y un rango de horas consecutivas, bloqueo todo o nada |
-| Datos de la reserva | Nombre obligatorio (solo letras); teléfono opcional en el formulario y obligatorio en el chat (10 dígitos, empieza por 3) |
+| Beneficio | Desde 2 horas seguidas: $5.000 menos por hora y un pack de agua gratis (por cancha y jornada en eventos/torneos) |
+| Torneos | De 1 a 3 canchas de un mismo deporte, 4/8/16 equipos por fases de eliminación directa en uno o varios días y bracket interactivo |
+| Cumpleaños | Varias canchas (incluso de distintos deportes), un rango de horas consecutivas y hasta 100 invitados; bloqueo todo o nada |
+| Datos de la reserva | Nombre obligatorio (solo letras); teléfono opcional en el formulario y obligatorio en el chat (10 dígitos, empieza por 3). Una reserva sin teléfono solo se consulta o cancela por su código `SPF-XXXXXX` en **Mis reservas** |
 | Abono | 50 % del total en las 2 horas siguientes, por Nequi o transferencia Bancolombia |
-| Cancelación | Sin costo hasta 6 horas antes (solo reservas de cancha); después, el abono no se devuelve |
+| Cancelación | Sin costo hasta 6 horas antes (solo reservas individuales de cancha); torneos y cumpleaños se gestionan llamando al local |
 | Medios de pago | Efectivo, Nequi, Daviplata, transferencia Bancolombia y tarjeta en el local |
 
 | Canchas | Precio por hora |
@@ -309,10 +349,11 @@ scripts/
 └── probar-chat.mjs      Casos de prueba de /api/chat (local o producción)
 src/
 ├── components/
-│   ├── layout/          Navbar, Footer y PaginaInicio
+│   ├── layout/          Navbar, Footer, PaginaInicio y MisReservas (consulta por código o teléfono, QR y cancelación)
 │   ├── hero/            DeporteHero: heros por deporte con video y pinning
 │   ├── canchas/         VistaCanchas: la página de reserva (/reservar/<deporte>)
-│   ├── reservas/        useReserva, formulario, voucher, selector de modo y confirmación con QR
+│   ├── reservas/        useReserva, formulario, voucher, selector de modo, confirmación con QR
+│   │   └── torneo/      Bracket interactivo, CalendarioTorneo por fases y AlertaTiempo
 │   ├── eventos/         EventoCTA: sección de eventos y torneos
 │   ├── ubicacion/       Ubicacion: dirección, teléfono, horario y mapa
 │   ├── shared/          SelectorDia: tira de 7 días con horarios libres
@@ -329,6 +370,7 @@ src/
 │   └── deportes.js      Nombre y color de acento de cada deporte
 ├── lib/                 Lógica pura, con sus tests al lado (*.test.js)
 │   ├── precios.js       Reglas de precio y descuento
+│   ├── torneo.js        Fases de eliminación directa, bracket, validación de jornadas y precios de torneo
 │   ├── horarios.js      Selección de horas (bloque de hasta 3 o rango)
 │   ├── validacion.js    Nombre, teléfono y reserva propuesta por el chat
 │   ├── cancelacion.js   Plazo de cancelación, estado resultante y búsqueda de reservas
@@ -392,7 +434,7 @@ probarlo en local:
 ## Pruebas
 
 ```bash
-npm test                          # 121 tests en 11 archivos (Vitest)
+npm test                          # 192 tests en 15 archivos (Vitest)
 npm run lint                      # ESLint sobre src, api y scripts
 npm run build                     # build de producción en /dist
 ```
@@ -400,16 +442,18 @@ npm run build                     # build de producción en /dist
 El lint se corre aparte: ya no forma parte del build ni del servidor de
 desarrollo. `npm run test:watch` deja Vitest observando los cambios.
 
-Las pruebas unitarias cubren la lógica pura de `src/lib/`: precios y
-descuentos, selección de horas, validación de nombre, teléfono y reservas
-propuestas, fechas, código y texto del QR, datos del negocio, rutas del sitio,
-plazo y búsqueda de cancelaciones, el contexto, el historial y los textos fijos
-del chat, y el respaldo de modelo (orden, tiempos por intento y respuesta final).
-`src/App.test.jsx` monta la aplicación en la página de inicio y en `/reservar/padel`.
+Las pruebas unitarias y de componentes cubren la lógica pura de `src/lib/`
+(precios y descuentos, fases y bracket de torneos, selección de horas,
+validación de nombre, teléfono y reservas propuestas, fechas, código y texto
+del QR, datos del negocio, rutas del sitio, plazo y búsqueda de cancelaciones,
+contexto e historial del chat y respaldo de modelo) además de las pruebas de
+interfaz para torneos, cumpleaños, consulta en **Mis reservas** y montaje
+general en `src/App.test.jsx`.
 
-El asistente tiene además un script con 10 casos contra la función real:
+El asistente tiene además un script con 12 casos contra la función real:
 disponibilidad, "resérvalo" con una y con varias franjas, datos válidos e
-inválidos, hora ocupada, ubicación, parqueadero y una pregunta fuera de tema.
+inválidos, hora ocupada, ubicación, parqueadero, proceso de torneo por fases,
+cancelación con código y una pregunta fuera de tema.
 
 ```bash
 node scripts/probar-chat.mjs                                     # contra vercel dev (localhost:3000)
@@ -442,13 +486,20 @@ El sitio está en Vercel y **cada push a `main` despliega a producción**.
 - Las animaciones de entrada, el zoom lento de las fotos y el panel del
   asistente respetan `prefers-reduced-motion`.
 - Todo indicador visual de disponibilidad va con texto ("10 de 13 horarios
-  libres", "reservado", "completo").
+  libres", "ocupado", "completo").
 - El color de acento de cada deporte se aplica con un color de texto que
-  cumple el contraste WCAG (`estiloAcento` en `src/lib/canchas.js`).
-- El asistente se cierra con Escape y devuelve el foco al botón. Sus mensajes
-  se anuncian con `aria-live`. El visor de fotos usa un `<dialog>` nativo.
-- Los videos de los heros son *all-intra* (un keyframe por cuadro), 1080p30 y
-  sin audio, para que avanzar y retroceder con el scroll sea fluido.
+  cumple el contraste WCAG (`--accent-contrast` y `--accent-text` en
+  `estiloAcento`, `src/lib/canchas.js`).
+- Navegación por teclado con contorno `:focus-visible` de alto contraste,
+  soporte de flechas (`ArrowLeft`, `ArrowRight`, `Home`, `End` con `tabIndex`
+  roving) en las pestañas de deporte y áreas táctiles mínimas de 44 px en
+  controles interactivos.
+- El asistente, el visor de fotos y el modal de **Mis reservas** se cierran con
+  `Escape` y devuelven el foco al botón que los abrió. Los mensajes y avisos se
+  anuncian con `aria-live`.
+- Los videos de los heros son *all-intra* (un keyframe por cuadro), 1080p30,
+  sin audio y cuentan con imagen `poster` de respaldo, para que avanzar y
+  retroceder con el scroll sea inmediato y fluido.
 - Las fotos de las canchas son WebP en dos tamaños (720 y 1440 px) con
   `srcSet`. El mapa y la galería de eventos cargan en diferido
   (`loading="lazy"`).
@@ -463,9 +514,9 @@ El sitio está en Vercel y **cada push a `main` despliega a producción**.
 | 2. Heros por deporte con GSAP y ScrollTrigger | ✅ |
 | 3. Catálogo de canchas: página de reserva con carrusel 3D | ✅ |
 | 4. Sistema de reservas: 1 a 3 horas, descuento, validación de choques | ✅ |
-| 5. Modo evento: torneos y cumpleaños, todo o nada | ✅ |
+| 5. Modo evento: torneos por fases multi-día, bracket interactivo y cumpleaños | ✅ |
 | 6. Asistente: función `/api/chat`, widget y reservas o cancelaciones desde el chat | ✅ |
-| 7. Panel de estado y administración (opcional) | Pendiente |
+| 7. Consulta de **Mis reservas** (código/teléfono, QR y cancelación) y auditoría de usabilidad | ✅ |
 
 ---
 
