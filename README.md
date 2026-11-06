@@ -123,14 +123,14 @@ cada tipo de reserva:
 - **Torneos por fases (eliminación directa):**
   - se eligen de **1 a 3 canchas de un mismo deporte**;
   - se configura el formato de **4, 8 o 16 equipos** (de 2 a 4 fases: octavos,
-    cuartos, semifinal y final), la duración de cada partido (**15, 30, 45, 60
-    o 90 min**) y el emparejamiento (**sorteo aleatorio** o **cruces manuales**
+    cuartos, semifinal y final), la duración de cada partido (**15, 20 o 30
+    min**) y el emparejamiento (**sorteo aleatorio** o **cruces manuales**
     editables en la primera ronda). El desempate depende del deporte: **penales**
     en fútbol, **tie-break** en voley playa y **super tie-break** en pádel;
   - cada fase se programa en su propio día y rango de horas dentro de la
     ventana de 7 días (en fechas crecientes o el mismo día después de cerrar la
     fase previa), con alertas si el tiempo elegido no alcanza y acción rápida
-    para pasar a formato relámpago de 15 min;
+    para bajar a partidos de 15 min;
   - incluye un **bracket interactivo** en vivo que también se conserva en el
     comprobante al confirmar.
 - **Cumpleaños:**
