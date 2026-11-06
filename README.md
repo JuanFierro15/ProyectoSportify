@@ -124,8 +124,9 @@ cada tipo de reserva:
   - se eligen de **1 a 3 canchas de un mismo deporte**;
   - se configura el formato de **4, 8 o 16 equipos** (de 2 a 4 fases: octavos,
     cuartos, semifinal y final), la duración de cada partido (**15, 30, 45, 60
-    o 90 min**), el desempate (**5 min** o **penales**) y el emparejamiento
-    (**sorteo aleatorio** o **cruces manuales** editables en la primera ronda);
+    o 90 min**) y el emparejamiento (**sorteo aleatorio** o **cruces manuales**
+    editables en la primera ronda). El desempate depende del deporte: **penales**
+    en fútbol, **tie-break** en voley playa y **super tie-break** en pádel;
   - cada fase se programa en su propio día y rango de horas dentro de la
     ventana de 7 días (en fechas crecientes o el mismo día después de cerrar la
     fase previa), con alertas si el tiempo elegido no alcanza y acción rápida
@@ -222,7 +223,7 @@ mano.
 | Cumpleaños | Varias canchas (incluso de distintos deportes), un rango de horas consecutivas y hasta 100 invitados; bloqueo todo o nada |
 | Datos de la reserva | Nombre obligatorio (solo letras); teléfono opcional en el formulario y obligatorio en el chat (10 dígitos, empieza por 3). Una reserva sin teléfono solo se consulta o cancela por su código `SPF-XXXXXX` en **Mis reservas** |
 | Abono | 50 % del total en las 2 horas siguientes, por Nequi o transferencia Bancolombia |
-| Cancelación | Sin costo hasta 6 horas antes (solo reservas individuales de cancha); torneos y cumpleaños se gestionan llamando al local |
+| Cancelación | Sin costo hasta 6 horas antes (solo reservas individuales de cancha); después, el abono no se devuelve. Torneos y cumpleaños se gestionan llamando al local |
 | Medios de pago | Efectivo, Nequi, Daviplata, transferencia Bancolombia y tarjeta en el local |
 
 | Canchas | Precio por hora |
