@@ -1,0 +1,128 @@
+# Reporte — Etapa 8: Cierre del proyecto, pruebas integrales y documentación final
+
+- **Fecha**: 2026-11-06
+- **Rama**: `etapa-8-cierre`
+- **Autor**: Juan Manuel Villalba Rincón (`jmvr24`)
+
+---
+
+## 1. Resumen
+
+Ejecución de los bloques locales de cierre definidos en `PLAN.md` (`z1`, `z2`, `z3` y `z4`):
+
+- **`z1` (Chat y datos del negocio)**: se actualizaron las instrucciones de `/api/chat` (`api/_lib/instrucciones.js`) para reflejar el flujo real de torneos por fases (`MAX_CANCHAS_TORNEO = 3` del mismo deporte, `OPCIONES_EQUIPOS` = 4, 8 o 16, emparejamiento aleatorio o manual, programación por fases en varios días y descuentos desde `MIN_HORAS_BENEFICIO` horas seguidas) y el modal **"Mis reservas"** (consulta por código `SPF-XXXXXX` o nombre + teléfono, visualización de QR y cancelación individual hasta 6 h antes); se alineó `src/data/negocio.json` ("en una o varias canchas del mismo deporte") y se agregaron los casos `torneo-proceso` y `cancelar-codigo` a `scripts/probar-chat.mjs` (12 casos en total).
+- **`z2` (Invitados, estado vacío y pestañas)**: se agregó la cantidad de invitados en `VoucherReserva.jsx` y `ConfirmacionReserva.jsx` (desde `useReserva.js`) cuando el modo es `"cumpleanos"`, con su test en `Torneo.test.jsx`; se ajustó el texto del estado vacío en `CanchasElegidas.jsx` a `"Aún no has elegido canchas. Agrégalas desde el carrusel."`; y se implementó navegación circular por teclado (`ArrowRight`, `ArrowLeft`, `Home`, `End`) con `tabIndex` roving (`0` / `-1`), `role="presentation"` en los `<li>` y contorno `:focus-visible` en las pestañas de deporte de `VistaCanchas.jsx`.
+- **`z3` (Pruebas integrales de inicio a fin)**: se verificaron en navegador real (Chrome headless vía CDP contra `npm run build` + `npm run preview`, en `1440×900` y `390×844`) todos los flujos locales (`A1`–`A5`, `B1`–`B7`, `C1`–`C4`, `D1`–`D5`, `E7`, `F1`–`F6`, `G1`–`G4`, `H1`–`H3`). Los casos que requieren `vercel dev` o acceso a `/api/chat` (`E1`–`E6` y `scripts/probar-chat.mjs`), junto con `z5` (integración a `main`) y `z6` (verificación en producción), quedan documentados como **pendientes por `JuanFierro15`**.
+- **`z4` (Documentación, capturas y guías)**: se actualizaron las 10 capturas existentes de `docs/capturas/` con la marca `Sportify` y los cambios de las etapas 6–8, se generaron las 2 capturas nuevas (`torneo-bracket.webp` y `mis-reservas.webp`), y se dejaron al día `README.md`, `planificacion/README.md`, `planificacion/etapas/7-auditoria-usabilidad/REPORTE.md` y `GEMINI.md` local.
+
+---
+
+## 2. Estado por bloque y commits
+
+| Bloque | Estado | Commits | Resumen |
+|---|---|---|---|
+| `z1` — Chat y datos del negocio | ✅ Completado | `6d4a417`, `ec39b18` | `api/_lib/instrucciones.js`, `src/data/negocio.json` y `scripts/probar-chat.mjs` (12 casos). |
+| `z2` — Invitados, estado vacío y pestañas | ✅ Completado | `8e1a203`, `d5c9757`, `ab3f6d2` | Invitados en voucher/confirmación (`useReserva.js`, `VoucherReserva.jsx`, `ConfirmacionReserva.jsx`, `VistaCanchas.jsx`, `Torneo.test.jsx`), estado vacío en `CanchasElegidas.jsx` y flechas/Home/End con roving `tabIndex` en `VistaCanchas.jsx` + `VistaCanchas.css`. |
+| `z3` — Pruebas integrales de inicio a fin | ✅ Completado en local (API chat pendiente `JuanFierro15`) | (este reporte) | 31 casos locales verificados en `1440×900` y `390×844`; `E1`–`E6` y `probar-chat.mjs` pendientes por `JuanFierro15`. |
+| `z4` — Documentación, capturas y guías | ✅ Completado | `9418642` + cierre | 12 capturas WebP en `docs/capturas/`, `README.md`, `planificacion/` y `GEMINI.md`. |
+| `z5` — Integración a `main` y despliegue | ⏳ Pendiente por `JuanFierro15` | — | Revisión del PR de `etapa-8-cierre`, `vercel build` y merge a `main`. |
+| `z6` — Verificación en producción y límite de peticiones | ⏳ Pendiente por `JuanFierro15` | — | Regla en Vercel Firewall, prueba de humo y `node scripts/probar-chat.mjs https://proyecto-sportify.vercel.app` tras desplegar. |
+
+---
+
+## 3. Resultados de las pruebas integrales (`z3`)
+
+| ID | Caso de prueba | Escritorio (`1440×900`) | Móvil (`390×844`) | Resultado y observaciones |
+|---|---|:---:|:---:|---|
+| **A1** | Padel 1, mañana, 2 h seguidas (`14:00` y `15:00`) | ✅ | ✅ | Total `$120.000` (`$65.000 × 2 − $5.000 × 2`), ahorro `$10.000` y `Packs de agua gratis: 1`. |
+| **A2** | Intentar agregar una 4.ª hora seguida | ✅ | ✅ | Bloquea en máximo 3 horas seguidas con alerta `"Máximo 3 horas seguidas por reserva"`. |
+| **A3** | Confirmar reserva con nombre y teléfono | ✅ | ✅ | Muestra código `SPF-XXXXXX`, QR descargable, botón `"Copiar código"` (`"¡Copiado!"`) y condiciones (abono 50 %, cancelación 6 h). |
+| **A4** | Recargar la página tras confirmar | ✅ | ✅ | Las horas `14:00` y `15:00` siguen marcadas como `· ocupado` en ese día y cancha (`localStorage`). |
+| **A5** | Intentar reservar la misma hora recién ocupada | ✅ | ✅ | Botón deshabilitado (`disabled`), no permite seleccionarla ni confirmarla. |
+| **B1** | Entrar desde `"Reserva un evento"` en el inicio | ✅ | ✅ | Abre `/reservar/voley-playa?modo=torneo` con **0 canchas** preseleccionadas y avisos claros en `CanchasElegidas` y `CalendarioTorneo`. |
+| **B2** | Intentar agregar 4.ª cancha o cancha de otro deporte en torneo | ✅ | ✅ | Rechaza con aviso en `.vista-canchas__aviso-torneo` (`Máximo 3 canchas por torneo` y `mismo deporte`). |
+| **B3** | Cambiar entre `4`, `8` y `16` equipos | ✅ | ✅ | Actualiza partidos y fases (`2`, `3` y `4` fases) tanto en `CalendarioTorneo` como en `Bracket`. |
+| **B4** | Programar Fase 1 en día 3 (`10:00–13:00`) y revisar Fase 2 | ✅ | ✅ | En Fase 2 los días 1 y 2 aparecen bloqueados, y en el día 3 las horas `<= 12:00` están bloqueadas y desde `13:00` libres. |
+| **B5** | Elegir `"Armar cruces manualmente"` e intercambiar equipos | ✅ | ✅ | Permite editar la primera ronda en el bracket e intercambia automáticamente sin dejar duplicados. |
+| **B6** | Elegir menos horas de las que requiere una fase | ✅ | ✅ | Muestra `AlertaTiempo` con sugerencias y el botón `"Usar partidos de 15 min (relámpago)"` ajusta la duración a `15 min`. |
+| **B7** | Confirmar torneo de varios días | ✅ | ✅ | Voucher y confirmación muestran desglose por fase/día, bracket completo y dejan ocupadas las horas en cada fecha. |
+| **C1** | En `"Cumpleaños"`, escribir `150` en `"Invitados"` | ✅ | ✅ | Bloquea `"Confirmar reserva"` y muestra alerta `"Máximo 100 invitados."`. |
+| **C2** | En `"Cumpleaños"`, agregar canchas de distintos deportes | ✅ | ✅ | Permite combinar canchas de vóley playa y pádel en el mismo evento. |
+| **C3** | Confirmar cumpleaños con `20` invitados | ✅ | ✅ | Muestra `Invitados: 20` tanto en el voucher como en la pantalla de confirmación. |
+| **C4** | Elegir un rango con una hora ocupada en medio | ✅ | ✅ | Rechaza el rango y muestra el aviso de horarios ocupados intermedios. |
+| **D1** | Buscar en `"Mis reservas"` por código `SPF-XXXXXX` (en minúsculas) | ✅ | ✅ | Encuentra la reserva, muestra sus datos, `"Ver QR"` despliega el QR y ofrece `"Cancelar reserva"`. |
+| **D2** | Buscar en `"Mis reservas"` por nombre y teléfono (sin tildes/con espacios) | ✅ | ✅ | Encuentra las reservas futuras de esa persona (`"ana gomez"` + `"300 123 4567"`). |
+| **D3** | Reserva individual creada sin teléfono | ✅ | ✅ | Aparece al buscar por código `SPF-XXXXXX` y no aparece al buscar por nombre y teléfono. |
+| **D4** | Cancelar reserva con más de 6 h de anticipación | ✅ | ✅ | Se elimina de `"Mis reservas"` y sus horas vuelven a estar libres inmediatamente en el formulario. |
+| **D5** | Intentar cancelar en `"Mis reservas"` un torneo/evento o reserva `< 6 h` | ✅ | ✅ | No muestra botón de cancelar y explica el motivo (eventos solo llamando al local / plazo mínimo de 6 h). |
+| **E1–E6** | Casos en vivo de `/api/chat` y `node scripts/probar-chat.mjs` | ⏳ | ⏳ | **Pendiente por `JuanFierro15`** (requiere `vercel dev` / entorno con `GEMINI_API_KEY`). Casos configurados en `scripts/probar-chat.mjs`. |
+| **E7** | Conversación del widget al navegar del inicio a `/reservar/...` y volver | ✅ | ✅ | El portal del chatbot permanece montado en `document.body` y conserva los mensajes y el borrador entre páginas. |
+| **F1** | Recargar (`F5`) en `/reservar/padel` | ✅ | ✅ | Renderiza la página de reserva sin 404. |
+| **F2** | Abrir `/reservar/futbol?modo=torneo` directamente | ✅ | ✅ | Abre en la pestaña de fútbol con el modo `"Torneo"` activo. |
+| **F3** | Bajar en el inicio, entrar a `"Ver canchas de Pádel"` y tocar `"Volver al inicio"` | ✅ | ✅ | Vuelve a `/` y restaura la posición de scroll donde estaba el usuario. |
+| **F4** | Ctrl+clic / clic medio en `"Ver canchas..."`, `"Canchas"` o `"Reserva un evento"` | ✅ | ✅ | Todos los enlaces tienen `href` real (`/reservar/<deporte>`) y delegan en el navegador con `esClicNormal(e)`. |
+| **F5** | Tocar `"Ubicación"` o `"Eventos"` en el navbar desde la página de reserva | ✅ | ✅ | Vuelve al inicio y desplaza suavemente hasta `#ubicacion` o `#eventos`. |
+| **F6** | Girar la rueda del mouse sobre el carrusel de canchas | ✅ | ✅ | Desplaza verticalmente la página sin quedar atrapado en el carrusel. |
+| **G1** | Recorrer con `Tab` y `Shift+Tab` la página de inicio y la de reserva | ✅ | ✅ | Orden de foco lógico y contorno `:focus-visible` de 2 px claramente visible en todos los controles. |
+| **G2** | En las pestañas de deporte, usar `ArrowLeft`, `ArrowRight`, `Home` y `End` | ✅ | ✅ | Cambia de deporte circularmente, mueve el foco con `tabIndex` roving (`0` en activa, `-1` en inactivas) y `role="presentation"` en los `<li>`. |
+| **G3** | Abrir visor de foto, `"Mis reservas"` y el chat, y presionar `Escape` | ✅ | ✅ | Cierra únicamente el diálogo/panel activo y devuelve el foco al botón que lo abrió. |
+| **G4** | Activar `prefers-reduced-motion: reduce` | ✅ | ✅ | Desactiva animaciones de movimiento mantendo la página y el carrusel totalmente funcionales. |
+| **H1** | En `390×844`, completar reserva (`A`) y consulta (`D`) | ✅ | ✅ | Sin scroll horizontal (`scrollWidth <= clientWidth`) y botones con área táctil cómoda (`>= 44 px`). |
+| **H2** | En `390×844`, recorrer los heros de inicio | ✅ | ✅ | El video avanza con el scroll y se detiene al soltar, con imagen `poster` inicial. |
+| **H3** | En `390×844`, abrir el chat y `"Mis reservas"` | ✅ | ✅ | Ambos modales abren sin desborde horizontal ni elementos tapados. |
+
+---
+
+## 4. Capturas actualizadas y nuevas (`docs/capturas/`)
+
+Generadas con `planificacion/herramientas/capturas/capturas.mjs` (WebP calidad 82):
+
+- **Retomadas con marca `Sportify` y cambios de etapas 6–8**:
+  - `inicio.webp` (`1440×900`)
+  - `hero-padel.webp` (`1440×900`)
+  - `hero-futbol.webp` (`1440×900`)
+  - `eventos.webp` (`1440×900`)
+  - `ubicacion.webp` (`1440×900`)
+  - `movil-inicio.webp` (`390×844`, DPR 2)
+  - `vista-canchas.webp` (`1440×900`)
+  - `reserva-voucher.webp` (`1440×900`)
+  - `confirmacion-qr.webp` (`1440×900`)
+  - `modo-torneo.webp` (`1440×900`)
+- **Nuevas**:
+  - `torneo-bracket.webp` (`1440×900`)
+  - `mis-reservas.webp` (`1440×900`)
+- **Conservadas sin cambios**:
+  - `chat-disponibilidad.webp`, `chat-tarjeta.webp`, `movil-chat.webp` y `chat-reserva.gif`.
+
+---
+
+## 5. Cambios aplicados en `GEMINI.md` (para replicar en `CLAUDE.md`)
+
+1. **Comandos (`probar-chat.mjs`)**: se añadieron los ids `torneo-proceso` y `cancelar-codigo` (12 casos en total).
+2. **Arquitectura (`ReservasContext` y `src/lib/`)**:
+   - Se documentó la acción `RESERVAR_TORNEO` (`reservarTorneo`) junto a `RESERVAR_EVENTO`.
+   - En `cancelacion.js` se reemplazó la referencia al "panel admin (Bloque 7)" por `MisReservas` y se listaron `buscarReservaPorCodigo`, `buscarReservasDePersona` y `horasDeReserva`.
+   - Se agregó la entrada de `src/lib/torneo.js` (`OPCIONES_EQUIPOS`, `MAX_CANCHAS_TORNEO`, `calcularFasesTorneo`, `generarCrucesIniciales`, `generarBracket`, `intercambiarEquipoEnPartidos`, `validarJornadasTorneo`, `calcularPrecioJornadas`).
+   - En `estiloAcento(acento)` se añadió `--accent-text` (contraste WCAG AA sobre fondos claros).
+3. **Vista de reserva y componentes (`VistaCanchas`, `ConfirmacionReserva`, `MisReservas`)**:
+   - Se documentó `sinPreseleccionar: true` al abrir modo torneo desde `"Reserva un evento"` o desde el chat (arranca con 0 canchas).
+   - Se actualizó `"Cancelar"` por `"Limpiar selección"` en el voucher (limpia sin salir de la página).
+   - Se actualizó `detalleEnTarjeta: true` para indicar que está activo en los tres deportes, no solo en fútbol.
+   - Se documentó la subcarpeta `components/reservas/torneo/` (`CalendarioTorneo`, `Bracket`, `AlertaTiempo`) y el modal `MisReservas` (`components/layout/MisReservas.jsx`), eliminando la nota del Bloque 7 en `ConfirmacionReserva`.
+4. **Lista de bloques ("Cómo trabajamos")**:
+   - Se reemplazó el Bloque 7 ("Panel de estado/admin (opcional) ← pendiente") por el cierre real: `5. ✅ Modo evento especial (torneos por fases multi-día con bracket interactivo y cumpleaños)`, `6. ✅ Chatbot` y `7. ✅ Consulta de Mis reservas y auditoría de usabilidad y accesibilidad`.
+
+---
+
+## 6. Pendientes para `JuanFierro15`
+
+1. **Pruebas en vivo del chatbot (`z3` casos `E1`–`E6`)**:
+   - Levantar `vercel dev` con `GEMINI_API_KEY` y ejecutar:
+     ```bash
+     node scripts/probar-chat.mjs http://localhost:3000
+     node scripts/probar-chat.mjs http://localhost:3000 torneo-proceso cancelar-codigo reservalo-varias
+     ```
+2. **Integración a `main` (`z5`)**:
+   - Ejecutar `vercel build` para confirmar el empaquetado de `api/chat.func`, integrar `etapa-8-cierre` en `main` y hacer `git push origin main`.
+3. **Verificación en producción (`z6`)**:
+   - Verificar `https://proyecto-sportify.vercel.app` y correr `node scripts/probar-chat.mjs https://proyecto-sportify.vercel.app`.
