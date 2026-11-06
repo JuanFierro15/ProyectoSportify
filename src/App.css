@@ -12,6 +12,23 @@
   --color-marca-contraste: #141414;
   /* Encima del navbar (1000) */
   --z-chatbot: 1100;
+
+  /* Tokens de la página de reserva y confirmación (etapa 9) */
+  --reserva-fondo: var(--eventos-fondo);
+  --reserva-seccion: #161616;
+  --reserva-seccion-borde: #2a2a2a;
+  --reserva-elevada: #1a1a1a;
+  --reserva-elevada-borde: #333333;
+  --reserva-control: #1f1f1f;
+  --reserva-control-borde: #4a4a4a;
+  --reserva-campo: #0f0f0f;
+  --reserva-campo-borde: #444444;
+  --reserva-texto: #f2f2f2;
+  --reserva-texto-2: #c4c4c4;
+  --reserva-texto-tenue: #a8a8a8;
+  --reserva-sobre-acento: #0d0d0d;
+  --reserva-linea: #3a3a3a;
+  --reserva-reservada: #808080;
 }
 
 .App {

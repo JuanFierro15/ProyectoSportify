@@ -31,20 +31,79 @@
    contenedor de scroll propio y rompe el position: sticky del voucher. */
 .vista-canchas {
   min-height: 100vh;
-  background: #ffffff;
+  background: var(--reserva-fondo, #0d0d0d);
+  color: var(--reserva-texto, #f2f2f2);
+  padding-top: 5.75rem;
+  --accent-text: var(--accent) !important;
 }
 
-.vista-canchas__marco {
+@media screen and (min-width: 40.0625em) {
+  .vista-canchas {
+    padding-top: 4.5rem;
+  }
+}
+
+/* Encabezado con foto grande y velo con degradado a fondo oscuro */
+.vista-canchas__encabezado {
   position: relative;
+  height: 320px;
+  overflow: hidden;
+}
+
+.vista-canchas__encabezado--torneo {
+  height: 260px;
+}
+
+.vista-canchas__encabezado--torneo .vista-canchas__encabezado-contenido {
+  padding: 14px 24px 18px;
+  gap: 8px;
+}
+
+.vista-canchas__encabezado--torneo .vista-canchas__titulo {
+  font-size: clamp(1.75rem, 3.8vw, 38px);
+  line-height: 1.1;
+}
+
+.vista-canchas__encabezado--torneo .vista-canchas__subtitulo {
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  max-width: 620px;
+}
+
+.vista-canchas__encabezado--torneo .vista-canchas__modo {
+  margin: 0;
+}
+
+.vista-canchas__encabezado-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 40%;
+}
+
+.vista-canchas__encabezado-velo {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(13, 13, 13, 0.55) 0%,
+    rgba(13, 13, 13, 0.78) 55%,
+    var(--reserva-fondo, #0d0d0d) 100%
+  );
+}
+
+.vista-canchas__encabezado-contenido {
+  position: relative;
+  height: 100%;
+  margin: 0 auto;
+  padding: 24px 24px 28px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  /* Despeja el navbar fijo (unos 64 px de alto). */
-  padding-top: 5.25rem;
-  padding-bottom: 3rem;
-  /* Las tarjetas laterales del carrusel que se salen por la derecha en
-     pantallas angostas se recortan en el borde del contenedor; `clip` no crea
-     un contenedor de scroll, así que el voucher sticky sigue funcionando. */
-  overflow-x: clip;
+  justify-content: flex-end;
+  gap: 12px;
 }
 
 .vista-canchas__volver {
@@ -52,28 +111,36 @@
   align-items: center;
   align-self: flex-start;
   gap: 0.4rem;
-  margin: 0 0 0.75rem;
+  margin: 0;
+  min-height: 44px;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #4a4a4a;
+  color: #d6d6d6;
   text-decoration: none;
   border-radius: 6px;
   transition: color 0.18s ease;
 }
 
-.vista-canchas__volver:hover,
-.vista-canchas__volver:focus-visible {
-  color: color-mix(in srgb, var(--accent, #1779ba) 70%, black);
+.vista-canchas__volver:hover {
+  color: #ffffff;
+}
+
+.vista-canchas__volver:focus:not(:focus-visible) {
+  outline: none;
 }
 
 .vista-canchas__volver:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent, #1779ba) 70%, black);
-  outline-offset: 4px;
+  outline: 2px solid #f2f2f2;
+  outline-offset: 2px;
 }
 
 .vista-canchas__titulo {
-  margin: 0 0 1.25rem;
-  font-size: 1.9rem;
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 52px);
+  line-height: 1.05;
   font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--reserva-texto, #f2f2f2);
 }
 
 .vista-canchas__titulo:focus:not(:focus-visible) {
@@ -81,73 +148,113 @@
 }
 
 .vista-canchas__titulo:focus-visible {
-  outline: 2px solid var(--accent-text, var(--accent, #1779ba));
-  outline-offset: 2px;
+  outline: 2px solid var(--accent, #1779ba);
+  outline-offset: 4px;
+}
+
+.vista-canchas__subtitulo {
+  margin: 0;
+  max-width: 580px;
+  color: var(--reserva-texto-2, #c4c4c4);
+  font-size: 1.0625rem;
+  line-height: 1.4;
 }
 
 .vista-canchas__modo {
-  margin: -0.5rem 0 1.25rem;
+  margin: 0.25rem 0 0;
+}
+
+.vista-canchas__marco {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding-top: 1.75rem;
+  padding-bottom: 3rem;
+  overflow-x: clip;
+}
+
+/* Fila de pestañas de deportes + filtro de disponibilidad */
+.vista-canchas__cabecera-deportes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 28px;
+  border-bottom: 1px solid #262626;
+  margin-bottom: 1.75rem;
 }
 
 .vista-canchas__tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
-  margin: 0 0 1rem;
+  gap: 4px 28px;
+  margin: 0;
+  padding: 0;
   border: none;
   background: transparent;
+  list-style: none;
 }
 
-/* Los pills inactivos muestran el color propio de SU deporte (para
-   previsualizar los tres), no el tema activo -> variable local por <li>. */
+.vista-canchas__tabs .tabs-title {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .vista-canchas__tabs .tabs-title > a {
-  padding: 0.55rem 1.1rem;
-  border: 2px solid color-mix(in srgb, var(--acento, #1779ba) 35%, transparent);
-  border-radius: 999px;
-  background: #fff;
-  color: #4a4a4a;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 4px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+  color: #a8a8a8;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  transition: color 0.18s ease, border-color 0.18s ease;
 }
 
-.vista-canchas__tabs .tabs-title > a:hover,
-.vista-canchas__tabs .tabs-title > a:focus {
-  background: #fff;
+.vista-canchas__tabs .tabs-title > a:hover {
+  color: #f2f2f2;
 }
 
-/* El pill activo sí lee del tema global (--accent), no de su color local. */
+.vista-canchas__tabs .tabs-title > a:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .vista-canchas__tabs .tabs-title > a:focus-visible {
-  outline: 2px solid var(--accent-text, var(--accent, #1779ba));
-  outline-offset: 2px;
+  outline: 2px solid var(--acento, var(--accent, #1779ba));
+  outline-offset: 4px;
+  border-radius: 4px;
 }
+
 .vista-canchas__tabs .tabs-title.is-active > a {
-  border-color: var(--accent, #1779ba);
-  background: var(--accent, #1779ba);
-  color: var(--accent-contrast, #fff);
+  border-bottom-color: var(--acento, var(--accent, #1779ba));
+  color: #f2f2f2;
+  font-weight: 700;
+  background: none;
 }
 
 .vista-canchas__filtro {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  gap: 10px;
+  min-height: 48px;
+  margin-left: auto;
 }
 
 .vista-canchas__filtro-texto {
   margin: 0;
-  font-size: 0.95rem;
-  color: #4a4a4a;
+  font-size: 0.875rem;
+  color: var(--reserva-texto-2, #c4c4c4);
   cursor: pointer;
-  line-height: 24px; /* misma altura que el switch, para centrar el texto */
+  line-height: 24px;
 }
 
-/* --- Switch "Solo con horarios libres ese día": rediseño propio sobre el
-   checkbox real de Foundation (mismo input, misma accesibilidad; solo se
-   repinta). Los selectores llevan `.switch` para pesar más que los de
-   Foundation para `.switch.small` (pista de 3.5rem y perilla de 1.25rem):
-   sin eso la pista se desborda del contenedor de 44px y tapa el espacio
-   que separa el switch de su texto. --- */
 .vista-canchas__filtro .switch {
   width: 44px;
   height: 24px;
@@ -158,28 +265,59 @@
   width: 100%;
   height: 100%;
   border-radius: 999px;
-  background: #d6d6d6;
+  background: var(--reserva-control, #1f1f1f);
+  border: 1px solid var(--reserva-campo-borde, #444444);
+  transition: background-color 0.18s ease, border-color 0.18s ease;
 }
 
 .vista-canchas__filtro .switch .switch-paddle::after {
-  top: 3px;
-  left: 3px;
+  top: 2px;
+  left: 2px;
   width: 18px;
   height: 18px;
   border-radius: 50%;
+  background: #f2f2f2;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: left 0.18s ease, background-color 0.18s ease;
 }
 
 .vista-canchas__filtro .switch .switch-input:checked ~ .switch-paddle {
   background: var(--accent, #1779ba);
+  border-color: var(--accent, #1779ba);
 }
 
 .vista-canchas__filtro .switch .switch-input:checked ~ .switch-paddle::after {
-  left: 23px;
+  left: 22px;
+  background: var(--reserva-sobre-acento, #0d0d0d);
 }
 
-.vista-canchas__filtro .switch-input:focus-visible ~ .switch-paddle {
+.vista-canchas__filtro .switch .switch-input:focus-visible ~ .switch-paddle {
   outline: 2px solid var(--accent, #1779ba);
   outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .vista-canchas__encabezado,
+  .vista-canchas__encabezado--torneo {
+    height: auto;
+    min-height: 280px;
+  }
+
+  .vista-canchas__encabezado-contenido {
+    padding: 20px 16px 24px;
+    gap: 10px;
+  }
+
+  .vista-canchas__cabecera-deportes {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .vista-canchas__filtro {
+    margin-left: 0;
+    padding-bottom: 8px;
+  }
 }
 
 .vista-canchas__cuerpo {
@@ -230,20 +368,20 @@
   }
 }
 
-/* Puntos del carrusel debajo de la tarjeta (no encima de la foto) y con
-   colores pensados para el fondo blanco de la vista. */
+/* Puntos del carrusel debajo de la tarjeta (no encima de la foto) en tema oscuro */
 .vista-canchas__cuerpo .depth-carousel__dots {
   bottom: 2px;
-  background: rgba(15, 23, 42, 0.06);
+  background: #1c1c1c;
+  border: 1px solid #444444;
   backdrop-filter: none;
 }
 
 .vista-canchas__cuerpo .depth-carousel__dot {
-  background: rgba(15, 23, 42, 0.25);
+  background: transparent;
 }
 
-.vista-canchas__cuerpo .depth-carousel__dot.is-active {
-  background: var(--accent, #1779ba);
+.vista-canchas__cuerpo .depth-carousel__dot.is-active::after {
+  background: #ffffff;
 }
 
 .vista-canchas__vacio {
@@ -255,7 +393,7 @@
   min-height: 380px;
   padding: 2rem 1rem;
   text-align: center;
-  color: #4a4a4a;
+  color: var(--reserva-texto-2, #c4c4c4);
 }
 
 /* Estilo base de "card cancha-card": único consumidor desde que el catálogo
@@ -312,8 +450,9 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 3px solid transparent;
-  background: #fff;
+  border: 2px solid var(--reserva-seccion-borde, #2a2a2a);
+  background: var(--reserva-seccion, #161616);
+  color: var(--reserva-texto, #f2f2f2);
   font: inherit;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -678,4 +817,137 @@
 .vista-canchas__card-estatica:disabled {
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+/* ==========================================================================
+   OVERRIDES DE FOUNDATION DENTRO DE .vista-canchas (E4)
+   Garantiza que nada quede blanco ni con texto azul por defecto de Foundation
+   ========================================================================== */
+
+/* Elementos sin clase */
+.vista-canchas fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+  color: inherit;
+}
+
+.vista-canchas legend {
+  color: var(--reserva-texto, #f2f2f2);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.vista-canchas label {
+  color: var(--reserva-texto-2, #c4c4c4);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.vista-canchas select,
+.vista-canchas input:not([type="checkbox"]):not([type="radio"]) {
+  background-color: var(--reserva-campo, #0f0f0f);
+  border: 1px solid var(--reserva-campo-borde, #444444);
+  color: var(--reserva-texto, #f2f2f2);
+  border-radius: 8px;
+  box-shadow: none;
+  min-height: 44px;
+}
+
+.vista-canchas select:focus,
+.vista-canchas input:not([type="checkbox"]):not([type="radio"]):focus {
+  background-color: var(--reserva-campo, #0f0f0f);
+  border-color: var(--accent, #1779ba);
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #1779ba) 30%, transparent);
+}
+
+.vista-canchas input::placeholder {
+  color: var(--reserva-texto-tenue, #a8a8a8);
+}
+
+.vista-canchas details,
+.vista-canchas summary {
+  color: var(--reserva-texto, #f2f2f2);
+  cursor: pointer;
+}
+
+.vista-canchas button {
+  font-family: inherit;
+}
+
+/* Botones de Foundation */
+.vista-canchas .button.hollow {
+  border: 1px solid var(--reserva-control-borde, #4a4a4a);
+  color: var(--reserva-texto, #f2f2f2);
+  background: transparent;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.vista-canchas .button.hollow:hover,
+.vista-canchas .button.hollow:focus {
+  border-color: var(--accent, #1779ba);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.vista-canchas .button.hollow:focus-visible {
+  outline: 2px solid var(--accent, #1779ba);
+  outline-offset: 2px;
+}
+
+.vista-canchas .button.small {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vista-canchas .button.success {
+  background-color: var(--accent, #1779ba);
+  color: var(--reserva-sobre-acento, #0d0d0d);
+  font-weight: 700;
+  border-radius: 8px;
+}
+
+.vista-canchas .button.success:hover,
+.vista-canchas .button.success:focus {
+  filter: brightness(1.1);
+  color: var(--reserva-sobre-acento, #0d0d0d);
+}
+
+.vista-canchas .button.clear.secondary {
+  color: var(--reserva-texto-2, #c4c4c4);
+  background: transparent;
+}
+
+.vista-canchas .button.clear.secondary:hover,
+.vista-canchas .button.clear.secondary:focus {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Callouts de Foundation */
+.vista-canchas .callout.alert {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+  border-radius: 12px;
+}
+
+.vista-canchas .callout.warning {
+  background: rgba(246, 169, 75, 0.12);
+  border: 1px solid rgba(246, 169, 75, 0.35);
+  color: #fde68a;
+  border-radius: 12px;
+}
+
+/* Mensajes de error */
+.vista-canchas .form-error,
+.vista-canchas .is-invalid-input + .form-error {
+  color: #f87171;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin-top: 0.35rem;
 }

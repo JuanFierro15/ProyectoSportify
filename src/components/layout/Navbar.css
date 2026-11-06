@@ -130,6 +130,75 @@
   outline-offset: 2px;
 }
 
+/* ==========================================================================
+   MODO 3: Página de reserva (fondo oscuro, tema unificado con inicio)
+   ========================================================================== */
+.site-header.site-header--reserva {
+  background-color: #0d0d0d !important;
+  backdrop-filter: none !important;
+  border-bottom: 1px solid #262626 !important;
+  box-shadow: none !important;
+}
+
+.site-header.site-header--reserva #main-navbar,
+.site-header.site-header--reserva .top-bar,
+.site-header.site-header--reserva .top-bar-left,
+.site-header.site-header--reserva .top-bar-right,
+.site-header.site-header--reserva .top-bar ul,
+.site-header.site-header--reserva .menu {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+.site-header.site-header--reserva .site-header__brand-text {
+  color: #f2f2f2 !important;
+  text-shadow: none !important;
+}
+
+.site-header.site-header--reserva .site-header__brand-icon {
+  color: var(--color-marca, #f6a94b) !important;
+  filter: none !important;
+}
+
+.site-header.site-header--reserva .menu a {
+  color: #f2f2f2 !important;
+  font-size: 1.05rem !important;
+  font-weight: 600 !important;
+  padding: 0.55rem 1rem !important;
+  border-radius: 8px;
+  text-shadow: none !important;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.site-header.site-header--reserva .menu a:hover,
+.site-header.site-header--reserva .menu a:focus-visible {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  outline: 2px solid #f2f2f2;
+  outline-offset: 2px;
+}
+
+.site-header.site-header--reserva .site-header__btn-mis-reservas {
+  color: #f2f2f2 !important;
+  font-size: 1.05rem !important;
+  font-weight: 600 !important;
+  padding: 0.5rem 0.9rem !important;
+  border: 1px solid #4a4a4a !important;
+  border-radius: 8px !important;
+  background-color: transparent !important;
+  text-shadow: none !important;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.site-header.site-header--reserva .site-header__btn-mis-reservas:hover,
+.site-header.site-header--reserva .site-header__btn-mis-reservas:focus-visible {
+  color: #ffffff !important;
+  border-color: #8f8f8f !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  outline: 2px solid #f2f2f2;
+  outline-offset: 2px;
+}
+
 /* Layout general de la barra */
 .site-header .top-bar {
   padding: 0.65rem 1.75rem;
@@ -196,9 +265,53 @@
 
   .site-header--transparent .menu a,
   .site-header--scrolled .menu a,
+  .site-header.site-header--reserva .menu a,
   .site-header--transparent .site-header__btn-mis-reservas,
-  .site-header--scrolled .site-header__btn-mis-reservas {
+  .site-header--scrolled .site-header__btn-mis-reservas,
+  .site-header.site-header--reserva .site-header__btn-mis-reservas {
     padding: 0.45rem 0.65rem !important;
     font-size: 0.92rem !important;
+  }
+
+  /* Compactación exclusiva de la variante reserva en celular para no ocupar 3 líneas */
+  .site-header.site-header--reserva .top-bar {
+    padding: 0.4rem 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.25rem 0;
+  }
+
+  .site-header.site-header--reserva .top-bar-left,
+  .site-header.site-header--reserva .top-bar-right {
+    flex: 0 0 100%;
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .site-header.site-header--reserva .site-header__brand {
+    padding: 0.15rem 0;
+  }
+
+  .site-header.site-header--reserva .site-header__brand-text {
+    font-size: 1.05rem;
+  }
+
+  .site-header.site-header--reserva .menu {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 0.2rem;
+  }
+
+  .site-header.site-header--reserva .menu li {
+    flex-shrink: 0;
+  }
+
+  .site-header.site-header--reserva .menu a,
+  .site-header.site-header--reserva .site-header__btn-mis-reservas {
+    padding: 0.35rem 0.45rem !important;
+    font-size: 0.85rem !important;
+    white-space: nowrap;
   }
 }

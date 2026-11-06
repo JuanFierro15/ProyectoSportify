@@ -11,7 +11,8 @@ import {
   imagenGrandeCancha,
   estiloAcento,
 } from '../../lib/canchas';
-import { formatoPrecio } from '../../lib/precios';
+import { formatoPrecio, MAX_HORAS_SEGUIDAS } from '../../lib/precios';
+import { MAX_CANCHAS_TORNEO } from '../../lib/torneo';
 import { fechaCompleta } from '../../lib/fechas';
 import { esClicNormal, rutaReserva } from '../../lib/rutas';
 import DepthCarousel from '../reactbits/DepthCarousel';
@@ -27,6 +28,13 @@ import './VistaCanchas.css';
 // Por debajo de este número de canchas, el carrusel 3D no aporta nada (y se
 // ve vacío): se usa un grid estático centrado en su lugar.
 const MINIMO_PARA_CARRUSEL = 3;
+
+// Subtítulos del encabezado de la página de reserva según el modo activo
+const SUBTITULOS = {
+  cancha: `Elige la cancha, el día y hasta ${MAX_HORAS_SEGUIDAS} horas seguidas.`,
+  torneo: `Elige hasta ${MAX_CANCHAS_TORNEO} canchas de un deporte, el formato y la fecha de cada fase.`,
+  cumpleanos: 'Elige las canchas, el día, el horario y cuántos invitados vienen.',
+};
 
 // Dimensiones reales de las fotos en public/img/canchas/ (720x893): se pasan
 // como width/height del <img> para que el navegador reserve el espacio antes
@@ -356,6 +364,14 @@ function VistaCanchas() {
 
   const idFiltro = 'vista-canchas-filtro-libres';
 
+  const canchaEncabezado =
+    canchaActiva ||
+    canchasDelDeporte(canchas, deporteAbierto)[0] ||
+    null;
+  const fotoEncabezado = canchaEncabezado?.imagen
+    ? imagenGrandeCancha(canchaEncabezado.imagen)
+    : null;
+
   return (
     <main
       className="vista-canchas"
@@ -363,35 +379,57 @@ function VistaCanchas() {
       data-sport={deporteAbierto || undefined}
       style={estiloAcento(acento)}
     >
-      <div className="vista-canchas__marco grid-container">
-        <a
-          href="/"
-          className="vista-canchas__volver"
-          onClick={(e) => {
-            if (esClicNormal(e)) {
-              e.preventDefault();
-              cerrarVista();
-            }
-          }}
-        >
-          <ArrowLeft size={18} aria-hidden="true" /> Volver al inicio
-        </a>
-
-        <h1
-          id="vista-canchas-titulo"
-          className="vista-canchas__titulo"
-          tabIndex={-1}
-          ref={tituloRef}
-        >
-          {reserva.modoInfo.titulo}
-        </h1>
-
-        {!reserva.confirmado && (
-          <div className="vista-canchas__modo">
-            <SelectorModo modo={reserva.modo} onCambiar={reserva.cambiarModo} />
-          </div>
+      <section
+        className={
+          'vista-canchas__encabezado' +
+          (reserva.modo === 'torneo' ? ' vista-canchas__encabezado--torneo' : '')
+        }
+      >
+        {fotoEncabezado && (
+          <img
+            src={fotoEncabezado}
+            alt=""
+            aria-hidden="true"
+            className="vista-canchas__encabezado-img"
+          />
         )}
+        <div className="vista-canchas__encabezado-velo" aria-hidden="true" />
+        <div className="vista-canchas__encabezado-contenido grid-container">
+          <a
+            href="/"
+            className="vista-canchas__volver"
+            onClick={(e) => {
+              if (esClicNormal(e)) {
+                e.preventDefault();
+                cerrarVista();
+              }
+            }}
+          >
+            <ArrowLeft size={18} aria-hidden="true" /> Volver al inicio
+          </a>
 
+          <h1
+            id="vista-canchas-titulo"
+            className="vista-canchas__titulo"
+            tabIndex={-1}
+            ref={tituloRef}
+          >
+            {reserva.modoInfo.titulo}
+          </h1>
+
+          <p className="vista-canchas__subtitulo">
+            {SUBTITULOS[reserva.modo] || SUBTITULOS.cancha}
+          </p>
+
+          {!reserva.confirmado && (
+            <div className="vista-canchas__modo">
+              <SelectorModo modo={reserva.modo} onCambiar={reserva.cambiarModo} />
+            </div>
+          )}
+        </div>
+      </section>
+
+      <div className="vista-canchas__marco grid-container">
         {reserva.confirmado ? (
           <div className={'vista-canchas__confirmacion' + (reserva.confirmado?.resumen?.torneo ? ' vista-canchas__confirmacion--torneo' : '')}>
             <ConfirmacionReserva
@@ -403,56 +441,58 @@ function VistaCanchas() {
           </div>
         ) : (
           <>
-            <ul className="tabs vista-canchas__tabs" role="tablist" aria-label="Deporte">
-              {DEPORTES.map((d, idx) => {
-                const esActiva = deporteAbierto === d.slug;
-                return (
-                  <li
-                    key={d.slug}
-                    role="presentation"
-                    className={'tabs-title' + (esActiva ? ' is-active' : '')}
-                    style={{ '--acento': d.colorAcento }}
-                  >
-                    <a
-                      ref={(el) => {
-                        tabsRef.current[idx] = el;
-                      }}
-                      href={rutaReserva(d.slug, reserva.modo)}
-                      role="tab"
-                      aria-selected={esActiva}
-                      tabIndex={esActiva ? 0 : -1}
-                      onClick={(e) => {
-                        if (esClicNormal(e)) {
-                          e.preventDefault();
-                          activarPestanaDeporte(d.slug);
-                        }
-                      }}
-                      onKeyDown={(e) => manejarTecladoPestana(e, idx)}
+            <div className="vista-canchas__cabecera-deportes">
+              <ul className="tabs vista-canchas__tabs" role="tablist" aria-label="Deporte">
+                {DEPORTES.map((d, idx) => {
+                  const esActiva = deporteAbierto === d.slug;
+                  return (
+                    <li
+                      key={d.slug}
+                      role="presentation"
+                      className={'tabs-title' + (esActiva ? ' is-active' : '')}
+                      style={{ '--acento': d.colorAcento }}
                     >
-                      {d.nombre}
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
+                      <a
+                        ref={(el) => {
+                          tabsRef.current[idx] = el;
+                        }}
+                        href={rutaReserva(d.slug, reserva.modo)}
+                        role="tab"
+                        aria-selected={esActiva}
+                        tabIndex={esActiva ? 0 : -1}
+                        onClick={(e) => {
+                          if (esClicNormal(e)) {
+                            e.preventDefault();
+                            activarPestanaDeporte(d.slug);
+                          }
+                        }}
+                        onKeyDown={(e) => manejarTecladoPestana(e, idx)}
+                      >
+                        {d.nombre}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
 
-            <div className="vista-canchas__filtro">
-              <div className="switch small">
-                <input
-                  className="switch-input"
-                  id={idFiltro}
-                  type="checkbox"
-                  role="switch"
-                  checked={soloDisponibles}
-                  onChange={(e) => setSoloDisponibles(e.target.checked)}
-                />
-                <label className="switch-paddle" htmlFor={idFiltro}>
-                  <span className="show-for-sr">Solo con horarios libres ese día</span>
+              <div className="vista-canchas__filtro">
+                <div className="switch small">
+                  <input
+                    className="switch-input"
+                    id={idFiltro}
+                    type="checkbox"
+                    role="switch"
+                    checked={soloDisponibles}
+                    onChange={(e) => setSoloDisponibles(e.target.checked)}
+                  />
+                  <label className="switch-paddle" htmlFor={idFiltro}>
+                    <span className="show-for-sr">Solo con horarios libres ese día</span>
+                  </label>
+                </div>
+                <label htmlFor={idFiltro} className="vista-canchas__filtro-texto">
+                  Solo con horarios libres ese día
                 </label>
               </div>
-              <label htmlFor={idFiltro} className="vista-canchas__filtro-texto">
-                Solo con horarios libres ese día
-              </label>
             </div>
 
             <div className="vista-canchas__reserva">
