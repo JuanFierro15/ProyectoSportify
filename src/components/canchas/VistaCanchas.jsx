@@ -186,6 +186,41 @@ function VistaCanchas() {
 
   const rootRef = useRef(null);
   const tituloRef = useRef(null);
+  const tabsRef = useRef([]);
+
+  const activarPestanaDeporte = (slug, enfocar = false) => {
+    if (reserva.modo === 'cancha') {
+      reserva.elegirCancha(
+        (canchasDelDeporte(canchas, slug)[0] || {}).id || null
+      );
+    }
+    cambiarDeporte(slug);
+    if (enfocar) {
+      const idx = DEPORTES.findIndex((dep) => dep.slug === slug);
+      if (idx !== -1) {
+        tabsRef.current[idx]?.focus();
+      }
+    }
+  };
+
+  const manejarTecladoPestana = (e, idxActual) => {
+    const total = DEPORTES.length;
+    if (total === 0) return;
+    let nuevoIdx = -1;
+    if (e.key === 'ArrowRight') {
+      nuevoIdx = (idxActual + 1) % total;
+    } else if (e.key === 'ArrowLeft') {
+      nuevoIdx = (idxActual - 1 + total) % total;
+    } else if (e.key === 'Home') {
+      nuevoIdx = 0;
+    } else if (e.key === 'End') {
+      nuevoIdx = total - 1;
+    }
+    if (nuevoIdx !== -1) {
+      e.preventDefault();
+      activarPestanaDeporte(DEPORTES[nuevoIdx].slug, true);
+    }
+  };
 
   // Al entrar a la página se coloca el scroll arriba antes del primer pintado.
   useLayoutEffect(() => {
@@ -369,30 +404,36 @@ function VistaCanchas() {
         ) : (
           <>
             <ul className="tabs vista-canchas__tabs" role="tablist" aria-label="Deporte">
-              {DEPORTES.map((d) => (
-                <li
-                  key={d.slug}
-                  className={'tabs-title' + (deporteAbierto === d.slug ? ' is-active' : '')}
-                  style={{ '--acento': d.colorAcento }}
-                >
-                  <a
-                    href={rutaReserva(d.slug, reserva.modo)}
-                    role="tab"
-                    aria-selected={deporteAbierto === d.slug}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (reserva.modo === 'cancha') {
-                        reserva.elegirCancha(
-                          (canchasDelDeporte(canchas, d.slug)[0] || {}).id || null
-                        );
-                      }
-                      cambiarDeporte(d.slug);
-                    }}
+              {DEPORTES.map((d, idx) => {
+                const esActiva = deporteAbierto === d.slug;
+                return (
+                  <li
+                    key={d.slug}
+                    role="presentation"
+                    className={'tabs-title' + (esActiva ? ' is-active' : '')}
+                    style={{ '--acento': d.colorAcento }}
                   >
-                    {d.nombre}
-                  </a>
-                </li>
-              ))}
+                    <a
+                      ref={(el) => {
+                        tabsRef.current[idx] = el;
+                      }}
+                      href={rutaReserva(d.slug, reserva.modo)}
+                      role="tab"
+                      aria-selected={esActiva}
+                      tabIndex={esActiva ? 0 : -1}
+                      onClick={(e) => {
+                        if (esClicNormal(e)) {
+                          e.preventDefault();
+                          activarPestanaDeporte(d.slug);
+                        }
+                      }}
+                      onKeyDown={(e) => manejarTecladoPestana(e, idx)}
+                    >
+                      {d.nombre}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
 
             <div className="vista-canchas__filtro">
@@ -560,6 +601,7 @@ function VistaCanchas() {
                 onConfirmar={reserva.confirmar}
                 onCancelar={reserva.reiniciar}
                 torneo={reserva.modo === 'torneo' ? reserva.torneoPlan : null}
+                invitados={reserva.modo === 'cumpleanos' ? reserva.invitados : null}
               />
             </div>
           </>

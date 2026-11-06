@@ -10,7 +10,7 @@ import './VoucherReserva.css';
  *
  * Props: tipoEtiqueta, fechaTexto, horas (bloque elegido), precio (resultado
  * de calcularPrecioEvento o calcularPrecioJornadas), puedeConfirmar, motivoBloqueo (por qué aún no se
- * puede confirmar), onConfirmar, onCancelar, torneo (opcional).
+ * puede confirmar), onConfirmar, onCancelar, torneo (opcional), invitados (opcional).
  */
 function VoucherReserva({
   tipoEtiqueta,
@@ -22,10 +22,15 @@ function VoucherReserva({
   onConfirmar,
   onCancelar,
   torneo = null,
+  invitados = null,
 }) {
   const n = horas.length;
   const lineas = precio?.lineas || [];
   const esModoTorneo = !!torneo;
+  const tieneInvitados =
+    invitados !== null &&
+    String(invitados).trim() !== '' &&
+    Number(invitados) > 0;
   const sinSeleccion = esModoTorneo
     ? lineas.length === 0
     : lineas.length === 0 || n === 0;
@@ -115,6 +120,12 @@ function VoucherReserva({
               <span className="voucher-reserva__etiqueta">Horario</span>
               <span className="voucher-reserva__valor">{textoHorario}</span>
             </div>
+            {tieneInvitados && (
+              <div className="voucher-reserva__fila">
+                <span className="voucher-reserva__etiqueta">Invitados</span>
+                <span className="voucher-reserva__valor">{Number(invitados)}</span>
+              </div>
+            )}
           </>
         )}
 

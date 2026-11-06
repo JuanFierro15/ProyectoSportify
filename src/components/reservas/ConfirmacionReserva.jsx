@@ -13,7 +13,7 @@ import './ConfirmacionReserva.css';
  * resumen, copia rápida del código, condiciones del negocio y opción de descargar el QR como imagen.
  *
  * Props: codigo, textoQr, resumen ({ tipoEtiqueta, fechaTexto, horario,
- * canchas, total, packsAgua, torneo }), onListo.
+ * canchas, total, packsAgua, torneo, invitados }), onListo.
  */
 function ConfirmacionReserva({ codigo, textoQr, resumen = {}, onListo }) {
   const qrRef = useRef(null);
@@ -58,6 +58,7 @@ function ConfirmacionReserva({ codigo, textoQr, resumen = {}, onListo }) {
     canchas: nombresCanchas = [],
     total = 0,
     packsAgua = 0,
+    invitados = null,
     torneo = null,
   } = resumen;
 
@@ -154,6 +155,12 @@ function ConfirmacionReserva({ codigo, textoQr, resumen = {}, onListo }) {
 
         {nombresCanchas.length > 0 && (
           <p className="confirmacion-reserva__canchas">{nombresCanchas.join(' · ')}</p>
+        )}
+
+        {invitados > 0 && (
+          <p className="confirmacion-reserva__invitados">
+            Invitados: <strong>{invitados}</strong>
+          </p>
         )}
 
         {torneo && (

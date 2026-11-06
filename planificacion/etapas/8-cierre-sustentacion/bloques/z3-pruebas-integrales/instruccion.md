@@ -1,0 +1,2 @@
+Lee primero `C:\my_things\FOLD-STUDY\FOLD_USCO\Semestres\6to_Semestre\cursos\6_lenguajes_Web\proyecto_sportify\ProyectoSportify\planificacion\comun\base.md` y luego `C:\my_things\FOLD-STUDY\FOLD_USCO\Semestres\6to_Semestre\cursos\6_lenguajes_Web\proyecto_sportify\ProyectoSportify\planificacion\etapas\8-cierre-sustentacion\bloques\z3-pruebas-integrales\tarea.md`.
+Sigue todas las reglas del primero y ejecuta la tarea del segundo sin pedir confirmación salvo en los casos previstos en `base.md`.

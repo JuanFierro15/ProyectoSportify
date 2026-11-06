@@ -35,7 +35,7 @@ planificacion/
 | `5-torneo-multidia` | Torneos multi-día por fases (jornadas), canchas efectivas por fase y validación cronológica (30-10) | Miguel Medina | sí | no | sí | t1, t2, t3 |
 | `6-bloqueo-cronologico-torneo` | Bloqueo cronológico preventivo de días y horas entre fases del torneo (31-10) | Miguel Medina | sí | no | sí | b1 |
 | `7-auditoria-usabilidad` | Auditoría integral de usabilidad (`impeccable`) y mejoras de prevención de errores, A11y y móvil (planificado para `usability-improve` tras merge de PR #2) | Miguel Medina (auditoría) y Juan Fierro (ejecución, 31-10) | sí | no | sí | u1, u2, u3, u4 |
-| `8-cierre-sustentacion` | **En curso, plan aprobado.** Pendientes y pruebas completas antes de la sustentación del 20-11; Bloque 7 descartado | Juan Manuel Villalba (coordina Juan Fierro) | sí | no | no | z1 a z6 |
+| `8-cierre-sustentacion` | Cierre antes de la sustentación del 20-11: chat y negocio al día con torneos, invitados en cumpleaños, pestañas con flechas, pruebas integrales, README y capturas; Bloque 7 descartado (`z5` y `z6` pendientes por Juan Fierro) | Juan Manuel Villalba (coordina Juan Fierro) | sí | no | sí | z1 a z6 |
 
 Antes del flujo por etapas (sin plan ni reporte, solo commits):
 
@@ -44,7 +44,6 @@ Antes del flujo por etapas (sin plan ni reporte, solo commits):
   `776f560`.
 - Migración de Create React App a Vite: `2af2ec3..c7193d2` (14-10).
 - Torneos con bracket (Miguel Medina, PR #1): `0b57856..f119ff4` (30-10).
-  Pendiente: documentarlo en las guías del proyecto.
 
 ## Qué hay dentro de cada bloque
 
@@ -76,10 +75,14 @@ inicio).
 | Torneo multi-día | `t2-calendario-y-bracket` | Componente `CalendarioTorneo.jsx` y fechas por fase en `Bracket.jsx` / `Bracket.css` | `a97d9f4` | `t2.log` |
 | Torneo multi-día | `t3-integracion-vistas-y-tests` | Integración en `FormularioReserva`, `VoucherReserva`, `ConfirmacionReserva`, `VistaCanchas` y pruebas en `Torneo.test.jsx` | `7d85c28` | `t3.log` |
 | Bloqueo cronológico torneo | `b1-bloqueo-cronologico-fases` | Bloqueo preventivo de días y horas anteriores entre fases en `SelectorDia`, `useReserva`, `CalendarioTorneo` y `Torneo.test.jsx` | `fc9f6ed`, `1d5ecdb` | `b1.log` |
-| Auditoría de usabilidad | `u1-prevencion-errores-reservas` | Prevención de tope de canchas, swap automático en cruces manuales, resumen horario en vivo y acciones rápidas en `AlertaTiempo` | `1f4874e` | `u1.log` (`ERROR` tras entregar; tarea corregida por Juan, borrador en `instruccion-borrador.md`) |
-| Auditoría de usabilidad | `u2-contacto-mis-reservas-y-voucher` | Consulta/cancelación por código (`Mis reservas`), botón copiar código, políticas en confirmación y limpiar selección en voucher | `a98ef61` | `u2.log` (`ERROR` tras entregar; dos ajustes del coordinador) |
-| Auditoría de usabilidad | `u3-accesibilidad-contraste-y-tokens` | Contraste WCAG AA (`--accent-text`), `:focus-visible`, `prefers-reduced-motion`, `scroll-snap` y eliminación de `side-tab` | `4e23d3a` | `u3.log` (primer intento sin red: `u3-intento1.*`; `ERROR` tras entregar) |
-| Auditoría de usabilidad | `u4-carrusel-touch-targets-y-perf` | Desbloqueo de scroll vertical en `DepthCarousel`, touch targets `>=44px`, detalles en Vóley/Pádel y `poster` en videos | `2bca2a0` | `u4.log` (`ERROR` tras entregar) |
+| Auditoría de usabilidad | `u1-prevencion-errores-reservas` | Prevención de tope de canchas, swap automático en cruces manuales, resumen horario en vivo y acciones rápidas en `AlertaTiempo` | `a75629f` | `u1.log` (`ERROR` tras entregar; tarea corregida por Juan, borrador en `instruccion-borrador.md`) |
+| Auditoría de usabilidad | `u2-contacto-mis-reservas-y-voucher` | Consulta/cancelación por código (`Mis reservas`), botón copiar código, políticas en confirmación y limpiar selección en voucher | `748ae74` | `u2.log` (`ERROR` tras entregar; dos ajustes del coordinador) |
+| Auditoría de usabilidad | `u3-accesibilidad-contraste-y-tokens` | Contraste WCAG AA (`--accent-text`), `:focus-visible`, `prefers-reduced-motion`, `scroll-snap` y eliminación de `side-tab` | `6e536f5` | `u3.log` (primer intento sin red: `u3-intento1.*`; `ERROR` tras entregar) |
+| Auditoría de usabilidad | `u4-carrusel-touch-targets-y-perf` | Desbloqueo de scroll vertical en `DepthCarousel`, touch targets `>=44px`, detalles en Vóley/Pádel y `poster` en videos | `e7c19aa` | `u4.log` (`ERROR` tras entregar) |
+| Cierre sustentación | `z1-chat-y-negocio` | Instrucciones del chat al día con torneos por fases y "Mis reservas", `negocio.json` y casos `torneo-proceso` y `cancelar-codigo` en `probar-chat.mjs` | `6d4a417`, `ec39b18` | `z1.log` |
+| Cierre sustentación | `z2-invitados-vacio-y-pestanas` | Invitados en voucher y confirmación de cumpleaños, aviso de estado vacío y navegación con flechas en pestañas de deporte | `8e1a203`, `d5c9757`, `ab3f6d2` | `z2.log` |
+| Cierre sustentación | `z3-pruebas-integrales` | Pruebas integrales de inicio a fin en `1440×900` y `390×844` registradas en `REPORTE.md` (`E1`–`E6` pendientes por Juan Fierro) | (en `REPORTE.md`) | (en sesión) |
+| Cierre sustentación | `z4-documentacion-y-capturas` | Actualización de `README.md`, 12 capturas en `docs/capturas/`, script `capturas.mjs`, `planificacion/` y `GEMINI.md` | `9418642` | (en sesión) |
 
 ## Cómo trabajar en equipo
 
