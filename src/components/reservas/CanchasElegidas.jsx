@@ -31,7 +31,7 @@ function CanchasElegidas({
     <div className="canchas-elegidas" aria-live="polite">
       {canchas.length === 0 ? (
         <p className="canchas-elegidas__nota">
-          Aún no has elegido canchas.
+          Aún no has elegido canchas. Agrégalas desde el carrusel.
         </p>
       ) : (
         canchas.map((c) => {
