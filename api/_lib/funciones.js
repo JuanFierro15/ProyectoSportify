@@ -179,7 +179,10 @@ export function procesarLlamada(llamada, contexto) {
         : null;
 
     const textoFijo = TEXTOS.seccion[args.seccion] ?? TEXTOS.generico;
-    const respuesta = mensajeRecortado || textoFijo;
+    // La dirección es un dato fijo: si el modelo no la escribió, la pone el servidor.
+    const faltaDireccion =
+      args.seccion === 'ubicacion' && !mensajeRecortado.includes(negocioData.direccion);
+    const respuesta = faltaDireccion ? textoFijo : mensajeRecortado || textoFijo;
 
     return {
       respuesta,
