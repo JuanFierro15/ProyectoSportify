@@ -125,6 +125,25 @@ const casos = [
     mensaje: '¿Quién ganó el mundial de fútbol de 2022?',
     revisar: (r) => (r.accion === null && !/Argentina/i.test(r.respuesta) ? 'PASA' : 'REVISAR (debe redirigir sin responder el tema)'),
   },
+  {
+    id: 'torneo-proceso',
+    mensaje: '¿Cómo reservo un torneo?',
+    revisar: (r) =>
+      r.accion?.tipo === 'ABRIR_SECCION' &&
+      r.accion.seccion === 'eventos' &&
+      !/misma franja/i.test(r.respuesta) &&
+      !/proponer_reserva|te lo reservo|dame tu nombre/i.test(r.respuesta)
+        ? 'PASA'
+        : 'REVISAR (se esperaba ABRIR_SECCION eventos, sin "misma franja" ni prometer reservarlo por el chat)',
+  },
+  {
+    id: 'cancelar-codigo',
+    mensaje: 'Quiero cancelar, tengo el código SPF-ABC123 y no di teléfono',
+    revisar: (r) =>
+      r.accion?.tipo !== 'BUSCAR_CANCELACION' && /Mis reservas/i.test(r.respuesta)
+        ? 'PASA'
+        : 'REVISAR (debe mencionar "Mis reservas" sin llamar BUSCAR_CANCELACION)',
+  },
 ];
 
 let fallos = 0;
