@@ -35,6 +35,7 @@ planificacion/
 | `5-torneo-multidia` | Torneos multi-día por fases (jornadas), canchas efectivas por fase y validación cronológica (30-10) | Miguel Medina | sí | no | sí | t1, t2, t3 |
 | `6-bloqueo-cronologico-torneo` | Bloqueo cronológico preventivo de días y horas entre fases del torneo (31-10) | Miguel Medina | sí | no | sí | b1 |
 | `7-auditoria-usabilidad` | Auditoría integral de usabilidad (`impeccable`) y mejoras de prevención de errores, A11y y móvil (planificado para `usability-improve` tras merge de PR #2) | Miguel Medina (auditoría) y Juan Fierro (ejecución, 31-10) | sí | no | sí | u1, u2, u3, u4 |
+| `8-cierre-sustentacion` | **En curso, plan aprobado.** Pendientes y pruebas completas antes de la sustentación del 20-11; Bloque 7 descartado | Juan Manuel Villalba (coordina Juan Fierro) | sí | no | no | z1 a z6 |
 
 Antes del flujo por etapas (sin plan ni reporte, solo commits):
 
