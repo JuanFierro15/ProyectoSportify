@@ -35,7 +35,7 @@ planificacion/
 | `5-torneo-multidia` | Torneos multi-día por fases (jornadas), canchas efectivas por fase y validación cronológica (30-10) | Miguel Medina | sí | no | sí | t1, t2, t3 |
 | `6-bloqueo-cronologico-torneo` | Bloqueo cronológico preventivo de días y horas entre fases del torneo (31-10) | Miguel Medina | sí | no | sí | b1 |
 | `7-auditoria-usabilidad` | Auditoría integral de usabilidad (`impeccable`) y mejoras de prevención de errores, A11y y móvil (planificado para `usability-improve` tras merge de PR #2) | Miguel Medina (auditoría) y Juan Fierro (ejecución, 31-10) | sí | no | sí | u1, u2, u3, u4 |
-| `8-cierre-sustentacion` | Cierre antes de la sustentación del 20-11: chat y negocio al día con torneos, invitados en cumpleaños, pestañas con flechas, pruebas integrales, README y capturas; Bloque 7 descartado (`z5` y `z6` pendientes por Juan Fierro) | Juan Manuel Villalba (coordina Juan Fierro) | sí | no | sí | z1 a z6 |
+| `8-cierre-sustentacion` | Cierre antes de la sustentación del 20-11: chat y negocio al día con torneos, invitados en cumpleaños, pestañas con flechas, pruebas integrales, README y capturas; Bloque 7 descartado (fusionada en `e6a167c`; faltan las pruebas manuales de `z5` y `z6`, de Juan Fierro) | Juan Manuel Villalba (coordina Juan Fierro) | sí | no | sí | z1 a z6 |
 
 Antes del flujo por etapas (sin plan ni reporte, solo commits):
 
@@ -81,7 +81,7 @@ inicio).
 | Auditoría de usabilidad | `u4-carrusel-touch-targets-y-perf` | Desbloqueo de scroll vertical en `DepthCarousel`, touch targets `>=44px`, detalles en Vóley/Pádel y `poster` en videos | `e7c19aa` | `u4.log` (`ERROR` tras entregar) |
 | Cierre sustentación | `z1-chat-y-negocio` | Instrucciones del chat al día con torneos por fases y "Mis reservas", `negocio.json` y casos `torneo-proceso` y `cancelar-codigo` en `probar-chat.mjs` | `6d4a417`, `ec39b18` | `z1.log` |
 | Cierre sustentación | `z2-invitados-vacio-y-pestanas` | Invitados en voucher y confirmación de cumpleaños, aviso de estado vacío y navegación con flechas en pestañas de deporte | `8e1a203`, `d5c9757`, `ab3f6d2` | `z2.log` |
-| Cierre sustentación | `z3-pruebas-integrales` | Pruebas integrales de inicio a fin en `1440×900` y `390×844` registradas en `REPORTE.md` (`E1`–`E6` pendientes por Juan Fierro) | (en `REPORTE.md`) | (en sesión) |
+| Cierre sustentación | `z3-pruebas-integrales` | Pruebas integrales de inicio a fin en `1440×900` y `390×844` registradas en `REPORTE.md` (`E1`–`E6` en su sección 7) | (en `REPORTE.md`) | (en sesión) |
 | Cierre sustentación | `z4-documentacion-y-capturas` | Actualización de `README.md`, 12 capturas en `docs/capturas/`, script `capturas.mjs`, `planificacion/` y `GEMINI.md` | `9418642` | (en sesión) |
 
 ## Cómo trabajar en equipo

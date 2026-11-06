@@ -2,7 +2,7 @@
 
 - **Fecha**: 2026-11-06
 - **Rama**: `etapa-8-cierre`
-- **Autor**: Juan Manuel Villalba Rincón (`jmvr24`)
+- **Autor**: Juan Manuel Villalba Rincón (`jmvr24`); revisión y sección 7 de Juan Fierro
 
 ---
 
@@ -25,7 +25,7 @@ Ejecución de los bloques locales de cierre definidos en `PLAN.md` (`z1`, `z2`, 
 | `z2` — Invitados, estado vacío y pestañas | ✅ Completado | `8e1a203`, `d5c9757`, `ab3f6d2` | Invitados en voucher/confirmación (`useReserva.js`, `VoucherReserva.jsx`, `ConfirmacionReserva.jsx`, `VistaCanchas.jsx`, `Torneo.test.jsx`), estado vacío en `CanchasElegidas.jsx` y flechas/Home/End con roving `tabIndex` en `VistaCanchas.jsx` + `VistaCanchas.css`. |
 | `z3` — Pruebas integrales de inicio a fin | ✅ Completado en local (API chat pendiente `JuanFierro15`) | (este reporte) | 31 casos locales verificados en `1440×900` y `390×844`; `E1`–`E6` y `probar-chat.mjs` pendientes por `JuanFierro15`. |
 | `z4` — Documentación, capturas y guías | ✅ Completado | `9418642` + cierre | 12 capturas WebP en `docs/capturas/`, `README.md`, `planificacion/` y `GEMINI.md`. |
-| `z5` — Integración a `main` y despliegue | ⏳ Pendiente por `JuanFierro15` | — | Revisión del PR de `etapa-8-cierre`, `vercel build` y merge a `main`. |
+| `z5` — Integración a `main` y despliegue | 🟡 Fusionado; faltan las pruebas manuales en producción | `e6a167c` | Ver la sección 7. |
 | `z6` — Verificación en producción y límite de peticiones | ⏳ Pendiente por `JuanFierro15` | — | Regla en Vercel Firewall, prueba de humo y `node scripts/probar-chat.mjs https://proyecto-sportify.vercel.app` tras desplegar. |
 
 ---
@@ -55,7 +55,7 @@ Ejecución de los bloques locales de cierre definidos en `PLAN.md` (`z1`, `z2`, 
 | **D3** | Reserva individual creada sin teléfono | ✅ | ✅ | Aparece al buscar por código `SPF-XXXXXX` y no aparece al buscar por nombre y teléfono. |
 | **D4** | Cancelar reserva con más de 6 h de anticipación | ✅ | ✅ | Se elimina de `"Mis reservas"` y sus horas vuelven a estar libres inmediatamente en el formulario. |
 | **D5** | Intentar cancelar en `"Mis reservas"` un torneo/evento o reserva `< 6 h` | ✅ | ✅ | No muestra botón de cancelar y explica el motivo (eventos solo llamando al local / plazo mínimo de 6 h). |
-| **E1–E6** | Casos en vivo de `/api/chat` y `node scripts/probar-chat.mjs` | ⏳ | ⏳ | **Pendiente por `JuanFierro15`** (requiere `vercel dev` / entorno con `GEMINI_API_KEY`). Casos configurados en `scripts/probar-chat.mjs`. |
+| **E1–E6** | Casos en vivo de `/api/chat` y `node scripts/probar-chat.mjs` | — | — | Ver la sección 7. |
 | **E7** | Conversación del widget al navegar del inicio a `/reservar/...` y volver | ✅ | ✅ | El portal del chatbot permanece montado en `document.body` y conserva los mensajes y el borrador entre páginas. |
 | **F1** | Recargar (`F5`) en `/reservar/padel` | ✅ | ✅ | Renderiza la página de reserva sin 404. |
 | **F2** | Abrir `/reservar/futbol?modo=torneo` directamente | ✅ | ✅ | Abre en la pestaña de fútbol con el modo `"Torneo"` activo. |
@@ -98,6 +98,8 @@ Generadas con `planificacion/herramientas/capturas/capturas.mjs` (WebP calidad 8
 
 ## 5. Cambios aplicados en `GEMINI.md` (para replicar en `CLAUDE.md`)
 
+> Tiene nombres que no existen en el código: ver las correcciones de la sección 7.
+
 1. **Comandos (`probar-chat.mjs`)**: se añadieron los ids `torneo-proceso` y `cancelar-codigo` (12 casos en total).
 2. **Arquitectura (`ReservasContext` y `src/lib/`)**:
    - Se documentó la acción `RESERVAR_TORNEO` (`reservarTorneo`) junto a `RESERVAR_EVENTO`.
@@ -114,15 +116,67 @@ Generadas con `planificacion/herramientas/capturas/capturas.mjs` (WebP calidad 8
 
 ---
 
-## 6. Pendientes para `JuanFierro15`
+## 6. Pendientes
 
-1. **Pruebas en vivo del chatbot (`z3` casos `E1`–`E6`)**:
-   - Levantar `vercel dev` con `GEMINI_API_KEY` y ejecutar:
-     ```bash
-     node scripts/probar-chat.mjs http://localhost:3000
-     node scripts/probar-chat.mjs http://localhost:3000 torneo-proceso cancelar-codigo reservalo-varias
-     ```
-2. **Integración a `main` (`z5`)**:
-   - Ejecutar `vercel build` para confirmar el empaquetado de `api/chat.func`, integrar `etapa-8-cierre` en `main` y hacer `git push origin main`.
-3. **Verificación en producción (`z6`)**:
-   - Verificar `https://proyecto-sportify.vercel.app` y correr `node scripts/probar-chat.mjs https://proyecto-sportify.vercel.app`.
+Actualizado por Juan Fierro el 06-11-2026, tras la revisión de la sección 7.
+
+1. **Pruebas manuales en producción (`z5`):** A3, B7, C3, D1, D4, E2, F1 y H1, en ventana de incógnito o perfil temporal.
+2. **Chat en la interfaz:** E1 (comparar con los horarios de la página), E2 (reservar y responder "sí") y E3 (cancelar con nombre y teléfono).
+3. **Volver a comprobar B5 y B6:** ver la nota de la sección 7.
+4. **Límite de peticiones (`z6`):** regla de Vercel Firewall sobre `/api/chat`, a cargo de Juan Fierro. Falta comprobar que el plan la incluya.
+5. **Cierre:** completar este reporte y borrar la rama `etapa-8-cierre`.
+
+Las capturas de la página de reserva y del torneo se rehacen en la etapa 9, porque ese rediseño las deja viejas.
+
+---
+
+## 7. Revisión y fusión (Juan Fierro, 06-11-2026)
+
+PR #4 fusionado en `main` con `e6a167c`. Antes de fusionar se agregaron a la rama cuatro commits, por lo que encontró la revisión:
+
+| Commit | Qué corrige |
+|---|---|
+| `e844ef7` | Instrucciones del chat: el proceso de torneos va dentro del mensaje de `abrir_seccion`. |
+| `2105fe9` | README: desempate según el deporte y condición del abono. |
+| `b3e0b45` | La dirección del local la garantiza el servidor (`procesarLlamada` en `api/_lib/funciones.js`), con 3 tests en `api/_lib/funciones.test.js`. |
+| `783bb02` | README: conteo de tests (195 en 16 archivos). |
+
+### Regresión encontrada en el chat
+
+Las instrucciones nuevas del PR hacían que el modelo dejara de dar la dirección, aunque la regla de ubicación no había cambiado. Mejorar solo el texto no lo resolvió una vez desplegado: 7 de 8 en local, pero 0 de 8 en el preview, con el mismo modelo. Por eso la dirección quedó a cargo del servidor.
+
+| Caso | Dónde | `main` antes | PR original | Ajuste de texto | Con el servidor |
+|---|---|:---:|:---:|:---:|:---:|
+| `¿Dónde quedan?` da la dirección | Local | 12 de 14 | 2 de 15 | 7 de 8 | — |
+| `¿Dónde quedan?` da la dirección | Desplegado | 5 de 8 | — | 0 de 8 | **8 de 8** |
+| `¿Cómo reservo un torneo?` menciona las fases | Local | no contado | 1 de 6 | 8 de 8 | — |
+| `¿Cómo reservo un torneo?` menciona las fases | Desplegado | 0 de 8 | — | **8 de 8** | — |
+
+Muchas de esas respuestas solo dicen "organiza tu torneo por fases", sin explicar el proceso completo. Ese caso depende del modelo: no está garantizado por el servidor.
+
+### Casos del chat (`E1`–`E6`)
+
+`vercel dev` falló en el equipo de la revisión (`EPERM` al crear symlinks en la caché de la CLI), así que los casos locales corrieron sobre el handler real de `api/chat.js`, cargado con Vite. `vercel build` no se ejecutó: la compilación la respaldan el preview y producción, que responden HTTP 200.
+
+| ID | Resultado | Observaciones |
+|---|---|---|
+| E1 | parcial | `disponibilidad` pasa con el script; falta compararlo con la página. |
+| E2 | parcial | `datos-validos` propone la reserva; falta confirmarla en la interfaz. |
+| E3 | sin probar | El script no tiene este caso. |
+| E4 | pasa | Abre la reserva de eventos y menciona las fases (tabla anterior). |
+| E5 | pasa | `cancelar-codigo`: 6 de 6 en local y 1 en producción. |
+| E6 | pasa | `fuera-de-tema` no responde el tema. |
+
+`node scripts/probar-chat.mjs https://proyecto-sportify.vercel.app` pasó 10 de 12 a la primera. En `fuera-de-tema` y `torneo-proceso` la petición falló sin respuesta HTTP, sin causa identificada; al repetirlos pasaron 3 de 3 cada uno.
+
+### Otras verificaciones de la revisión
+
+- `npm test` (195 tests) en `main`; `npm run lint` y `npm run build` en la rama, antes del último commit, que solo cambia el README.
+- G2 y F4 repetidos en Chrome contra el build, a 1440×900: pestañas con flechas, Inicio, Fin y Ctrl+clic, sin errores de consola. A 390×844 no se repitieron.
+- El resto de la tabla de `z3` no se repitió.
+
+### Correcciones a este reporte
+
+- **Sección 5:** varios nombres no existen en el código, así que no se copiaron a `CLAUDE.md`. No existen `RESERVAR_TORNEO` ni `reservarTorneo` (los torneos usan `RESERVAR_EVENTO` con `bloques`), `sinPreseleccionar` (`canchaIds` arranca vacío), ni `calcularFasesTorneo`, `generarCrucesIniciales`, `generarBracket`, `intercambiarEquipoEnPartidos` y `validarJornadasTorneo`. `calcularPrecioJornadas` está en `precios.js`, no en `torneo.js`. **Si tu `GEMINI.md` tiene esos nombres, corrígelo.**
+- **Sección 3:** algunas citas no corresponden a la interfaz. B5 cita "Armar cruces manualmente" y B6 "Usar partidos de 15 min (relámpago)"; lo que existe es "Manual" y "Cambiar a 15 min por partido". B2 cita la clase `.vista-canchas__aviso-torneo`, que no existe. Por eso B5 y B6 quedan por comprobar, y los demás resultados de la tabla son los que registró Juan Manuel, sin repetir.
+- **README:** las duraciones de partido son 15, 20 o 30 min (`OPCIONES_DURACION`), no 15 a 90.
