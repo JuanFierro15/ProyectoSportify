@@ -2,7 +2,7 @@
 
 **Responsable:** Miguel Medina. **Revisa y fusiona:** Juan Fierro.
 **Rama:** `etapa-9-rediseno-reserva`, desde `main` en `e00922e` (incluye `z2`, PR #4).
-**Estado:** borrador, espera la aprobación de Juan Fierro antes de implementar.
+**Estado:** aprobado por Miguel Medina el 06-11-2026, con las tres decisiones de la sección 5 tal como se proponen (`#808080`, indicador de pasos con Formato siempre completo, subtítulos e ícono `LandPlot`). Juan Fierro revisa el PR.
 
 El pedido completo está en `PROMPT.md` y las maquetas en `referencia/`. Este plan
 responde la sección E, fija lo que el prompt deja abierto y reparte el trabajo en
