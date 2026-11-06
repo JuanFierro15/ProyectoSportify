@@ -117,6 +117,10 @@
 }
 
 /* El pill activo sí lee del tema global (--accent), no de su color local. */
+.vista-canchas__tabs .tabs-title > a:focus-visible {
+  outline: 2px solid var(--accent-text, var(--accent, #1779ba));
+  outline-offset: 2px;
+}
 .vista-canchas__tabs .tabs-title.is-active > a {
   border-color: var(--accent, #1779ba);
   background: var(--accent, #1779ba);
