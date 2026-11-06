@@ -14,6 +14,7 @@ import {
   finDeFranja,
 } from '../../src/lib/precios.js';
 import { formatoTelefono } from '../../src/lib/negocio.js';
+import { MAX_CANCHAS_TORNEO, OPCIONES_EQUIPOS } from '../../src/lib/torneo.js';
 
 // '$ 60.000' (con espacio de no separación) -> '$60.000', como lo escribe el chat.
 export function precioChat(valor) {
@@ -30,8 +31,8 @@ export function construirInstrucciones(contexto) {
     '- Resuelves referencias como "resérvalo" o "esa" con el historial. Si tu último mensaje ofrecía más de una franja, día o cancha y el usuario no dijo cuál, eso es un dato que falta: preguntas explícitamente cuál, nombrando las opciones que ofreciste. Nunca supones una.',
     `- Para reservar necesitas cancha, fecha, una o varias horas seguidas (de 1 a ${MAX_HORAS_SEGUIDAS}), nombre y teléfono. En el chat el teléfono es obligatorio. Si faltan datos, pides en un solo mensaje con responder todos los que falten y solo esos (no vuelves a pedir lo que ya está claro en el historial).`,
     '- Cuando ya tienes los cinco datos y el usuario quiere reservar, llamas proponer_reserva. No verificas tú si la franja está libre ni si el nombre o el teléfono son válidos: el sistema lo revisa y responde.',
-    '- Para cancelar necesitas el nombre y el teléfono con que se hizo la reserva (y, si los da, la cancha, la fecha o la hora); con esos datos llamas proponer_cancelacion. Si faltan, los pides con responder.',
-    '- Los torneos, cumpleaños y eventos no se reservan ni se cancelan desde el chat: explicas el proceso y llamas abrir_seccion con seccion "eventos".',
+    '- Para cancelar necesitas el nombre y el teléfono con que se hizo la reserva (y, si los da, la cancha, la fecha o la hora); con esos datos llamas proponer_cancelacion. Si faltan, los pides con responder. Si la persona tiene el código de reserva (SPF-XXXXXX) o reservó sin teléfono, no llamas proponer_cancelacion: le indicas con responder que use "Mis reservas" en el menú.',
+    '- Los torneos, cumpleaños y eventos no se reservan ni se cancelan desde el chat: explicas el proceso y llamas abrir_seccion con seccion "eventos". En "Mis reservas" del menú también se pueden consultar los torneos y cumpleaños, pero no se cancelan por ahí ni por el chat, sino llamando al local.',
     '- Si preguntan dónde queda el local, das la dirección completa en el mensaje y llamas abrir_seccion con seccion "ubicacion".',
     '- Si quieren ver las canchas, llamas abrir_seccion con seccion "canchas" y el deporte si lo dijeron.',
     '- Nunca dices que una reserva o cancelación quedó hecha: eso lo confirma el sitio.',
@@ -73,7 +74,7 @@ export function construirInstrucciones(contexto) {
   const lineasEventos = negocioData.eventos.map((e) => `${e.label}: ${e.detalle}`).join('\n');
   const eventos = [
     lineasEventos,
-    'Proceso: se reservan desde la sección de eventos del sitio; se elige torneo o cumpleaños, una o varias canchas y una franja de horas seguidas; se reserva todo o nada; el precio es la suma por cancha con las mismas reglas de precio.',
+    `Proceso: se reservan desde la página de reserva del sitio, en el modo Torneo o Cumpleaños, y se reserva todo o nada. Torneo: de 1 a ${MAX_CANCHAS_TORNEO} canchas de un solo deporte, ${OPCIONES_EQUIPOS.slice(0, -1).join(', ')} o ${OPCIONES_EQUIPOS[OPCIONES_EQUIPOS.length - 1]} equipos, y un día y horario por cada fase, en orden cronológico dentro de los próximos 7 días. Cumpleaños: una o varias canchas, una franja de horas seguidas y el número de invitados. El precio es la suma por cancha (en torneo, por cada fase y sus canchas efectivas) con las mismas reglas de descuento y agua desde ${MIN_HORAS_BENEFICIO} horas seguidas en cada bloque.`,
   ].join('\n');
 
   const dias = fechasVentana(contexto.fechaHoy);
