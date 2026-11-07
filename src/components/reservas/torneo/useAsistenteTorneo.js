@@ -75,20 +75,33 @@ export function useAsistenteTorneo(opciones = {}) {
     return estadosPasos.find((p) => p.id === pasoActual) || estadosPasos[0];
   }, [estadosPasos, pasoActual]);
 
+  // El asistente solo actúa sobre la página en móvil y en modo torneo (S2).
+  const activo = esMovil && reserva?.modo === 'torneo';
+
+  // "Siguiente" exige el paso actual completo y el de destino alcanzable (S5).
+  const siguienteId = PASOS_TORNEO[pasoIndex + 1]?.id;
   const puedeAvanzar = Boolean(
-    pasoActualInfo?.completo && pasoIndex < PASOS_TORNEO.length - 1
+    pasoActualInfo?.completo && siguienteId && alcanzables.includes(siguienteId)
   );
+
+  let motivoAvance = '';
+  if (!pasoActualInfo?.completo) {
+    motivoAvance = pasoActualInfo?.motivo || '';
+  } else if (siguienteId && !puedeAvanzar) {
+    const pendiente = estadosPasos.find((p) => !p.completo);
+    if (pendiente) {
+      motivoAvance = `Primero completa ${pendiente.etiqueta}: ${pendiente.motivo}`;
+    }
+  }
 
   const puedeRetroceder = pasoIndex > 0;
 
   // 3. Funciones de navegación
   const siguiente = useCallback(() => {
-    if (!pasoActualInfo?.completo) return false;
-    if (pasoIndex >= PASOS_TORNEO.length - 1) return false;
-    const siguienteId = PASOS_TORNEO[pasoIndex + 1].id;
+    if (!puedeAvanzar) return false;
     setPasoActual(siguienteId);
     return true;
-  }, [pasoActualInfo, pasoIndex]);
+  }, [puedeAvanzar, siguienteId]);
 
   const anterior = useCallback(() => {
     if (pasoIndex <= 0) return false;
@@ -108,16 +121,19 @@ export function useAsistenteTorneo(opciones = {}) {
 
   // Si un cambio de la reserva (p. ej. "Limpiar selección") deja el paso
   // actual fuera de alcance, vuelve al primer paso incompleto.
+  // En escritorio el paso se conserva tal cual (S6) y se corrige al volver
+  // a móvil.
   useEffect(() => {
-    if (alcanzables.includes(pasoActual)) return;
+    if (!activo || alcanzables.includes(pasoActual)) return;
     const primerIncompleto = estadosPasos.find((p) => !p.completo);
     setPasoActual(primerIncompleto ? primerIncompleto.id : PASOS_TORNEO[0].id);
-  }, [alcanzables, estadosPasos, pasoActual]);
+  }, [activo, alcanzables, estadosPasos, pasoActual]);
 
-  // 4. Efecto de scroll y foco al cambiar de paso
+  // 4. Efecto de scroll y foco al cambiar de paso (solo con el asistente activo)
   useEffect(() => {
     if (pasoPrevioRef.current === pasoActual) return;
     pasoPrevioRef.current = pasoActual;
+    if (!activo) return;
 
     // Scroll al inicio respetando prefers-reduced-motion
     if (typeof window !== 'undefined' && window.scrollTo) {
@@ -134,7 +150,7 @@ export function useAsistenteTorneo(opciones = {}) {
     if (encabezadoRef.current && typeof encabezadoRef.current.focus === 'function') {
       encabezadoRef.current.focus();
     }
-  }, [pasoActual]);
+  }, [activo, pasoActual]);
 
   return {
     esMovil,
@@ -143,6 +159,7 @@ export function useAsistenteTorneo(opciones = {}) {
     numeroPaso: pasoIndex + 1,
     totalPasos: PASOS_TORNEO.length,
     pasoActualInfo,
+    motivoAvance,
     estadosPasos,
     alcanzables,
     puedeAvanzar,

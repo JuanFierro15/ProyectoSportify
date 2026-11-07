@@ -178,7 +178,55 @@ describe('useAsistenteTorneo', () => {
     expect(result.current.pasoActual).toBe('formato');
   });
 
+  it('en escritorio no sube la página ni cambia de paso si una cancha se quita (S2)', () => {
+    // Canchas completo y Formato incompleto: Formato es alcanzable solo
+    // mientras Canchas siga completo.
+    const conCanchas = { modo: 'torneo', canchaIds: ['c1'], torneoPlan: {} };
+    const { result, rerender } = renderHook(
+      ({ r }) => useAsistenteTorneo({ reserva: r }),
+      { initialProps: { r: conCanchas } }
+    );
+    act(() => {
+      result.current.irA('formato');
+    });
+    window.scrollTo.mockClear();
+
+    rerender({ r: { ...conCanchas, canchaIds: [] } });
+
+    expect(window.scrollTo).not.toHaveBeenCalled();
+    expect(result.current.pasoActual).toBe('formato');
+  });
+
+  it('no avanza a un paso inalcanzable y explica qué paso falta (S5)', () => {
+    currentMatches = true;
+    // Formato completo, pero Canchas no: Fechas no es alcanzable.
+    const reserva = {
+      modo: 'torneo',
+      canchaIds: [],
+      equipos: 8,
+      duracionPartido: 20,
+      torneoPlan: {},
+    };
+    const { result } = renderHook(() => useAsistenteTorneo({ reserva }));
+    act(() => {
+      result.current.irA('formato');
+    });
+    expect(result.current.pasoActual).toBe('formato');
+    expect(result.current.puedeAvanzar).toBe(false);
+    expect(result.current.motivoAvance).toBe(
+      'Primero completa Canchas: Elige al menos una cancha'
+    );
+
+    let avanzo;
+    act(() => {
+      avanzo = result.current.siguiente();
+    });
+    expect(avanzo).toBe(false);
+    expect(result.current.pasoActual).toBe('formato');
+  });
+
   it('vuelve al primer paso incompleto si el paso actual deja de ser alcanzable', () => {
+    currentMatches = true;
     const conCanchas = { modo: 'torneo', canchaIds: ['c1'], torneoPlan: {} };
     const { result, rerender } = renderHook(
       ({ r }) => useAsistenteTorneo({ reserva: r }),
@@ -196,6 +244,7 @@ describe('useAsistenteTorneo', () => {
   });
 
   it('hace scroll y pone el foco en el encabezado al cambiar de paso', () => {
+    currentMatches = true;
     const reserva = {
       modo: 'torneo',
       canchaIds: ['c1'],
