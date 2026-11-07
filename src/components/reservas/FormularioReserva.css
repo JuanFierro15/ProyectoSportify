@@ -1,139 +1,385 @@
-.formulario-reserva .callout.alert {
-  margin-bottom: 1.25rem;
-  border-radius: 8px;
+/* ==========================================================================
+   Formulario de Reserva — Tema Oscuro (Etapa 9, Bloque r2)
+   ========================================================================== */
+
+.formulario-reserva {
+  display: flex;
+  flex-direction: column;
 }
 
-.formulario-reserva__campo {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 14px;
-  padding: 1rem 1.25rem;
-  margin: 0 0 1rem;
+.formulario-reserva .callout.alert {
+  margin-bottom: 1.25rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, #ef4444 14%, var(--reserva-seccion, #161616));
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+  padding: 0.85rem 1.1rem;
+}
+
+/* --- Tarjetas de sección (Día, Horario, Formato, Fechas, Tus datos) --- */
+.formulario-reserva__campo,
+.vista-canchas .formulario-reserva__campo {
+  background: var(--reserva-seccion, #161616);
+  border: 1px solid var(--reserva-seccion-borde, #2a2a2a);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin: 0 0 1.5rem;
   min-width: 0;
   scroll-margin-top: 6rem;
+  color: var(--reserva-texto, #f2f2f2);
+  box-sizing: border-box;
+}
+
+@media screen and (max-width: 39.9375em) {
+  .formulario-reserva__campo,
+  .vista-canchas .formulario-reserva__campo {
+    padding: 1.25rem 0.85rem;
+  }
+}
+
+.formulario-reserva__campo--fases,
+.vista-canchas .formulario-reserva__campo--fases {
+  background: transparent;
+  border: none;
+  padding: 0;
 }
 
 .formulario-reserva__campo legend {
   font-weight: 700;
-  font-size: 1.05rem;
-  color: #1e293b;
-  margin-bottom: 0.4rem;
+  font-size: 1.125rem;
+  color: var(--reserva-texto, #f2f2f2);
+  margin-bottom: 1rem;
   padding: 0;
 }
 
-.formulario-reserva__ayuda {
-  margin: 0 0 0.6rem;
+.formulario-reserva__legend-horario {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.formulario-reserva__subtexto-horario {
   font-size: 0.85rem;
-  color: #64748b;
+  font-weight: 400;
+  color: var(--reserva-texto-2, #b3b3b3);
+}
+
+.formulario-reserva__rango {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent, #5bd67d);
+}
+
+.formulario-reserva__ayuda {
+  margin: 0 0 0.85rem;
+  font-size: 0.88rem;
+  color: var(--reserva-texto-2, #b3b3b3);
+  line-height: 1.4;
 }
 
 .formulario-reserva__nota {
-  margin: 0.4rem 0 0;
-  font-size: 0.85rem;
-  color: #64748b;
+  margin: 0.4rem 0 0.85rem;
+  font-size: 0.88rem;
+  color: var(--reserva-texto-tenue, #a8a8a8);
+  line-height: 1.4;
 }
 
-/* Colores del deporte activo: `--accent` y `--accent-contrast` los define la
-   vista de canchas (estiloAcento). El texto usa el acento oscurecido para
-   que se lea sobre fondo claro aunque el acento sea claro (p. ej. el ámbar
-   del vóley). Fuera de la vista, los respaldos dan el verde/azul de antes. */
+/* Aviso del beneficio (2 horas seguidas) tintado con el acento */
 .formulario-reserva__promo {
   display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
-  margin: 0 0 0.85rem;
-  padding: 0.55rem 0.75rem;
+  gap: 0.55rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
   border-radius: 10px;
-  background: color-mix(in srgb, var(--accent, #2fa35a) 14%, #ffffff);
-  color: color-mix(in srgb, var(--accent, #2fa35a) 45%, #1a1a1a);
-  font-size: 0.85rem;
+  background: color-mix(in srgb, var(--accent, #5bd67d) 12%, var(--reserva-seccion, #161616));
+  border: 1px solid color-mix(in srgb, var(--accent, #5bd67d) 25%, transparent);
+  color: var(--reserva-texto, #f2f2f2);
+  font-size: 0.88rem;
+  line-height: 1.45;
 }
 
 .formulario-reserva__promo svg {
   flex-shrink: 0;
-  margin-top: 0.1rem;
-  color: color-mix(in srgb, var(--accent, #2fa35a) 75%, #1a1a1a);
+  margin-top: 0.15rem;
+  color: var(--accent, #5bd67d);
 }
 
-.formulario-reserva__horas {
+.formulario-reserva__promo strong {
+  color: var(--reserva-texto, #f2f2f2);
+  font-weight: 700;
+}
+
+/* --- Horario por franjas (Mañana, Tarde, Noche) --- */
+.formulario-reserva__franjas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.formulario-reserva__franja {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
+  align-items: center;
+  gap: 0.625rem;
 }
 
-.formulario-reserva__hora {
+.formulario-reserva__franja-etiqueta {
+  width: 72px;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--reserva-texto-2, #b3b3b3);
+}
+
+.formulario-reserva__franja-horas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex: 1 1 300px;
+}
+
+/* --- Botones de hora (84 × 44 px) --- */
+.formulario-reserva__hora.button,
+.formulario-reserva__hora.button.hollow,
+.vista-canchas .formulario-reserva__hora.button,
+.vista-canchas .formulario-reserva__hora.button.hollow {
+  width: 84px;
+  min-height: 44px;
+  padding: 0;
   margin: 0;
-  border-radius: 999px;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease,
-    background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background: var(--reserva-control, #1f1f1f);
+  border: 1px solid var(--reserva-control-borde, #4a4a4a);
+  color: var(--reserva-texto, #f2f2f2);
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.formulario-reserva__hora.button:hover:not(:disabled),
+.formulario-reserva__hora.button.hollow:hover:not(:disabled),
+.vista-canchas .formulario-reserva__hora.button:hover:not(:disabled),
+.vista-canchas .formulario-reserva__hora.button.hollow:hover:not(:disabled) {
+  border-color: var(--accent, #5bd67d);
+  background: color-mix(in srgb, var(--accent, #5bd67d) 15%, var(--reserva-control, #1f1f1f));
+  color: var(--reserva-texto, #f2f2f2);
 }
 
 .formulario-reserva__hora:focus:not(:focus-visible) {
   outline: none;
 }
 
-.formulario-reserva__hora:focus-visible {
-  outline: 2px solid var(--accent-text, var(--accent, #1779ba));
+.formulario-reserva__hora:focus-visible,
+.vista-canchas .formulario-reserva__hora:focus-visible {
+  outline: 2px solid var(--accent, #5bd67d);
   outline-offset: 2px;
 }
 
-/* Horas libres (botón hollow de Foundation): borde y texto del deporte. */
-.formulario-reserva .button.hollow {
-  border-color: var(--accent-text, var(--accent, #1779ba));
-  color: var(--accent-text, var(--accent, #1779ba));
-}
-
-.formulario-reserva__hora.button.hollow,
-.formulario-reserva__hora.button.hollow:disabled {
-  border-color: var(--accent-text, var(--accent, #1779ba));
-  color: var(--accent-text, var(--accent, #1779ba));
-}
-
-.formulario-reserva__hora.button.hollow:hover:not(:disabled),
-.formulario-reserva__hora.button.hollow:focus:not(:disabled) {
-  border-color: color-mix(in srgb, var(--accent, #1779ba) 80%, #1a1a1a);
-  background: color-mix(in srgb, var(--accent, #1779ba) 12%, #ffffff);
-  color: color-mix(in srgb, var(--accent, #1779ba) 45%, #1a1a1a);
-}
-
-.formulario-reserva__hora--ocupado {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-/* Hora elegida (botón relleno): fondo del deporte y texto con contraste. */
+/* Elegida: fondo del acento, texto var(--reserva-sobre-acento) en negrilla */
 .formulario-reserva__hora--sel.button,
+.formulario-reserva__hora--sel.button.hollow,
 .formulario-reserva__hora--sel.button:hover,
-.formulario-reserva__hora--sel.button:focus {
-  border-color: var(--accent, #1779ba);
-  background: var(--accent, #1779ba);
-  color: var(--accent-contrast, #ffffff);
-  box-shadow: 0 8px 16px -4px color-mix(in srgb, var(--accent, #1779ba) 55%, transparent);
-  transform: translateY(-1px);
+.formulario-reserva__hora--sel.button:focus,
+.vista-canchas .formulario-reserva__hora--sel.button,
+.vista-canchas .formulario-reserva__hora--sel.button.hollow,
+.vista-canchas .formulario-reserva__hora--sel.button:hover,
+.vista-canchas .formulario-reserva__hora--sel.button:focus {
+  border: 1px solid var(--accent, #5bd67d);
+  background: var(--accent, #5bd67d);
+  color: var(--reserva-sobre-acento, #0d0d0d);
+  font-weight: 700;
+  box-shadow: none;
+  transform: none;
 }
 
-.formulario-reserva__hora-tag {
-  font-size: 0.7em;
-  opacity: 0.8;
+/* Deshabilitada sin canchas seleccionadas (no ocupada) */
+.formulario-reserva__hora.button:disabled:not(.formulario-reserva__hora--ocupado),
+.formulario-reserva__hora.button.hollow:disabled:not(.formulario-reserva__hora--ocupado),
+.vista-canchas .formulario-reserva__hora.button:disabled:not(.formulario-reserva__hora--ocupado),
+.vista-canchas .formulario-reserva__hora.button.hollow:disabled:not(.formulario-reserva__hora--ocupado) {
+  background: var(--reserva-control, #1f1f1f);
+  border: 1px solid var(--reserva-control-borde, #4a4a4a);
+  color: #8c8c8c;
+  text-decoration: none;
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Reservada / ocupada de verdad: borde punteado #3a3a3a, texto var(--reserva-reservada) (#808080) tachado, disabled */
+.formulario-reserva__hora--ocupado.button:disabled,
+.formulario-reserva__hora--ocupado.button.hollow:disabled,
+.vista-canchas .formulario-reserva__hora--ocupado.button:disabled,
+.vista-canchas .formulario-reserva__hora--ocupado.button.hollow:disabled {
+  background: transparent !important;
+  border: 1px dashed var(--reserva-linea, #3a3a3a) !important;
+  color: var(--reserva-reservada, #808080) !important;
+  text-decoration: line-through !important;
+  cursor: not-allowed !important;
+  opacity: 1 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* --- Leyenda de horarios --- */
+.formulario-reserva__leyenda {
+  margin: 1rem 0 0;
+  display: flex;
+  gap: 1.125rem;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: var(--reserva-texto-2, #b3b3b3);
+}
+
+.formulario-reserva__leyenda-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.formulario-reserva__muestra {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.formulario-reserva__muestra--libre {
+  border: 1px solid var(--reserva-control-borde, #4a4a4a);
+  background: var(--reserva-control, #1f1f1f);
+}
+
+.formulario-reserva__muestra--elegida {
+  background: var(--accent, #5bd67d);
+}
+
+.formulario-reserva__muestra--reservada {
+  border: 1px dashed var(--reserva-linea, #4a4a4a);
+  background: transparent;
+}
+
+/* --- Tus datos (Contacto y cumple) --- */
+.formulario-reserva__contacto {
+  margin-top: 0;
+}
+
+.formulario-reserva label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--reserva-texto-2, #d6d6d6);
+  margin-bottom: 0.35rem;
+}
+
+.formulario-reserva input[type="text"],
+.formulario-reserva input[type="tel"],
+.formulario-reserva input[type="number"],
+.formulario-reserva select,
+.formulario-reserva .formulario-reserva__input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 46px;
+  min-height: 46px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--reserva-campo-borde, #444444);
+  background-color: var(--reserva-campo, #0f0f0f);
+  color: var(--reserva-texto, #f2f2f2);
+  font-size: 15px;
+  font-weight: 400;
+  box-shadow: none;
+  margin-bottom: 0.25rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.formulario-reserva input::placeholder {
+  color: var(--reserva-texto-tenue, #8f8f8f);
+}
+
+.formulario-reserva input:focus,
+.formulario-reserva select:focus,
+.formulario-reserva .formulario-reserva__input:focus {
+  border-color: var(--accent, #5bd67d);
+  background-color: var(--reserva-campo, #0f0f0f);
+  color: var(--reserva-texto, #f2f2f2);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #5bd67d) 30%, transparent);
+  outline: none;
+}
+
+.formulario-reserva input:focus-visible,
+.formulario-reserva select:focus-visible,
+.formulario-reserva .formulario-reserva__input:focus-visible,
+.vista-canchas input:focus-visible,
+.vista-canchas select:focus-visible,
+.vista-canchas .formulario-reserva input:focus-visible,
+.vista-canchas .formulario-reserva select:focus-visible,
+.vista-canchas .formulario-reserva .formulario-reserva__input:focus-visible,
+.vista-canchas select.asignacion-manual__select:focus-visible {
+  outline: 2px solid var(--accent, #5bd67d);
+  outline-offset: 2px;
+  border-color: var(--accent, #5bd67d);
+}
+
+.formulario-reserva input.is-invalid-input {
+  border-color: #ef4444;
+  background-color: var(--reserva-campo, #0f0f0f);
+}
+
+.formulario-reserva .form-error {
+  display: none;
+  margin-top: 0.35rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #f87171;
+}
+
+.formulario-reserva .form-error.is-visible {
+  display: block;
+}
+
+.formulario-reserva__nota-contacto {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--reserva-texto-tenue, #a8a8a8);
+  line-height: 1.4;
 }
 
 /* --- Modo Torneo --- */
 .formulario-reserva__torneo {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .formulario-reserva__seccion-torneo {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.65rem;
+  margin-bottom: 1.25rem;
+}
+
+.formulario-reserva__seccion-torneo:last-child {
+  margin-bottom: 0;
 }
 
 .formulario-reserva__subtitulo {
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: #334155;
+  color: var(--reserva-texto, #f2f2f2);
 }
 
 .formulario-reserva__pills {
@@ -142,58 +388,81 @@
   gap: 0.5rem;
 }
 
-.formulario-reserva__pill {
+.formulario-reserva__pill.button,
+.formulario-reserva__pill.button.hollow,
+.vista-canchas .formulario-reserva__pill.button,
+.vista-canchas .formulario-reserva__pill.button.hollow {
   margin: 0;
+  min-height: 44px;
+  padding: 0 1rem;
   border-radius: 999px;
   font-weight: 600;
+  font-size: 0.88rem;
+  background: var(--reserva-control, #1f1f1f);
+  border: 1px solid var(--reserva-control-borde, #4a4a4a);
+  color: var(--reserva-texto, #f2f2f2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
-.formulario-reserva__pill.button.hollow {
-  border-color: var(--accent-text, var(--accent, #1779ba));
-  color: var(--accent-text, var(--accent, #1779ba));
+.formulario-reserva__pill.button:hover,
+.formulario-reserva__pill.button.hollow:hover,
+.vista-canchas .formulario-reserva__pill.button:hover,
+.vista-canchas .formulario-reserva__pill.button.hollow:hover {
+  border-color: var(--accent, #5bd67d);
+  background: color-mix(in srgb, var(--accent, #5bd67d) 15%, var(--reserva-control, #1f1f1f));
+  color: var(--reserva-texto, #f2f2f2);
 }
 
-.formulario-reserva__pill.button.hollow:hover,
-.formulario-reserva__pill.button.hollow:focus {
-  border-color: color-mix(in srgb, var(--accent, #1779ba) 80%, #1a1a1a);
-  background: color-mix(in srgb, var(--accent, #1779ba) 12%, #ffffff);
-  color: color-mix(in srgb, var(--accent, #1779ba) 45%, #1a1a1a);
+.formulario-reserva__pill:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.formulario-reserva__pill:focus-visible,
+.vista-canchas .formulario-reserva__pill:focus-visible {
+  outline: 2px solid var(--accent, #5bd67d);
+  outline-offset: 2px;
 }
 
 .formulario-reserva__pill--activo.button,
 .formulario-reserva__pill--activo.button:hover,
-.formulario-reserva__pill--activo.button:focus {
-  border-color: var(--accent, #1779ba);
-  background: var(--accent, #1779ba);
-  color: var(--accent-contrast, #ffffff);
-  transform: translateY(-1px);
+.formulario-reserva__pill--activo.button:focus,
+.vista-canchas .formulario-reserva__pill--activo.button,
+.vista-canchas .formulario-reserva__pill--activo.button:hover,
+.vista-canchas .formulario-reserva__pill--activo.button:focus {
+  border: 1px solid var(--accent, #5bd67d);
+  background: var(--accent, #5bd67d);
+  color: var(--reserva-sobre-acento, #0d0d0d);
+  font-weight: 700;
+  transform: none;
 }
 
 .formulario-reserva__nota-torneo {
   margin: 0;
-  font-size: 0.82rem;
-  color: #64748b;
-  line-height: 1.4;
+  font-size: 0.84rem;
+  color: var(--reserva-texto-tenue, #a8a8a8);
+  line-height: 1.45;
 }
 
 .formulario-reserva__desempate {
   display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.65rem 0.85rem;
+  gap: 0.55rem;
+  padding: 0.75rem 1rem;
   border-radius: 10px;
-  background: color-mix(in srgb, var(--accent, #1779ba) 10%, #ffffff);
-  border: 1px solid color-mix(in srgb, var(--accent, #1779ba) 25%, transparent);
-  color: #1e293b;
-  font-size: 0.86rem;
+  background: color-mix(in srgb, var(--accent, #5bd67d) 10%, var(--reserva-seccion, #161616));
+  border: 1px solid color-mix(in srgb, var(--accent, #5bd67d) 25%, transparent);
+  color: var(--reserva-texto, #f2f2f2);
+  font-size: 0.88rem;
   line-height: 1.45;
 }
 
 .formulario-reserva__desempate svg {
   flex-shrink: 0;
   margin-top: 0.15rem;
-  color: var(--accent, #1779ba);
+  color: var(--accent, #5bd67d);
 }
 
 .formulario-reserva__emparejamiento-controles {
@@ -203,21 +472,47 @@
   gap: 0.75rem;
 }
 
-.formulario-reserva__sortear {
+.formulario-reserva__sortear.button,
+.formulario-reserva__sortear.button.hollow,
+.vista-canchas .formulario-reserva__sortear.button,
+.vista-canchas .formulario-reserva__sortear.button.hollow {
   margin: 0;
+  min-height: 44px;
+  padding: 0 1rem;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  border-radius: 8px;
-  border-color: #cbd5e1;
-  color: #475569;
+  gap: 0.45rem;
+  border-radius: 10px;
+  border: 1px solid var(--reserva-control-borde, #4a4a4a);
+  background: transparent;
+  color: var(--reserva-texto, #f2f2f2);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-.formulario-reserva__sortear:hover,
-.formulario-reserva__sortear:focus {
-  border-color: #94a3b8;
-  background: #f1f5f9;
-  color: #1e293b;
+.formulario-reserva__sortear.button:hover,
+.formulario-reserva__sortear.button.hollow:hover,
+.formulario-reserva__sortear.button:focus,
+.formulario-reserva__sortear.button.hollow:focus,
+.vista-canchas .formulario-reserva__sortear.button:hover,
+.vista-canchas .formulario-reserva__sortear.button.hollow:hover,
+.vista-canchas .formulario-reserva__sortear.button:focus,
+.vista-canchas .formulario-reserva__sortear.button.hollow:focus {
+  border-color: var(--accent, #5bd67d);
+  background: color-mix(in srgb, var(--accent, #5bd67d) 15%, transparent);
+  color: var(--reserva-texto, #f2f2f2);
+}
+
+.formulario-reserva__sortear:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.formulario-reserva__sortear:focus-visible,
+.vista-canchas .formulario-reserva__sortear:focus-visible {
+  outline: 2px solid var(--accent, #5bd67d);
+  outline-offset: 2px;
 }
 
 .formulario-reserva__metricas {
@@ -229,26 +524,27 @@
 .formulario-reserva__metrica {
   display: inline-flex;
   align-items: center;
-  padding: 0.35rem 0.75rem;
+  min-height: 36px;
+  padding: 0.35rem 0.85rem;
   border-radius: 999px;
   font-size: 0.82rem;
   font-weight: 600;
-  background: #f1f5f9;
-  color: #334155;
-  border: 1px solid #e2e8f0;
+  background: var(--reserva-control, #1f1f1f);
+  color: var(--reserva-texto-2, #c4c4c4);
+  border: 1px solid var(--reserva-control-borde, #4a4a4a);
 }
 
 .formulario-reserva__fases-detalle {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.4rem;
   margin-top: 0.25rem;
 }
 
 .formulario-reserva__fases-titulo {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--reserva-texto-tenue, #a8a8a8);
 }
 
 .formulario-reserva__fases-pills {
@@ -257,17 +553,19 @@
   gap: 0.5rem;
 }
 
+/* Torneos guardados */
 .formulario-reserva__torneos-guardados {
   margin-top: 0.5rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 0.75rem 1rem;
-  background: #f8fafc;
+  border: 1px solid var(--reserva-elevada-borde, #333333);
+  border-radius: 12px;
+  padding: 0.85rem 1.1rem;
+  background: var(--reserva-elevada, #1a1a1a);
+  color: var(--reserva-texto, #f2f2f2);
 }
 
 .formulario-reserva__torneos-guardados summary {
   font-weight: 700;
-  color: #1e293b;
+  color: var(--reserva-texto, #f2f2f2);
   cursor: pointer;
 }
 
@@ -276,7 +574,7 @@
 }
 
 .formulario-reserva__torneos-guardados summary:focus-visible {
-  outline: 2px solid var(--accent-text, var(--accent, #1779ba));
+  outline: 2px solid var(--accent, #5bd67d);
   outline-offset: 2px;
 }
 
@@ -291,10 +589,10 @@
 }
 
 .formulario-reserva__torneo-guardado {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 0.85rem;
+  background: var(--reserva-seccion, #161616);
+  border: 1px solid var(--reserva-seccion-borde, #2a2a2a);
+  border-radius: 10px;
+  padding: 1rem;
 }
 
 .formulario-reserva__torneo-guardado-info {
@@ -307,73 +605,218 @@
 }
 
 .formulario-reserva__torneo-guardado-codigo {
-  color: #0f172a;
+  color: var(--reserva-texto, #f2f2f2);
 }
 
 .formulario-reserva__torneo-guardado-meta {
-  color: #64748b;
+  color: var(--reserva-texto-tenue, #a8a8a8);
 }
 
 .formulario-reserva__torneo-guardado-jornadas {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 0.65rem;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
   font-size: 0.82rem;
-  color: #475569;
-  background: #f1f5f9;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
+  color: var(--reserva-texto-2, #c4c4c4);
+  background: var(--reserva-control, #1f1f1f);
+  border: 1px solid var(--reserva-control-borde, #4a4a4a);
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
 }
 
 .formulario-reserva__torneo-guardado-jornada-item {
   line-height: 1.35;
 }
 
-/* Contacto y datos */
-.formulario-reserva__contacto {
-  margin-bottom: 0.5rem;
+/* ==========================================================================
+   C10: AlertaTiempo en versión oscura
+   ========================================================================== */
+.alerta-tiempo.callout,
+.formulario-reserva .alerta-tiempo {
+  margin-bottom: 1.25rem;
+  border-radius: 12px;
+  background-color: color-mix(in srgb, #f59e0b 10%, #161616) !important;
+  border: 1px solid #d97706 !important;
+  color: var(--reserva-texto, #f2f2f2) !important;
+  padding: 1rem 1.25rem;
 }
 
-.formulario-reserva__contacto label {
+.alerta-tiempo__header {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.4rem;
+}
+
+.alerta-tiempo__icono {
+  flex-shrink: 0;
+  color: #f59e0b;
+}
+
+.alerta-tiempo__titulo {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fbbf24;
+  line-height: 1.35;
+}
+
+.alerta-tiempo__detalle {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  color: var(--reserva-texto-2, #c4c4c4);
+  line-height: 1.45;
+}
+
+.alerta-tiempo__sugerencias {
+  margin: 0.5rem 0 0 1.25rem;
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--reserva-texto-2, #c4c4c4);
+  list-style-type: disc;
+}
+
+.alerta-tiempo__sugerencias li {
+  margin-bottom: 0.25rem;
+}
+
+.alerta-tiempo__accion.button,
+.alerta-tiempo__accion.button.hollow,
+.vista-canchas .alerta-tiempo__accion.button,
+.vista-canchas .alerta-tiempo__accion.button.hollow {
+  margin: 0.5rem 0 0;
+  min-height: 44px;
+  padding: 0 1rem;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 8px;
+  border: 1px solid #f59e0b;
+  background: transparent;
+  color: #fbbf24;
   font-weight: 600;
   font-size: 0.88rem;
-  color: #334155;
-  margin-bottom: 0.35rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.formulario-reserva__input {
-  border: 1px solid #d5d5d5;
-  border-radius: 8px;
-  padding: 0.55rem 0.75rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+.alerta-tiempo__accion.button:hover,
+.alerta-tiempo__accion.button.hollow:hover,
+.alerta-tiempo__accion.button:focus,
+.alerta-tiempo__accion.button.hollow:focus,
+.vista-canchas .alerta-tiempo__accion.button:hover,
+.vista-canchas .alerta-tiempo__accion.button.hollow:hover,
+.vista-canchas .alerta-tiempo__accion.button:focus,
+.vista-canchas .alerta-tiempo__accion.button.hollow:focus {
+  background: color-mix(in srgb, #f59e0b 20%, transparent);
+  color: #fef3c7;
+  border-color: #fbbf24;
 }
 
-.formulario-reserva__input:focus {
-  border-color: var(--accent, #1779ba);
-  box-shadow: 0 0 0 3px var(--accent-soft, rgba(23, 121, 186, 0.14));
-}
-
-.formulario-reserva__input:focus:not(:focus-visible) {
+.alerta-tiempo__accion.button:focus:not(:focus-visible),
+.vista-canchas .alerta-tiempo__accion.button:focus:not(:focus-visible) {
   outline: none;
 }
 
-.formulario-reserva__input:focus-visible {
-  outline: 2px solid var(--accent-text, var(--accent, #1779ba));
+.alerta-tiempo__accion.button:focus-visible,
+.vista-canchas .alerta-tiempo__accion.button:focus-visible {
+  outline: 2px solid #fbbf24;
   outline-offset: 2px;
 }
 
+/* ==========================================================================
+   C10: AsignacionManual en versión oscura
+   ========================================================================== */
+.asignacion-manual {
+  margin-bottom: 1.25rem;
+}
+
+.asignacion-manual__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.85rem;
+}
+
+.asignacion-manual__tarjeta {
+  background: var(--reserva-control, #1f1f1f);
+  border: 1px solid var(--reserva-control-borde, #4a4a4a);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.asignacion-manual__tarjeta-titulo {
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: var(--reserva-texto-tenue, #a8a8a8);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.asignacion-manual__partido {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.asignacion-manual__select.formulario-reserva__input,
+.formulario-reserva select.asignacion-manual__select {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  height: 46px;
+  min-height: 46px;
+  padding: 0 0.75rem;
+  font-size: 0.85rem;
+  border-radius: 10px;
+  border: 1px solid var(--reserva-campo-borde, #444444);
+  background-color: var(--reserva-campo, #0f0f0f);
+  color: var(--reserva-texto, #f2f2f2);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.asignacion-manual__select option {
+  background-color: var(--reserva-campo, #0f0f0f);
+  color: var(--reserva-texto, #f2f2f2);
+}
+
+.asignacion-manual__select:focus {
+  border-color: var(--accent, #5bd67d);
+  background-color: var(--reserva-campo, #0f0f0f);
+  color: var(--reserva-texto, #f2f2f2);
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #5bd67d) 30%, transparent);
+}
+
+.asignacion-manual__select:focus-visible {
+  outline: 2px solid var(--accent, #5bd67d);
+  outline-offset: 2px;
+}
+
+.asignacion-manual__vs {
+  font-weight: 800;
+  font-size: 0.75rem;
+  color: var(--reserva-texto-tenue, #a8a8a8);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.asignacion-manual__error {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  color: #f87171;
+}
+
+/* --- Accesibilidad --- */
 @media (prefers-reduced-motion: reduce) {
   .formulario-reserva__hora,
   .formulario-reserva__pill,
   .formulario-reserva__sortear,
-  .formulario-reserva__input {
-    transition: none;
+  .formulario-reserva__input,
+  .asignacion-manual__select,
+  .alerta-tiempo__accion {
+    transition: none !important;
+    transform: none !important;
   }
-}
-
-/* Resumen en vivo de la franja elegida, junto a la etiqueta de horario. */
-.formulario-reserva__rango {
-  font-weight: 400;
-  color: var(--accent-text, var(--accent, #1779ba));
 }

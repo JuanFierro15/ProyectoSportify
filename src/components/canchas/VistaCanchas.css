@@ -825,7 +825,7 @@
    ========================================================================== */
 
 /* Elementos sin clase */
-.vista-canchas fieldset {
+.vista-canchas fieldset:not(.formulario-reserva__campo) {
   border: none;
   margin: 0;
   padding: 0;
@@ -858,8 +858,19 @@
 .vista-canchas input:not([type="checkbox"]):not([type="radio"]):focus {
   background-color: var(--reserva-campo, #0f0f0f);
   border-color: var(--accent, #1779ba);
-  outline: none;
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #1779ba) 30%, transparent);
+}
+
+.vista-canchas select:focus:not(:focus-visible),
+.vista-canchas input:not([type="checkbox"]):not([type="radio"]):focus:not(:focus-visible) {
+  outline: none;
+}
+
+.vista-canchas select:focus-visible,
+.vista-canchas input:not([type="checkbox"]):not([type="radio"]):focus-visible {
+  outline: 2px solid var(--accent, #1779ba);
+  outline-offset: 2px;
+  border-color: var(--accent, #1779ba);
 }
 
 .vista-canchas input::placeholder {
@@ -877,7 +888,7 @@
 }
 
 /* Botones de Foundation */
-.vista-canchas .button.hollow {
+.vista-canchas .button.hollow:not(.formulario-reserva__hora):not(.formulario-reserva__pill):not(.alerta-tiempo__accion) {
   border: 1px solid var(--reserva-control-borde, #4a4a4a);
   color: var(--reserva-texto, #f2f2f2);
   background: transparent;
@@ -885,14 +896,14 @@
   transition: all 0.15s ease;
 }
 
-.vista-canchas .button.hollow:hover,
-.vista-canchas .button.hollow:focus {
+.vista-canchas .button.hollow:not(.formulario-reserva__hora):not(.formulario-reserva__pill):not(.alerta-tiempo__accion):hover,
+.vista-canchas .button.hollow:not(.formulario-reserva__hora):not(.formulario-reserva__pill):not(.alerta-tiempo__accion):focus {
   border-color: var(--accent, #1779ba);
   color: #ffffff;
   background: rgba(255, 255, 255, 0.08);
 }
 
-.vista-canchas .button.hollow:focus-visible {
+.vista-canchas .button.hollow:not(.formulario-reserva__hora):not(.formulario-reserva__pill):not(.alerta-tiempo__accion):focus-visible {
   outline: 2px solid var(--accent, #1779ba);
   outline-offset: 2px;
 }

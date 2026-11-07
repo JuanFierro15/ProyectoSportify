@@ -28,48 +28,56 @@ function CanchasElegidas({
     idsDeporte.every((id) => canchas.some((c) => c.id === id));
 
   return (
-    <div className="canchas-elegidas" aria-live="polite">
-      {canchas.length === 0 ? (
-        <p className="canchas-elegidas__nota">
-          Aún no has elegido canchas. Agrégalas desde el carrusel.
-        </p>
-      ) : (
-        canchas.map((c) => {
-          const d = deportePorSlug(c.deporte);
-          return (
-            <span
-              key={c.id}
-              className="canchas-elegidas__chip"
-              style={estiloAcento(d ? d.colorAcento : undefined)}
-            >
-              {c.nombre}
-              <button
-                type="button"
-                className="canchas-elegidas__quitar"
-                aria-label={`Quitar ${c.nombre}`}
-                onClick={() => onQuitar(c.id)}
+    <section className="canchas-elegidas" aria-labelledby="t-canchas-elegidas" aria-live="polite">
+      <div className="canchas-elegidas__cabecera">
+        <h3 id="t-canchas-elegidas" className="canchas-elegidas__titulo">
+          Canchas seleccionadas
+        </h3>
+        {deporte && (
+          <button
+            type="button"
+            disabled={bloqueadoTodas}
+            className="canchas-elegidas__todas"
+            onClick={() => onAlternarDeporte(deporte.slug)}
+          >
+            {bloqueadoTodas
+              ? 'Solo un deporte por torneo'
+              : todas
+              ? `Quitar todas de ${deporte.nombre}`
+              : `Elegir todas de ${deporte.nombre}`}
+          </button>
+        )}
+      </div>
+
+      <div className="canchas-elegidas__lista">
+        {canchas.length === 0 ? (
+          <p className="canchas-elegidas__nota">
+            Aún no has elegido canchas. Agrégalas desde el carrusel.
+          </p>
+        ) : (
+          canchas.map((c) => {
+            const d = deportePorSlug(c.deporte);
+            return (
+              <span
+                key={c.id}
+                className="canchas-elegidas__chip"
+                style={estiloAcento(d ? d.colorAcento : undefined)}
               >
-                ×
-              </button>
-            </span>
-          );
-        })
-      )}
-      {deporte && (
-        <button
-          type="button"
-          disabled={bloqueadoTodas}
-          className="canchas-elegidas__todas"
-          onClick={() => onAlternarDeporte(deporte.slug)}
-        >
-          {bloqueadoTodas
-            ? 'Solo un deporte por torneo'
-            : todas
-            ? `Quitar todas de ${deporte.nombre}`
-            : `Elegir todas de ${deporte.nombre}`}
-        </button>
-      )}
-    </div>
+                {c.nombre}
+                <button
+                  type="button"
+                  className="canchas-elegidas__quitar"
+                  aria-label={`Quitar ${c.nombre}`}
+                  onClick={() => onQuitar(c.id)}
+                >
+                  ×
+                </button>
+              </span>
+            );
+          })
+        )}
+      </div>
+    </section>
   );
 }
 

@@ -1,0 +1,97 @@
+/* CalendarioTorneo — Programación por fases en modo oscuro */
+
+.calendario-torneo {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.calendario-torneo__fase {
+  background: var(--reserva-seccion, #161616);
+  border: 1px solid var(--reserva-seccion-borde, #2a2a2a);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: none;
+  transition: border-color 0.18s ease;
+}
+
+@media screen and (max-width: 39.9375em) {
+  .calendario-torneo__fase {
+    padding: 1.25rem 0.85rem;
+  }
+}
+
+.calendario-torneo__fase:hover {
+  border-color: var(--accent, #5bd67d);
+}
+
+.calendario-torneo__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--reserva-seccion-borde, #2a2a2a);
+}
+
+.calendario-torneo__titulo {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--reserva-texto, #f2f2f2);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.calendario-torneo__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.calendario-torneo__badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent, #5bd67d) 14%, var(--reserva-control, #1f1f1f));
+  border: 1px solid color-mix(in srgb, var(--accent, #5bd67d) 30%, transparent);
+  color: var(--accent, #5bd67d);
+  line-height: 1.3;
+}
+
+.calendario-torneo__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.calendario-torneo__etiqueta {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--reserva-texto-tenue, #a8a8a8);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.calendario-torneo__alerta-orden {
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  background: color-mix(in srgb, #ef4444 14%, var(--reserva-seccion, #161616));
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+}
