@@ -506,6 +506,11 @@
   grid-area: comprobante;
 }
 
+.vista-canchas__reserva .asistente-torneo {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
 @media screen and (min-width: 64em) {
   .vista-canchas__reserva {
     display: flex;

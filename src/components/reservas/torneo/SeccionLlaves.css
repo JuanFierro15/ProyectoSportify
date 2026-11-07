@@ -31,3 +31,10 @@
   font-size: 0.875rem;
   color: var(--reserva-texto-2, #b3b3b3);
 }
+
+/* En móvil (< 64em): evita que la sección de llaves supere el ancho del contenedor */
+@media screen and (max-width: 63.9375em) {
+  .seccion-llaves {
+    max-width: 100%;
+  }
+}

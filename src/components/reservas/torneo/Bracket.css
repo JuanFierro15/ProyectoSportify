@@ -368,6 +368,20 @@
   scrollbar-width: thin;
 }
 
+/* En móvil (< 64em): evita que el bracket aporte su ancho intrínseco al grid padre y desplaza dentro de su caja */
+@media screen and (max-width: 63.9375em) {
+  .bracket-torneo {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Entre 900px y 64em el bracket usa el lienzo de escritorio dentro del asistente */
+  .bracket-torneo__movil,
+  .bracket-torneo__canvas-scroll {
+    contain: inline-size;
+  }
+}
+
 /* --------------------------------------------------------------------------
    4. Variante Compacta (Confirmación y Torneos reservados)
    -------------------------------------------------------------------------- */

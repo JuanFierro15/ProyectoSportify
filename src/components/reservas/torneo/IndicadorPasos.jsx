@@ -1,80 +1,92 @@
 import React from 'react';
 import { Check } from 'lucide-react';
+import { estadoPasosTorneo, pasosAlcanzables as obtenerPasosAlcanzables } from '../../../lib/pasosTorneo';
 import './IndicadorPasos.css';
 
-export function IndicadorPasos({ reserva }) {
+/**
+ * Indicador de progreso de los pasos del torneo.
+ *
+ * En escritorio muestra 5 pasos informativos (sin resumen).
+ * En móvil (modo interactivo) puede mostrar los 6 pasos y permitir salto a pasos alcanzables.
+ *
+ * @param {Object} props
+ * @param {Object} props.reserva - Objeto devuelto por useReserva.
+ * @param {string} [props.pasoActual] - ID del paso activo en el asistente.
+ * @param {Function} [props.onSeleccionarPaso] - Callback al pulsar un paso alcanzable.
+ * @param {string[]} [props.pasosAlcanzables] - Lista de IDs de pasos alcanzables.
+ * @param {boolean} [props.seisPasos=false] - Mostrar los 6 pasos (incluyendo resumen).
+ */
+export function IndicadorPasos({
+  reserva,
+  pasoActual,
+  onSeleccionarPaso,
+  pasosAlcanzables,
+  seisPasos = false,
+}) {
   if (!reserva || reserva.modo !== 'torneo') return null;
 
-  const canchasCompleto = Boolean(
-    reserva.canchaIds &&
-      reserva.canchaIds.length > 0 &&
-      !reserva.torneoPlan?.errorCanchas
-  );
-
-  const formatoCompleto = Boolean(
-    [4, 8, 16].includes(Number(reserva.equipos)) && reserva.duracionPartido
-  );
-
-  const fases = reserva.torneoPlan?.fases || [];
-  const jornadas = reserva.torneoPlan?.jornadas || reserva.jornadas || {};
-  const validaciones = reserva.torneoPlan?.validacionesJornadas || [];
-  const todasFasesConHoras =
-    fases.length > 0 &&
-    fases.every((f) => {
-      const j = jornadas[f.ronda];
-      return Array.isArray(j?.horas) && j.horas.length > 0;
-    });
-  const sinErroresJornadas = !validaciones.some((v) => Boolean(v?.error));
-  const fechasCompleto = todasFasesConHoras && sinErroresJornadas;
-
-  const llavesCompleto = Boolean(
-    reserva.torneoPlan?.partidos &&
-      reserva.torneoPlan.partidos.length > 0 &&
-      !reserva.torneoPlan?.errorCruces
-  );
-
-  const datosCompleto = Boolean(
-    !reserva.errNombre &&
-      !reserva.errTelefono &&
-      reserva.nombre &&
-      reserva.nombre.trim().length > 0
-  );
-
-  const pasos = [
-    { id: 'canchas', etiqueta: 'Canchas', completo: canchasCompleto },
-    { id: 'formato', etiqueta: 'Formato', completo: formatoCompleto },
-    { id: 'fechas', etiqueta: 'Fechas por fase', completo: fechasCompleto },
-    { id: 'llaves', etiqueta: 'Llaves', completo: llavesCompleto },
-    { id: 'datos', etiqueta: 'Tus datos', completo: datosCompleto },
-  ];
-
+  const estados = estadoPasosTorneo(reserva);
+  const pasos = seisPasos ? estados : estados.slice(0, 5);
   const primerIncompletoIdx = pasos.findIndex((p) => !p.completo);
+  const alcanzables = pasosAlcanzables || obtenerPasosAlcanzables(estados);
 
   return (
     <ol className="indicador-pasos" aria-label="Pasos del torneo">
       {pasos.map((paso, idx) => {
-        const esActual = idx === primerIncompletoIdx;
+        const esActual = pasoActual !== undefined ? paso.id === pasoActual : idx === primerIncompletoIdx;
+        const esAlcanzable = alcanzables.includes(paso.id);
+
+        // Un paso completo puede ser el actual en el asistente móvil: las clases
+        // se combinan y el CSS de --actual (declarado después) gana. En
+        // escritorio el actual es siempre el primer incompleto, como antes.
         let estadoClase = 'indicador-pasos__paso--incompleto';
         if (paso.completo) {
-          estadoClase = 'indicador-pasos__paso--completo';
+          estadoClase = esActual
+            ? 'indicador-pasos__paso--completo indicador-pasos__paso--actual'
+            : 'indicador-pasos__paso--completo';
         } else if (esActual) {
           estadoClase = 'indicador-pasos__paso--actual';
         }
 
+        const interactivo = Boolean(onSeleccionarPaso);
+        const claseInteractivo = interactivo ? ' indicador-pasos__paso--interactivo' : '';
+        const claseAlcanzable = interactivo && esAlcanzable ? ' indicador-pasos__paso--alcanzable' : '';
+
         return (
           <li
             key={paso.id}
-            className={`indicador-pasos__paso ${estadoClase}`}
+            className={`indicador-pasos__paso ${estadoClase}${claseInteractivo}${claseAlcanzable}`}
             aria-current={esActual ? 'step' : undefined}
           >
-            <span className="indicador-pasos__icono" aria-hidden="true">
-              {paso.completo ? (
-                <Check size={14} strokeWidth={3} />
-              ) : (
-                idx + 1
-              )}
-            </span>
-            <span className="indicador-pasos__etiqueta">{paso.etiqueta}</span>
+            {interactivo ? (
+              <button
+                type="button"
+                className="indicador-pasos__boton"
+                onClick={() => esAlcanzable && onSeleccionarPaso(paso.id)}
+                disabled={!esAlcanzable}
+                aria-label={`${paso.etiqueta}${!esAlcanzable ? ' (bloqueado)' : ''}`}
+              >
+                <span className="indicador-pasos__icono" aria-hidden="true">
+                  {paso.completo ? (
+                    <Check size={14} strokeWidth={3} />
+                  ) : (
+                    idx + 1
+                  )}
+                </span>
+                <span className="indicador-pasos__etiqueta">{paso.etiqueta}</span>
+              </button>
+            ) : (
+              <>
+                <span className="indicador-pasos__icono" aria-hidden="true">
+                  {paso.completo ? (
+                    <Check size={14} strokeWidth={3} />
+                  ) : (
+                    idx + 1
+                  )}
+                </span>
+                <span className="indicador-pasos__etiqueta">{paso.etiqueta}</span>
+              </>
+            )}
           </li>
         );
       })}
