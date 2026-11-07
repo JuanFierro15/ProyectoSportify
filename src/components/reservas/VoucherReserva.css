@@ -1,65 +1,76 @@
+/* ==========================================================================
+   VoucherReserva — Comprobante con forma de tiquete (etapa 9, bloque r3)
+   ========================================================================== */
+
 .voucher-reserva {
   display: flex;
   flex-direction: column;
-  padding: 1.25rem;
-  background: #f7f9fb;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+  background: var(--reserva-elevada, #1a1a1a);
+  border: 1px solid var(--reserva-elevada-borde, #333333);
+  border-radius: 18px;
+  position: relative;
+  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.65);
+  box-sizing: border-box;
+}
+
+/* Sección superior del tiquete */
+.voucher-reserva__superior {
+  padding: 24px 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .voucher-reserva__cabecera {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px dashed #d5dee6;
+  gap: 8px;
 }
 
 .voucher-reserva__titulo {
   margin: 0;
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: #1e293b;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--reserva-texto, #f2f2f2);
+  letter-spacing: -0.01em;
 }
 
 .voucher-reserva__tipo {
   display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.6rem;
+  padding: 3px 10px;
   border-radius: 999px;
-  font-size: 0.75rem;
+  border: 1px solid var(--accent, #5bd67d);
+  color: var(--accent, #5bd67d);
+  background: transparent;
+  font-size: 12px;
   font-weight: 700;
-  /* Color del deporte activo (lo define la vista de canchas). */
-  color: color-mix(in srgb, var(--accent, #1779ba) 50%, #1a1a1a);
-  background: color-mix(in srgb, var(--accent, #1779ba) 16%, #ffffff);
+  line-height: 1.4;
 }
 
 .voucher-reserva__meta {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
-  margin-bottom: 0.9rem;
+  gap: 10px;
 }
 
 .voucher-reserva__fila {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.5rem;
-  font-size: 0.88rem;
+  gap: 12px;
+  font-size: 15px;
 }
 
 .voucher-reserva__etiqueta {
-  color: #64748b;
-  font-weight: 500;
+  color: var(--reserva-texto-tenue, #a8a8a8);
+  font-weight: 400;
   flex-shrink: 0;
 }
 
 .voucher-reserva__valor {
-  color: #1e293b;
+  color: var(--reserva-texto, #f2f2f2);
   font-weight: 600;
   text-align: right;
   word-break: break-word;
@@ -68,167 +79,259 @@
 .voucher-reserva__jornadas {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 8px;
 }
 
 .voucher-reserva__fila--fase {
-  font-size: 0.85rem;
-  color: #334155;
+  font-size: 14px;
+  color: var(--reserva-texto, #f2f2f2);
 }
 
 .voucher-reserva__fase-item {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--reserva-texto, #f2f2f2);
   line-height: 1.35;
 }
 
+/* Perforación de tiquete con semicírculos de corte */
+.voucher-reserva__perforacion {
+  position: relative;
+  height: 24px;
+  display: flex;
+  align-items: center;
+}
+
+.voucher-reserva__muesca {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--reserva-fondo, #0d0d0d);
+  box-sizing: border-box;
+}
+
+.voucher-reserva__muesca--izq {
+  left: -13px;
+  border: 0;
+  border-right: 1px solid var(--reserva-elevada-borde, #333333);
+}
+
+.voucher-reserva__muesca--der {
+  right: -13px;
+  border: 0;
+  border-left: 1px solid var(--reserva-elevada-borde, #333333);
+}
+
+.voucher-reserva__linea-puntos {
+  flex: 1;
+  margin: 0 20px;
+  border: 0;
+  border-top: 2px dashed var(--reserva-linea, #3a3a3a);
+}
+
+/* Sección inferior del tiquete */
+.voucher-reserva__inferior {
+  padding: 16px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .voucher-reserva__cuerpo {
-  margin-bottom: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .voucher-reserva__vacio {
   margin: 0.5rem 0;
-  padding: 0.75rem;
-  border-radius: 8px;
-  background: #edf2f7;
-  color: #64748b;
-  font-size: 0.85rem;
+  padding: 0.85rem;
+  border-radius: 10px;
+  background: var(--reserva-campo, #0f0f0f);
+  border: 1px dashed var(--reserva-linea, #3a3a3a);
+  color: var(--reserva-texto-tenue, #a8a8a8);
+  font-size: 14px;
   text-align: center;
+  line-height: 1.4;
 }
 
 .voucher-reserva__lineas {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 8px;
 }
 
 .voucher-reserva__linea {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.5rem;
-  font-size: 0.85rem;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--reserva-texto-2, #c4c4c4);
 }
 
 .voucher-reserva__linea-info {
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .voucher-reserva__linea-nombre {
-  font-weight: 700;
-  color: #1e293b;
+  font-weight: 600;
+  color: var(--reserva-texto, #f2f2f2);
 }
 
 .voucher-reserva__linea-calculo {
-  font-size: 0.78rem;
-  color: #64748b;
+  font-size: 13px;
+  color: var(--reserva-texto-tenue, #a8a8a8);
 }
 
 .voucher-reserva__linea-precio {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 8px;
   text-align: right;
   white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: 12px;
 }
 
 .voucher-reserva__linea-tachado {
-  color: #8a8a8a;
-  font-size: 0.8rem;
+  color: var(--reserva-texto-tenue, #a8a8a8);
+  font-size: 13px;
+  text-decoration: line-through;
 }
 
 .voucher-reserva__linea-total {
   font-weight: 700;
-  color: #1e293b;
+  color: var(--reserva-texto, #f2f2f2);
 }
 
 .voucher-reserva__separador {
-  border-top: 1px dashed #d5dee6;
-  margin: 0.9rem 0;
+  border: 0;
+  border-top: 1px dashed var(--reserva-linea, #3a3a3a);
+  margin: 4px 0;
 }
 
 .voucher-reserva__desglose {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 8px;
 }
 
-.voucher-reserva__valor--ahorro {
-  color: #1d6b3a;
-  font-weight: 700;
+.voucher-reserva__fila--agua,
+.voucher-reserva__fila--ahorro {
+  color: var(--accent, #5bd67d);
 }
 
-.voucher-reserva__fila--total {
-  margin-top: 0.4rem;
-  padding-top: 0.55rem;
-  border-top: 1px dashed #d5dee6;
-  align-items: center;
-}
-
-.voucher-reserva__etiqueta-total {
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.voucher-reserva__valor-total {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.voucher-reserva__acciones {
-  margin-top: auto;
-}
-
-.voucher-reserva__acciones .button {
-  margin-bottom: 0.5rem;
-  border-radius: 8px;
-}
-
-.voucher-reserva__acciones .button:last-child {
-  margin-bottom: 0;
-}
-
-/* Confirmar: color del deporte activo en vez del verde de Foundation. */
-.voucher-reserva__acciones .button.success,
-.voucher-reserva__acciones .button.success:disabled,
-.voucher-reserva__acciones .button.success:disabled:hover,
-.voucher-reserva__acciones .button.success:disabled:focus {
-  background: var(--accent, #3adb76);
-  color: var(--accent-contrast, #0a0a0a);
-}
-
-.voucher-reserva__acciones .button.success:hover:not(:disabled),
-.voucher-reserva__acciones .button.success:focus:not(:disabled) {
-  background: color-mix(in srgb, var(--accent, #3adb76) 85%, #000000);
-  color: var(--accent-contrast, #0a0a0a);
-}
-
-.voucher-reserva__acciones .button.success:disabled {
-  opacity: 0.4;
-}
-
-/* Cancelar: botón secundario con contorno neutro. Foundation `.clear` lo
-   dejaba sin borde ni fondo y no se leía como botón. */
-.voucher-reserva__acciones .button.clear.secondary {
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #334155;
+.voucher-reserva__fila--agua .voucher-reserva__etiqueta,
+.voucher-reserva__fila--agua .voucher-reserva__valor,
+.voucher-reserva__fila--ahorro .voucher-reserva__etiqueta,
+.voucher-reserva__fila--ahorro .voucher-reserva__valor {
+  color: var(--accent, #5bd67d);
   font-weight: 600;
 }
 
-.voucher-reserva__acciones .button.clear.secondary:hover,
-.voucher-reserva__acciones .button.clear.secondary:focus {
-  border-color: #94a3b8;
-  background: #f1f5f9;
-  color: #0f172a;
+.voucher-reserva__valor--ahorro {
+  white-space: nowrap;
+  margin-left: 12px;
+}
+
+.voucher-reserva__fila--total {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--reserva-linea, #3a3a3a);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.voucher-reserva__etiqueta-total {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--reserva-texto-2, #d6d6d6);
+}
+
+.voucher-reserva__valor-total {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--reserva-texto, #f2f2f2);
+  white-space: nowrap;
+  line-height: 1.1;
+  margin-left: 12px;
+}
+
+/* Acciones del comprobante */
+.voucher-reserva__acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.voucher-reserva__acciones .button {
+  margin: 0 !important;
+  width: 100%;
+}
+
+.voucher-reserva__acciones .button.success {
+  min-height: 50px;
+  border-radius: 12px;
+  border: 0 !important;
+  background: var(--accent, #5bd67d) !important;
+  color: var(--reserva-sobre-acento, #0d0d0d) !important;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: opacity 0.15s ease, filter 0.15s ease;
+}
+
+.voucher-reserva__acciones .button.success:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.voucher-reserva__acciones .button.success:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: var(--accent, #5bd67d) !important;
+  color: var(--reserva-sobre-acento, #0d0d0d) !important;
+}
+
+.voucher-reserva__acciones .button.success:focus-visible {
+  outline: 2px solid var(--reserva-texto, #f2f2f2);
+  outline-offset: 2px;
+}
+
+.voucher-reserva__acciones .button.clear.secondary {
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--reserva-control-borde, #444444) !important;
+  background: transparent !important;
+  color: var(--reserva-texto, #f2f2f2) !important;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.voucher-reserva__acciones .button.clear.secondary:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: #666666 !important;
+  color: #ffffff !important;
+}
+
+.voucher-reserva__acciones .button.clear.secondary:focus-visible {
+  outline: 2px solid var(--reserva-texto, #f2f2f2);
+  outline-offset: 2px;
 }
 
 .voucher-reserva__bloqueo {
-  margin: -0.15rem 0 0.5rem;
-  font-size: 0.8rem;
-  color: #64748b;
+  margin: 2px 0;
+  font-size: 13px;
+  color: var(--reserva-texto-tenue, #a8a8a8);
   text-align: center;
+  line-height: 1.4;
 }

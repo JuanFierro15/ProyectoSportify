@@ -498,6 +498,9 @@
 }
 
 .vista-canchas__confirmacion {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   max-width: 560px;
   margin: 0 auto;
   padding: 1.5rem;
