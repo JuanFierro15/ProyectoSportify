@@ -138,7 +138,8 @@ cada tipo de reserva:
     En el **celular** se convierte en un **asistente de un paso a la vez**
     (Canchas, Formato, Fechas por fase, Llaves, Tus datos y Resumen), con una
     barra inferior fija con **Anterior** y **Siguiente**, el motivo cuando aún
-    no se puede avanzar y un indicador para saltar a los pasos ya completos;
+    no se puede avanzar y un indicador para saltar a los pasos ya completos o
+    al primero pendiente;
   - se eligen de **1 a 3 canchas de un mismo deporte**;
   - se configura el formato de **4, 8 o 16 equipos** (de 2 a 4 fases: octavos,
     cuartos, semifinal y final), la duración de cada partido (**15, 20 o 30

@@ -206,8 +206,9 @@ nunca acceder a `localStorage` fuera de este archivo.
     sitio; Ctrl+clic o clic medio abren otra pestaña.
 - **Tokens globales** (`src/App.css`, `:root`): `--eventos-fondo`,
   `--color-marca` (+ `-soft`, `-contraste`; el ámbar `#f6a94b`, color base
-  cuando no hay deporte activo) y `--z-chatbot` (1100, encima del navbar
-  1000). Nada de z-index sueltos para el chat.
+  cuando no hay deporte activo), `--z-chatbot` (1100, encima del navbar
+  1000) y `--z-barra-asistente` (900, barra inferior del asistente de
+  torneo). Nada de z-index sueltos.
 - Cada `DeporteHero` lleva `data-sport={slug}` en su `<section>` (lo usa el
   chat para el acento).
 - **`DeporteHero`**: video de fondo pinned con GSAP/ScrollTrigger; el
@@ -341,6 +342,9 @@ nunca acceder a `localStorage` fuera de este archivo.
       paso) y `torneo/AsistenteTorneo.jsx` (cabecera, indicador clicable y
       barra inferior fija con "Paso N de 6"). Todo lo elegido sigue en
       `useReserva`: cambiar de paso o de tamaño no pierde nada.
+    - El scroll, el foco y el regreso a un paso alcanzable solo corren en
+      móvil y en modo torneo; "Siguiente" exige que el paso de destino sea
+      alcanzable (si no, `motivoAvance` dice qué paso falta).
     - La barra publica `--alto-barra-inferior` en `<html>` y `Chatbot.css`
       sube el botón y el panel esa distancia (sin asistente vale 0).
     - `FormularioReserva` acepta `seccion` (`'formato' | 'fechas' | 'llaves'
