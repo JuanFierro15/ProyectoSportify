@@ -352,19 +352,28 @@ async function main() {
 
       if (isMobile) {
         await evaluate(`(() => {
+          const horario = document.getElementById('reserva-horario');
+          window.scrollBy(0, horario.getBoundingClientRect().top - 72);
+        })()`);
+        await sleep(400);
+        await captureScene('cancha-futbol-horario', isMobile);
+
+        await evaluate(`(() => {
           const voucher = document.querySelector('.voucher-reserva');
           const rect = voucher.getBoundingClientRect();
           window.scrollBy(0, rect.bottom - window.innerHeight + 24);
         })()`);
+        await sleep(400);
+        await captureScene('cancha-futbol', isMobile);
       } else {
         await evaluate(`(() => {
           const horario = document.getElementById('reserva-horario');
           window.scrollBy(0, horario.getBoundingClientRect().top - 120);
         })()`);
+        await sleep(400);
+        await captureScene('cancha-futbol-horario', isMobile);
+        await captureScene('cancha-futbol', isMobile);
       }
-      await sleep(400);
-      await captureScene('cancha-futbol-horario', isMobile);
-      await captureScene('cancha-futbol', isMobile);
 
       // Confirmar cancha -> confirmacion-cancha
       await clickElement('.voucher-reserva__acciones button.success');
