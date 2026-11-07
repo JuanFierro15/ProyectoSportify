@@ -375,7 +375,9 @@
     max-width: 100%;
   }
 
-  .bracket-torneo__movil {
+  /* Entre 900px y 64em el bracket usa el lienzo de escritorio dentro del asistente */
+  .bracket-torneo__movil,
+  .bracket-torneo__canvas-scroll {
     contain: inline-size;
   }
 }
