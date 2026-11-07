@@ -37,6 +37,7 @@ planificacion/
 | `7-auditoria-usabilidad` | Auditoría integral de usabilidad (`impeccable`) y mejoras de prevención de errores, A11y y móvil (planificado para `usability-improve` tras merge de PR #2) | Miguel Medina (auditoría) y Juan Fierro (ejecución, 31-10) | sí | no | sí | u1, u2, u3, u4 |
 | `8-cierre-sustentacion` | Cierre antes de la sustentación del 20-11: chat y negocio al día con torneos, invitados en cumpleaños, pestañas con flechas, pruebas integrales, README y capturas; Bloque 7 descartado (fusionada en `e6a167c`; faltan las pruebas manuales de `z5` y `z6`, de Juan Fierro) | Juan Manuel Villalba (coordina Juan Fierro) | sí | no | sí | z1 a z6 |
 | `9-rediseno-pagina-de-reserva` | **Hecha, falta la aprobación de capturas y el PR.** Rediseño visual de la página de reserva y la confirmación en el tema oscuro del inicio, llaves simétricas con la final al centro, indicador de pasos y README y capturas al día (rama `etapa-9-rediseno-reserva`, 06/07-11) | Miguel Medina (revisa y fusiona Juan Fierro) | sí | sí | sí | a0, r1 a r6 (con verificaciones v1 a v4) |
+| `10-asistente-torneo-secciones` | Frente B del asistente de torneo en móvil (issue #6): prop `seccion` en `FormularioReserva` con los bloques en `torneo/Paso*.jsx`, y el bracket con scroll propio a 390 y 960 px (rama `feat/asistente-torneo-movil-secciones`, 07-11) | Miguel Medina | sí | no | sí | f1, f2 (con verificaciones v1 a v3) |
 
 Antes del flujo por etapas (sin plan ni reporte, solo commits):
 
