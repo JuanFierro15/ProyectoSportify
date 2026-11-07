@@ -36,7 +36,7 @@ planificacion/
 | `6-bloqueo-cronologico-torneo` | Bloqueo cronológico preventivo de días y horas entre fases del torneo (31-10) | Miguel Medina | sí | no | sí | b1 |
 | `7-auditoria-usabilidad` | Auditoría integral de usabilidad (`impeccable`) y mejoras de prevención de errores, A11y y móvil (planificado para `usability-improve` tras merge de PR #2) | Miguel Medina (auditoría) y Juan Fierro (ejecución, 31-10) | sí | no | sí | u1, u2, u3, u4 |
 | `8-cierre-sustentacion` | Cierre antes de la sustentación del 20-11: chat y negocio al día con torneos, invitados en cumpleaños, pestañas con flechas, pruebas integrales, README y capturas; Bloque 7 descartado (fusionada en `e6a167c`; faltan las pruebas manuales de `z5` y `z6`, de Juan Fierro) | Juan Manuel Villalba (coordina Juan Fierro) | sí | no | sí | z1 a z6 |
-| `9-rediseno-pagina-de-reserva` | **PLAN en borrador, espera la aprobación de Juan Fierro.** Rediseño visual de la página de reserva y la confirmación en el tema oscuro del inicio, y llaves simétricas con la final al centro (rama `etapa-9-rediseno-reserva`) | Miguel Medina (revisa y fusiona Juan Fierro) | borrador | sí | no | r1 a r5 (propuestos) |
+| `9-rediseno-pagina-de-reserva` | **En curso (avance en `PROGRESO.md`).** Rediseño visual de la página de reserva y la confirmación en el tema oscuro del inicio, y llaves simétricas con la final al centro (rama `etapa-9-rediseno-reserva`; r1 a r4 hechos, falta r5 y el REPORTE) | Miguel Medina (revisa y fusiona Juan Fierro) | sí | sí | no | a0, r1 a r4 (con v1 a v4); r5 pendiente |
 
 Antes del flujo por etapas (sin plan ni reporte, solo commits):
 
