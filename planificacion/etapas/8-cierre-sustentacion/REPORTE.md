@@ -26,7 +26,7 @@ Ejecución de los bloques locales de cierre definidos en `PLAN.md` (`z1`, `z2`, 
 | `z3` — Pruebas integrales de inicio a fin | ✅ Completado en local (API chat pendiente `JuanFierro15`) | (este reporte) | 31 casos locales verificados en `1440×900` y `390×844`; `E1`–`E6` y `probar-chat.mjs` pendientes por `JuanFierro15`. |
 | `z4` — Documentación, capturas y guías | ✅ Completado | `9418642` + cierre | 12 capturas WebP en `docs/capturas/`, `README.md`, `planificacion/` y `GEMINI.md`. |
 | `z5` — Integración a `main` y despliegue | 🟡 Fusionado; faltan las pruebas manuales en producción | `e6a167c` | Ver la sección 7. |
-| `z6` — Verificación en producción y límite de peticiones | ⏳ Pendiente por `JuanFierro15` | — | Regla en Vercel Firewall, prueba de humo y `node scripts/probar-chat.mjs https://proyecto-sportify.vercel.app` tras desplegar. |
+| `z6` — Verificación en producción y límite de peticiones | 🟡 Regla activa (07-11-2026); falta la prueba de humo tras la etapa 9 | — | Regla "Limitar chat" en Vercel Firewall: `POST /api/chat`, 30 peticiones por minuto por IP, responde 429. Ver la sección 8. |
 
 ---
 
@@ -123,7 +123,7 @@ Actualizado por Juan Fierro el 06-11-2026, tras la revisión de la sección 7.
 1. **Pruebas manuales en producción (`z5`):** A3, B7, C3, D1, D4, E2, F1 y H1, en ventana de incógnito o perfil temporal.
 2. **Chat en la interfaz:** E1 (comparar con los horarios de la página), E2 (reservar y responder "sí") y E3 (cancelar con nombre y teléfono).
 3. **Volver a comprobar B5 y B6:** ver la nota de la sección 7.
-4. **Límite de peticiones (`z6`):** regla de Vercel Firewall sobre `/api/chat`, a cargo de Juan Fierro. Falta comprobar que el plan la incluya.
+4. ~~**Límite de peticiones (`z6`):** regla de Vercel Firewall sobre `/api/chat`, a cargo de Juan Fierro. Falta comprobar que el plan la incluya.~~ Hecho el 07-11-2026 (sección 8). El plan Hobby la incluye.
 5. **Cierre:** completar este reporte y borrar la rama `etapa-8-cierre`.
 
 Las capturas de la página de reserva y del torneo se rehacen en la etapa 9, porque ese rediseño las deja viejas.
@@ -180,3 +180,23 @@ Muchas de esas respuestas solo dicen "organiza tu torneo por fases", sin explica
 - **Sección 5:** varios nombres no existen en el código, así que no se copiaron a `CLAUDE.md`. No existen `RESERVAR_TORNEO` ni `reservarTorneo` (los torneos usan `RESERVAR_EVENTO` con `bloques`), `sinPreseleccionar` (`canchaIds` arranca vacío), ni `calcularFasesTorneo`, `generarCrucesIniciales`, `generarBracket`, `intercambiarEquipoEnPartidos` y `validarJornadasTorneo`. `calcularPrecioJornadas` está en `precios.js`, no en `torneo.js`. **Si tu `GEMINI.md` tiene esos nombres, corrígelo.**
 - **Sección 3:** algunas citas no corresponden a la interfaz. B5 cita "Armar cruces manualmente" y B6 "Usar partidos de 15 min (relámpago)"; lo que existe es "Manual" y "Cambiar a 15 min por partido". B2 cita la clase `.vista-canchas__aviso-torneo`, que no existe. Por eso B5 y B6 quedan por comprobar, y los demás resultados de la tabla son los que registró Juan Manuel, sin repetir.
 - **README:** las duraciones de partido son 15, 20 o 30 min (`OPCIONES_DURACION`), no 15 a 90.
+
+---
+
+## 8. Límite de peticiones (`z6`, Juan Fierro, 07-11-2026)
+
+Regla de Vercel Firewall `Limitar chat` (`rule_limitar_chat_HgAMUe`), publicada en producción. No cambia código.
+
+| Campo | Valor |
+|---|---|
+| Condiciones | `path` igual a `/api/chat` y `method` igual a `POST` |
+| Límite | 30 peticiones por ventana fija de 60 s, contadas por IP |
+| Al pasarse | 429 de Vercel (`{"error":{"code":"429",...}}`) |
+
+- El plan Hobby la incluye. `--duration` y el bypass del sistema necesitan Pro.
+- Se publicó primero en modo `log` con 15 por minuto: de 21 peticiones, 6 quedaron registradas. Luego se subió a 30 y se pasó a bloquear, porque el tráfico real es muy bajo para sacar conclusiones de los registros.
+- Prueba sin gastar cuota: peticiones con cuerpo vacío (`{}`), que el servidor rechaza con 400 antes de llamar a Gemini. Resultado: 30 respondieron 400 y desde la 31 respondió 429. El inicio siguió en 200.
+- El widget muestra ante el 429 el mensaje genérico ("No pude responder ahora. Intenta de nuevo en un momento."), porque `normalizarRespuesta` descarta una respuesta sin `respuesta`.
+- Los contadores son por región. Todos los que compartan una IP (por ejemplo, el wifi del salón) suman al mismo límite. En la sustentación solo prueba el profesor, así que 30 por minuto alcanza.
+- Para cambiarla: `vercel firewall rules update "Limitar chat" ...` y `vercel firewall publish`. Para apagarla: `vercel firewall rules disable "Limitar chat"` y publicar.
+- Falta la prueba de humo del chat después de fusionar la etapa 9 (un mensaje real que responda bien).
