@@ -477,24 +477,62 @@
 
 .vista-canchas__reserva {
   display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "principal"
+    "llaves"
+    "comprobante";
   gap: 1.5rem;
   align-items: start;
 }
 
-@media screen and (min-width: 64em) {
-  .vista-canchas__reserva {
-    grid-template-columns: minmax(0, 1fr) 340px;
-    gap: 2rem;
-  }
-
-  .vista-canchas__reserva > .voucher-reserva {
-    position: sticky;
-    top: 5.5rem;
-  }
+.vista-canchas__fila-reserva {
+  display: contents;
 }
 
 .vista-canchas__principal {
+  grid-area: principal;
   min-width: 0;
+}
+
+.vista-canchas__reserva .seccion-llaves,
+.seccion-llaves {
+  grid-area: llaves;
+  min-width: 0;
+}
+
+.vista-canchas__fila-reserva > .voucher-reserva,
+.voucher-reserva {
+  grid-area: comprobante;
+}
+
+@media screen and (min-width: 64em) {
+  .vista-canchas__reserva {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    align-items: stretch;
+  }
+
+  .vista-canchas__fila-reserva {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-areas: "principal comprobante";
+    gap: 2rem;
+    align-items: start;
+    width: 100%;
+  }
+
+  .vista-canchas__fila-reserva > .voucher-reserva {
+    position: sticky;
+    top: 5.5rem;
+    grid-area: comprobante;
+  }
+
+  .vista-canchas__reserva .seccion-llaves,
+  .seccion-llaves {
+    width: 100%;
+  }
 }
 
 .vista-canchas__confirmacion {

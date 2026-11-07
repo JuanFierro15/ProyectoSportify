@@ -7,6 +7,8 @@ import FormularioReserva from './FormularioReserva';
 import VoucherReserva from './VoucherReserva';
 import ConfirmacionReserva from './ConfirmacionReserva';
 import AlertaTiempo from './torneo/AlertaTiempo';
+import IndicadorPasos from './torneo/IndicadorPasos';
+import SeccionLlaves from './torneo/SeccionLlaves';
 import { fechaCompleta } from '../../lib/fechas';
 
 // En los tests de integración de torneos, las 3 canchas de fútbol se configuran
@@ -81,7 +83,11 @@ function FlujoTorneoPrueba({ canchasIniciales = [], diaInicialIndex = null }) {
         />
       ) : (
         <>
+          {reserva.modo === 'torneo' && <IndicadorPasos reserva={reserva} />}
           <FormularioReserva reserva={reserva} dias={dias} />
+          {reserva.modo === 'torneo' && (
+            <SeccionLlaves reserva={reserva} canchas={canchas} />
+          )}
           <VoucherReserva
             tipoEtiqueta={reserva.modoInfo.tipoEtiqueta}
             fechaTexto={fechaCompleta(reserva.fecha)}
@@ -182,9 +188,9 @@ describe('Modo Torneo - Pruebas de integración', () => {
 
     expect(screen.getByRole('heading', { name: /^Semifinal$/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /^Final$/i })).toBeInTheDocument();
-    expect(screen.getByText('R1-P1')).toBeInTheDocument();
-    expect(screen.getByText('R1-P2')).toBeInTheDocument();
-    expect(screen.getByText('R2-P1')).toBeInTheDocument();
+    expect(screen.getByText(/^Partido 1\b/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Partido 2\b/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Partido 3\b/i)).toBeInTheDocument();
   });
 
   it('2. Alerta de insuficiencia de tiempo en una fase y bloqueo (AC-002, FR-006)', () => {
@@ -292,10 +298,10 @@ describe('Modo Torneo - Pruebas de integración', () => {
 
     // Aparecen los selectores de la primera ronda
     const selectorLocalR1P1 = screen.getByRole('combobox', {
-      name: 'Llave R1-P1 equipo local',
+      name: 'Partido 1, equipo local',
     });
     const selectorVisitanteR1P1 = screen.getByRole('combobox', {
-      name: 'Llave R1-P1 equipo visitante',
+      name: 'Partido 1, equipo visitante',
     });
 
     expect(selectorLocalR1P1).toBeInTheDocument();
@@ -443,13 +449,13 @@ describe('Modo Torneo - Pruebas de integración', () => {
     expect(contenedorGuardado).toBeInTheDocument();
     const dentroTorneo = within(contenedorGuardado);
 
-    expect(dentroTorneo.getByText('R1-P1')).toBeInTheDocument();
-    expect(dentroTorneo.getByText('R1-P2')).toBeInTheDocument();
-    expect(dentroTorneo.getByText('R1-P3')).toBeInTheDocument();
-    expect(dentroTorneo.getByText('R1-P4')).toBeInTheDocument();
-    expect(dentroTorneo.getByText('R2-P1')).toBeInTheDocument();
-    expect(dentroTorneo.getByText('R2-P2')).toBeInTheDocument();
-    expect(dentroTorneo.getByText('R3-P1')).toBeInTheDocument();
+    expect(dentroTorneo.getByText(/^Partido 1\b/i)).toBeInTheDocument();
+    expect(dentroTorneo.getByText(/^Partido 2\b/i)).toBeInTheDocument();
+    expect(dentroTorneo.getByText(/^Partido 3\b/i)).toBeInTheDocument();
+    expect(dentroTorneo.getByText(/^Partido 4\b/i)).toBeInTheDocument();
+    expect(dentroTorneo.getByText(/^Partido 5\b/i)).toBeInTheDocument();
+    expect(dentroTorneo.getByText(/^Partido 6\b/i)).toBeInTheDocument();
+    expect(dentroTorneo.getByText(/^Partido 7\b/i)).toBeInTheDocument();
   });
 
   it('6. En torneo con fútbol, cancha de pádel queda bloqueada y no se agrega', () => {
@@ -578,7 +584,11 @@ describe('Modo Torneo - Pruebas de integración', () => {
             />
           ) : (
             <>
+              {reserva.modo === 'torneo' && <IndicadorPasos reserva={reserva} />}
               <FormularioReserva reserva={reserva} dias={dias} />
+              {reserva.modo === 'torneo' && (
+                <SeccionLlaves reserva={reserva} canchas={canchas} />
+              )}
               <VoucherReserva
                 tipoEtiqueta={reserva.modoInfo.tipoEtiqueta}
                 fechaTexto={fechaCompleta(reserva.fecha)}
@@ -647,5 +657,43 @@ describe('Modo Torneo - Pruebas de integración', () => {
 
     const voucherTorneo = screen.getByLabelText('Resumen de tu reserva');
     expect(within(voucherTorneo).queryByText('Invitados')).not.toBeInTheDocument();
+  });
+
+  it('11. Rondas siguientes muestran "Ganador del partido N" y la final tiene trofeo y premiación', () => {
+    render(
+      <ReservasProvider>
+        <FlujoTorneoPrueba canchasIniciales={['futbol-1', 'futbol-2', 'futbol-3']} />
+      </ReservasProvider>
+    );
+
+    expect(screen.getByText('Ganador del partido 1')).toBeInTheDocument();
+    expect(screen.getByText('Ganador del partido 2')).toBeInTheDocument();
+    expect(screen.getByText('Ganador del partido 3')).toBeInTheDocument();
+    expect(screen.getByText('Ganador del partido 4')).toBeInTheDocument();
+    expect(screen.getByText('Ganador del partido 5')).toBeInTheDocument();
+    expect(screen.getByText('Ganador del partido 6')).toBeInTheDocument();
+    expect(screen.getByText('Trofeo y premiación al terminar.')).toBeInTheDocument();
+  });
+
+  it('12. Indicador de pasos resalta el paso actual con aria-current="step" y avanza al elegir canchas', () => {
+    render(
+      <ReservasProvider>
+        <FlujoTorneoPrueba canchasIniciales={[]} />
+      </ReservasProvider>
+    );
+
+    const listaPasos = screen.getByRole('list', { name: 'Pasos del torneo' });
+    expect(listaPasos).toBeInTheDocument();
+
+    const pasoCanchas = within(listaPasos).getByText('Canchas').closest('li');
+    expect(pasoCanchas).toHaveAttribute('aria-current', 'step');
+
+    // Al elegir una cancha, Canchas queda completo y el paso actual avanza a Fechas por fase
+    const btnCancha1 = screen.getByRole('button', { name: /Cancha Fútbol 1/i });
+    fireEvent.click(btnCancha1);
+
+    expect(pasoCanchas).not.toHaveAttribute('aria-current');
+    const pasoFechas = within(listaPasos).getByText('Fechas por fase').closest('li');
+    expect(pasoFechas).toHaveAttribute('aria-current', 'step');
   });
 });

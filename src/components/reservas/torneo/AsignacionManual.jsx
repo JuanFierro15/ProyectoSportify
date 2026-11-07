@@ -20,7 +20,7 @@ export function AsignacionManual({
           const indiceVisitante = 2 * m + 1;
           const valorLocal = orden[indiceLocal] ?? '';
           const valorVisitante = orden[indiceVisitante] ?? '';
-          const etiqueta = `R1-P${m + 1}`;
+          const etiqueta = `Partido ${m + 1}`;
 
           return (
             <div key={etiqueta} className="asignacion-manual__tarjeta">
@@ -28,7 +28,7 @@ export function AsignacionManual({
               <div className="asignacion-manual__partido">
                 <select
                   className="formulario-reserva__input asignacion-manual__select"
-                  aria-label={`Llave ${etiqueta} equipo local`}
+                  aria-label={`Partido ${m + 1}, equipo local`}
                   value={valorLocal}
                   onChange={(e) =>
                     onCambiarPosicion?.(
@@ -55,7 +55,7 @@ export function AsignacionManual({
 
                 <select
                   className="formulario-reserva__input asignacion-manual__select"
-                  aria-label={`Llave ${etiqueta} equipo visitante`}
+                  aria-label={`Partido ${m + 1}, equipo visitante`}
                   value={valorVisitante}
                   onChange={(e) =>
                     onCambiarPosicion?.(

@@ -379,14 +379,6 @@ function FormularioReserva({ reserva, dias }) {
             />
           </fieldset>
 
-          <fieldset className="formulario-reserva__campo">
-            <legend>Llaves y cronograma del torneo</legend>
-            <Bracket
-              partidos={reserva.torneoPlan?.partidos || []}
-              canchas={canchas}
-            />
-          </fieldset>
-
           {torneosGuardados.length > 0 && (
             <details className="formulario-reserva__torneos-guardados">
               <summary>Torneos reservados ({torneosGuardados.length})</summary>

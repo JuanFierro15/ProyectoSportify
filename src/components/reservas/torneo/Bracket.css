@@ -133,248 +133,262 @@
 }
 
 /* --------------------------------------------------------------------------
-   3. Bracket y Cronograma (FR-005, FR-007)
+   3. Bracket y Cronograma (C11, FR-005, FR-007)
    -------------------------------------------------------------------------- */
 .bracket-torneo {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 14px;
-  padding: 1.25rem;
-  margin-bottom: 1.25rem;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .bracket-torneo__vacio {
   margin: 0;
   text-align: center;
-  color: #64748b;
+  color: var(--reserva-texto-tenue, #a8a8a8);
   font-size: 0.9rem;
   padding: 2rem 1rem;
 }
 
-.bracket-torneo__rondas {
-  display: flex;
-  gap: 1.5rem;
+/* Contenedor con scroll horizontal para escritorio (16 equipos o anchos reducidos) */
+.bracket-torneo__canvas-scroll {
   overflow-x: auto;
   padding-bottom: 0.75rem;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scroll-snap-type: x proximity;
 }
 
-.bracket-torneo__columna,
-.bracket-torneo__ronda {
-  flex: 1 0 240px;
-  display: flex;
-  flex-direction: column;
-  min-width: 220px;
-  scroll-snap-align: start;
+.bracket-torneo__canvas-scroll:focus-visible,
+.bracket-torneo__movil:focus-visible {
+  outline: 2px solid var(--accent, #5bd67d);
+  outline-offset: 2px;
 }
 
-.bracket-torneo__ronda-titulo {
+.bracket-torneo__canvas-scroll:focus:not(:focus-visible),
+.bracket-torneo__movil:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.bracket-torneo__simetrico {
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  margin: 0 0 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--accent-soft, #eef3f8);
+  gap: 14px;
+  position: relative;
+}
+
+/* Fila de encabezados de columnas (Cuartos, Semifinal, Final, etc.) */
+.bracket-torneo__columnas-grid {
+  display: grid;
+  margin-bottom: 0.5rem;
+}
+
+.bracket-torneo__col-header {
+  min-width: 0;
+}
+
+.bracket-torneo__col-header--izq {
+  text-align: left;
+}
+
+.bracket-torneo__col-header--centro {
   text-align: center;
 }
 
-.bracket-torneo__ronda-nombre {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
+.bracket-torneo__col-header--der {
+  text-align: right;
 }
 
 .bracket-torneo__ronda-heading {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #1e293b;
   margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--reserva-texto, #f2f2f2);
   line-height: 1.25;
 }
 
-.bracket-torneo__trophy {
-  color: #eab308;
-  flex-shrink: 0;
+.bracket-torneo__ronda-heading--final {
+  color: var(--accent, #5bd67d);
+}
+
+.bracket-torneo__ronda-heading--espejo {
+  display: block;
 }
 
 .bracket-torneo__ronda-fecha {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--accent-text, var(--accent, #1779ba));
-  background: var(--accent-soft, #eef3f8);
-  padding: 0.15rem 0.5rem;
-  border-radius: 9999px;
-  line-height: 1.2;
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--reserva-texto-tenue, #a8a8a8);
+  line-height: 1.3;
 }
 
-.bracket-torneo__ronda-fecha svg {
-  flex-shrink: 0;
-  color: var(--accent-text, var(--accent, #1779ba));
+/* Lienzo absoluto para tarjetas y conectores en escritorio */
+.bracket-torneo__lienzo {
+  position: relative;
 }
 
-.bracket-torneo__lista-partidos {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  flex: 1;
-  gap: 1rem;
-  min-height: 100%;
+.bracket-torneo__conectores {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
 
+/* Tarjeta de partido */
 .bracket-torneo__partido {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 10px;
-  padding: 0.65rem 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  box-sizing: border-box;
 }
 
-.bracket-torneo__partido:hover {
-  border-color: var(--accent, #1779ba);
-  box-shadow: 0 6px 14px -3px color-mix(in srgb, var(--accent, #1779ba) 22%, transparent);
-  transform: translateY(-1px);
+.bracket-torneo__partido--absoluto {
+  position: absolute;
 }
 
 .bracket-torneo__partido-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.45rem;
-  border-bottom: 1px dashed rgba(0, 0, 0, 0.08);
-}
-
-.bracket-torneo__partido-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.bracket-torneo__badge {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--accent-text, var(--accent, #1779ba));
-  background: var(--accent-soft, #eef3f8);
-  padding: 0.15rem 0.45rem;
-  border-radius: 6px;
-}
-
-.bracket-torneo__turno {
-  font-size: 0.7rem;
-  color: #64748b;
-  font-weight: 600;
-}
-
-.bracket-torneo__partido-detalles {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.75rem;
-  color: #64748b;
-  flex-wrap: wrap;
-}
-
-.bracket-torneo__horario,
-.bracket-torneo__cancha {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.bracket-torneo__horario svg,
-.bracket-torneo__cancha svg {
-  color: color-mix(in srgb, var(--accent, #1779ba) 70%, #1a1a1a);
-  flex-shrink: 0;
-}
-
-.bracket-torneo__equipos {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.bracket-torneo__equipo {
-  padding: 0.35rem 0.5rem;
-  border-radius: 6px;
-  background: #f8fafc;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #1e293b;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.bracket-torneo__equipo-nombre {
+  display: block;
+  font-size: 12px;
+  color: var(--reserva-texto-tenue, #a8a8a8);
+  line-height: 1.3;
+  margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.bracket-torneo__vs {
-  align-self: center;
-  font-size: 0.65rem;
-  font-weight: 800;
-  color: #94a3b8;
-  text-transform: uppercase;
-  margin: -0.15rem 0;
+.bracket-torneo__partido-meta--izq {
+  text-align: left;
+}
+
+.bracket-torneo__partido-meta--centro {
+  text-align: center;
+}
+
+.bracket-torneo__partido-meta--der {
+  text-align: right;
+}
+
+/* Caja de 2 filas de 38 px (una por equipo) */
+.bracket-torneo__caja {
+  width: 190px;
+  height: 76px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border: 1px solid #333333;
+  background: var(--reserva-control, #1f1f1f);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.bracket-torneo__equipo-fila {
+  flex: 1;
+  min-height: 0;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.bracket-torneo__equipo-fila:first-child {
+  border-bottom: 1px solid #2c2c2c;
+}
+
+.bracket-torneo__equipo-fila--izq {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.bracket-torneo__equipo-fila--centro {
+  justify-content: center;
+  text-align: center;
+}
+
+.bracket-torneo__equipo-fila--der {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.bracket-torneo__equipo-nombre {
+  font-weight: 600;
+  color: var(--reserva-texto, #f2f2f2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bracket-torneo__equipo-nombre--ganador {
+  font-weight: 400;
+  color: var(--reserva-texto-tenue, #a8a8a8);
+}
+
+/* Tarjeta especial de la Final (96 px de alto, 2 px borde acento, trofeo) */
+.bracket-torneo__final-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+
+.bracket-torneo__trophy {
+  color: var(--accent, #5bd67d);
+  flex-shrink: 0;
+}
+
+.bracket-torneo__caja--final {
+  height: 96px;
+  border-radius: 12px;
+  border: 2px solid var(--accent, #5bd67d);
+  background: color-mix(in srgb, var(--accent, #5bd67d) 12%, #0d0d0d);
+}
+
+.bracket-torneo__caja--final .bracket-torneo__equipo-fila:first-child {
+  border-bottom: 1px solid color-mix(in srgb, var(--accent, #5bd67d) 30%, transparent);
+}
+
+.bracket-torneo__caja--final .bracket-torneo__equipo-nombre {
+  color: color-mix(in srgb, var(--accent, #5bd67d) 70%, #ffffff);
+}
+
+.bracket-torneo__final-premio {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--reserva-texto-2, #b3b3b3);
+  text-align: center;
+  line-height: 1.35;
+}
+
+/* Celular (< 900 px): rondas de izquierda a derecha con scroll horizontal y conectores */
+.bracket-torneo__movil {
+  overflow-x: auto;
+  padding-bottom: 0.75rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 /* --------------------------------------------------------------------------
-   4. Variante Compacta
+   4. Variante Compacta (Confirmación y Torneos reservados)
    -------------------------------------------------------------------------- */
 .bracket-torneo--compacto {
-  padding: 0.75rem;
-}
-
-.bracket-torneo--compacto .bracket-torneo__rondas {
-  gap: 0.85rem;
-}
-
-.bracket-torneo--compacto .bracket-torneo__columna {
-  min-width: 175px;
-  flex: 1 0 175px;
-}
-
-.bracket-torneo--compacto .bracket-torneo__ronda-titulo {
-  font-size: 0.85rem;
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.35rem;
-  gap: 0.2rem;
+  padding: 0.5rem 0;
 }
 
 .bracket-torneo--compacto .bracket-torneo__ronda-heading {
-  font-size: 0.85rem;
+  font-size: 13px;
 }
 
 .bracket-torneo--compacto .bracket-torneo__ronda-fecha {
-  font-size: 0.68rem;
-  padding: 0.1rem 0.4rem;
+  font-size: 11px;
 }
 
-.bracket-torneo--compacto .bracket-torneo__partido {
-  padding: 0.45rem 0.55rem;
+.bracket-torneo--compacto .bracket-torneo__caja {
+  width: 180px;
 }
 
-.bracket-torneo--compacto .bracket-torneo__equipo {
-  padding: 0.25rem 0.35rem;
-  font-size: 0.78rem;
-}
-
-.bracket-torneo--compacto .bracket-torneo__partido-meta {
-  font-size: 0.7rem;
-  margin-bottom: 0.35rem;
-  padding-bottom: 0.35rem;
+.bracket-torneo--compacto .bracket-torneo__caja--final {
+  width: 180px;
 }
 
 /* --------------------------------------------------------------------------

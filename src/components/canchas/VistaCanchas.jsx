@@ -23,6 +23,8 @@ import FormularioReserva from '../reservas/FormularioReserva';
 import VoucherReserva from '../reservas/VoucherReserva';
 import ConfirmacionReserva from '../reservas/ConfirmacionReserva';
 import TarjetaCanchaCarrusel from '../reservas/TarjetaCanchaCarrusel';
+import IndicadorPasos from '../reservas/torneo/IndicadorPasos';
+import SeccionLlaves from '../reservas/torneo/SeccionLlaves';
 import './VistaCanchas.css';
 
 // Por debajo de este número de canchas, el carrusel 3D no aporta nada (y se
@@ -496,7 +498,10 @@ function VistaCanchas() {
             </div>
 
             <div className="vista-canchas__reserva">
-              <div className="vista-canchas__principal">
+              <div className="vista-canchas__fila-reserva">
+                <div className="vista-canchas__principal">
+                {reserva.modo === 'torneo' && <IndicadorPasos reserva={reserva} />}
+
                 <div className="vista-canchas__cuerpo">
                   {canchasFiltradas.length === 0 ? (
                     <div className="vista-canchas__vacio">
@@ -631,18 +636,23 @@ function VistaCanchas() {
                 <FormularioReserva reserva={reserva} dias={dias} />
               </div>
 
-              <VoucherReserva
-                tipoEtiqueta={reserva.modoInfo.tipoEtiqueta}
-                fechaTexto={fechaCompleta(reserva.fecha)}
-                horas={reserva.horasSel}
-                precio={reserva.precio}
-                puedeConfirmar={reserva.puedeConfirmar}
-                motivoBloqueo={reserva.motivoBloqueo}
-                onConfirmar={reserva.confirmar}
-                onCancelar={reserva.reiniciar}
-                torneo={reserva.modo === 'torneo' ? reserva.torneoPlan : null}
-                invitados={reserva.modo === 'cumpleanos' ? reserva.invitados : null}
-              />
+                <VoucherReserva
+                  tipoEtiqueta={reserva.modoInfo.tipoEtiqueta}
+                  fechaTexto={fechaCompleta(reserva.fecha)}
+                  horas={reserva.horasSel}
+                  precio={reserva.precio}
+                  puedeConfirmar={reserva.puedeConfirmar}
+                  motivoBloqueo={reserva.motivoBloqueo}
+                  onConfirmar={reserva.confirmar}
+                  onCancelar={reserva.reiniciar}
+                  torneo={reserva.modo === 'torneo' ? reserva.torneoPlan : null}
+                  invitados={reserva.modo === 'cumpleanos' ? reserva.invitados : null}
+                />
+              </div>
+
+              {reserva.modo === 'torneo' && (
+                <SeccionLlaves reserva={reserva} canchas={canchas} />
+              )}
             </div>
           </>
         )}
