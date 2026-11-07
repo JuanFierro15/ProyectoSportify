@@ -36,9 +36,14 @@ export function IndicadorPasos({
         const esActual = pasoActual !== undefined ? paso.id === pasoActual : idx === primerIncompletoIdx;
         const esAlcanzable = alcanzables.includes(paso.id);
 
+        // Un paso completo puede ser el actual en el asistente móvil: las clases
+        // se combinan y el CSS de --actual (declarado después) gana. En
+        // escritorio el actual es siempre el primer incompleto, como antes.
         let estadoClase = 'indicador-pasos__paso--incompleto';
         if (paso.completo) {
-          estadoClase = 'indicador-pasos__paso--completo';
+          estadoClase = esActual
+            ? 'indicador-pasos__paso--completo indicador-pasos__paso--actual'
+            : 'indicador-pasos__paso--completo';
         } else if (esActual) {
           estadoClase = 'indicador-pasos__paso--actual';
         }

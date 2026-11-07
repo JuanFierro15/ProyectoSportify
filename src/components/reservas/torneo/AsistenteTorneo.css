@@ -50,7 +50,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 900;
+  z-index: var(--z-barra-asistente);
   background: rgba(22, 22, 22, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);

@@ -46,6 +46,20 @@ describe('AsistenteTorneo y VistaCanchas (frente A)', () => {
           reserva={{ modo: 'torneo', canchaIds: [], torneoPlan: {} }}
           dias={[]}
           renderCanchas={() => null}
+          asistente={{
+            pasoActual: 'canchas',
+            numeroPaso: 1,
+            totalPasos: 6,
+            pasoActualInfo: { id: 'canchas', etiqueta: 'Canchas', completo: false, motivo: '' },
+            motivoAvance: '',
+            alcanzables: ['canchas'],
+            puedeAvanzar: false,
+            puedeRetroceder: false,
+            siguiente: vi.fn(),
+            anterior: vi.fn(),
+            irA: vi.fn(),
+            encabezadoRef: { current: null },
+          }}
         />
       );
       expect(raiz.style.getPropertyValue('--alto-barra-inferior')).toMatch(/px$/);
@@ -183,6 +197,7 @@ describe('AsistenteTorneo y VistaCanchas (frente A)', () => {
               completo: false,
               motivo: 'Elige al menos una cancha',
             },
+            motivoAvance: 'Elige al menos una cancha',
             estadosPasos: [],
             alcanzables: ['canchas'],
             puedeAvanzar: false,
@@ -198,6 +213,45 @@ describe('AsistenteTorneo y VistaCanchas (frente A)', () => {
       expect(screen.getByText('Elige al menos una cancha')).toBeInTheDocument();
       const btnSiguiente = screen.getByRole('button', { name: /^Siguiente$/i });
       expect(btnSiguiente).toBeDisabled();
+      expect(btnSiguiente).toHaveAccessibleDescription('Elige al menos una cancha');
+    });
+
+    it('resalta el paso actual aunque esté completo (S9)', () => {
+      render(
+        <AsistenteTorneo
+          reserva={{ modo: 'torneo', canchaIds: ['padel-1'], torneoPlan: {} }}
+          dias={[]}
+          renderCanchas={() => null}
+          asistente={{
+            pasoActual: 'canchas',
+            pasoIndex: 0,
+            numeroPaso: 1,
+            totalPasos: 6,
+            pasoActualInfo: { id: 'canchas', etiqueta: 'Canchas', completo: true, motivo: '' },
+            motivoAvance: '',
+            estadosPasos: [],
+            alcanzables: ['canchas', 'formato'],
+            puedeAvanzar: true,
+            puedeRetroceder: false,
+            siguiente: vi.fn(),
+            anterior: vi.fn(),
+            irA: vi.fn(),
+            encabezadoRef: { current: null },
+          }}
+        />
+      );
+
+      const pasoCanchas = screen
+        .getByRole('list', { name: 'Pasos del torneo' })
+        .querySelector('[aria-current="step"]');
+      expect(pasoCanchas).toHaveTextContent('Canchas');
+      expect(pasoCanchas).toHaveClass('indicador-pasos__paso--completo');
+      expect(pasoCanchas).toHaveClass('indicador-pasos__paso--actual');
+      // "Paso 1 de 6" se anuncia una sola vez
+      const contadoresVisiblesParaLectores = screen
+        .getAllByText('Paso 1 de 6')
+        .filter((el) => !el.closest('[aria-hidden="true"]'));
+      expect(contadoresVisiblesParaLectores).toHaveLength(1);
     });
   });
 
@@ -255,10 +309,7 @@ describe('AsistenteTorneo y VistaCanchas (frente A)', () => {
       expect(screen.getByRole('tablist', { name: /deporte/i })).toBeInTheDocument();
 
       // Agregamos una cancha para completar el paso
-      const btnAgregar = screen.getAllByRole('button', { name: /agregar al evento/i })[0];
-      if (btnAgregar) {
-        fireEvent.click(btnAgregar);
-      }
+      fireEvent.click(screen.getAllByRole('button', { name: /agregar al evento/i })[0]);
 
       // El botón siguiente debe habilitarse tras completar canchas
       const btnSiguiente = screen.getByRole('button', { name: /^Siguiente$/i });
@@ -285,6 +336,8 @@ describe('AsistenteTorneo y VistaCanchas (frente A)', () => {
       // Estado conservado: volvemos a ver Canchas y la cancha sigue elegida
       expect(screen.getByRole('heading', { level: 2, name: 'Canchas' })).toBeInTheDocument();
       expect(screen.getByRole('tablist', { name: /deporte/i })).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /quitar del evento/i }).length).toBeGreaterThan(0);
+      expect(screen.getByRole('button', { name: /^Siguiente$/i })).not.toBeDisabled();
     });
   });
 });

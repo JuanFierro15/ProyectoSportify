@@ -3,7 +3,6 @@ import IndicadorPasos from './IndicadorPasos';
 import FormularioReserva from '../FormularioReserva';
 import VoucherReserva from '../VoucherReserva';
 import SeccionLlaves from './SeccionLlaves';
-import useAsistenteTorneo from './useAsistenteTorneo';
 import { fechaCompleta } from '../../../lib/fechas';
 import './AsistenteTorneo.css';
 
@@ -17,16 +16,17 @@ import './AsistenteTorneo.css';
  * 4. llaves: emparejamiento y visualización de llaves
  * 5. datos: nombre y teléfono
  * 6. resumen: voucher de confirmación y torneos reservados
+ *
+ * Es de presentación: el estado lo da `asistente`, el valor de
+ * useAsistenteTorneo que crea VistaCanchas (obligatorio).
  */
 export function AsistenteTorneo({
   reserva,
   dias,
   canchas = [],
   renderCanchas,
-  asistente: asistenteProp,
+  asistente: a,
 }) {
-  const hookAsistente = useAsistenteTorneo({ reserva });
-  const a = asistenteProp || hookAsistente;
   const barraRef = useRef(null);
 
   // Publica el alto de la barra fija para que el botón del chat se ubique
@@ -61,7 +61,7 @@ export function AsistenteTorneo({
         >
           {a.pasoActualInfo?.etiqueta}
         </h2>
-        <span className="asistente-torneo__badge-paso">
+        <span className="asistente-torneo__badge-paso" aria-hidden="true">
           Paso {a.numeroPaso} de {a.totalPasos}
         </span>
       </div>
@@ -147,9 +147,12 @@ export function AsistenteTorneo({
             <span className="asistente-torneo__texto-paso">
               Paso {a.numeroPaso} de {a.totalPasos}
             </span>
-            {!a.pasoActualInfo?.completo && a.pasoActualInfo?.motivo && (
-              <span className="asistente-torneo__motivo-bloqueo">
-                {a.pasoActualInfo.motivo}
+            {a.motivoAvance && (
+              <span
+                id="asistente-torneo-motivo"
+                className="asistente-torneo__motivo-bloqueo"
+              >
+                {a.motivoAvance}
               </span>
             )}
           </div>
@@ -160,6 +163,7 @@ export function AsistenteTorneo({
               className="button asistente-torneo__boton-nav asistente-torneo__boton-siguiente"
               onClick={a.siguiente}
               disabled={!a.puedeAvanzar}
+              aria-describedby={a.motivoAvance ? 'asistente-torneo-motivo' : undefined}
             >
               Siguiente
             </button>

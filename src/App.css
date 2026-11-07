@@ -12,6 +12,8 @@
   --color-marca-contraste: #141414;
   /* Encima del navbar (1000) */
   --z-chatbot: 1100;
+  /* Barra inferior del asistente de torneo en móvil (debajo del navbar y del chat) */
+  --z-barra-asistente: 900;
 
   /* Tokens de la página de reserva y confirmación (etapa 9) */
   --reserva-fondo: var(--eventos-fondo);
