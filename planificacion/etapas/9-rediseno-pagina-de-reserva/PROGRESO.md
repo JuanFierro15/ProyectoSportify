@@ -15,12 +15,12 @@
 
 Al cerrar `r4`: `npm test` 197 de 197, `npm run lint` 0 advertencias, `npm run build` OK (corridos a mano el 06-11).
 
+Al retomar el 07-11: `v4b` pasa (los cinco defectos de `r4`), `r5` hecho (`276e3d5`: los 16 casos de la etapa 8 pasan, teclado y movimiento reducido bien, contraste ≥ 4,5:1, capturas "después" y 5 de `docs/capturas/`), `r6` README al día y `REPORTE.md` escrito.
+
 ## Pendiente
 
-1. **Recomprobación `v4b`** de los cinco defectos de `r4` en el navegador: `bloques/v4-verificacion-r4/instruccion-recomprobacion.md` (Argon). Si falla algo, una corrección más con flash y commit aparte.
-2. **`r5`** (Argon): `bloques/r5-verificacion/tarea.md` → capturas "después", casos A1-A5, B1-B7 y C1-C4 de la etapa 8, teclado, movimiento reducido, tabla de contraste y las 5 capturas de `docs/capturas/`.
-3. README si hace falta (con flash), `REPORTE.md` (respuestas de E, capturas, tabla de contraste, pruebas que cambiaron: `Torneo.test.jsx` pruebas 1, 4 y 5 actualizadas y 11 y 12 nuevas) y fila del índice.
-4. Con las capturas aprobadas: push de la rama y PR a `main` antes del 18-11.
+1. Que Juan Fierro apruebe las capturas (`revision/despues/` y las 5 de `docs/capturas/`).
+2. Con eso: push de la rama y PR a `main` antes del 18-11 (sin menciones a herramientas ni coautorías).
 
 ## Cómo se trabaja (reparto acordado)
 
