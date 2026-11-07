@@ -2,7 +2,7 @@
 
 **Responsable:** Miguel Medina. **Revisa y fusiona:** Juan Fierro.
 **Rama:** `etapa-9-rediseno-reserva`, desde `main` en `e00922e`. **Fechas:** 06 y 07-11-2026.
-**Estado:** implementada y verificada; falta que Juan Fierro apruebe las capturas para hacer push y abrir el PR (antes del 18-11).
+**Estado:** implementada y verificada; PR #5 abierto, falta que Juan Fierro lo apruebe y lo fusione (antes del 18-11).
 
 La página de reserva (modos Cancha, Torneo y Cumpleaños) y la confirmación pasaron al tema oscuro del inicio. El comprobante ahora tiene forma de tiquete y las llaves del torneo son simétricas, con la final al centro. No cambió cómo se reserva, ni precios, ni validaciones, ni datos: no se tocaron `src/lib/`, `src/data/`, `src/context/`, `api/` ni `useReserva.js`.
 
@@ -18,6 +18,8 @@ La página de reserva (modos Cancha, Torneo y Cumpleaños) y la confirmación pa
 | `r4` | `SeccionLlaves` a ancho completo, llaves simétricas y por rondas en celular, "Partido N", `IndicadorPasos`, pruebas | `f063059` | `v4`: 5 defectos (comprobante `sticky` sobre las llaves, trofeo sobre "Final" con 4 equipos, faltaban conectores en celular, conectores separados en la versión compacta, recuadro con scroll no accesible con teclado) → corregidos → `v4b`: pasa |
 | `r5` | Capturas "después" (`revision/despues/`, 20), casos de la etapa 8, teclado, movimiento reducido, contraste y 5 capturas de `docs/capturas/` | `276e3d5` | Ver `revision/verificacion-final.md` |
 | `r6` | README al día con el rediseño (primer intento cortado por falta de memoria; el segundo lo terminó) | `a660ad7` | Revisión de menciones y Markdown; 197 pruebas |
+| `r7` | Conectores de las llaves derechos hasta el partido siguiente (ver sección 6) | `4083de8` | Playwright con 4, 8 y 16 equipos; desvío menor de 1 px |
+| Revisión | Títulos de las secciones del formulario fuera del borde de su tarjeta, descuento del comprobante dentro del margen y descuento por hora en su propio renglón (ver sección 6) | `66d60a2` | 197 pruebas, lint y build; capturas rehechas |
 
 Cada bloque lo implementó un agente con un modelo para escribir código y lo verificó otro, distinto, en el navegador. Las instrucciones de cada uno están en `bloques/`.
 
@@ -70,7 +72,8 @@ Ningún texto baja de 4,5:1. El PROMPT pedía `#7a7a7a` para las horas reservada
 
 ## 6. Pendiente y observaciones
 
-1. **Que Juan Fierro apruebe las capturas** (`revision/despues/` y las 5 de `docs/capturas/`). Después: push de la rama y PR a `main` antes del 18-11.
+1. **Que Juan Fierro apruebe y fusione el PR #5** antes del 18-11.
 2. **Conectores de las llaves (corregido en `r7`):** Miguel Medina reportó una línea torcida que no apuntaba a ningún partido. La causa: en `Bracket.jsx`, el segundo trazo de cada par de partidos usaba la forma abreviada `{ x1: xStart, y1, ... }`, que toma el `y` del partido de arriba en lugar del de abajo. La línea bajaba en diagonal y el partido de abajo quedaba sin conector (en los dos lados de la vista simétrica y en la compacta). Se corrigió y se comprobó en el navegador con Playwright, con 4, 8 y 16 equipos, en escritorio, celular y la confirmación: todos los tramos son horizontales o verticales y llegan al centro del partido siguiente (desvío menor de 1 px). Se rehicieron las capturas "después" y `docs/capturas/torneo-bracket.webp`.
 3. **"Formato" del indicador de pasos** aparece completo desde el inicio, como se decidió en el PLAN.
 4. Las pruebas manuales `z5` y `z6` de la etapa 8 (de Juan Fierro) siguen pendientes y no son parte de esta etapa.
+5. **Ajustes de la revisión de Juan Fierro (07-11):** el `legend` de cada `fieldset` del formulario ("Día", "Horario", "Tus datos") quedaba montado sobre el borde superior de la tarjeta; ahora flota dentro de ella. En el comprobante, "− $ 10.000" de "Descuento por horas seguidas" se salía del margen derecho, y la línea "2 horas de $ 115.000 (− $ 5.000/h)" se partía en un lugar raro: ahora el descuento va en su propio renglón ("−$ 5.000 por hora"). Se rehicieron las 20 capturas de `revision/despues/` y `vista-canchas`, `reserva-voucher` y `modo-torneo` de `docs/capturas/`.
