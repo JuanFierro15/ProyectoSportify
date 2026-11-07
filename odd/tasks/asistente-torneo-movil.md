@@ -31,8 +31,8 @@ Supuesto: cada paso no crea una entrada en el historial del navegador; el botón
 | A1 | S3, S4 | A (Juan) | agy | pendiente | |
 | A2 | S5, S6 | A (Juan) | agy | pendiente | |
 | A3 | S2, S3, S5, S7 | A (Juan) | agy | pendiente | |
-| B1 | S7 | B (Miguel) | issue | pendiente | |
-| B2 | S8 | B (Miguel) | issue | pendiente | |
+| B1 | S7 | B (Miguel) | issue #6 | pendiente | |
+| B2 | S8 | B (Miguel) | issue #6 | pendiente | |
 | C1 | S9 | A tras unir A y B | inline | pendiente | |
 
 - **A1.** `src/lib/pasosTorneo.js` (JS puro): `PASOS_TORNEO` (ids y etiquetas de S3), `estadoPasosTorneo(reserva)` → `[{ id, etiqueta, completo, motivo }]` y `pasosAlcanzables(estados)` (regla de salto de S5), con `src/lib/pasosTorneo.test.js`. `IndicadorPasos` pasa a usarla: en escritorio sigue mostrando los mismos 5 pasos de hoy.
