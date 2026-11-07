@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 // Uso, desde la raíz: npm run build, npm run preview y luego
 // node planificacion/herramientas/capturas/capturas.mjs
+// O solo una escena: node planificacion/herramientas/capturas/capturas.mjs --solo movil-torneo
 const CHROME_PATH = process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const PORT = 9333;
 const BASE_URL = 'http://localhost:4173';
@@ -94,6 +95,23 @@ function createCdpSession(wsUrl) {
 }
 
 async function main() {
+  const args = process.argv.slice(2);
+  let soloScene = null;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--solo' && args[i + 1]) {
+      soloScene = args[i + 1];
+      i++;
+    } else if (args[i].startsWith('--solo=')) {
+      soloScene = args[i].slice('--solo='.length);
+    }
+  }
+
+  const shouldRun = (name) => {
+    if (!soloScene) return true;
+    if (Array.isArray(name)) return name.includes(soloScene);
+    return soloScene === name;
+  };
+
   fs.mkdirSync(DOCS_OUT_DIR, { recursive: true });
   fs.mkdirSync(VERIF_OUT_DIR, { recursive: true });
 
@@ -179,6 +197,22 @@ async function main() {
           clickCount: 1,
         });
       }
+    };
+
+    const clickButton = async (selector, timeoutMs = 10000) => {
+      const start = Date.now();
+      const selJson = JSON.stringify(selector);
+      while (Date.now() - start < timeoutMs) {
+        const clicked = await evaluate(`(() => {
+          const el = document.querySelector(${selJson});
+          if (!el || el.disabled) return false;
+          el.click();
+          return true;
+        })()`);
+        if (clicked) return;
+        await sleep(80);
+      }
+      throw new Error(`Timeout esperando botón habilitado: ${selector}`);
     };
 
     const typeText = async (selector, text) => {
@@ -339,136 +373,200 @@ async function main() {
     };
 
     // --- 1) Página de inicio (escritorio y móvil) ---
-    await openHome(false);
-    await scrollToHero('voley-playa');
-    await captureToFile(path.join(DOCS_OUT_DIR, 'inicio.webp'));
+    if (shouldRun('inicio')) {
+      await openHome(false);
+      await scrollToHero('voley-playa');
+      await captureToFile(path.join(DOCS_OUT_DIR, 'inicio.webp'));
 
-    await scrollToHero('padel');
-    await captureToFile(path.join(DOCS_OUT_DIR, 'hero-padel.webp'));
+      await scrollToHero('padel');
+      await captureToFile(path.join(DOCS_OUT_DIR, 'hero-padel.webp'));
 
-    await scrollToHero('futbol');
-    await captureToFile(path.join(DOCS_OUT_DIR, 'hero-futbol.webp'));
+      await scrollToHero('futbol');
+      await captureToFile(path.join(DOCS_OUT_DIR, 'hero-futbol.webp'));
 
-    await evaluate(`(() => {
-      const ev = document.getElementById('eventos');
-      const imgs = Array.from(ev.querySelectorAll('img'));
-      for (const img of imgs) {
-        if (img.loading === 'lazy') img.loading = 'eager';
-      }
-      window.scrollTo(0, window.scrollY + ev.getBoundingClientRect().top);
-    })()`);
-    await sleep(1800);
-    await captureToFile(path.join(DOCS_OUT_DIR, 'eventos.webp'));
+      await evaluate(`(() => {
+        const ev = document.getElementById('eventos');
+        const imgs = Array.from(ev.querySelectorAll('img'));
+        for (const img of imgs) {
+          if (img.loading === 'lazy') img.loading = 'eager';
+        }
+        window.scrollTo(0, window.scrollY + ev.getBoundingClientRect().top);
+      })()`);
+      await sleep(1800);
+      await captureToFile(path.join(DOCS_OUT_DIR, 'eventos.webp'));
 
-    await evaluate(`(() => {
-      const ub = document.getElementById('ubicacion');
-      window.scrollTo(0, window.scrollY + ub.getBoundingClientRect().top - 40);
-    })()`);
-    await sleep(1600);
-    await captureToFile(path.join(DOCS_OUT_DIR, 'ubicacion.webp'));
+      await evaluate(`(() => {
+        const ub = document.getElementById('ubicacion');
+        window.scrollTo(0, window.scrollY + ub.getBoundingClientRect().top - 40);
+      })()`);
+      await sleep(1600);
+      await captureToFile(path.join(DOCS_OUT_DIR, 'ubicacion.webp'));
 
-    await openHome(true);
-    await scrollToHero('voley-playa');
-    await captureToFile(path.join(DOCS_OUT_DIR, 'movil-inicio.webp'));
+      await openHome(true);
+      await scrollToHero('voley-playa');
+      await captureToFile(path.join(DOCS_OUT_DIR, 'movil-inicio.webp'));
+    }
 
     // --- 2) Vista de canchas, reserva con voucher, confirmación QR y Mis reservas ---
-    await openScene('padel', false);
-    await evaluate(`localStorage.clear()`);
-    await openScene('padel', false);
-    await selectMode('Cancha');
-    await selectTomorrow();
-    await clickNextCard();
-    await evaluate(`window.scrollTo(0, 0)`);
-    await sleep(400);
-    await captureToFile(path.join(DOCS_OUT_DIR, 'vista-canchas.webp'));
+    if (shouldRun(['canchas', 'reserva'])) {
+      await openScene('padel', false);
+      await evaluate(`localStorage.clear()`);
+      await openScene('padel', false);
+      await selectMode('Cancha');
+      await selectTomorrow();
+      await clickNextCard();
+      await evaluate(`window.scrollTo(0, 0)`);
+      await sleep(400);
+      await captureToFile(path.join(DOCS_OUT_DIR, 'vista-canchas.webp'));
 
-    await selectHour('14:00');
-    await selectHour('15:00');
-    await typeText('#reserva-nombre', 'Ana Gómez');
-    await typeText('#reserva-telefono', '3001234567');
-    await evaluate(`(() => {
-      const fieldsets = Array.from(document.querySelectorAll('.formulario-reserva__campo'));
-      const diaFieldset = fieldsets.find((f) => {
-        const leg = f.querySelector('legend');
-        return leg && leg.textContent.trim() === 'Día';
-      });
-      window.scrollBy(0, diaFieldset.getBoundingClientRect().top - 320);
-    })()`);
-    await sleep(500);
-    await captureToFile(path.join(DOCS_OUT_DIR, 'reserva-voucher.webp'));
+      await selectHour('14:00');
+      await selectHour('15:00');
+      await typeText('#reserva-nombre', 'Ana Gómez');
+      await typeText('#reserva-telefono', '3001234567');
+      await evaluate(`(() => {
+        const fieldsets = Array.from(document.querySelectorAll('.formulario-reserva__campo'));
+        const diaFieldset = fieldsets.find((f) => {
+          const leg = f.querySelector('legend');
+          return leg && leg.textContent.trim() === 'Día';
+        });
+        window.scrollBy(0, diaFieldset.getBoundingClientRect().top - 320);
+      })()`);
+      await sleep(500);
+      await captureToFile(path.join(DOCS_OUT_DIR, 'reserva-voucher.webp'));
 
-    // Confirmar reserva -> confirmacion-qr.webp
-    await clickElement('.voucher-reserva__acciones button.success');
-    await waitForSelector('.confirmacion-reserva');
-    await evaluate(`window.scrollTo(0, 0)`);
-    await sleep(600);
-    await captureToFile(path.join(DOCS_OUT_DIR, 'confirmacion-qr.webp'));
+      // Confirmar reserva -> confirmacion-qr.webp
+      await clickElement('.voucher-reserva__acciones button.success');
+      await waitForSelector('.confirmacion-reserva');
+      await evaluate(`window.scrollTo(0, 0)`);
+      await sleep(600);
+      await captureToFile(path.join(DOCS_OUT_DIR, 'confirmacion-qr.webp'));
 
-    const codigoConfirmado = await evaluate(`(() => {
-      const el = document.querySelector('.confirmacion-reserva__codigo');
-      return el ? el.textContent.trim() : '';
-    })()`);
+      const codigoConfirmado = await evaluate(`(() => {
+        const el = document.querySelector('.confirmacion-reserva__codigo');
+        return el ? el.textContent.trim() : '';
+      })()`);
 
-    // Abrir Mis reservas y consultar el código confirmado -> mis-reservas.webp
-    await clickElement('.site-header__btn-mis-reservas');
-    await waitForSelector('dialog.mis-reservas[open]');
-    await sleep(300);
-    await typeText('#mis-reservas-codigo', codigoConfirmado);
-    await clickElement('.mis-reservas__form button[type="submit"]');
-    await waitForSelector('.mis-reservas__tarjeta');
-    await clickElement('.mis-reservas__btn-qr');
-    await sleep(400);
-    await captureToFile(path.join(DOCS_OUT_DIR, 'mis-reservas.webp'));
+      // Abrir Mis reservas y consultar el código confirmado -> mis-reservas.webp
+      await clickElement('.site-header__btn-mis-reservas');
+      await waitForSelector('dialog.mis-reservas[open]');
+      await sleep(300);
+      await typeText('#mis-reservas-codigo', codigoConfirmado);
+      await clickElement('.mis-reservas__form button[type="submit"]');
+      await waitForSelector('.mis-reservas__tarjeta');
+      await clickElement('.mis-reservas__btn-qr');
+      await sleep(400);
+      await captureToFile(path.join(DOCS_OUT_DIR, 'mis-reservas.webp'));
 
-    // Cerrar Mis reservas y limpiar localStorage antes de capturar modo torneo
-    await clickElement('.mis-reservas__cerrar');
-    await evaluate(`localStorage.clear()`);
+      // Cerrar Mis reservas y limpiar localStorage antes de capturar modo torneo
+      await clickElement('.mis-reservas__cerrar');
+      await evaluate(`localStorage.clear()`);
+    }
 
     // --- 3) Modo torneo por fases y bracket ---
-    await openScene('/reservar/padel?modo=torneo', false);
-    // Agregar Pádel 1 y Pádel 2
-    await clickElement('.depth-carousel__card[aria-hidden="false"] .tarjeta-cancha__boton');
-    await sleep(200);
-    await clickNextCard();
-    await clickElement('.depth-carousel__card[aria-hidden="false"] .tarjeta-cancha__boton');
-    await sleep(300);
+    if (shouldRun(['torneo', 'modo-torneo'])) {
+      await openScene('/reservar/padel?modo=torneo', false);
+      // Agregar Pádel 1 y Pádel 2
+      await clickElement('.depth-carousel__card[aria-hidden="false"] .tarjeta-cancha__boton');
+      await sleep(200);
+      await clickNextCard();
+      await clickElement('.depth-carousel__card[aria-hidden="false"] .tarjeta-cancha__boton');
+      await sleep(300);
 
-    // Fase 1 (Cuartos de final): día 2, 11:00 a 13:00 (2 h)
-    await clickElement('.calendario-torneo__fase[data-ronda="1"] .selector-dia button:nth-child(2)');
-    await sleep(150);
-    await clickElement('.calendario-torneo__fase[data-ronda="1"] .formulario-reserva__horas button[data-hora="11:00"]');
-    await sleep(100);
-    await clickElement('.calendario-torneo__fase[data-ronda="1"] .formulario-reserva__horas button[data-hora="12:00"]');
-    await sleep(150);
+      // Fase 1 (Cuartos de final): día 2, 11:00 a 13:00 (2 h)
+      await clickElement('.calendario-torneo__fase[data-ronda="1"] .selector-dia button:nth-child(2)');
+      await sleep(150);
+      await clickElement('.calendario-torneo__fase[data-ronda="1"] .formulario-reserva__horas button[data-hora="11:00"]');
+      await sleep(100);
+      await clickElement('.calendario-torneo__fase[data-ronda="1"] .formulario-reserva__horas button[data-hora="12:00"]');
+      await sleep(150);
 
-    // Fase 2 (Semifinal): día 3, 11:00 (1 h)
-    await clickElement('.calendario-torneo__fase[data-ronda="2"] .selector-dia button:nth-child(3)');
-    await sleep(150);
-    await clickElement('.calendario-torneo__fase[data-ronda="2"] .formulario-reserva__horas button[data-hora="11:00"]');
-    await sleep(150);
+      // Fase 2 (Semifinal): día 3, 11:00 (1 h)
+      await clickElement('.calendario-torneo__fase[data-ronda="2"] .selector-dia button:nth-child(3)');
+      await sleep(150);
+      await clickElement('.calendario-torneo__fase[data-ronda="2"] .formulario-reserva__horas button[data-hora="11:00"]');
+      await sleep(150);
 
-    // Fase 3 (Final): día 4, 11:00 (1 h)
-    await clickElement('.calendario-torneo__fase[data-ronda="3"] .selector-dia button:nth-child(4)');
-    await sleep(150);
-    await clickElement('.calendario-torneo__fase[data-ronda="3"] .formulario-reserva__horas button[data-hora="11:00"]');
-    await sleep(150);
+      // Fase 3 (Final): día 4, 11:00 (1 h)
+      await clickElement('.calendario-torneo__fase[data-ronda="3"] .selector-dia button:nth-child(4)');
+      await sleep(150);
+      await clickElement('.calendario-torneo__fase[data-ronda="3"] .formulario-reserva__horas button[data-hora="11:00"]');
+      await sleep(150);
 
-    await typeText('#reserva-nombre', 'Club Pádel Huila');
-    await typeText('#reserva-telefono', '3109876543');
+      await typeText('#reserva-nombre', 'Club Pádel Huila');
+      await typeText('#reserva-telefono', '3109876543');
 
-    await evaluate(`(() => {
-      const cal = document.querySelector('.calendario-torneo');
-      window.scrollBy(0, cal.getBoundingClientRect().top - 96);
-    })()`);
-    await sleep(500);
-    await captureToFile(path.join(DOCS_OUT_DIR, 'modo-torneo.webp'));
+      await evaluate(`(() => {
+        const cal = document.querySelector('.calendario-torneo');
+        window.scrollBy(0, cal.getBoundingClientRect().top - 96);
+      })()`);
+      await sleep(500);
+      await captureToFile(path.join(DOCS_OUT_DIR, 'modo-torneo.webp'));
 
-    await evaluate(`(() => {
-      const br = document.querySelector('.bracket-torneo');
-      window.scrollBy(0, br.getBoundingClientRect().top - 110);
-    })()`);
-    await sleep(500);
-    await captureToFile(path.join(DOCS_OUT_DIR, 'torneo-bracket.webp'));
+      await evaluate(`(() => {
+        const br = document.querySelector('.bracket-torneo');
+        window.scrollBy(0, br.getBoundingClientRect().top - 110);
+      })()`);
+      await sleep(500);
+      await captureToFile(path.join(DOCS_OUT_DIR, 'torneo-bracket.webp'));
+    }
+
+    // --- 4) Modo torneo en móvil: asistente por pasos (Llaves) ---
+    if (shouldRun(['movil-torneo', 'asistente-movil'])) {
+      await openScene('/reservar/padel?modo=torneo', true);
+      await evaluate(`localStorage.clear()`);
+      await openScene('/reservar/padel?modo=torneo', true);
+
+      // Paso 1 (Canchas): Agregar Pádel 1 y Pádel 2
+      await clickElement('.depth-carousel__card[aria-hidden="false"] .tarjeta-cancha__boton');
+      await sleep(250);
+      await clickNextCard();
+      await clickElement('.depth-carousel__card[aria-hidden="false"] .tarjeta-cancha__boton');
+      await sleep(300);
+
+      // Avanzar a Paso 2 (Formato): 8 equipos y 20 min vienen por defecto
+      await clickButton('.asistente-torneo__barra-inferior .asistente-torneo__boton-siguiente');
+      await sleep(350);
+
+      // Avanzar a Paso 3 (Fechas por fase)
+      await clickButton('.asistente-torneo__barra-inferior .asistente-torneo__boton-siguiente');
+      await sleep(350);
+
+      // Fase 1 (Cuartos de final): día 2, 11:00 a 13:00 (2 h)
+      await clickElement('.calendario-torneo__fase[data-ronda="1"] .selector-dia button:nth-child(2)');
+      await sleep(150);
+      await clickElement('.calendario-torneo__fase[data-ronda="1"] .formulario-reserva__horas button[data-hora="11:00"]');
+      await sleep(100);
+      await clickElement('.calendario-torneo__fase[data-ronda="1"] .formulario-reserva__horas button[data-hora="12:00"]');
+      await sleep(150);
+
+      // Fase 2 (Semifinal): día 3, 11:00 (1 h)
+      await clickElement('.calendario-torneo__fase[data-ronda="2"] .selector-dia button:nth-child(3)');
+      await sleep(150);
+      await clickElement('.calendario-torneo__fase[data-ronda="2"] .formulario-reserva__horas button[data-hora="11:00"]');
+      await sleep(150);
+
+      // Fase 3 (Final): día 4, 11:00 (1 h)
+      await clickElement('.calendario-torneo__fase[data-ronda="3"] .selector-dia button:nth-child(4)');
+      await sleep(150);
+      await clickElement('.calendario-torneo__fase[data-ronda="3"] .formulario-reserva__horas button[data-hora="11:00"]');
+      await sleep(200);
+
+      // Avanzar a Paso 4 (Llaves)
+      await clickButton('.asistente-torneo__barra-inferior .asistente-torneo__boton-siguiente');
+      await sleep(600);
+
+      // Desplazar la vista para que la cabecera del paso quede arriba y el bracket visible
+      await evaluate(`(() => {
+        const cab = document.querySelector('.asistente-torneo__cabecera');
+        if (cab) {
+          const top = window.scrollY + cab.getBoundingClientRect().top;
+          window.scrollTo(0, Math.max(0, top - 8));
+        }
+      })()`);
+      await sleep(600);
+
+      await captureToFile(path.join(DOCS_OUT_DIR, 'movil-torneo.webp'));
+    }
   } finally {
     if (cdp) {
       try {
