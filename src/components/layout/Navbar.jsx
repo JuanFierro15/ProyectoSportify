@@ -118,7 +118,9 @@ function Navbar() {
     <header
       className={`site-header ${
         visible ? 'site-header--visible' : 'site-header--hidden'
-      } ${sobreHero ? 'site-header--transparent' : 'site-header--scrolled'}`}
+      } ${sobreHero ? 'site-header--transparent' : 'site-header--scrolled'}${
+        deporteAbierto ? ' site-header--reserva' : ''
+      }`}
     >
       <div className="top-bar" id="main-navbar">
         <div className="top-bar-left">

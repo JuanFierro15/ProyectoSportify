@@ -11,7 +11,7 @@ conversacional** que también reserva y cancela.
 ![Foundation](https://img.shields.io/badge/Foundation-6.8-1779BA)
 ![GSAP](https://img.shields.io/badge/GSAP-3.13-88CE02)
 ![Gemini](https://img.shields.io/badge/Gemini-function%20calling-8E75B2?logo=googlegemini&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-195%20en%20verde-2EA44F)
+![Tests](https://img.shields.io/badge/tests-197%20en%20verde-2EA44F)
 
 ![Hero de voley playa con el video de fondo y el botón del asistente](docs/capturas/inicio.webp)
 
@@ -67,39 +67,50 @@ acento, que después usan la página de reserva y el asistente.
 
 ### Página de reserva
 
-Todo se reserva desde una página propia del sitio (`/reservar/<deporte>`). Se
-abre desde "Ver canchas de…" en cada hero o desde "Canchas" en el menú. Tiene:
+Todo se reserva desde una página propia del sitio (`/reservar/<deporte>`),
+diseñada en **tema oscuro** igual que el inicio. Se abre desde "Ver canchas
+de…" en cada hero o desde "Canchas" en el menú. Cuenta con:
 
-- **Pestañas por deporte** (con navegación por teclado mediante flechas) y el
-  filtro *Solo con horarios libres ese día*.
-- **Carrusel 3D** con las fotos de las canchas en grande, el precio, cuántos
+- **Encabezado con foto:** franja superior con la foto de la cancha activa
+  difuminada hacia el fondo oscuro y botón para volver al inicio.
+- **Selector de modo con íconos:** control segmentado para alternar entre
+  **Cancha**, **Torneo** y **Cumpleaños** con íconos representativos.
+- **Pestañas por deporte:** con el color de acento de cada deporte en la pestaña
+  activa, navegación por teclado mediante flechas y el filtro *Solo con horarios
+  libres ese día*.
+- **Carrusel 3D:** con las fotos de las canchas en grande, el precio, cuántos
   horarios libres tiene cada una el día elegido, las características y la
   descripción sobre la tarjeta en los tres deportes.
-- **Visor en grande** de la foto, con las características, la descripción y
+- **Visor en grande:** de la foto, con las características, la descripción y
   su propio botón para elegir horario (o agregar la cancha al evento).
+- **Comprobante con forma de tiquete:** panel lateral que calcula el
+  desglose en vivo, con perforación punteada y semicírculos decorativos.
 - **URL compartible:** la página tiene su dirección (`/reservar/padel`, y
   `/reservar/padel?modo=torneo` en modo torneo), se puede abrir en otra pestaña
   y el botón "atrás" vuelve al inicio donde estabas.
 
-![Vista de canchas de pádel con el carrusel 3D y el voucher](docs/capturas/vista-canchas.webp)
+![Página de reserva en tema oscuro con encabezado de pádel, selector de modo, carrusel 3D y comprobante con forma de tiquete](docs/capturas/vista-canchas.webp)
 
 ### Reserva de una cancha
 
 Se elige el día (hoy y los 6 siguientes, cada uno con su número de horarios
-libres) y de **1 a 3 horas seguidas**. Desde 2 horas cada hora cuesta
-$5.000 menos y se regala un pack de agua. A la derecha, el **voucher** muestra
-el total en vivo y, mientras falte algo, el motivo por el que todavía no se
-puede confirmar.
+libres) y de **1 a 3 horas seguidas**. Las franjas horarias se organizan en
+tres grupos: **Mañana, Tarde y Noche**, acompañadas por una **leyenda** que
+identifica los estados de cada botón (**Libre, Elegida y Reservada**). Desde 2
+horas cada hora cuesta $5.000 menos y se regala un pack de agua. A la derecha,
+el **comprobante con forma de tiquete** muestra el total en vivo y, mientras
+falte algo, el motivo por el que todavía no se puede confirmar.
 
-![Formulario con dos horas elegidas y el voucher con el descuento](docs/capturas/reserva-voucher.webp)
+![Formulario de reserva con horario agrupado en Mañana, Tarde y Noche, leyenda de estados y comprobante con forma de tiquete](docs/capturas/reserva-voucher.webp)
 
-Al confirmar se genera un **código de reserva** (`SPF-XXXXXX`, con botón para
-copiarlo en un clic) y un **QR** con los datos de la reserva (tipo, fecha,
-horario, cancha, nombre y total), que se puede descargar para mostrarlo al
-llegar, además del resumen de las condiciones de abono y cancelación y acceso
-directo a **Mis reservas**.
+Al confirmar se muestra la pantalla de confirmación en **tema oscuro**, donde
+se genera un **código de reserva** (`SPF-XXXXXX`, con botón para copiarlo en
+un clic) y un **código QR sobre fondo blanco** para garantizar su lectura
+óptica. El QR contiene los datos de la reserva (tipo, fecha, horario, cancha,
+nombre y total) y se puede descargar para mostrarlo al llegar, junto al resumen
+de las condiciones de abono y cancelación y acceso directo a **Mis reservas**.
 
-![Reserva confirmada con el código y el QR](docs/capturas/confirmacion-qr.webp)
+![Pantalla de confirmación en tema oscuro con código de reserva SPF y código QR sobre fondo blanco](docs/capturas/confirmacion-qr.webp)
 
 ### Mis reservas
 
@@ -121,6 +132,9 @@ La misma página tiene los modos **Cancha · Torneo · Cumpleaños**, adaptados 
 cada tipo de reserva:
 
 - **Torneos por fases (eliminación directa):**
+  - un **indicador de pasos** superior guía el avance del torneo por cinco
+    etapas (**Canchas, Formato, Fechas por fase, Llaves, Tus datos**),
+    resaltando el paso actual y marcando con un visto bueno los completados;
   - se eligen de **1 a 3 canchas de un mismo deporte**;
   - se configura el formato de **4, 8 o 16 equipos** (de 2 a 4 fases: octavos,
     cuartos, semifinal y final), la duración de cada partido (**15, 20 o 30
@@ -131,19 +145,23 @@ cada tipo de reserva:
     ventana de 7 días (en fechas crecientes o el mismo día después de cerrar la
     fase previa), con alertas si el tiempo elegido no alcanza y acción rápida
     para bajar a partidos de 15 min;
-  - incluye un **bracket interactivo** en vivo que también se conserva en el
-    comprobante al confirmar.
+  - incluye **llaves interactivas (bracket)** a ancho completo con los partidos
+    numerados como **"Partido N"** en orden de juego y la indicación de ganador
+    en rondas posteriores. En **escritorio** son **simétricas con la final al
+    centro y el trofeo**, mientras que en **celular** se despliegan **por rondas
+    con scroll horizontal**. Las llaves también se conservan en el comprobante
+    al confirmar.
 - **Cumpleaños:**
   - permite combinar **varias canchas**, incluso de **distintos deportes**;
   - se elige un **rango de horas** consecutivas (inicio y fin) y la cantidad de
-    **invitados** (hasta 100), que se muestra en el voucher y en el comprobante.
+    **invitados** (hasta 100), que se muestra en el comprobante y en la confirmación.
 - En ambos modos el bloqueo es **todo o nada** (si una sola celda cancha × hora
   está ocupada, no se reserva nada) y el precio suma cada cancha y jornada con
   las mismas reglas de descuento.
 
 | Programación por fases del torneo | Bracket interactivo del torneo |
 |:---:|:---:|
-| <img src="docs/capturas/modo-torneo.webp" alt="Modo torneo con programación por fases y voucher" width="440"> | <img src="docs/capturas/torneo-bracket.webp" alt="Bracket de 8 equipos con fases y fechas programadas" width="440"> |
+| <img src="docs/capturas/modo-torneo.webp" alt="Programación por fases del torneo en tema oscuro con selector de día, horario por franjas y comprobante con forma de tiquete" width="440"> | <img src="docs/capturas/torneo-bracket.webp" alt="Llaves simétricas del torneo a ancho completo con la final al centro, trofeo y partidos numerados en orden de juego" width="440"> |
 
 La sección **Eventos y torneos** de la página muestra cifras reales del local
 (deportes, canchas, días y horario, con un conteo animado) y una galería por
@@ -353,8 +371,8 @@ src/
 │   ├── layout/          Navbar, Footer, PaginaInicio y MisReservas (consulta por código o teléfono, QR y cancelación)
 │   ├── hero/            DeporteHero: heros por deporte con video y pinning
 │   ├── canchas/         VistaCanchas: la página de reserva (/reservar/<deporte>)
-│   ├── reservas/        useReserva, formulario, voucher, selector de modo, confirmación con QR
-│   │   └── torneo/      Bracket interactivo, CalendarioTorneo por fases y AlertaTiempo
+│   ├── reservas/        useReserva, formulario, comprobante (voucher), selector de modo, confirmación con QR
+│   │   └── torneo/      Bracket, SeccionLlaves, IndicadorPasos, CalendarioTorneo y AlertaTiempo
 │   ├── eventos/         EventoCTA: sección de eventos y torneos
 │   ├── ubicacion/       Ubicacion: dirección, teléfono, horario y mapa
 │   ├── shared/          SelectorDia: tira de 7 días con horarios libres
@@ -435,7 +453,7 @@ probarlo en local:
 ## Pruebas
 
 ```bash
-npm test                          # 195 tests en 16 archivos (Vitest)
+npm test                          # 197 tests en 16 archivos (Vitest)
 npm run lint                      # ESLint sobre src, api y scripts
 npm run build                     # build de producción en /dist
 ```
@@ -448,8 +466,10 @@ Las pruebas unitarias y de componentes cubren la lógica pura de `src/lib/`
 validación de nombre, teléfono y reservas propuestas, fechas, código y texto
 del QR, datos del negocio, rutas del sitio, plazo y búsqueda de cancelaciones,
 contexto e historial del chat y respaldo de modelo) además de las pruebas de
-interfaz para torneos, cumpleaños, consulta en **Mis reservas** y montaje
-general en `src/App.test.jsx`.
+interfaz para torneos y cumpleaños (`src/components/reservas/Torneo.test.jsx`,
+que cubren las llaves simétricas, la denominación "Ganador del partido N", la
+final con el trofeo y el indicador de pasos), consulta en **Mis reservas** y
+montaje general en `src/App.test.jsx`.
 
 El asistente tiene además un script con 12 casos contra la función real:
 disponibilidad, "resérvalo" con una y con varias franjas, datos válidos e
@@ -484,17 +504,25 @@ El sitio está en Vercel y **cada push a `main` despliega a producción**.
 
 ## Accesibilidad y rendimiento
 
-- Las animaciones de entrada, el zoom lento de las fotos y el panel del
-  asistente respetan `prefers-reduced-motion`.
+- **Contraste verificado:** contraste mínimo de 4,5:1 (WCAG AA) medido en todo
+  texto de la página de reserva contra sus superficies oscuras con los tres
+  colores de acento (`futbol` `#5bd67d`, `padel` `#3fa9f5` y `voley-playa`
+  `#f6a94b`), incluyendo las horas reservadas deshabilitadas (4,58:1), textos
+  secundarios y comprobante.
+- **Navegación por teclado y foco visible:** contorno `:focus-visible` de alto
+  contraste en todos los controles interactivos, supresión del anillo
+  programático en el `<h1>` al abrir la página de reserva y soporte de flechas
+  (`ArrowLeft`, `ArrowRight`, `Home`, `End` con `tabIndex` móvil) en las
+  pestañas de deporte, con áreas táctiles mínimas de 44 px.
+- **Movimiento reducido:** respeto estricto de `prefers-reduced-motion`:
+  desactiva las animaciones GSAP de entrada, las transiciones de la
+  confirmación, el zoom lento de las fotos del carrusel y el panel del
+  asistente, mostrando los estados de inmediato sin transiciones innecesarias.
 - Todo indicador visual de disponibilidad va con texto ("10 de 13 horarios
   libres", "ocupado", "completo").
 - El color de acento de cada deporte se aplica con un color de texto que
   cumple el contraste WCAG (`--accent-contrast` y `--accent-text` en
   `estiloAcento`, `src/lib/canchas.js`).
-- Navegación por teclado con contorno `:focus-visible` de alto contraste,
-  soporte de flechas (`ArrowLeft`, `ArrowRight`, `Home`, `End` con `tabIndex`
-  roving) en las pestañas de deporte y áreas táctiles mínimas de 44 px en
-  controles interactivos.
 - El asistente, el visor de fotos y el modal de **Mis reservas** se cierran con
   `Escape` y devuelven el foco al botón que los abrió. Los mensajes y avisos se
   anuncian con `aria-live`.

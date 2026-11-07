@@ -8,9 +8,10 @@ import negocio from '../../data/negocio.json';
 import './ConfirmacionReserva.css';
 
 /**
- * ConfirmacionReserva — pantalla final de la reserva (en VistaCanchas): código de reserva, QR
- * (con los datos en texto, ver lib/codigoReserva) para mostrar al llegar,
- * resumen, copia rápida del código, condiciones del negocio y opción de descargar el QR como imagen.
+ * ConfirmacionReserva — pantalla final de la reserva (en VistaCanchas): código de reserva grande, QR
+ * (con los datos en texto, ver lib/codigoReserva) sobre fondo blanco con margen blanco alrededor
+ * para mostrar al llegar, resumen en oscuro, copia rápida del código, condiciones del negocio
+ * y opciones de descargar el QR como imagen y finalizar con Listo.
  *
  * Props: codigo, textoQr, resumen ({ tipoEtiqueta, fechaTexto, horario,
  * canchas, total, packsAgua, torneo, invitados }), onListo.
@@ -95,8 +96,8 @@ function ConfirmacionReserva({ codigo, textoQr, resumen = {}, onListo }) {
   return (
     <div className="confirmacion-reserva">
       <CheckCircle2
-        size={44}
-        color="#0f9d58"
+        size={48}
+        color="currentColor"
         className="confirmacion-reserva__icono"
         aria-hidden="true"
       />
@@ -111,20 +112,20 @@ function ConfirmacionReserva({ codigo, textoQr, resumen = {}, onListo }) {
           <p className="confirmacion-reserva__codigo">{codigo}</p>
           <button
             type="button"
-            className="button hollow small confirmacion-reserva__boton-copiar"
+            className={`button hollow small confirmacion-reserva__boton-copiar${copiadoEstado === 'copiado' ? ' confirmacion-reserva__boton-copiar--copiado' : ''}`}
             onClick={copiarCodigo}
             aria-label="Copiar código"
           >
             {copiadoEstado === 'copiado' ? (
               <>
-                <Check size={14} aria-hidden="true" />
+                <Check size={16} aria-hidden="true" />
                 <span aria-live="polite">¡Copiado!</span>
               </>
             ) : copiadoEstado === 'error' ? (
               <span aria-live="polite">No se pudo copiar</span>
             ) : (
               <>
-                <Copy size={14} aria-hidden="true" />
+                <Copy size={16} aria-hidden="true" />
                 <span>Copiar código</span>
               </>
             )}
@@ -206,7 +207,8 @@ function ConfirmacionReserva({ codigo, textoQr, resumen = {}, onListo }) {
         )}
 
         <p className="confirmacion-reserva__total">
-          Total: <strong>{formatoPrecio.format(total)}</strong>
+          <span>Total</span>
+          <strong>{formatoPrecio.format(total)}</strong>
         </p>
 
         {packsAgua > 0 && (

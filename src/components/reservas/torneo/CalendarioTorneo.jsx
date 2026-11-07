@@ -5,6 +5,23 @@ import AlertaTiempo from './AlertaTiempo';
 import { tituloCancha } from '../../../lib/canchas';
 import { finDeFranja } from '../../../lib/precios';
 import './Bracket.css';
+import './CalendarioTorneo.css';
+
+const FRANJAS_CONFIG = [
+  { id: 'manana', nombre: 'Mañana', min: 0, max: 11 },
+  { id: 'tarde', nombre: 'Tarde', min: 12, max: 17 },
+  { id: 'noche', nombre: 'Noche', min: 18, max: 23 },
+];
+
+function agruparPorFranjas(horas) {
+  return FRANJAS_CONFIG.map((f) => ({
+    ...f,
+    horas: (horas || []).filter((h) => {
+      const num = parseInt(h, 10);
+      return num >= f.min && num <= f.max;
+    }),
+  })).filter((f) => f.horas.length > 0);
+}
 
 /**
  * CalendarioTorneo — Programación por fases del torneo multi-día.
@@ -32,6 +49,7 @@ export function CalendarioTorneo({
   esDiaBloqueadoFase,
 }) {
   const rootRef = useRef(null);
+  const franjas = agruparPorFranjas(horasBase);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -150,39 +168,81 @@ export function CalendarioTorneo({
                   Para elegir 2 o más horas seguidas, toca la hora de inicio y luego la hora final.
                 </p>
               )}
-              <div className="formulario-reserva__horas">
-                {horasBase.map((hora) => {
-                  const libre = esLibreFase ? esLibreFase(fase.ronda, hora) : false;
-                  const sel = horasFase.includes(hora);
+              <div className="formulario-reserva__franjas">
+                {franjas.map((franja) => (
+                  <div key={franja.id} className="formulario-reserva__franja">
+                    <span className="formulario-reserva__franja-etiqueta">
+                      {franja.nombre}
+                    </span>
+                    <div className="formulario-reserva__horas formulario-reserva__franja-horas">
+                      {franja.horas.map((hora) => {
+                        const libre = esLibreFase ? esLibreFase(fase.ronda, hora) : false;
+                        let bloqueadaPorPrevia = false;
+                        for (let rPrev = 1; rPrev < fase.ronda; rPrev += 1) {
+                          const jPrev = jornadas[rPrev];
+                          if (
+                            jPrev &&
+                            jPrev.fecha === jornada.fecha &&
+                            Array.isArray(jPrev.horas) &&
+                            jPrev.horas.length > 0
+                          ) {
+                            const finPrev = finDeFranja(jPrev.horas[jPrev.horas.length - 1]);
+                            if (hora < finPrev) {
+                              bloqueadaPorPrevia = true;
+                              break;
+                            }
+                          }
+                        }
 
-                  return (
-                    <button
-                      key={hora}
-                      type="button"
-                      className={
-                        'button small formulario-reserva__hora' +
-                        (libre ? '' : ' formulario-reserva__hora--ocupado') +
-                        (sel ? ' formulario-reserva__hora--sel' : ' hollow')
-                      }
-                      disabled={!libre}
-                      aria-pressed={sel}
-                      aria-label={`${fase.nombreRonda} ${hora}`}
-                      data-hora={hora}
-                      onClick={() =>
-                        onElegirHoraFase && onElegirHoraFase(fase.ronda, hora)
-                      }
-                    >
-                      {hora}
-                      {!libre && canchaIds.length > 0 && (
-                        <span className="formulario-reserva__hora-tag">
-                          {' '}
-                          · ocupado
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
+                        const ocupada =
+                          !libre &&
+                          !bloqueadaPorPrevia &&
+                          Array.isArray(canchaIds) &&
+                          canchaIds.length > 0;
+                        const sel = horasFase.includes(hora);
+                        const ariaLabel = ocupada
+                          ? `${fase.nombreRonda} ${hora}, reservada`
+                          : `${fase.nombreRonda} ${hora}`;
+
+                        return (
+                          <button
+                            key={hora}
+                            type="button"
+                            className={
+                              'button small formulario-reserva__hora' +
+                              (ocupada ? ' formulario-reserva__hora--ocupado' : '') +
+                              (sel ? ' formulario-reserva__hora--sel' : ' hollow')
+                            }
+                            disabled={!libre}
+                            aria-pressed={sel}
+                            aria-label={ariaLabel}
+                            data-hora={hora}
+                            onClick={() =>
+                              onElegirHoraFase && onElegirHoraFase(fase.ronda, hora)
+                            }
+                          >
+                            {hora}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
+              <p className="formulario-reserva__leyenda" aria-hidden="true">
+                <span className="formulario-reserva__leyenda-item">
+                  <span className="formulario-reserva__muestra formulario-reserva__muestra--libre"></span>
+                  Libre
+                </span>
+                <span className="formulario-reserva__leyenda-item">
+                  <span className="formulario-reserva__muestra formulario-reserva__muestra--elegida"></span>
+                  Elegida
+                </span>
+                <span className="formulario-reserva__leyenda-item">
+                  <span className="formulario-reserva__muestra formulario-reserva__muestra--reservada"></span>
+                  Reservada
+                </span>
+              </p>
             </div>
 
             {horasFase.length > 0 && (

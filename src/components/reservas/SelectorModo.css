@@ -1,27 +1,43 @@
-/* Sin fondo propio: las pills quedan directo sobre el degradado de la
-   ventana, igual que las pestañas de deporte. El espaciado lo da quien lo
-   contiene (.vista-canchas__modo). */
+/* Control segmentado para el selector de modo de reserva (Cancha, Torneo, Cumpleaños) */
 .selector-modo {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 4px;
+  align-self: flex-start;
+  padding: 4px;
+  background: rgba(20, 20, 20, 0.85);
+  border: 1px solid #333333;
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
 }
 
 .selector-modo__boton {
-  padding: 0.45rem 1.15rem;
-  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  height: 44px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #e6e6e6;
+  font-family: inherit;
+  font-size: 0.9375rem; /* 15px */
   font-weight: 600;
-  border: 1px solid #d5dee6;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #475569;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.selector-modo__icono {
+  flex-shrink: 0;
 }
 
 .selector-modo__boton:hover {
-  background: #f8fafc;
-  color: #1e293b;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
 .selector-modo__boton:focus:not(:focus-visible) {
@@ -29,16 +45,15 @@
 }
 
 .selector-modo__boton:focus-visible {
-  outline: 2px solid var(--accent-text, var(--accent, #1779ba));
+  outline: 2px solid #f2f2f2;
   outline-offset: 2px;
 }
 
 .selector-modo__boton--activo,
 .selector-modo__boton--activo:hover {
-  background: var(--accent, #1779ba);
-  border-color: var(--accent, #1779ba);
-  color: var(--accent-contrast, #ffffff);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent, #1779ba) 30%, transparent);
+  background: #f2f2f2;
+  color: #0d0d0d;
+  font-weight: 700;
 }
 
 @media (prefers-reduced-motion: reduce) {

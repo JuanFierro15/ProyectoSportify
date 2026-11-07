@@ -21,6 +21,22 @@ import CalendarioTorneo from './torneo/CalendarioTorneo';
 import { MAX_INVITADOS } from './useReserva';
 import './FormularioReserva.css';
 
+const FRANJAS_CONFIG = [
+  { id: 'manana', nombre: 'Mañana', min: 0, max: 11 },
+  { id: 'tarde', nombre: 'Tarde', min: 12, max: 17 },
+  { id: 'noche', nombre: 'Noche', min: 18, max: 23 },
+];
+
+function agruparPorFranjas(horas) {
+  return FRANJAS_CONFIG.map((f) => ({
+    ...f,
+    horas: (horas || []).filter((h) => {
+      const num = parseInt(h, 10);
+      return num >= f.min && num <= f.max;
+    }),
+  })).filter((f) => f.horas.length > 0);
+}
+
 /**
  * Formulario de reserva de canchas individuales y eventos.
  *
@@ -37,6 +53,8 @@ function FormularioReserva({ reserva, dias }) {
   const torneosGuardados = reservas.filter(
     (r) => r.tipo === 'evento' && r.subtipo === 'torneo' && r.torneo
   );
+
+  const franjas = agruparPorFranjas(reserva.horasBase);
 
   return (
     <div className="formulario-reserva">
@@ -59,11 +77,17 @@ function FormularioReserva({ reserva, dias }) {
           </fieldset>
 
           <fieldset id="reserva-horario" className="formulario-reserva__campo">
-            <legend>
-              Horario
-              {reserva.horasSel.length > 0 && (
+            <legend className="formulario-reserva__legend-horario">
+              <span>Horario</span>
+              {reserva.horasSel.length > 0 ? (
                 <span className="formulario-reserva__rango" aria-live="polite">
                   {` · ${reserva.horasSel[0]} a ${finDeFranja(reserva.horasSel[reserva.horasSel.length - 1])} (${reserva.horasSel.length} h)`}
+                </span>
+              ) : (
+                <span className="formulario-reserva__subtexto-horario">
+                  {reserva.esEvento
+                    ? 'Toca inicio y fin'
+                    : `Una hora o hasta ${MAX_HORAS_SEGUIDAS} seguidas`}
                 </span>
               )}
             </legend>
@@ -88,183 +112,254 @@ function FormularioReserva({ reserva, dias }) {
                 Elige al menos una cancha para ver los horarios libres.
               </p>
             )}
-            <div className="formulario-reserva__horas">
-              {reserva.horasBase.map((hora) => {
-                const libre = reserva.esLibre(hora);
-                const sel = reserva.horasSel.includes(hora);
-                return (
-                  <button
-                    key={hora}
-                    type="button"
-                    className={
-                      'button small formulario-reserva__hora' +
-                      (libre ? '' : ' formulario-reserva__hora--ocupado') +
-                      (sel ? ' formulario-reserva__hora--sel' : ' hollow')
-                    }
-                    disabled={!libre}
-                    aria-pressed={sel}
-                    onClick={() => reserva.elegirHora(hora)}
-                  >
-                    {hora}
-                    {!libre && (!reserva.esEvento || reserva.canchaIds.length > 0) && (
-                      <span className="formulario-reserva__hora-tag">
-                        {' '}
-                        · {reserva.esEvento ? 'ocupado' : 'reservado'}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+            <div className="formulario-reserva__franjas">
+              {franjas.map((franja) => (
+                <div key={franja.id} className="formulario-reserva__franja">
+                  <span className="formulario-reserva__franja-etiqueta">
+                    {franja.nombre}
+                  </span>
+                  <div className="formulario-reserva__horas formulario-reserva__franja-horas">
+                    {franja.horas.map((hora) => {
+                      const libre = reserva.esLibre(hora);
+                      const ocupada =
+                        !libre && (!reserva.esEvento || (reserva.canchaIds && reserva.canchaIds.length > 0));
+                      const sel = reserva.horasSel.includes(hora);
+                      return (
+                        <button
+                          key={hora}
+                          type="button"
+                          className={
+                            'button small formulario-reserva__hora' +
+                            (ocupada ? ' formulario-reserva__hora--ocupado' : '') +
+                            (sel ? ' formulario-reserva__hora--sel' : ' hollow')
+                          }
+                          disabled={!libre}
+                          aria-pressed={sel}
+                          aria-label={ocupada ? `${hora}, reservada` : undefined}
+                          data-hora={hora}
+                          onClick={() => reserva.elegirHora(hora)}
+                        >
+                          {hora}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
+            <p className="formulario-reserva__leyenda" aria-hidden="true">
+              <span className="formulario-reserva__leyenda-item">
+                <span className="formulario-reserva__muestra formulario-reserva__muestra--libre"></span>
+                Libre
+              </span>
+              <span className="formulario-reserva__leyenda-item">
+                <span className="formulario-reserva__muestra formulario-reserva__muestra--elegida"></span>
+                Elegida
+              </span>
+              <span className="formulario-reserva__leyenda-item">
+                <span className="formulario-reserva__muestra formulario-reserva__muestra--reservada"></span>
+                Reservada
+              </span>
+            </p>
           </fieldset>
         </>
       )}
 
       {reserva.modo === 'torneo' && (
-        <fieldset className="formulario-reserva__campo formulario-reserva__torneo">
-          <legend>Organización del torneo</legend>
+        <div className="formulario-reserva__torneo">
+          <fieldset className="formulario-reserva__campo">
+            <legend>Formato del torneo</legend>
 
-          {reserva.torneoPlan?.errorCanchas && reserva.canchaIds.length > 0 && (
-            <div className="callout alert" role="alert">
-              {reserva.torneoPlan.errorCanchas}
-            </div>
-          )}
+            {reserva.torneoPlan?.errorCanchas && reserva.canchaIds.length > 0 && (
+              <div className="callout alert" role="alert">
+                {reserva.torneoPlan.errorCanchas}
+              </div>
+            )}
 
-          <div className="formulario-reserva__seccion-torneo">
-            <span className="formulario-reserva__subtitulo">
-              Cantidad de equipos (Eliminación directa)
-            </span>
-            <div
-              className="formulario-reserva__pills"
-              role="group"
-              aria-label="Cantidad de equipos"
-            >
-              {OPCIONES_EQUIPOS.map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  className={
-                    'button small formulario-reserva__pill' +
-                    (Number(reserva.equipos) === n
-                      ? ' formulario-reserva__pill--activo'
-                      : ' hollow')
-                  }
-                  aria-pressed={Number(reserva.equipos) === n}
-                  onClick={() => reserva.cambiarEquiposTorneo(n)}
-                >
-                  {n} equipos ({n - 1} partidos)
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="formulario-reserva__seccion-torneo">
-            <span className="formulario-reserva__subtitulo">
-              Duración por partido
-            </span>
-            <div
-              className="formulario-reserva__pills"
-              role="group"
-              aria-label="Duración por partido"
-            >
-              {OPCIONES_DURACION.map((min) => (
-                <button
-                  key={min}
-                  type="button"
-                  className={
-                    'button small formulario-reserva__pill' +
-                    (Number(reserva.duracionPartido) === min
-                      ? ' formulario-reserva__pill--activo'
-                      : ' hollow')
-                  }
-                  aria-pressed={Number(reserva.duracionPartido) === min}
-                  onClick={() => reserva.setDuracionPartido(min)}
-                >
-                  {min} min
-                </button>
-              ))}
-            </div>
-            <p className="formulario-reserva__nota-torneo">
-              {`Cada turno suma ${reserva.duracionPartido} min de partido + ${reserva.torneoPlan?.desempate?.minutos ?? 5} min de desempate + ${TRANSICION_MIN} min de transición = ${reserva.torneoPlan?.minutosTurno ?? 30} min por turno.`}
-            </p>
-          </div>
-
-          {reserva.torneoPlan?.desempate && (
-            <div className="formulario-reserva__desempate">
-              <ShieldCheck size={16} aria-hidden="true" />
-              <span>
-                <strong>
-                  Desempate ({reserva.torneoPlan.desempate.etiqueta || reserva.torneoPlan.desempate.metodo}):
-                </strong>{' '}
-                {reserva.torneoPlan.desempate.descripcion}
+            <div className="formulario-reserva__seccion-torneo">
+              <span className="formulario-reserva__subtitulo">
+                Cantidad de equipos (Eliminación directa)
               </span>
-            </div>
-          )}
-
-          <div className="formulario-reserva__seccion-torneo">
-            <span className="formulario-reserva__subtitulo">
-              Emparejamiento de 1.ª ronda
-            </span>
-            <div className="formulario-reserva__emparejamiento-controles">
               <div
                 className="formulario-reserva__pills"
                 role="group"
-                aria-label="Tipo de emparejamiento"
+                aria-label="Cantidad de equipos"
               >
-                <button
-                  type="button"
-                  className={
-                    'button small formulario-reserva__pill' +
-                    (reserva.emparejamiento === 'aleatorio'
-                      ? ' formulario-reserva__pill--activo'
-                      : ' hollow')
-                  }
-                  aria-pressed={reserva.emparejamiento === 'aleatorio'}
-                  onClick={() => reserva.cambiarEmparejamiento('aleatorio')}
+                {OPCIONES_EQUIPOS.map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    className={
+                      'button small formulario-reserva__pill' +
+                      (Number(reserva.equipos) === n
+                        ? ' formulario-reserva__pill--activo'
+                        : ' hollow')
+                    }
+                    aria-pressed={Number(reserva.equipos) === n}
+                    onClick={() => reserva.cambiarEquiposTorneo(n)}
+                  >
+                    {n} equipos ({n - 1} partidos)
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="formulario-reserva__seccion-torneo">
+              <span className="formulario-reserva__subtitulo">
+                Duración por partido
+              </span>
+              <div
+                className="formulario-reserva__pills"
+                role="group"
+                aria-label="Duración por partido"
+              >
+                {OPCIONES_DURACION.map((min) => (
+                  <button
+                    key={min}
+                    type="button"
+                    className={
+                      'button small formulario-reserva__pill' +
+                      (Number(reserva.duracionPartido) === min
+                        ? ' formulario-reserva__pill--activo'
+                        : ' hollow')
+                    }
+                    aria-pressed={Number(reserva.duracionPartido) === min}
+                    onClick={() => reserva.setDuracionPartido(min)}
+                  >
+                    {min} min
+                  </button>
+                ))}
+              </div>
+              <p className="formulario-reserva__nota-torneo">
+                {`Cada turno suma ${reserva.duracionPartido} min de partido + ${reserva.torneoPlan?.desempate?.minutos ?? 5} min de desempate + ${TRANSICION_MIN} min de transición = ${reserva.torneoPlan?.minutosTurno ?? 30} min por turno.`}
+              </p>
+            </div>
+
+            {reserva.torneoPlan?.desempate && (
+              <div className="formulario-reserva__desempate">
+                <ShieldCheck size={16} aria-hidden="true" />
+                <span>
+                  <strong>
+                    Desempate ({reserva.torneoPlan.desempate.etiqueta || reserva.torneoPlan.desempate.metodo}):
+                  </strong>{' '}
+                  {reserva.torneoPlan.desempate.descripcion}
+                </span>
+              </div>
+            )}
+
+            <div className="formulario-reserva__seccion-torneo">
+              <span className="formulario-reserva__subtitulo">
+                Emparejamiento de 1.ª ronda
+              </span>
+              <div className="formulario-reserva__emparejamiento-controles">
+                <div
+                  className="formulario-reserva__pills"
+                  role="group"
+                  aria-label="Tipo de emparejamiento"
                 >
-                  Aleatorio
-                </button>
-                <button
-                  type="button"
-                  className={
-                    'button small formulario-reserva__pill' +
-                    (reserva.emparejamiento === 'manual'
-                      ? ' formulario-reserva__pill--activo'
-                      : ' hollow')
-                  }
-                  aria-pressed={reserva.emparejamiento === 'manual'}
-                  onClick={() => reserva.cambiarEmparejamiento('manual')}
-                >
-                  Manual
-                </button>
+                  <button
+                    type="button"
+                    className={
+                      'button small formulario-reserva__pill' +
+                      (reserva.emparejamiento === 'aleatorio'
+                        ? ' formulario-reserva__pill--activo'
+                        : ' hollow')
+                    }
+                    aria-pressed={reserva.emparejamiento === 'aleatorio'}
+                    onClick={() => reserva.cambiarEmparejamiento('aleatorio')}
+                  >
+                    Aleatorio
+                  </button>
+                  <button
+                    type="button"
+                    className={
+                      'button small formulario-reserva__pill' +
+                      (reserva.emparejamiento === 'manual'
+                        ? ' formulario-reserva__pill--activo'
+                        : ' hollow')
+                    }
+                    aria-pressed={reserva.emparejamiento === 'manual'}
+                    onClick={() => reserva.cambiarEmparejamiento('manual')}
+                  >
+                    Manual
+                  </button>
+                </div>
+
+                {reserva.emparejamiento === 'aleatorio' && (
+                  <button
+                    type="button"
+                    className="button small hollow formulario-reserva__sortear"
+                    onClick={reserva.resortearTorneo}
+                  >
+                    <Shuffle size={14} aria-hidden="true" />
+                    Volver a sortear llaves
+                  </button>
+                )}
               </div>
 
-              {reserva.emparejamiento === 'aleatorio' && (
-                <button
-                  type="button"
-                  className="button small hollow formulario-reserva__sortear"
-                  onClick={reserva.resortearTorneo}
-                >
-                  <Shuffle size={14} aria-hidden="true" />
-                  Volver a sortear llaves
-                </button>
+              {reserva.emparejamiento === 'manual' && (
+                <AsignacionManual
+                  equipos={Number(reserva.equipos)}
+                  orden={reserva.ordenEquipos}
+                  error={reserva.torneoPlan?.errorCruces || ''}
+                  onCambiarPosicion={reserva.cambiarCruceManual}
+                />
               )}
             </div>
 
-            {reserva.emparejamiento === 'manual' && (
-              <AsignacionManual
-                equipos={Number(reserva.equipos)}
-                orden={reserva.ordenEquipos}
-                error={reserva.torneoPlan?.errorCruces || ''}
-                onCambiarPosicion={reserva.cambiarCruceManual}
-              />
-            )}
-          </div>
+            <div className="formulario-reserva__seccion-torneo">
+              <span className="formulario-reserva__subtitulo">
+                Capacidad y tiempo estimado
+              </span>
+              <div className="formulario-reserva__metricas">
+                <span className="formulario-reserva__metrica">
+                  {`Canchas seleccionadas: ${reserva.canchaIds.length || 1} (hasta ${(reserva.canchaIds.length || 1) * 2} equipos simultáneos)`}
+                </span>
+                <span className="formulario-reserva__metrica">
+                  {`Turnos requeridos: ${reserva.torneoPlan?.turnosTotales ?? 0}`}
+                </span>
+                <span className="formulario-reserva__metrica">
+                  {`Tiempo estimado (peor caso): ${reserva.torneoPlan?.minutosRequeridos ?? 0} min`}
+                </span>
+              </div>
 
-          <div className="formulario-reserva__seccion-torneo">
-            <span className="formulario-reserva__subtitulo">
-              Programación por fases (días y horarios)
-            </span>
+              {reserva.torneoPlan?.fases && reserva.torneoPlan.fases.length > 0 && (
+                <div className="formulario-reserva__fases-detalle">
+                  <span className="formulario-reserva__fases-titulo">
+                    Canchas efectivas por fase:
+                  </span>
+                  <div className="formulario-reserva__fases-pills">
+                    {reserva.torneoPlan.fases.map((fase) => {
+                      const nombreCorto = fase.nombreRonda.replace(/ de final$/i, '');
+                      return (
+                        <span key={fase.ronda} className="formulario-reserva__metrica">
+                          {`${nombreCorto}: ${fase.canchasEfectivas} ${fase.canchasEfectivas === 1 ? 'cancha' : 'canchas'}`}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {reserva.horasSel.length > 0 &&
+                reserva.torneoPlan?.validacionFranja &&
+                !reserva.torneoPlan.validacionFranja.alcanza && (
+                  <AlertaTiempo
+                    equipos={Number(reserva.equipos)}
+                    canchasCount={Math.max(1, reserva.canchaIds.length)}
+                    minutosRequeridos={reserva.torneoPlan.minutosRequeridos}
+                    disponibles={reserva.torneoPlan.validacionFranja.disponibles}
+                    deficit={reserva.torneoPlan.validacionFranja.deficit}
+                    sugerencias={reserva.torneoPlan.sugerencias}
+                    duracionPartido={reserva.duracionPartido}
+                    onCambiarDuracion={reserva.setDuracionPartido}
+                  />
+                )}
+            </div>
+          </fieldset>
+
+          <fieldset className="formulario-reserva__campo formulario-reserva__campo--fases">
+            <legend>Programación por fases (días y horarios)</legend>
             <CalendarioTorneo
               fases={reserva.torneoPlan?.fases || []}
               jornadas={reserva.torneoPlan?.jornadas || {}}
@@ -282,67 +377,7 @@ function FormularioReserva({ reserva, dias }) {
               contarLibresFase={reserva.contarLibresFase}
               esDiaBloqueadoFase={reserva.esDiaBloqueadoFase}
             />
-          </div>
-
-          <div className="formulario-reserva__seccion-torneo">
-            <span className="formulario-reserva__subtitulo">
-              Capacidad y tiempo estimado
-            </span>
-            <div className="formulario-reserva__metricas">
-              <span className="formulario-reserva__metrica">
-                {`Canchas seleccionadas: ${reserva.canchaIds.length || 1} (hasta ${(reserva.canchaIds.length || 1) * 2} equipos simultáneos)`}
-              </span>
-              <span className="formulario-reserva__metrica">
-                {`Turnos requeridos: ${reserva.torneoPlan?.turnosTotales ?? 0}`}
-              </span>
-              <span className="formulario-reserva__metrica">
-                {`Tiempo estimado (peor caso): ${reserva.torneoPlan?.minutosRequeridos ?? 0} min`}
-              </span>
-            </div>
-
-            {reserva.torneoPlan?.fases && reserva.torneoPlan.fases.length > 0 && (
-              <div className="formulario-reserva__fases-detalle">
-                <span className="formulario-reserva__fases-titulo">
-                  Canchas efectivas por fase:
-                </span>
-                <div className="formulario-reserva__fases-pills">
-                  {reserva.torneoPlan.fases.map((fase) => {
-                    const nombreCorto = fase.nombreRonda.replace(/ de final$/i, '');
-                    return (
-                      <span key={fase.ronda} className="formulario-reserva__metrica">
-                        {`${nombreCorto}: ${fase.canchasEfectivas} ${fase.canchasEfectivas === 1 ? 'cancha' : 'canchas'}`}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {reserva.horasSel.length > 0 &&
-              reserva.torneoPlan?.validacionFranja &&
-              !reserva.torneoPlan.validacionFranja.alcanza && (
-                <AlertaTiempo
-                  equipos={Number(reserva.equipos)}
-                  canchasCount={Math.max(1, reserva.canchaIds.length)}
-                  minutosRequeridos={reserva.torneoPlan.minutosRequeridos}
-                  disponibles={reserva.torneoPlan.validacionFranja.disponibles}
-                  deficit={reserva.torneoPlan.validacionFranja.deficit}
-                  sugerencias={reserva.torneoPlan.sugerencias}
-                  duracionPartido={reserva.duracionPartido}
-                  onCambiarDuracion={reserva.setDuracionPartido}
-                />
-              )}
-          </div>
-
-          <div className="formulario-reserva__seccion-torneo">
-            <span className="formulario-reserva__subtitulo">
-              Llaves y cronograma del torneo
-            </span>
-            <Bracket
-              partidos={reserva.torneoPlan?.partidos || []}
-              canchas={canchas}
-            />
-          </div>
+          </fieldset>
 
           {torneosGuardados.length > 0 && (
             <details className="formulario-reserva__torneos-guardados">
@@ -423,14 +458,14 @@ function FormularioReserva({ reserva, dias }) {
               </div>
             </details>
           )}
-        </fieldset>
+        </div>
       )}
 
-      {reserva.modo === 'cumpleanos' && (
-        <fieldset className="formulario-reserva__campo">
-          <legend>Datos del cumpleaños</legend>
-          <div className="grid-x grid-padding-x">
-            <div className="cell medium-6">
+      <fieldset className="formulario-reserva__campo formulario-reserva__contacto">
+        <legend>Tus datos</legend>
+        <div className="grid-x grid-padding-x">
+          {reserva.modo === 'cumpleanos' && (
+            <div className="cell medium-4">
               <label htmlFor="reserva-invitados">
                 Invitados
               </label>
@@ -446,72 +481,72 @@ function FormularioReserva({ reserva, dias }) {
                 onChange={(e) => reserva.setInvitados(e.target.value)}
               />
             </div>
+          )}
+          <div className={`cell ${reserva.modo === 'cumpleanos' ? 'medium-4' : 'medium-6'}`}>
+            <label htmlFor="reserva-nombre">
+              Nombre
+            </label>
+            <input
+              id="reserva-nombre"
+              name="nombre"
+              type="text"
+              className={
+                'formulario-reserva__input' +
+                (reserva.verErrNombre ? ' is-invalid-input' : '')
+              }
+              placeholder="Ej. Juan Pérez…"
+              value={reserva.nombre}
+              onChange={(e) => reserva.cambiarNombre(e.target.value)}
+              onBlur={() => reserva.marcarTocado('nombre')}
+              autoComplete="name"
+              aria-invalid={reserva.verErrNombre}
+              aria-describedby="reserva-nombre-error"
+            />
+            <span
+              id="reserva-nombre-error"
+              className={
+                'form-error' + (reserva.verErrNombre ? ' is-visible' : '')
+              }
+            >
+              {reserva.errNombre}
+            </span>
           </div>
-        </fieldset>
-      )}
-
-      <div className="grid-x grid-padding-x formulario-reserva__contacto">
-        <div className="cell medium-6">
-          <label htmlFor="reserva-nombre">
-            Nombre
-          </label>
-          <input
-            id="reserva-nombre"
-            name="nombre"
-            type="text"
-            className={
-              'formulario-reserva__input' +
-              (reserva.verErrNombre ? ' is-invalid-input' : '')
-            }
-            placeholder="Ej. Juan Pérez…"
-            value={reserva.nombre}
-            onChange={(e) => reserva.cambiarNombre(e.target.value)}
-            onBlur={() => reserva.marcarTocado('nombre')}
-            autoComplete="name"
-            aria-invalid={reserva.verErrNombre}
-            aria-describedby="reserva-nombre-error"
-          />
-          <span
-            id="reserva-nombre-error"
-            className={
-              'form-error' + (reserva.verErrNombre ? ' is-visible' : '')
-            }
-          >
-            {reserva.errNombre}
-          </span>
+          <div className={`cell ${reserva.modo === 'cumpleanos' ? 'medium-4' : 'medium-6'}`}>
+            <label htmlFor="reserva-telefono">
+              Teléfono (opcional)
+            </label>
+            <input
+              id="reserva-telefono"
+              name="telefono"
+              type="tel"
+              className={
+                'formulario-reserva__input' +
+                (reserva.verErrTelefono ? ' is-invalid-input' : '')
+              }
+              placeholder="Ej. 3001234567"
+              value={reserva.telefono}
+              onChange={(e) => reserva.cambiarTelefono(e.target.value)}
+              onBlur={() => reserva.marcarTocado('telefono')}
+              inputMode="numeric"
+              maxLength={10}
+              autoComplete="tel-national"
+              aria-invalid={reserva.verErrTelefono}
+              aria-describedby="reserva-telefono-error"
+            />
+            <span
+              id="reserva-telefono-error"
+              className={
+                'form-error' + (reserva.verErrTelefono ? ' is-visible' : '')
+              }
+            >
+              {reserva.errTelefono}
+            </span>
+          </div>
         </div>
-        <div className="cell medium-6">
-          <label htmlFor="reserva-telefono">
-            Teléfono (opcional)
-          </label>
-          <input
-            id="reserva-telefono"
-            name="telefono"
-            type="tel"
-            className={
-              'formulario-reserva__input' +
-              (reserva.verErrTelefono ? ' is-invalid-input' : '')
-            }
-            placeholder="Ej. 3001234567"
-            value={reserva.telefono}
-            onChange={(e) => reserva.cambiarTelefono(e.target.value)}
-            onBlur={() => reserva.marcarTocado('telefono')}
-            inputMode="numeric"
-            maxLength={10}
-            autoComplete="tel-national"
-            aria-invalid={reserva.verErrTelefono}
-            aria-describedby="reserva-telefono-error"
-          />
-          <span
-            id="reserva-telefono-error"
-            className={
-              'form-error' + (reserva.verErrTelefono ? ' is-visible' : '')
-            }
-          >
-            {reserva.errTelefono}
-          </span>
-        </div>
-      </div>
+        <p className="formulario-reserva__nota-contacto">
+          Con el teléfono puedes cancelar desde el chat. Sin él, solo con el código de la reserva.
+        </p>
+      </fieldset>
     </div>
   );
 }
