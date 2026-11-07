@@ -198,8 +198,11 @@ function VoucherReserva({
                           {lineas.length === 1 && !torneo
                             ? `${horasLinea} ${horasLinea === 1 ? 'hora de' : 'horas de'} ${formatoPrecio.format(l.precioHoraFinal)}`
                             : `${horasLinea} h × ${formatoPrecio.format(l.precioHoraFinal)}`}
-                          {l.descuentoHora > 0 &&
-                            ` (−${formatoPrecio.format(l.descuentoHora)}/h)`}
+                          {l.descuentoHora > 0 && (
+                            <span className="voucher-reserva__linea-descuento">
+                              {`−${formatoPrecio.format(l.descuentoHora)} por hora`}
+                            </span>
+                          )}
                         </span>
                       </div>
                       <div className="voucher-reserva__linea-precio">

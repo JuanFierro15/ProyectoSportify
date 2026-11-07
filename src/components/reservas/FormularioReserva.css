@@ -44,12 +44,20 @@
   padding: 0;
 }
 
+/* A rendered legend sits on the fieldset border; floating it keeps it
+   inside the card, and the next element clears it. */
 .formulario-reserva__campo legend {
+  float: left;
+  width: 100%;
   font-weight: 700;
   font-size: 1.125rem;
   color: var(--reserva-texto, #f2f2f2);
   margin-bottom: 1rem;
   padding: 0;
+}
+
+.formulario-reserva__campo legend + * {
+  clear: both;
 }
 
 .formulario-reserva__legend-horario {

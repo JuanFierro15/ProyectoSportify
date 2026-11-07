@@ -233,9 +233,18 @@
   font-weight: 600;
 }
 
+.voucher-reserva__fila--ahorro .voucher-reserva__etiqueta {
+  flex-shrink: 1;
+  min-width: 0;
+}
+
 .voucher-reserva__valor--ahorro {
   white-space: nowrap;
-  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+.voucher-reserva__linea-descuento {
+  display: block;
 }
 
 .voucher-reserva__fila--total {
