@@ -134,7 +134,11 @@ cada tipo de reserva:
 - **Torneos por fases (eliminación directa):**
   - un **indicador de pasos** superior guía el avance del torneo por cinco
     etapas (**Canchas, Formato, Fechas por fase, Llaves, Tus datos**),
-    resaltando el paso actual y marcando con un visto bueno los completados;
+    resaltando el paso actual y marcando con un visto bueno los completados.
+    En el **celular** se convierte en un **asistente de un paso a la vez**
+    (Canchas, Formato, Fechas por fase, Llaves, Tus datos y Resumen), con una
+    barra inferior fija con **Anterior** y **Siguiente**, el motivo cuando aún
+    no se puede avanzar y un indicador para saltar a los pasos ya completos;
   - se eligen de **1 a 3 canchas de un mismo deporte**;
   - se configura el formato de **4, 8 o 16 equipos** (de 2 a 4 fases: octavos,
     cuartos, semifinal y final), la duración de cada partido (**15, 20 o 30
@@ -215,10 +219,14 @@ borra.
 ### Versión móvil
 
 Todo el sitio funciona en el celular. El asistente y el modal de **Mis
-reservas** se adaptan a pantallas pequeñas y respetan las zonas seguras.
+reservas** se adaptan a pantallas pequeñas y respetan las zonas seguras. El
+modo torneo muestra un paso a la vez y las llaves se desplazan dentro de su
+propio recuadro, sin mover la página.
 
 <p align="center">
   <img src="docs/capturas/movil-inicio.webp" alt="Hero de voley playa en el celular" width="260">
+  &nbsp;&nbsp;
+  <img src="docs/capturas/movil-torneo.webp" alt="Paso Llaves del asistente de torneo en el celular, con el bracket y la barra inferior Paso 4 de 6" width="260">
   &nbsp;&nbsp;
   <img src="docs/capturas/movil-chat.webp" alt="Asistente a pantalla completa en el celular" width="260">
 </p>
@@ -372,7 +380,7 @@ src/
 │   ├── hero/            DeporteHero: heros por deporte con video y pinning
 │   ├── canchas/         VistaCanchas: la página de reserva (/reservar/<deporte>)
 │   ├── reservas/        useReserva, formulario, comprobante (voucher), selector de modo, confirmación con QR
-│   │   └── torneo/      Bracket, SeccionLlaves, IndicadorPasos, CalendarioTorneo y AlertaTiempo
+│   │   └── torneo/      Bracket, SeccionLlaves, IndicadorPasos, CalendarioTorneo, AlertaTiempo, asistente móvil y bloques Paso*
 │   ├── eventos/         EventoCTA: sección de eventos y torneos
 │   ├── ubicacion/       Ubicacion: dirección, teléfono, horario y mapa
 │   ├── shared/          SelectorDia: tira de 7 días con horarios libres
@@ -390,6 +398,7 @@ src/
 ├── lib/                 Lógica pura, con sus tests al lado (*.test.js)
 │   ├── precios.js       Reglas de precio y descuento
 │   ├── torneo.js        Fases de eliminación directa, bracket, validación de jornadas y precios de torneo
+│   ├── pasosTorneo.js   Pasos del torneo: completitud, motivo y a cuáles se puede saltar
 │   ├── horarios.js      Selección de horas (bloque de hasta 3 o rango)
 │   ├── validacion.js    Nombre, teléfono y reserva propuesta por el chat
 │   ├── cancelacion.js   Plazo de cancelación, estado resultante y búsqueda de reservas
@@ -468,7 +477,9 @@ del QR, datos del negocio, rutas del sitio, plazo y búsqueda de cancelaciones,
 contexto e historial del chat y respaldo de modelo) además de las pruebas de
 interfaz para torneos y cumpleaños (`src/components/reservas/Torneo.test.jsx`,
 que cubren las llaves simétricas, la denominación "Ganador del partido N", la
-final con el trofeo y el indicador de pasos), consulta en **Mis reservas** y
+final con el trofeo y el indicador de pasos), el asistente de un paso a la vez
+del torneo en el celular y las secciones del formulario que muestra cada paso,
+consulta en **Mis reservas** y
 montaje general en `src/App.test.jsx`.
 
 El asistente tiene además un script con 12 casos contra la función real:

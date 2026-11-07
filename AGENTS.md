@@ -55,7 +55,9 @@ node scripts/probar-chat.mjs [url] [ids...]  # casos de prueba de /api/chat
   viven junto a su módulo en `src/lib/*.test.js` (precios, validación, fechas,
   horarios, código de reserva, datos del negocio, chat, cancelación, torneos,
   rutas, canchas y respaldo de modelo). De interfaz:
-  `src/components/reservas/Torneo.test.jsx` (torneo y cumpleaños) y
+  `src/components/reservas/Torneo.test.jsx` (torneo y cumpleaños),
+  `FormularioReserva.test.jsx` (prop `seccion`), los del asistente en
+  `src/components/reservas/torneo/` (`AsistenteTorneo`, `useAsistenteTorneo`) y
   `src/components/layout/MisReservas.test.jsx`. `api/_lib/funciones.test.js`
   cubre las funciones del chat y `src/App.test.jsx` es un smoke test. `src/setupTests.js` carga
   `@testing-library/jest-dom/vitest` y simula `matchMedia`,
@@ -324,6 +326,31 @@ nunca acceder a `localStorage` fuera de este archivo.
     anterior a la fase previa), `Bracket` (llaves; también en la confirmación),
     `AsignacionManual` (cruces manuales con intercambio) y `AlertaTiempo`
     (tiempo insuficiente, con acción para bajar a 15 min por partido).
+  - **Asistente del torneo en móvil** (desde el 07-11-2026; spec en
+    `odd/tasks/asistente-torneo-movil.md`): bajo `large`
+    (`(max-width: 63.9375em)`) el modo torneo muestra un paso a la vez; en
+    escritorio y en los otros modos, el layout de siempre.
+    - Pasos (`src/lib/pasosTorneo.js`, puro y con tests): `canchas`,
+      `formato`, `fechas`, `llaves`, `datos` y `resumen`.
+      `estadoPasosTorneo(reserva)` da la completitud y el motivo de cada uno;
+      `pasosAlcanzables` decide a qué paso se puede saltar (los completos y
+      el primero incompleto). `IndicadorPasos` usa la misma regla y en
+      escritorio sigue mostrando 5 pasos.
+    - `torneo/useAsistenteTorneo.js` (`esMovil` con `matchMedia`, paso
+      actual, `siguiente`/`anterior`/`irA`, scroll y foco al título del
+      paso) y `torneo/AsistenteTorneo.jsx` (cabecera, indicador clicable y
+      barra inferior fija con "Paso N de 6"). Todo lo elegido sigue en
+      `useReserva`: cambiar de paso o de tamaño no pierde nada.
+    - La barra publica `--alto-barra-inferior` en `<html>` y `Chatbot.css`
+      sube el botón y el panel esa distancia (sin asistente vale 0).
+    - `FormularioReserva` acepta `seccion` (`'formato' | 'fechas' | 'llaves'
+      | 'datos' | 'guardados'`): con un valor válido en modo torneo solo
+      renderiza ese bloque (`torneo/Paso*.jsx`); sin él, todo como antes. El
+      `Bracket` del paso `llaves` lo pone `SeccionLlaves`.
+    - El bracket tiene ancho fijo (616-646 px): bajo `large`,
+      `contain: inline-size` en `.bracket-torneo__movil` y
+      `.bracket-torneo__canvas-scroll` evita que ensanche la página y lo deja
+      desplazarse dentro de su caja. No quitarlo.
 - **`MisReservas` (`components/layout/`)**: `<dialog>` con `showModal()`, abierto
   desde el navbar. Busca por código o por nombre + teléfono, muestra el QR y
   cancela reservas individuales hasta 6 horas antes. Torneos y cumpleaños se
