@@ -17,7 +17,7 @@ La página de reserva (modos Cancha, Torneo y Cumpleaños) y la confirmación pa
 | `r3` | Comprobante tiquete y confirmación oscura con el QR sobre blanco | `deaecc3` | `v3`: 2 defectos (confirmación de torneo recortada a 390 px, precio tachado a 4,41:1) → corregidos → `v3b`: pasa |
 | `r4` | `SeccionLlaves` a ancho completo, llaves simétricas y por rondas en celular, "Partido N", `IndicadorPasos`, pruebas | `f063059` | `v4`: 5 defectos (comprobante `sticky` sobre las llaves, trofeo sobre "Final" con 4 equipos, faltaban conectores en celular, conectores separados en la versión compacta, recuadro con scroll no accesible con teclado) → corregidos → `v4b`: pasa |
 | `r5` | Capturas "después" (`revision/despues/`, 20), casos de la etapa 8, teclado, movimiento reducido, contraste y 5 capturas de `docs/capturas/` | `276e3d5` | Ver `revision/verificacion-final.md` |
-| `r6` | README al día con el rediseño | (ver log) | — |
+| `r6` | README al día con el rediseño (primer intento cortado por falta de memoria; el segundo lo terminó) | `a660ad7` | Revisión de menciones y Markdown; 197 pruebas |
 
 Cada bloque lo implementó un agente con un modelo para escribir código y lo verificó otro, distinto, en el navegador. Las instrucciones de cada uno están en `bloques/`.
 
