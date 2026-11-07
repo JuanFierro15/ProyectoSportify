@@ -11,7 +11,8 @@
 .chatbot__boton {
   position: fixed;
   right: max(20px, env(safe-area-inset-right));
-  bottom: max(20px, env(safe-area-inset-bottom));
+  /* --alto-barra-inferior: barra fija del asistente de torneo en móvil */
+  bottom: calc(max(20px, env(safe-area-inset-bottom)) + var(--alto-barra-inferior, 0px));
   z-index: var(--z-chatbot);
   width: 56px;
   height: 56px;
@@ -43,9 +44,9 @@
   position: fixed;
   z-index: var(--z-chatbot);
   right: 20px;
-  bottom: 92px;
+  bottom: calc(92px + var(--alto-barra-inferior, 0px));
   width: min(380px, calc(100vw - 32px));
-  height: min(560px, calc(100dvh - 120px));
+  height: min(560px, calc(100dvh - 120px - var(--alto-barra-inferior, 0px)));
   display: flex;
   flex-direction: column;
   background: #ffffff;

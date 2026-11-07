@@ -25,6 +25,8 @@ import ConfirmacionReserva from '../reservas/ConfirmacionReserva';
 import TarjetaCanchaCarrusel from '../reservas/TarjetaCanchaCarrusel';
 import IndicadorPasos from '../reservas/torneo/IndicadorPasos';
 import SeccionLlaves from '../reservas/torneo/SeccionLlaves';
+import AsistenteTorneo from '../reservas/torneo/AsistenteTorneo';
+import useAsistenteTorneo from '../reservas/torneo/useAsistenteTorneo';
 import './VistaCanchas.css';
 
 // Por debajo de este número de canchas, el carrusel 3D no aporta nada (y se
@@ -193,6 +195,9 @@ function VistaCanchas() {
     modoInicial,
     canchaInicial: deporteAbierto ? canchasDelDeporte(canchas, deporteAbierto)[0] || null : null,
   });
+
+  const asistente = useAsistenteTorneo({ reserva });
+  const esAsistenteMovil = reserva.modo === 'torneo' && asistente.esMovil;
 
   const rootRef = useRef(null);
   const tituloRef = useRef(null);
@@ -374,6 +379,141 @@ function VistaCanchas() {
     ? imagenGrandeCancha(canchaEncabezado.imagen)
     : null;
 
+  const renderBloqueCanchas = () => (
+    <>
+      <div className="vista-canchas__cuerpo">
+        {canchasFiltradas.length === 0 ? (
+          <div className="vista-canchas__vacio">
+            <p>
+              Ninguna cancha de {infoDeporte ? infoDeporte.nombre.toLowerCase() : 'este deporte'}{' '}
+              tiene horarios libres ese día.
+            </p>
+            {soloDisponibles && (
+              <button
+                type="button"
+                className="button hollow small"
+                onClick={() => setSoloDisponibles(false)}
+              >
+                Ver todas de todas formas
+              </button>
+            )}
+          </div>
+        ) : totalDelDeporte < MINIMO_PARA_CARRUSEL ? (
+          <div className="vista-canchas__grid-estatico grid-x grid-padding-x align-center">
+            {canchasFiltradas.map((c) => {
+              const esActiva = reserva.esEvento
+                ? reserva.canchaIds.includes(c.id)
+                : !!reserva.canchaSel && reserva.canchaSel.id === c.id;
+              const motivoGrid = reserva.esEvento ? reserva.motivoNoAgregable(c.id) : null;
+              return (
+                <div key={c.id} className="cell small-12 medium-6 vista-canchas__grid-celda">
+                  <button
+                    type="button"
+                    disabled={reserva.esEvento && motivoGrid !== null}
+                    className={
+                      'card cancha-card vista-canchas__card-estatica' +
+                      (esActiva ? ' vista-canchas__card-estatica--activa' : '')
+                    }
+                    aria-pressed={esActiva}
+                    onClick={() => {
+                      if (reserva.esEvento) {
+                        reserva.alternarCancha(c.id);
+                      } else {
+                        setCanchaActivaId(c.id);
+                        reserva.elegirCancha(c.id);
+                      }
+                    }}
+                  >
+                    <span className="vista-canchas__card-nombre">{tituloCancha(c)}</span>
+                    {reserva.esEvento && motivoGrid !== null && (
+                      <small className="vista-canchas__card-motivo">{motivoGrid}</small>
+                    )}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <DepthCarousel
+            key={`${deporteAbierto}-${reserva.esEvento ? 'evento' : 'cancha'}`}
+            items={canchasFiltradas.map((c) => {
+              const degradado = imagenPlaceholderCancha(acento);
+              return c.imagen
+                ? {
+                    id: c.id,
+                    image: c.imagen,
+                    srcSet: `${c.imagen} 720w, ${imagenGrandeCancha(c.imagen)} 1440w`,
+                    sizes: TAMANOS_IMAGEN_CARRUSEL,
+                    fallback: degradado,
+                    width: ANCHO_IMAGEN,
+                    height: ALTO_IMAGEN,
+                    alt: altCancha(c, infoDeporte),
+                    viewable: true,
+                  }
+                : { id: c.id, image: degradado, alt: '' };
+            })}
+            initialIndex={Math.max(
+              0,
+              canchasFiltradas.findIndex((c) => canchaActiva && c.id === canchaActiva.id)
+            )}
+            cardWidth={420}
+            cardHeight={520}
+            radius={16}
+            spread={140}
+            tint={acento}
+            falloff={0.18}
+            blur={3}
+            visibleCards={3}
+            autoScale={false}
+            ariaLabel="Canchas"
+            prevLabel="Cancha anterior"
+            nextLabel="Cancha siguiente"
+            getSlideLabel={(i, n) => `Cancha ${i + 1} de ${n}`}
+            getDotLabel={(i) => `Ir a la cancha ${i + 1}`}
+            onChange={(_, item) => {
+              setCanchaActivaId(item.id);
+              if (!reserva.esEvento) reserva.elegirCancha(item.id);
+            }}
+            onOpenViewer={() => setVisorAbierto(true)}
+            getViewerLabel={(item) => {
+              const c = canchasFiltradas.find((x) => x.id === item.id);
+              return c ? etiquetaVerGrande(c, infoDeporte) : 'Ver imagen en grande';
+            }}
+            renderOverlay={(item, i, esActiva) => {
+              const c = canchasFiltradas.find((x) => x.id === item.id);
+              if (!c) return null;
+              const horarios = disponibilidad(c.id, reserva.fecha);
+              return (
+                <TarjetaCanchaCarrusel
+                  cancha={c}
+                  deporte={deportePorSlug(c.deporte)}
+                  modo={reserva.esEvento ? 'evento' : 'cancha'}
+                  activa={esActiva}
+                  marcada={reserva.esEvento ? reserva.canchaIds.includes(c.id) : false}
+                  libresDia={horarios.filter((h) => h.disponible).length}
+                  totalDia={horarios.length}
+                  motivoBloqueo={reserva.motivoNoAgregable(c.id)}
+                  onAlternar={() => reserva.alternarCancha(c.id)}
+                />
+              );
+            }}
+          />
+        )}
+      </div>
+
+      {reserva.esEvento && (
+        <CanchasElegidas
+          canchas={reserva.canchasElegidas}
+          deporte={infoDeporte}
+          idsDeporte={canchasDelDeporte(canchas, deporteAbierto).map((c) => c.id)}
+          bloqueadoTodas={reserva.deporteBloqueado(deporteAbierto)}
+          onQuitar={reserva.alternarCancha}
+          onAlternarDeporte={reserva.alternarDeporte}
+        />
+      )}
+    </>
+  );
+
   return (
     <main
       className="vista-canchas"
@@ -443,215 +583,100 @@ function VistaCanchas() {
           </div>
         ) : (
           <>
-            <div className="vista-canchas__cabecera-deportes">
-              <ul className="tabs vista-canchas__tabs" role="tablist" aria-label="Deporte">
-                {DEPORTES.map((d, idx) => {
-                  const esActiva = deporteAbierto === d.slug;
-                  return (
-                    <li
-                      key={d.slug}
-                      role="presentation"
-                      className={'tabs-title' + (esActiva ? ' is-active' : '')}
-                      style={{ '--acento': d.colorAcento }}
-                    >
-                      <a
-                        ref={(el) => {
-                          tabsRef.current[idx] = el;
-                        }}
-                        href={rutaReserva(d.slug, reserva.modo)}
-                        role="tab"
-                        aria-selected={esActiva}
-                        tabIndex={esActiva ? 0 : -1}
-                        onClick={(e) => {
-                          if (esClicNormal(e)) {
-                            e.preventDefault();
-                            activarPestanaDeporte(d.slug);
-                          }
-                        }}
-                        onKeyDown={(e) => manejarTecladoPestana(e, idx)}
+            {(!esAsistenteMovil || asistente.pasoActual === 'canchas') && (
+              <div className="vista-canchas__cabecera-deportes">
+                <ul className="tabs vista-canchas__tabs" role="tablist" aria-label="Deporte">
+                  {DEPORTES.map((d, idx) => {
+                    const esActiva = deporteAbierto === d.slug;
+                    return (
+                      <li
+                        key={d.slug}
+                        role="presentation"
+                        className={'tabs-title' + (esActiva ? ' is-active' : '')}
+                        style={{ '--acento': d.colorAcento }}
                       >
-                        {d.nombre}
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
+                        <a
+                          ref={(el) => {
+                            tabsRef.current[idx] = el;
+                          }}
+                          href={rutaReserva(d.slug, reserva.modo)}
+                          role="tab"
+                          aria-selected={esActiva}
+                          tabIndex={esActiva ? 0 : -1}
+                          onClick={(e) => {
+                            if (esClicNormal(e)) {
+                              e.preventDefault();
+                              activarPestanaDeporte(d.slug);
+                            }
+                          }}
+                          onKeyDown={(e) => manejarTecladoPestana(e, idx)}
+                        >
+                          {d.nombre}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
 
-              <div className="vista-canchas__filtro">
-                <div className="switch small">
-                  <input
-                    className="switch-input"
-                    id={idFiltro}
-                    type="checkbox"
-                    role="switch"
-                    checked={soloDisponibles}
-                    onChange={(e) => setSoloDisponibles(e.target.checked)}
-                  />
-                  <label className="switch-paddle" htmlFor={idFiltro}>
-                    <span className="show-for-sr">Solo con horarios libres ese día</span>
+                <div className="vista-canchas__filtro">
+                  <div className="switch small">
+                    <input
+                      className="switch-input"
+                      id={idFiltro}
+                      type="checkbox"
+                      role="switch"
+                      checked={soloDisponibles}
+                      onChange={(e) => setSoloDisponibles(e.target.checked)}
+                    />
+                    <label className="switch-paddle" htmlFor={idFiltro}>
+                      <span className="show-for-sr">Solo con horarios libres ese día</span>
+                    </label>
+                  </div>
+                  <label htmlFor={idFiltro} className="vista-canchas__filtro-texto">
+                    Solo con horarios libres ese día
                   </label>
                 </div>
-                <label htmlFor={idFiltro} className="vista-canchas__filtro-texto">
-                  Solo con horarios libres ese día
-                </label>
               </div>
-            </div>
+            )}
 
             <div className="vista-canchas__reserva">
-              <div className="vista-canchas__fila-reserva">
-                <div className="vista-canchas__principal">
-                {reserva.modo === 'torneo' && <IndicadorPasos reserva={reserva} />}
-
-                <div className="vista-canchas__cuerpo">
-                  {canchasFiltradas.length === 0 ? (
-                    <div className="vista-canchas__vacio">
-                      <p>
-                        Ninguna cancha de {infoDeporte ? infoDeporte.nombre.toLowerCase() : 'este deporte'}{' '}
-                        tiene horarios libres ese día.
-                      </p>
-                      {soloDisponibles && (
-                        <button
-                          type="button"
-                          className="button hollow small"
-                          onClick={() => setSoloDisponibles(false)}
-                        >
-                          Ver todas de todas formas
-                        </button>
-                      )}
-                    </div>
-                  ) : totalDelDeporte < MINIMO_PARA_CARRUSEL ? (
-                    <div className="vista-canchas__grid-estatico grid-x grid-padding-x align-center">
-                      {canchasFiltradas.map((c) => {
-                        const esActiva = reserva.esEvento
-                          ? reserva.canchaIds.includes(c.id)
-                          : !!reserva.canchaSel && reserva.canchaSel.id === c.id;
-                        const motivoGrid = reserva.esEvento ? reserva.motivoNoAgregable(c.id) : null;
-                        return (
-                          <div key={c.id} className="cell small-12 medium-6 vista-canchas__grid-celda">
-                            <button
-                              type="button"
-                              disabled={reserva.esEvento && motivoGrid !== null}
-                              className={
-                                'card cancha-card vista-canchas__card-estatica' +
-                                (esActiva ? ' vista-canchas__card-estatica--activa' : '')
-                              }
-                              aria-pressed={esActiva}
-                              onClick={() => {
-                                if (reserva.esEvento) {
-                                  reserva.alternarCancha(c.id);
-                                } else {
-                                  setCanchaActivaId(c.id);
-                                  reserva.elegirCancha(c.id);
-                                }
-                              }}
-                            >
-                              <span className="vista-canchas__card-nombre">{tituloCancha(c)}</span>
-                              {reserva.esEvento && motivoGrid !== null && (
-                                <small className="vista-canchas__card-motivo">{motivoGrid}</small>
-                              )}
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <DepthCarousel
-                      key={`${deporteAbierto}-${reserva.esEvento ? 'evento' : 'cancha'}`}
-                      items={canchasFiltradas.map((c) => {
-                        const degradado = imagenPlaceholderCancha(acento);
-                        return c.imagen
-                          ? {
-                              id: c.id,
-                              image: c.imagen,
-                              srcSet: `${c.imagen} 720w, ${imagenGrandeCancha(c.imagen)} 1440w`,
-                              sizes: TAMANOS_IMAGEN_CARRUSEL,
-                              fallback: degradado,
-                              width: ANCHO_IMAGEN,
-                              height: ALTO_IMAGEN,
-                              alt: altCancha(c, infoDeporte),
-                              viewable: true,
-                            }
-                          : { id: c.id, image: degradado, alt: '' };
-                      })}
-                      initialIndex={Math.max(
-                        0,
-                        canchasFiltradas.findIndex((c) => canchaActiva && c.id === canchaActiva.id)
-                      )}
-                      cardWidth={420}
-                      cardHeight={520}
-                      radius={16}
-                      spread={140}
-                      tint={acento}
-                      falloff={0.18}
-                      blur={3}
-                      visibleCards={3}
-                      autoScale={false}
-                      ariaLabel="Canchas"
-                      prevLabel="Cancha anterior"
-                      nextLabel="Cancha siguiente"
-                      getSlideLabel={(i, n) => `Cancha ${i + 1} de ${n}`}
-                      getDotLabel={(i) => `Ir a la cancha ${i + 1}`}
-                      onChange={(_, item) => {
-                        setCanchaActivaId(item.id);
-                        if (!reserva.esEvento) reserva.elegirCancha(item.id);
-                      }}
-                      onOpenViewer={() => setVisorAbierto(true)}
-                      getViewerLabel={(item) => {
-                        const c = canchasFiltradas.find((x) => x.id === item.id);
-                        return c ? etiquetaVerGrande(c, infoDeporte) : 'Ver imagen en grande';
-                      }}
-                      renderOverlay={(item, i, esActiva) => {
-                        const c = canchasFiltradas.find((x) => x.id === item.id);
-                        if (!c) return null;
-                        const horarios = disponibilidad(c.id, reserva.fecha);
-                        return (
-                          <TarjetaCanchaCarrusel
-                            cancha={c}
-                            deporte={deportePorSlug(c.deporte)}
-                            modo={reserva.esEvento ? 'evento' : 'cancha'}
-                            activa={esActiva}
-                            marcada={reserva.esEvento ? reserva.canchaIds.includes(c.id) : false}
-                            libresDia={horarios.filter((h) => h.disponible).length}
-                            totalDia={horarios.length}
-                            motivoBloqueo={reserva.motivoNoAgregable(c.id)}
-                            onAlternar={() => reserva.alternarCancha(c.id)}
-                          />
-                        );
-                      }}
-                    />
-                  )}
-                </div>
-
-                {reserva.esEvento && (
-                  <CanchasElegidas
-                    canchas={reserva.canchasElegidas}
-                    deporte={infoDeporte}
-                    idsDeporte={canchasDelDeporte(canchas, deporteAbierto).map((c) => c.id)}
-                    bloqueadoTodas={reserva.deporteBloqueado(deporteAbierto)}
-                    onQuitar={reserva.alternarCancha}
-                    onAlternarDeporte={reserva.alternarDeporte}
-                  />
-                )}
-
-                <FormularioReserva reserva={reserva} dias={dias} />
-              </div>
-
-                <VoucherReserva
-                  tipoEtiqueta={reserva.modoInfo.tipoEtiqueta}
-                  fechaTexto={fechaCompleta(reserva.fecha)}
-                  horas={reserva.horasSel}
-                  precio={reserva.precio}
-                  puedeConfirmar={reserva.puedeConfirmar}
-                  motivoBloqueo={reserva.motivoBloqueo}
-                  onConfirmar={reserva.confirmar}
-                  onCancelar={reserva.reiniciar}
-                  torneo={reserva.modo === 'torneo' ? reserva.torneoPlan : null}
-                  invitados={reserva.modo === 'cumpleanos' ? reserva.invitados : null}
+              {esAsistenteMovil ? (
+                <AsistenteTorneo
+                  reserva={reserva}
+                  dias={dias}
+                  canchas={canchas}
+                  asistente={asistente}
+                  renderCanchas={renderBloqueCanchas}
                 />
-              </div>
+              ) : (
+                <>
+                  <div className="vista-canchas__fila-reserva">
+                    <div className="vista-canchas__principal">
+                      {reserva.modo === 'torneo' && <IndicadorPasos reserva={reserva} />}
 
-              {reserva.modo === 'torneo' && (
-                <SeccionLlaves reserva={reserva} canchas={canchas} />
+                      {renderBloqueCanchas()}
+
+                      <FormularioReserva reserva={reserva} dias={dias} />
+                    </div>
+
+                    <VoucherReserva
+                      tipoEtiqueta={reserva.modoInfo.tipoEtiqueta}
+                      fechaTexto={fechaCompleta(reserva.fecha)}
+                      horas={reserva.horasSel}
+                      precio={reserva.precio}
+                      puedeConfirmar={reserva.puedeConfirmar}
+                      motivoBloqueo={reserva.motivoBloqueo}
+                      onConfirmar={reserva.confirmar}
+                      onCancelar={reserva.reiniciar}
+                      torneo={reserva.modo === 'torneo' ? reserva.torneoPlan : null}
+                      invitados={reserva.modo === 'cumpleanos' ? reserva.invitados : null}
+                    />
+                  </div>
+
+                  {reserva.modo === 'torneo' && (
+                    <SeccionLlaves reserva={reserva} canchas={canchas} />
+                  )}
+                </>
               )}
             </div>
           </>

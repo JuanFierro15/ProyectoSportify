@@ -1,0 +1,134 @@
+.asistente-torneo {
+  position: relative;
+  width: 100%;
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.asistente-torneo__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.asistente-torneo__titulo-paso {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--reserva-texto, #f2f2f2);
+}
+
+.asistente-torneo__titulo-paso:focus {
+  outline: none;
+}
+
+.asistente-torneo__titulo-paso:focus-visible {
+  outline: 2px solid var(--accent, #5bd67d);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.asistente-torneo__badge-paso {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  background: var(--reserva-seccion, #161616);
+  border: 1px solid var(--reserva-seccion-borde, #2a2a2a);
+  color: var(--reserva-texto-2, #c4c4c4);
+  white-space: nowrap;
+}
+
+.asistente-torneo__paso-contenido {
+  margin-top: 1rem;
+}
+
+/* Barra inferior fija para navegación móvil */
+.asistente-torneo__barra-inferior {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  background: rgba(22, 22, 22, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--reserva-seccion-borde, #2a2a2a);
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.asistente-torneo__barra-contenido {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  max-width: 64em;
+  margin: 0 auto;
+}
+
+.asistente-torneo__info-barra {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.asistente-torneo__texto-paso {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--reserva-texto, #f2f2f2);
+}
+
+.asistente-torneo__motivo-bloqueo {
+  font-size: 0.75rem;
+  color: #f28b82;
+  margin-top: 0.15rem;
+  line-height: 1.2;
+  white-space: normal;
+}
+
+.asistente-torneo__boton-nav {
+  min-height: 44px;
+  min-width: 90px;
+  margin: 0;
+  font-weight: 600;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.asistente-torneo__boton-anterior {
+  color: var(--reserva-texto-2, #c4c4c4);
+  border-color: var(--reserva-seccion-borde, #3a3a3a);
+}
+
+.asistente-torneo__boton-anterior:hover:not(:disabled),
+.asistente-torneo__boton-anterior:focus-visible {
+  color: var(--reserva-texto, #ffffff);
+  border-color: var(--reserva-texto-2, #888888);
+}
+
+.asistente-torneo__boton-siguiente {
+  background: var(--accent, #5bd67d);
+  border-color: var(--accent, #5bd67d);
+  color: var(--reserva-sobre-acento, #0d0d0d);
+  font-weight: 700;
+}
+
+.asistente-torneo__boton-siguiente:hover:not(:disabled),
+.asistente-torneo__boton-siguiente:focus-visible {
+  filter: brightness(1.1);
+  background: var(--accent, #5bd67d);
+}
+
+.asistente-torneo__boton-nav:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
