@@ -637,6 +637,16 @@
   line-height: 1.35;
 }
 
+/* En móvil (< 64em): evita que el formulario y los torneos guardados se expandan por el bracket compacto */
+@media screen and (max-width: 63.9375em) {
+  .formulario-reserva,
+  .formulario-reserva__torneos-guardados,
+  .formulario-reserva__torneo-guardado {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
 /* ==========================================================================
    C10: AlertaTiempo en versión oscura
    ========================================================================== */
