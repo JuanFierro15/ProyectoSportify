@@ -28,9 +28,9 @@ Supuesto: cada paso no crea una entrada en el historial del navegador; el botón
 
 | ID | Specs | Frente | Ruta | Estado | Commit |
 |---|---|---|---|---|---|
-| A1 | S3, S4 | A (Juan) | agy | pendiente | |
-| A2 | S5, S6 | A (Juan) | agy | pendiente | |
-| A3 | S2, S3, S5, S7 | A (Juan) | agy | pendiente | |
+| A1 | S3, S4 | A (Juan) | agy | hecho | f752905 |
+| A2 | S5, S6 | A (Juan) | agy | hecho | c1a812c |
+| A3 | S2, S3, S5, S7 | A (Juan) | agy | hecho | 972854b |
 | B1 | S7 | B (Miguel) | issue #6 | pendiente | |
 | B2 | S8 | B (Miguel) | issue #6 | pendiente | |
 | C1 | S9 | A tras unir A y B | inline | pendiente | |
@@ -40,7 +40,7 @@ Supuesto: cada paso no crea una entrada en el historial del navegador; el botón
 - **A3.** `src/components/reservas/torneo/AsistenteTorneo.jsx` + `.css` (encabezado del paso, indicador clicable, contenido y barra inferior fija con safe-area) e integración en `VistaCanchas.jsx`/`.css`: con modo torneo y `esMovil`, renderiza solo el paso actual según S3; si no, el layout de hoy. Tests en `AsistenteTorneo.test.jsx`.
 - **B1.** Prop `seccion` de S7 en `FormularioReserva.jsx`; se recomienda extraer cada bloque del modo torneo a su componente en `src/components/reservas/torneo/` (`PasoFormato.jsx`, etc.). Tests en `src/components/reservas/FormularioReserva.test.jsx`: sin `seccion` se ve todo, y con cada valor solo su bloque.
 - **B2.** CSS móvil del contenido de los pasos: `FormularioReserva.css`, `torneo/CalendarioTorneo.css`, `torneo/Bracket.css`, `torneo/SeccionLlaves.css` (y el CSS de los componentes nuevos de B1). Escritorio sin cambios.
-- **C1.** Prueba de costura con las dos ramas unidas (suite completa, lint, build, revisión a 390×844 y 1440×900), README, capturas y `CLAUDE.md`.
+- **C1.** Prueba de costura con las dos ramas unidas (suite completa, lint, build, revisión a 390×844 y 1440×900), README, capturas y `AGENTS.md`.
 
 Superficies separadas: el frente A no toca `FormularioReserva.*`, `CalendarioTorneo.*`, `Bracket.*` ni `SeccionLlaves.*`; el frente B no toca `VistaCanchas.*`, `IndicadorPasos.*`, `AsistenteTorneo.*`, `useAsistenteTorneo.js` ni `src/lib/pasosTorneo.*`. `Torneo.test.jsx` no lo modifica ninguno de los dos hasta C1.
 
@@ -48,3 +48,5 @@ Superficies separadas: el frente A no toca `FormularioReserva.*`, `CalendarioTor
 
 - **L1 (2026-11-07, Juan):** "Me gusta la opción grande que muestre un paso a la vez en móvil, no te preocupes por el tiempo de sustentación para poder realizar este nuevo feature dividelo para que miguel y nosotros podamos hacerlo al mismo tiempo, entonces arma lo necesario que tenemos que implementar y le dejas lo pendiente a miguel a traves de github"
 - **L2:** Mapa actual en móvil (`VistaCanchas.jsx:500-655`): indicador, carrusel, canchas elegidas, formulario completo del torneo, voucher y, de último, `SeccionLlaves`. `IndicadorPasos` ya calcula la completitud de 5 pasos, pero no navega. Pronóstico: unas 800 líneas en total (A unas 550, B unas 300); dos PR, uno por frente.
+- **L3 (2026-11-07):** Las instrucciones del proyecto pasan a `AGENTS.md` versionado y `CLAUDE.md` queda como `@AGENTS.md` (`f3915c4` en `main`, integrado en la rama con `ef66f4f`). Miguel ya no necesita una copia local.
+- **L4 (2026-11-07):** Frente A entregado por agy (A1 a A3). En la revisión se corrigieron dos fallas: el botón flotante del chat tapaba "Siguiente" (ahora la barra publica `--alto-barra-inferior` en `<html>` y `Chatbot.css` sube el botón y el panel esa distancia; sin asistente vale 0) y "Limpiar selección" en el Resumen dejaba el asistente en un paso inalcanzable (ahora vuelve al primer paso incompleto). RED observado en ambos tests antes del arreglo. `Chatbot.css` se agregó a la superficie del frente A. Verificación: `npm test` 19 archivos y 220 tests pasan; `npm run lint` sin errores ni warnings; `npm run build` correcto. Pendiente: revisión visual a 390×844 y 1440×900, que queda para C1. Mientras no esté B1, cada paso muestra el formulario completo.
