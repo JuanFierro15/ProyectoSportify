@@ -25,8 +25,8 @@ Ejecución de los bloques locales de cierre definidos en `PLAN.md` (`z1`, `z2`, 
 | `z2` — Invitados, estado vacío y pestañas | ✅ Completado | `8e1a203`, `d5c9757`, `ab3f6d2` | Invitados en voucher/confirmación (`useReserva.js`, `VoucherReserva.jsx`, `ConfirmacionReserva.jsx`, `VistaCanchas.jsx`, `Torneo.test.jsx`), estado vacío en `CanchasElegidas.jsx` y flechas/Home/End con roving `tabIndex` en `VistaCanchas.jsx` + `VistaCanchas.css`. |
 | `z3` — Pruebas integrales de inicio a fin | ✅ Completado en local (API chat pendiente `JuanFierro15`) | (este reporte) | 31 casos locales verificados en `1440×900` y `390×844`; `E1`–`E6` y `probar-chat.mjs` pendientes por `JuanFierro15`. |
 | `z4` — Documentación, capturas y guías | ✅ Completado | `9418642` + cierre | 12 capturas WebP en `docs/capturas/`, `README.md`, `planificacion/` y `GEMINI.md`. |
-| `z5` — Integración a `main` y despliegue | 🟡 Fusionado; faltan las pruebas manuales en producción | `e6a167c` | Ver la sección 7. |
-| `z6` — Verificación en producción y límite de peticiones | 🟡 Regla activa (07-11-2026); falta la prueba de humo tras la etapa 9 | — | Regla "Limitar chat" en Vercel Firewall: `POST /api/chat`, 30 peticiones por minuto por IP, responde 429. Ver la sección 8. |
+| `z5` — Integración a `main` y despliegue | ✅ Fusionado y probado en producción (07-11-2026, tras la etapa 9) | `e6a167c` | Ver las secciones 7 y 9. |
+| `z6` — Verificación en producción y límite de peticiones | ✅ Regla activa y chat probado tras la etapa 9 (07-11-2026) | — | Regla "Limitar chat" en Vercel Firewall: `POST /api/chat`, 30 peticiones por minuto por IP, responde 429. Ver la sección 8. |
 
 ---
 
@@ -120,11 +120,11 @@ Generadas con `planificacion/herramientas/capturas/capturas.mjs` (WebP calidad 8
 
 Actualizado por Juan Fierro el 06-11-2026, tras la revisión de la sección 7.
 
-1. **Pruebas manuales en producción (`z5`):** A3, B7, C3, D1, D4, E2, F1 y H1, en ventana de incógnito o perfil temporal.
-2. **Chat en la interfaz:** E1 (comparar con los horarios de la página), E2 (reservar y responder "sí") y E3 (cancelar con nombre y teléfono).
-3. **Volver a comprobar B5 y B6:** ver la nota de la sección 7.
+1. ~~**Pruebas manuales en producción (`z5`):** A3, B7, C3, D1, D4, E2, F1 y H1, en ventana de incógnito o perfil temporal.~~ Hecho el 07-11-2026 (sección 9).
+2. ~~**Chat en la interfaz:** E1 (comparar con los horarios de la página), E2 (reservar y responder "sí") y E3 (cancelar con nombre y teléfono).~~ Hecho el 07-11-2026 (sección 9).
+3. ~~**Volver a comprobar B5 y B6:** ver la nota de la sección 7.~~ Hecho el 07-11-2026 (sección 9).
 4. ~~**Límite de peticiones (`z6`):** regla de Vercel Firewall sobre `/api/chat`, a cargo de Juan Fierro. Falta comprobar que el plan la incluya.~~ Hecho el 07-11-2026 (sección 8). El plan Hobby la incluye.
-5. **Cierre:** completar este reporte y borrar la rama `etapa-8-cierre`.
+5. ~~**Cierre:** completar este reporte y borrar la rama `etapa-8-cierre`.~~ Hecho: la rama ya no existe y este reporte queda cerrado con la sección 9.
 
 Las capturas de la página de reserva y del torneo se rehacen en la etapa 9, porque ese rediseño las deja viejas.
 
@@ -199,4 +199,30 @@ Regla de Vercel Firewall `Limitar chat` (`rule_limitar_chat_HgAMUe`), publicada 
 - El widget muestra ante el 429 el mensaje genérico ("No pude responder ahora. Intenta de nuevo en un momento."), porque `normalizarRespuesta` descarta una respuesta sin `respuesta`.
 - Los contadores son por región. Todos los que compartan una IP (por ejemplo, el wifi del salón) suman al mismo límite. En la sustentación solo prueba el profesor, así que 30 por minuto alcanza.
 - Para cambiarla: `vercel firewall rules update "Limitar chat" ...` y `vercel firewall publish`. Para apagarla: `vercel firewall rules disable "Limitar chat"` y publicar.
-- Falta la prueba de humo del chat después de fusionar la etapa 9 (un mensaje real que responda bien).
+- ~~Falta la prueba de humo del chat después de fusionar la etapa 9 (un mensaje real que responda bien).~~ Hecha el 07-11-2026: E1, E2 y E3 respondieron bien en producción (sección 9).
+
+---
+
+## 9. Pruebas en producción tras la etapa 9 (Juan Fierro, 07-11-2026)
+
+Contra https://proyecto-sportify.vercel.app, ya con la etapa 9 fusionada (`307d883`). Chrome headless con un perfil temporal (el `localStorage` real no se tocó), manejado por CDP. Escritorio 1440×900; H1 a 390×844 con DPR 2. Datos ficticios: "Ana Gómez", 300 123 4567.
+
+| ID | Resultado | Observaciones |
+|---|---|---|
+| A3 | pasa | Fútbol 1, mañana 14:00-16:00: código `SPF-XXXXXX`, QR, "¡Copiado!" al copiar y "Descargar QR" baja `reserva-SPF-….png`. |
+| B5 | pasa | En "Manual", poner en el partido 1 un equipo del partido 2 los intercambia: 8 equipos distintos y sin aviso de repetidos. |
+| B6 | pasa | Con 30 min por partido y 1 h en cuartos aparece "faltan 20 min…"; "Cambiar a 15 min por partido" deja 15 min y quita la alerta. |
+| B7 | pasa | 8 equipos en 2 canchas, cuartos el 8, semifinal el 9 y final el 10: total $ 560.000 (3 × 120.000 + 2 × 100.000), llaves en la confirmación y las 5 celdas cancha×hora ocupadas en sus días. |
+| C3 | pasa | "Invitados 20" en el comprobante y "Invitados: 20" en la confirmación. |
+| D1 | pasa | `spf-2r4uj7` en minúsculas encuentra la reserva. |
+| D4 | pasa | Cancelar ("Sí, cancelar") deja libres las 14:00 y 15:00 y borra el registro. |
+| F1 | pasa | Cargar `/reservar/padel` directo abre la página de reserva, con el foco en el `h1`. |
+| H1 | pasa | A y D a 390 px: sin scroll horizontal (`scrollWidth` 390), reserva, búsqueda por nombre sin tilde ("ana gomez") + teléfono y cancelación. Solo los puntos del carrusel miden menos de 40 px (28 px); hay flechas para lo mismo. |
+| E1 | pasa | "¿Qué horarios libres tiene la Cancha Fútbol 1 mañana?": las 8 franjas que dio coinciden con las libres del estado (sin las ocupadas por C3 y B7). |
+| E2 | pasa | Tarjeta con total $230.000 (con descuento) y, tras "sí", reserva `SPF-N7K36N` creada, con comprobante y QR en el chat. |
+| E3 | pasa | Con nombre y teléfono encontró `SPF-N7K36N`; "Cancelar reserva" la quitó y liberó 16:00 y 17:00. |
+
+`node scripts/probar-chat.mjs https://proyecto-sportify.vercel.app`: 11 de 12. La salida de la primera corrida se recortó, así que se repitieron los 8 casos que no se alcanzaron a ver (`disponibilidad` a `ubicacion`); el resultado fue el mismo: 11 de 12.
+
+- **`hora-ocupada` (para revisar):** "Juan Pérez, 3001234567" para voley 1 hoy a las 12:00. El modelo contestó él mismo ("La franja de 12:00 m. … no se encuentra disponible hoy") en vez de llamar `proponer_reserva`, así que no salió el texto fijo de `MENSAJES_CHAT` que espera el caso. No reserva nada y el usuario entiende, pero el texto no es el fijo. Se corrió a las 12:27, con esa franja ya empezada; puede depender de la hora. No tiene relación con la etapa 9, que no tocó el chat.
+
