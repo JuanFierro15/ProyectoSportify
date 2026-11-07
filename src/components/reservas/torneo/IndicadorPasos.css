@@ -23,6 +23,38 @@
   transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease;
 }
 
+.indicador-pasos__paso--interactivo {
+  padding: 0;
+}
+
+.indicador-pasos__boton {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.55rem 0.95rem;
+  min-height: 44px;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  background: none;
+  border: none;
+  border-radius: 12px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.indicador-pasos__boton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.indicador-pasos__boton:focus-visible {
+  outline: 2px solid var(--accent, #5bd67d);
+  outline-offset: 2px;
+}
+
 .indicador-pasos__paso--completo {
   background: var(--reserva-seccion, #161616);
   border-color: var(--reserva-seccion-borde, #2a2a2a);
