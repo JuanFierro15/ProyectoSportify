@@ -71,6 +71,6 @@ Ningún texto baja de 4,5:1. El PROMPT pedía `#7a7a7a` para las horas reservada
 ## 6. Pendiente y observaciones
 
 1. **Que Juan Fierro apruebe las capturas** (`revision/despues/` y las 5 de `docs/capturas/`). Después: push de la rama y PR a `main` antes del 18-11.
-2. **Conectores de las llaves:** del lado de los cuartos, las líneas que unen dos partidos con el siguiente bajan en diagonal en vez de hacer un codo en ángulo recto (se ve en `docs/capturas/torneo-bracket.webp`). El PROMPT no fija la forma: queda a criterio de Juan si se cambia.
+2. **Conectores de las llaves (corregido en `r7`):** Miguel Medina reportó una línea torcida que no apuntaba a ningún partido. La causa: en `Bracket.jsx`, el segundo trazo de cada par de partidos usaba la forma abreviada `{ x1: xStart, y1, ... }`, que toma el `y` del partido de arriba en lugar del de abajo. La línea bajaba en diagonal y el partido de abajo quedaba sin conector (en los dos lados de la vista simétrica y en la compacta). Se corrigió y se comprobó en el navegador con Playwright, con 4, 8 y 16 equipos, en escritorio, celular y la confirmación: todos los tramos son horizontales o verticales y llegan al centro del partido siguiente (desvío menor de 1 px). Se rehicieron las capturas "después" y `docs/capturas/torneo-bracket.webp`.
 3. **"Formato" del indicador de pasos** aparece completo desde el inicio, como se decidió en el PLAN.
 4. Las pruebas manuales `z5` y `z6` de la etapa 8 (de Juan Fierro) siguen pendientes y no son parte de esta etapa.

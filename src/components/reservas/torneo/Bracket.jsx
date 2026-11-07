@@ -295,12 +295,14 @@ export function Bracket({
         const nextCentros = centrosYPorRonda[r + 1] || [yCenterFinal];
         for (let j = 0; j < Math.floor(centros.length / 2); j += 1) {
           const y1 = centros[2 * j];
-          const y2 = centros[2 * j + 1];
+          const y2 = centros[2 * j + 1] ?? y1;
           const yMid = nextCentros[j] ?? (y1 + y2) / 2;
 
           lineas.push({ x1: xStart, y1, x2: xVertical, y2: y1, final: false });
-          lineas.push({ x1: xStart, y1, x2: xVertical, y2: y2, final: false });
-          lineas.push({ x1: xVertical, y1, x2: xVertical, y2: y2, final: false });
+          if (y2 !== y1) {
+            lineas.push({ x1: xStart, y1: y2, x2: xVertical, y2: y2, final: false });
+            lineas.push({ x1: xVertical, y1, x2: xVertical, y2: y2, final: false });
+          }
           lineas.push({
             x1: xVertical,
             y1: yMid,
@@ -367,12 +369,14 @@ export function Bracket({
         const nextCentros = centrosYPorRonda[r + 1] || [yCenterFinal];
         for (let j = 0; j < Math.floor(centros.length / 2); j += 1) {
           const y1 = centros[2 * j];
-          const y2 = centros[2 * j + 1];
+          const y2 = centros[2 * j + 1] ?? y1;
           const yMid = nextCentros[j] ?? (y1 + y2) / 2;
 
           lineas.push({ x1: xStart, y1, x2: xVertical, y2: y1, final: false });
-          lineas.push({ x1: xStart, y1, x2: xVertical, y2: y2, final: false });
-          lineas.push({ x1: xVertical, y1, x2: xVertical, y2: y2, final: false });
+          if (y2 !== y1) {
+            lineas.push({ x1: xStart, y1: y2, x2: xVertical, y2: y2, final: false });
+            lineas.push({ x1: xVertical, y1, x2: xVertical, y2: y2, final: false });
+          }
           lineas.push({
             x1: xVertical,
             y1: yMid,
@@ -508,13 +512,27 @@ export function Bracket({
         const nextCentros = centrosPorRonda[r + 1];
 
         if (centros.length === 1 && nextCentros.length === 1) {
-          lineas.push({
-            x1: xStart,
-            y1: centros[0],
-            x2: xEnd,
-            y2: nextCentros[0],
-            final: esHaciaFinal,
-          });
+          const y1 = centros[0];
+          const y2 = nextCentros[0];
+          if (y1 === y2) {
+            lineas.push({
+              x1: xStart,
+              y1,
+              x2: xEnd,
+              y2,
+              final: esHaciaFinal,
+            });
+          } else {
+            lineas.push({ x1: xStart, y1, x2: xVertical, y2: y1, final: false });
+            lineas.push({ x1: xVertical, y1, x2: xVertical, y2, final: false });
+            lineas.push({
+              x1: xVertical,
+              y1: y2,
+              x2: xEnd,
+              y2,
+              final: esHaciaFinal,
+            });
+          }
         } else {
           for (let j = 0; j < nextCentros.length; j += 1) {
             const y1 = centros[2 * j];
