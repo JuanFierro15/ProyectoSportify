@@ -77,7 +77,10 @@ function normalizarJornadasCascada(jornadasActuales, fases = [], dias = [], hora
     let nuevaFecha = actual.fecha || fechaMin;
     let nuevasHoras = Array.isArray(actual.horas) ? [...actual.horas] : [];
 
-    if (fechaMin && nuevaFecha < fechaMin) {
+    if (
+      (fechaMin && nuevaFecha < fechaMin) ||
+      (dias.length > 0 && !dias.includes(nuevaFecha))
+    ) {
       nuevaFecha = fechaMin;
       nuevasHoras = [];
     }
@@ -175,7 +178,6 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
   const prevActivoRef = useRef(false);
 
   const reiniciar = useCallback(() => {
-    setModo(modoInicial);
     setFecha(dias[0]);
     setCanchaId(canchaInicial ? canchaInicial.id : null);
     setCanchaIds([]);
@@ -191,7 +193,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     setTocado({ nombre: false, telefono: false });
     setError(null);
     setConfirmado(null);
-  }, [modoInicial, dias, canchaInicial]);
+  }, [dias, canchaInicial]);
 
   useEffect(() => {
     if (activo && !prevActivoRef.current) {
@@ -236,6 +238,21 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
       minutosTurno: minTurno,
     });
   }, [canchasElegidas, canchaSel, duracionPartido, equipos, canchaIds]);
+
+  useEffect(() => {
+    if (dias.length === 0) return;
+    if (!dias.includes(fecha)) {
+      setFecha(dias[0]);
+      setHorasSel([]);
+    }
+    setJornadas((prev) => {
+      const algunaFuera = Object.values(prev).some(
+        (j) => j && j.fecha && !dias.includes(j.fecha)
+      );
+      if (!algunaFuera) return prev;
+      return normalizarJornadasCascada(prev, fases, dias, horasBase);
+    });
+  }, [dias, fecha, fases, horasBase]);
 
   const esLibre = useCallback(
     (hora) => {
@@ -681,7 +698,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
       return 'Elige el horario.';
     }
     if (modo === 'cumpleanos') {
-      if (Number(invitados) < 1) {
+      if (!Number.isInteger(Number(invitados)) || Number(invitados) < 1) {
         return 'Indica cuántos invitados vienen.';
       }
       if (Number(invitados) > MAX_INVITADOS) {
