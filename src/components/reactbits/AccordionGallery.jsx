@@ -17,16 +17,8 @@ import { gsap } from 'gsap';
 
 import './AccordionGallery.css';
 
-const DEFAULT_ITEMS = [
-  { image: 'https://picsum.photos/id/1015/900/1200', label: 'Canyon', link: '#' },
-  { image: 'https://picsum.photos/id/1018/900/1200', label: 'Ridgeline', link: '#' },
-  { image: 'https://picsum.photos/id/1039/900/1200', label: 'Falls', link: '#' },
-  { image: 'https://picsum.photos/id/1043/900/1200', label: 'Harbour', link: '#' },
-  { image: 'https://picsum.photos/id/1044/900/1200', label: 'Skyline', link: '#' }
-];
-
 const AccordionGallery = ({
-  items = DEFAULT_ITEMS,
+  items = [],
   defaultIndex = 2,
   accentColor = '#ffffff',
   overlayColor = '#060010',
@@ -58,7 +50,7 @@ const AccordionGallery = ({
 
   const vertical = orientation === 'vertical';
   const count = items.length;
-  const [active, setActive] = useState(Math.min(Math.max(defaultIndex, 0), count - 1));
+  const [active, setActive] = useState(Math.min(Math.max(defaultIndex, 0), Math.max(count - 1, 0)));
 
   const prefersReduced =
     typeof window !== 'undefined' && window.matchMedia
@@ -226,7 +218,7 @@ const AccordionGallery = ({
           >
             <span className="ag-panel__frame">
               <span className="ag-panel__media" ref={el => (mediaRefs.current[i] = el)}>
-                <img src={item.image} alt={item.alt || item.label || ''} draggable="false" loading="lazy" decoding="async" />
+                <img src={item.image} alt={item.alt ?? item.label ?? ''} draggable="false" loading="lazy" decoding="async" />
               </span>
               <span className="ag-panel__overlay" aria-hidden="true" />
             </span>
