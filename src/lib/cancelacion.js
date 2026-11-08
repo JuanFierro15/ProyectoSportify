@@ -162,7 +162,6 @@ export function aplicarCancelacion(
       ...state,
       ocupados,
       reservas: nuevasReservas,
-      error: null,
     },
     error: null,
   };

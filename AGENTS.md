@@ -661,6 +661,10 @@ el plan del chatbot está en `planificacion/etapas/1-chatbot/PLAN.md`.
   `GEMINI.md`, `.mcp.json`, `.claude.json`, `.agents/`), además de `.env` y
   los videos fuente. `.vercelignore` es lista blanca, así que estos archivos
   no llegan al despliegue.
+- `.engram/` **sí se versiona, a propósito** (decisión de Juan, 07-11-2026):
+  son las memorias del proyecto exportadas con `engram sync` para que todo el
+  equipo tenga el mismo contexto. No es un descuido ni código muerto: no
+  quitarla ni agregarla al `.gitignore`. Tampoco llega al despliegue.
 - **Ningún commit debe mencionar IA, Claude ni Anthropic**, ni incluir
   coautoría de ellos.
 - Commits en español con prefijo (`feat:`, `fix:`, `chore:`, `docs:`,

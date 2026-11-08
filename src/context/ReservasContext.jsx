@@ -33,11 +33,11 @@ import { validarJornadas } from '../lib/torneo';
  *       consecutivas, bloqueadas todo-o-nada (Bloque 5). Guarda también su
  *       `total` (mismas reglas de precio por cancha, ver calcularPrecioEvento).
  *   Ambos tipos guardan un `codigo` corto (SPF-XXXXXX) que se muestra en el
- *   QR de confirmación. Ambos tipos se reservan desde la misma ventana: la
+ *   QR de confirmación. Ambos tipos se reservan desde la misma página: la
  *   vista de canchas (VistaCanchas).
  * - La acción CANCELAR quita una reserva individual y libera sus horas (no las
  *   de la semilla ni las de eventos), respetando cancelacion.horasMinimas de
- *   negocio.json; la usa el chat y la reutilizará el panel admin (Bloque 7).
+ *   negocio.json; la usan el chat y Mis reservas.
  * - Sin backend: todo vive en memoria y se espeja al almacenamiento local.
  *
  * Consumir con el hook `useReservas()`.
@@ -145,14 +145,14 @@ export function crearEstadoInicial() {
           tipo: r.tipo || (Array.isArray(r.canchaIds) ? 'evento' : 'individual'),
           ...r,
         }));
-        return { dias, canchas, ocupados, reservas, error: null };
+        return { dias, canchas, ocupados, reservas };
       }
     }
   } catch (e) {
     // Sin almacenamiento local o dato corrupto -> semilla completa.
   }
 
-  return { dias, canchas, ocupados: semillaOcup, reservas: [], error: null };
+  return { dias, canchas, ocupados: semillaOcup, reservas: [] };
 }
 
 // Horas de una cancha en una fecha, con su disponibilidad.
@@ -176,28 +176,6 @@ function horaLibre(state, canchaId, fecha, hora) {
   const ocup =
     (state.ocupados[canchaId] && state.ocupados[canchaId][fecha]) || [];
   return !ocup.includes(hora);
-}
-
-// ¿Esa hora de esa cancha/fecha está tomada por un evento (torneo/cumpleaños)?
-function horaDeEvento(state, canchaId, fecha, hora) {
-  return state.reservas.some(
-    (r) =>
-      r.tipo === 'evento' &&
-      ((r.fecha === fecha &&
-        Array.isArray(r.canchaIds) &&
-        r.canchaIds.includes(canchaId) &&
-        Array.isArray(r.horas) &&
-        r.horas.includes(hora)) ||
-        (Array.isArray(r.bloques) &&
-          r.bloques.some(
-            (b) =>
-              b.fecha === fecha &&
-              Array.isArray(b.canchaIds) &&
-              b.canchaIds.includes(canchaId) &&
-              Array.isArray(b.horas) &&
-              b.horas.includes(hora)
-          )))
-  );
 }
 
 // ¿Las horas pedidas son consecutivas (franjas de 1 h una tras otra) y todas
@@ -326,10 +304,7 @@ export function reducer(state, action) {
 
       // Validación de choque también a nivel reducer (última línea de defensa).
       if (!bloqueLibre(state, canchaId, fecha, horas)) {
-        return {
-          ...state,
-          error: 'Ese horario ya está reservado. Elige otro.',
-        };
+        return state;
       }
 
       const previas =
@@ -367,7 +342,6 @@ export function reducer(state, action) {
         ...state,
         ocupados,
         reservas: [...state.reservas, reserva],
-        error: null,
       };
     }
 
@@ -388,10 +362,7 @@ export function reducer(state, action) {
 
       const validacion = validarReservaEvento(state, action.payload);
       if (!validacion.ok) {
-        return {
-          ...state,
-          error: validacion.error,
-        };
+        return state;
       }
 
       if (Array.isArray(bloques) && bloques.length > 0) {
@@ -448,7 +419,6 @@ export function reducer(state, action) {
           ...state,
           ocupados,
           reservas: [...state.reservas, evento],
-          error: null,
         };
       }
 
@@ -496,7 +466,6 @@ export function reducer(state, action) {
         ...state,
         ocupados,
         reservas: [...state.reservas, evento],
-        error: null,
       };
     }
 
@@ -509,16 +478,10 @@ export function reducer(state, action) {
         negocio.cancelacion.horasMinimas
       );
       if (res.error) {
-        return {
-          ...state,
-          error: res.error,
-        };
+        return state;
       }
       return res.state;
     }
-
-    case 'LIMPIAR_ERROR':
-      return state.error ? { ...state, error: null } : state;
 
     case 'RENOVAR_VENTANA': {
       const dias = ventanaDias();
@@ -607,12 +570,6 @@ export function ReservasProvider({ children }) {
     [state]
   );
 
-  // ¿Esa hora está tomada por un evento? (para marcarlo en el catálogo).
-  const esHorarioDeEvento = useCallback(
-    (canchaId, fecha, hora) => horaDeEvento(state, canchaId, fecha, hora),
-    [state]
-  );
-
   // Cancelación individual: valida el plazo y, si se puede, despacha. Devuelve { ok, error? }.
   const cancelar = useCallback(
     (reservaId) => {
@@ -632,32 +589,24 @@ export function ReservasProvider({ children }) {
     [state]
   );
 
-  const limpiarError = useCallback(() => dispatch({ type: 'LIMPIAR_ERROR' }), []);
-
   const value = useMemo(
     () => ({
       dias: state.dias,
       canchas: state.canchas,
       reservas: state.reservas,
-      error: state.error,
       disponibilidad,
       reservar,
       reservarEvento,
-      esHorarioDeEvento,
       cancelar,
-      limpiarError,
     }),
     [
       state.dias,
       state.canchas,
       state.reservas,
-      state.error,
       disponibilidad,
       reservar,
       reservarEvento,
-      esHorarioDeEvento,
       cancelar,
-      limpiarError,
     ]
   );
 

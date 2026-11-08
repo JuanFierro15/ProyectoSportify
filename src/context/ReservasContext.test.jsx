@@ -49,9 +49,7 @@ describe('ReservasContext y reducer — doble validación de eventos (S3, S4)', 
       },
     });
 
-    expect(estadoDiaInvertido.error).toBe(
-      `Final debe jugarse después de que termine Semifinal (${dia2} a las 15:00).`
-    );
+    expect(estadoDiaInvertido).toBe(estadoInicial);
     expect(estadoDiaInvertido.reservas).toEqual([]);
     expect(estadoDiaInvertido.ocupados).toEqual(ocupadosAntes);
 
@@ -84,9 +82,7 @@ describe('ReservasContext y reducer — doble validación de eventos (S3, S4)', 
       },
     });
 
-    expect(estadoHoraInvertida.error).toBe(
-      `Final debe jugarse después de que termine Semifinal (${dia1} a las 17:00).`
-    );
+    expect(estadoHoraInvertida).toBe(estadoInicial);
     expect(estadoHoraInvertida.reservas).toEqual([]);
     expect(estadoHoraInvertida.ocupados).toEqual(ocupadosAntes);
   });
@@ -109,9 +105,7 @@ describe('ReservasContext y reducer — doble validación de eventos (S3, S4)', 
       },
     });
 
-    expect(siguiente.error).toBe(
-      'Alguna cancha u horario del evento ya no está disponible. No se reservó nada.'
-    );
+    expect(siguiente).toBe(estadoInicial);
     expect(siguiente.reservas).toEqual([]);
     expect(siguiente.ocupados).toEqual(ocupadosAntes);
   });

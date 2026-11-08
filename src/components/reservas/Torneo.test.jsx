@@ -1217,7 +1217,7 @@ describe('Modo Torneo - Pruebas de integración', () => {
       return null;
     }
 
-    // Parte A: En el hook, con 4 equipos el tope es 2 canchas (alternarCancha, alternarDeporte, motivoNoAgregable, topeCanchasAlcanzado)
+    // Parte A: En el hook, con 4 equipos el tope es 2 canchas (alternarCancha, alternarDeporte, motivoNoAgregable)
     let diasHook = [];
     function ProbarHookS6() {
       const { dias } = useReservas();
@@ -1237,7 +1237,6 @@ describe('Modo Torneo - Pruebas de integración', () => {
     });
 
     expect(result.current.canchaIds).toEqual(['futbol-1', 'futbol-2']);
-    expect(result.current.topeCanchasAlcanzado).toBe(true);
     expect(result.current.motivoNoAgregable('futbol-3')).toBe(
       'Con 4 equipos se juegan como máximo 2 partidos a la vez: elige hasta 2 canchas.'
     );

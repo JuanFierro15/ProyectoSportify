@@ -16,7 +16,7 @@
   flex-direction: column;
   gap: 1.25rem;
   box-shadow: none;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition: border-color 0.18s ease;
 }
 
 @media screen and (max-width: 39.9375em) {

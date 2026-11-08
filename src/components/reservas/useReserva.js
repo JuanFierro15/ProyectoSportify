@@ -30,12 +30,10 @@ import {
   partidosPorRonda,
   programarTorneo,
   sortearEquipos,
-  sugerenciasTiempo,
   sugerenciasTiempoFase,
   turnosPorRonda,
   validarCanchasTorneo,
   validarCrucesManuales,
-  validarFranja,
   validarJornadas,
 } from '../../lib/torneo';
 
@@ -180,6 +178,8 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
   const [confirmado, setConfirmado] = useState(null);
 
   const prevActivoRef = useRef(false);
+  const jornadasRef = useRef(jornadas);
+  jornadasRef.current = jornadas;
 
   const reiniciar = useCallback(() => {
     setFecha(dias[0]);
@@ -438,8 +438,6 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     [emparejamiento, fecha, modo, canchaIds.length]
   );
 
-  const setEquipos = cambiarEquiposTorneo;
-
   const setDuracionPartido = useCallback((min) => {
     setDuracionPartidoState(Number(min));
   }, []);
@@ -494,40 +492,51 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
   const elegirHoraFase = useCallback(
     (ronda, hora) => {
       const numRonda = Number(ronda);
-      setJornadas((prev) => {
-        const jActual = prev[numRonda] || { fecha, horas: [] };
-        const horasActuales = Array.isArray(jActual.horas) ? jActual.horas : [];
-        if (horasActuales.includes(hora) && !esLibreFase(numRonda, hora)) {
-          setError(null);
-          const siguiente = {
-            ...prev,
+      const prevJornadas = jornadasRef.current;
+      const jActual = prevJornadas[numRonda] || { fecha, horas: [] };
+      const horasActuales = Array.isArray(jActual.horas) ? jActual.horas : [];
+
+      if (horasActuales.includes(hora) && !esLibreFase(numRonda, hora)) {
+        setError(null);
+        const siguiente = normalizarJornadasCascada(
+          {
+            ...prevJornadas,
             [numRonda]: {
               ...jActual,
               horas: [],
             },
-          };
-          return normalizarJornadasCascada(siguiente, fases, dias, horasBase);
-        }
-        const res = seleccionarRango(
-          horasActuales,
-          hora,
-          horasBase,
-          (h) => esLibreFase(numRonda, h)
+          },
+          fases,
+          dias,
+          horasBase
         );
-        if (res.error) {
-          setError(res.error);
-        } else {
-          setError(null);
-        }
-        const siguiente = {
-          ...prev,
+        jornadasRef.current = siguiente;
+        setJornadas(siguiente);
+        return;
+      }
+
+      const res = seleccionarRango(
+        horasActuales,
+        hora,
+        horasBase,
+        (h) => esLibreFase(numRonda, h)
+      );
+
+      setError(res.error || null);
+      const siguiente = normalizarJornadasCascada(
+        {
+          ...prevJornadas,
           [numRonda]: {
             ...jActual,
             horas: res.sel,
           },
-        };
-        return normalizarJornadasCascada(siguiente, fases, dias, horasBase);
-      });
+        },
+        fases,
+        dias,
+        horasBase
+      );
+      jornadasRef.current = siguiente;
+      setJornadas(siguiente);
     },
     [fecha, horasBase, esLibreFase, fases, dias]
   );
@@ -550,103 +559,41 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
         ? validarCrucesManuales(ordenEquipos, Number(equipos))
         : '';
 
-    const tieneJornadasConfiguradas = Object.values(jornadas).some(
-      (j) => Array.isArray(j?.horas) && j.horas.length > 0
-    );
-
-    // Fallback: si no hay jornadas por fase configuradas pero hay horasSel globales
-    const usarFallbackUnico = !tieneJornadasConfiguradas && horasSel.length > 0;
-
-    let jornadasEfectivas;
-    let validacionesJornadas;
-    let sugerenciasPorFase;
-    let bloques;
-    let partidos;
-    let validacionFranja;
-    let sugerencias;
-
-    if (usarFallbackUnico) {
-      jornadasEfectivas = { 1: { fecha, horas: [...horasSel] } };
-      sugerenciasPorFase = {};
-      validacionFranja = validarFranja(minRequeridos, horasSel.length);
-      sugerencias = sugerenciasTiempo({
-        equipos: Number(equipos),
-        canchas: numCanchas,
+    const validacionesJornadas = validarJornadas(fases, jornadas);
+    const sugerenciasPorFase = {};
+    fases.forEach((fase) => {
+      const j = jornadas[fase.ronda];
+      const nH = Array.isArray(j?.horas) ? j.horas.length : 0;
+      sugerenciasPorFase[fase.ronda] = sugerenciasTiempoFase({
+        fase,
+        canchasTotales: canchaIds.length,
         duracionPartido: Number(duracionPartido),
         deporte: deporteTorneo,
-        horasReservadas: horasSel.length,
+        horasReservadas: nH,
       });
-      validacionesJornadas = [
-        {
-          ronda: 1,
-          nombreRonda: fases[0]?.nombreRonda || 'Torneo',
-          completa: true,
-          alcanza: validacionFranja.alcanza,
-          ordenValido: true,
-          disponibles: validacionFranja.disponibles,
-          deficit: validacionFranja.deficit,
-          error: validacionFranja.alcanza
-            ? null
-            : `La franja elegida no alcanza para el torneo (faltan ${validacionFranja.deficit} min).`,
-        },
-      ];
-      bloques = [{ fecha, horas: [...horasSel], canchaIds: [...canchaIds] }];
-      partidos = programarTorneo({
-        orden: ordenEquipos,
-        canchaIds,
-        horaInicio: horasSel[0] || null,
-        minutosTurno,
-      });
-    } else {
-      jornadasEfectivas = jornadas;
-      validacionesJornadas = validarJornadas(fases, jornadasEfectivas);
-      sugerenciasPorFase = {};
-      fases.forEach((fase) => {
-        const j = jornadasEfectivas[fase.ronda];
-        const nH = Array.isArray(j?.horas) ? j.horas.length : 0;
-        sugerenciasPorFase[fase.ronda] = sugerenciasTiempoFase({
-          fase,
-          canchasTotales: canchaIds.length,
-          duracionPartido: Number(duracionPartido),
-          deporte: deporteTorneo,
-          horasReservadas: nH,
-        });
-      });
-      bloques = fases
-        .map((fase) => {
-          const j = jornadasEfectivas[fase.ronda];
-          if (!j || !j.fecha || !Array.isArray(j.horas) || j.horas.length === 0) {
-            return null;
-          }
-          return {
-            ronda: fase.ronda,
-            nombreRonda: fase.nombreRonda,
-            fecha: j.fecha,
-            horas: [...j.horas],
-            canchaIds: [...fase.canchaIds],
-          };
-        })
-        .filter(Boolean);
-      partidos = programarTorneo({
-        orden: ordenEquipos,
-        canchaIds,
-        horaInicio: null,
-        minutosTurno,
-        jornadas: jornadasEfectivas,
-      });
-      const horasTotales = Object.values(jornadasEfectivas).reduce(
-        (acc, j) => acc + (Array.isArray(j?.horas) ? j.horas.length : 0),
-        0
-      );
-      validacionFranja = validarFranja(minRequeridos, horasTotales);
-      sugerencias = sugerenciasTiempo({
-        equipos: Number(equipos),
-        canchas: numCanchas,
-        duracionPartido: Number(duracionPartido),
-        deporte: deporteTorneo,
-        horasReservadas: horasTotales,
-      });
-    }
+    });
+    const bloques = fases
+      .map((fase) => {
+        const j = jornadas[fase.ronda];
+        if (!j || !j.fecha || !Array.isArray(j.horas) || j.horas.length === 0) {
+          return null;
+        }
+        return {
+          ronda: fase.ronda,
+          nombreRonda: fase.nombreRonda,
+          fecha: j.fecha,
+          horas: [...j.horas],
+          canchaIds: [...fase.canchaIds],
+        };
+      })
+      .filter(Boolean);
+    const partidos = programarTorneo({
+      orden: ordenEquipos,
+      canchaIds,
+      horaInicio: null,
+      minutosTurno,
+      jornadas,
+    });
 
     return {
       deporte: deporteTorneo,
@@ -657,15 +604,13 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
       minutosTurno,
       turnosTotales,
       minutosRequeridos: minRequeridos,
-      validacionFranja,
-      sugerencias,
       errorCanchas,
       errorCruces,
       emparejamiento,
       ordenEquipos,
       partidos,
       fases,
-      jornadas: jornadasEfectivas,
+      jornadas,
       validacionesJornadas,
       sugerenciasPorFase,
       bloques,
@@ -679,8 +624,6 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     emparejamiento,
     ordenEquipos,
     jornadas,
-    horasSel,
-    fecha,
     fases,
   ]);
 
@@ -853,9 +796,6 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     [modo, canchaIds, canchas, equipos]
   );
 
-  const topeCanchasAlcanzado =
-    modo === 'torneo' && canchaIds.length >= maxCanchas;
-
   const deporteBloqueado = useCallback(
     (slug) => {
       if (modo !== 'torneo' || canchaIds.length === 0) return false;
@@ -1000,9 +940,6 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     if (!puedeConfirmar) return;
 
     let res;
-    const tieneJornadasConfiguradas = Object.values(jornadas).some(
-      (j) => Array.isArray(j?.horas) && j.horas.length > 0
-    );
 
     const datosTorneo =
       modo === 'torneo'
@@ -1013,8 +950,8 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
             emparejamiento,
             orden: ordenEquipos,
             canchaIds,
-            horaInicio: horasSel[0] || null,
-            jornadas: tieneJornadasConfiguradas ? torneoPlan.jornadas : null,
+            horaInicio: null,
+            jornadas: torneoPlan.jornadas,
           })
         : null;
 
@@ -1033,7 +970,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
         subtipo: 'torneo',
         fecha: primerBloque.fecha || fecha,
         canchaIds,
-        horas: primerBloque.horas || horasSel,
+        horas: primerBloque.horas || [],
         bloques,
         equipos: Number(equipos),
         canchasNecesarias: canchaIds.length,
@@ -1098,10 +1035,12 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
       null;
 
     const horario =
-      modo === 'torneo' && torneoPlan.bloques?.length > 1
-        ? `${torneoPlan.bloques.length} jornadas`
-        : primerBloque && primerBloque.horas && primerBloque.horas.length > 0
-        ? `${primerBloque.horas[0]} a ${finDeFranja(primerBloque.horas[primerBloque.horas.length - 1])}`
+      modo === 'torneo'
+        ? torneoPlan.bloques?.length > 1
+          ? `${torneoPlan.bloques.length} jornadas`
+          : primerBloque && primerBloque.horas && primerBloque.horas.length > 0
+          ? `${primerBloque.horas[0]} a ${finDeFranja(primerBloque.horas[primerBloque.horas.length - 1])}`
+          : ''
         : `${horasSel[0]} a ${finDeFranja(horasSel[horasSel.length - 1])}`;
 
     const fechaTexto =
@@ -1139,7 +1078,6 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     });
   }, [
     puedeConfirmar,
-    jornadas,
     modo,
     torneoPlan,
     equipos,
@@ -1174,12 +1112,10 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     canchasElegidas,
     horasSel,
     equipos,
-    setEquipos,
     invitados,
     setInvitados,
     nombre,
     telefono,
-    tocado,
     errNombre,
     errTelefono,
     verErrNombre,
@@ -1190,7 +1126,6 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     motivoBloqueo,
     puedeConfirmar,
     motivoNoAgregable,
-    topeCanchasAlcanzado,
     deporteBloqueado,
     esLibre,
     contarLibresDia,
