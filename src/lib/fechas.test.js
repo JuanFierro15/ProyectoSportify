@@ -1,10 +1,22 @@
 import { vi } from 'vitest';
-import { esHoraPasada, fechaCompleta, horaAmPm } from './fechas';
+import { esHoraPasada, fechaCompleta, fechaEnFrase, horaAmPm } from './fechas';
 
 describe('fechaCompleta', () => {
   test('día de la semana, número y mes, sin fechas relativas', () => {
     expect(fechaCompleta('2026-10-13')).toBe('Martes 13 de octubre');
     expect(fechaCompleta('2026-10-14')).toBe('Miércoles 14 de octubre');
+  });
+});
+
+describe('fechaEnFrase', () => {
+  test('pasa la primera letra mayúscula a minúscula para incluir a mitad de frase', () => {
+    expect(fechaEnFrase('2026-10-13')).toBe('martes 13 de octubre');
+    expect(fechaEnFrase('2026-10-14')).toBe('miércoles 14 de octubre');
+  });
+
+  test('devuelve cadena vacía si no hay fecha válida', () => {
+    expect(fechaEnFrase(null)).toBe('');
+    expect(fechaEnFrase('')).toBe('');
   });
 });
 

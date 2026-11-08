@@ -12,7 +12,7 @@ import {
   estiloAcento,
 } from '../../lib/canchas';
 import { formatoPrecio, MAX_HORAS_SEGUIDAS } from '../../lib/precios';
-import { MAX_CANCHAS_TORNEO } from '../../lib/torneo';
+import { maxCanchasTorneo } from '../../lib/torneo';
 import { fechaCompleta } from '../../lib/fechas';
 import { esClicNormal, rutaReserva } from '../../lib/rutas';
 import DepthCarousel from '../reactbits/DepthCarousel';
@@ -36,9 +36,15 @@ const MINIMO_PARA_CARRUSEL = 3;
 // Subtítulos del encabezado de la página de reserva según el modo activo
 const SUBTITULOS = {
   cancha: `Elige la cancha, el día y hasta ${MAX_HORAS_SEGUIDAS} horas seguidas.`,
-  torneo: `Elige hasta ${MAX_CANCHAS_TORNEO} canchas de un deporte, el formato y la fecha de cada fase.`,
   cumpleanos: 'Elige las canchas, el día, el horario y cuántos invitados vienen.',
 };
+
+function subtituloModo(modo, equipos) {
+  if (modo === 'torneo') {
+    return `Elige hasta ${maxCanchasTorneo(equipos)} canchas de un deporte, el formato y la fecha de cada fase.`;
+  }
+  return SUBTITULOS[modo] || SUBTITULOS.cancha;
+}
 
 // Dimensiones reales de las fotos en public/img/canchas/ (720x893): se pasan
 // como width/height del <img> para que el navegador reserve el espacio antes
@@ -560,7 +566,7 @@ function VistaCanchas() {
           </h1>
 
           <p className="vista-canchas__subtitulo">
-            {SUBTITULOS[reserva.modo] || SUBTITULOS.cancha}
+            {subtituloModo(reserva.modo, reserva.equipos)}
           </p>
 
           {!reserva.confirmado && (

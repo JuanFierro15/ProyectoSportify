@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { useReservas } from '../../context/ReservasContext';
 import { normalizarNombre, normalizarTelefono, validarContactoChat } from '../../lib/validacion';
 import { calcularPrecio, finDeFranja } from '../../lib/precios';
@@ -27,12 +27,14 @@ import {
 // del bot, y el estado de cada tarjeta se guarda en su mensaje.
 export default function useAccionesReserva({ agregarMensaje, actualizarMensaje }) {
   const { reservar, cancelar, reservas, canchas, disponibilidad } = useReservas();
+  const reservasRef = useRef(reservas);
+  reservasRef.current = reservas;
 
   const confirmarReserva = useCallback(
     (mensaje) => {
       if (!mensaje || mensaje.estado !== 'pendiente') return;
 
-      const { canchaId, fecha, horas } = mensaje.accion || {};
+      const { canchaId, fecha, horas = [] } = mensaje.accion || {};
       const nombre = normalizarNombre(mensaje.accion?.nombre);
       const telefono = normalizarTelefono(mensaje.accion?.telefono);
 
@@ -43,9 +45,21 @@ export default function useAccionesReserva({ agregarMensaje, actualizarMensaje }
         return;
       }
 
-      const res = reservar({ canchaId, fecha, horas, nombre, telefono });
       const cancha = canchas.find((c) => c.id === canchaId);
       const canchaNombre = cancha ? cancha.nombre : canchaId;
+
+      if (horas.length === 0) {
+        actualizarMensaje(mensaje.id, { estado: 'fallida' });
+        const libres = disponibilidad(canchaId, fecha)
+          .filter((h) => h && h.disponible)
+          .map((h) => h.hora);
+        agregarMensaje({
+          texto: mensajeChoque({ canchaNombre, fecha, libres }),
+        });
+        return;
+      }
+
+      const res = reservar({ canchaId, fecha, horas, nombre, telefono });
 
       if (!res.ok) {
         actualizarMensaje(mensaje.id, { estado: 'fallida' });
@@ -107,10 +121,10 @@ export default function useAccionesReserva({ agregarMensaje, actualizarMensaje }
   );
 
   const manejarBusqueda = useCallback(
-    (accion) => {
+    (accion, reservasActuales = reservasRef.current) => {
       if (!accion) return;
       const { cancelables, enVentana } = buscarReservasCancelables({
-        reservas,
+        reservas: reservasActuales,
         nombre: accion.nombre,
         telefono: accion.telefono,
         canchaId: accion.canchaId,
@@ -151,7 +165,7 @@ export default function useAccionesReserva({ agregarMensaje, actualizarMensaje }
         });
       }
     },
-    [agregarMensaje, canchas, reservas]
+    [agregarMensaje, canchas]
   );
 
   const elegirReserva = useCallback(

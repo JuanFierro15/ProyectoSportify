@@ -68,12 +68,20 @@ export function validarPeticion(cuerpoTexto) {
   if (typeof ctx.fechaHoy !== 'string' || !REGEX_FECHA.test(ctx.fechaHoy)) {
     return { ok: false };
   }
-
-  if (typeof ctx.horaActual !== 'string' || !REGEX_HORA.test(ctx.horaActual)) {
+  const [yStr, mStr, dStr] = ctx.fechaHoy.split('-');
+  const y = parseInt(yStr, 10);
+  const m = parseInt(mStr, 10);
+  const d = parseInt(dStr, 10);
+  const fechaObj = new Date(Date.UTC(y, m - 1, d));
+  if (
+    fechaObj.getUTCFullYear() !== y ||
+    fechaObj.getUTCMonth() !== m - 1 ||
+    fechaObj.getUTCDate() !== d
+  ) {
     return { ok: false };
   }
 
-  if (!Array.isArray(ctx.canchas) || ctx.canchas.length > 30) {
+  if (typeof ctx.horaActual !== 'string' || !REGEX_HORA.test(ctx.horaActual)) {
     return { ok: false };
   }
 

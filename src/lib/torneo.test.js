@@ -8,6 +8,9 @@ import {
   desempateDe,
   minutosPorTurno,
   partidosPorRonda,
+  maxCanchasTorneo,
+  mensajeTopeCanchas,
+  limpiarJornadasConChoque,
   turnosPorRonda,
   minutosRequeridos,
   validarFranja,
@@ -59,6 +62,49 @@ describe('Estructura de rondas y cálculo de tiempo', () => {
     expect(partidosPorRonda(16)).toEqual([8, 4, 2, 1]);
     expect(partidosPorRonda(6)).toEqual([]);
     expect(partidosPorRonda(0)).toEqual([]);
+  });
+
+  test('maxCanchasTorneo limita por los partidos de la fase más grande y MAX_CANCHAS_TORNEO', () => {
+    expect(maxCanchasTorneo(4)).toBe(2);
+    expect(maxCanchasTorneo(8)).toBe(3);
+    expect(maxCanchasTorneo(16)).toBe(3);
+    expect(maxCanchasTorneo(6)).toBe(MAX_CANCHAS_TORNEO);
+    expect(maxCanchasTorneo(0)).toBe(MAX_CANCHAS_TORNEO);
+    expect(maxCanchasTorneo()).toBe(MAX_CANCHAS_TORNEO);
+  });
+
+  test('mensajeTopeCanchas construye el aviso de límite y el de recorte', () => {
+    expect(mensajeTopeCanchas(4)).toBe(
+      'Con 4 equipos se juegan como máximo 2 partidos a la vez: elige hasta 2 canchas.'
+    );
+    expect(mensajeTopeCanchas(4, { recorte: true })).toBe(
+      'Con 4 equipos se juegan como máximo 2 partidos a la vez: se dejaron las primeras 2 canchas elegidas.'
+    );
+  });
+
+  test('limpiarJornadasConChoque limpia la franja entera de las fases con alguna hora ocupada y conserva el resto', () => {
+    const jornadas = {
+      1: { fecha: '2026-11-10', horas: ['14:00', '15:00'] },
+      2: { fecha: '2026-11-11', horas: ['16:00'] },
+    };
+
+    const conChoque = limpiarJornadasConChoque(
+      jornadas,
+      (r, h) => !(r === 1 && h === '15:00')
+    );
+    expect(conChoque).toEqual({
+      huboChoque: true,
+      jornadas: {
+        1: { fecha: '2026-11-10', horas: [] },
+        2: { fecha: '2026-11-11', horas: ['16:00'] },
+      },
+    });
+
+    const sinChoque = limpiarJornadasConChoque(jornadas, () => true);
+    expect(sinChoque).toEqual({
+      huboChoque: false,
+      jornadas,
+    });
   });
 
   test('turnosPorRonda distribuye partidos según canchas disponibles', () => {
@@ -190,6 +236,17 @@ describe('sugerenciasTiempo', () => {
 
     expect(sugs.length).toBe(1);
     expect(sugs[0]).toContain('Amplía la franja horaria');
+
+    // Con 4 equipos, el tope es 2 canchas: con 2 canchas y 15 min no sugiere agregar más canchas
+    const sugs4 = sugerenciasTiempo({
+      equipos: 4,
+      canchas: 2,
+      duracionPartido: 15,
+      deporte: 'futbol',
+      horasReservadas: 0,
+    });
+    expect(sugs4).toHaveLength(1);
+    expect(sugs4[0]).toContain('Amplía la franja horaria');
   });
 });
 
@@ -207,6 +264,18 @@ describe('validarCanchasTorneo', () => {
       { id: 'c4', deporte: 'futbol' },
     ];
     expect(validarCanchasTorneo(canchas)).toBe('Elige máximo 3 canchas para el torneo.');
+  });
+
+  test('con 4 equipos limita a 2 canchas y explica el motivo', () => {
+    const tresCanchas = [
+      { id: 'c1', deporte: 'futbol' },
+      { id: 'c2', deporte: 'futbol' },
+      { id: 'c3', deporte: 'futbol' },
+    ];
+    expect(validarCanchasTorneo(tresCanchas, 4)).toBe(
+      'Con 4 equipos se juegan como máximo 2 partidos a la vez: elige hasta 2 canchas.'
+    );
+    expect(validarCanchasTorneo(tresCanchas.slice(0, 2), 4)).toBe('');
   });
 
   test('retorna error si las canchas son de deportes distintos', () => {

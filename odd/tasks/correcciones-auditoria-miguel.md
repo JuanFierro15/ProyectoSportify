@@ -33,7 +33,7 @@ Las citas entre comillas son textuales de las issues. Las decisiones marcadas "(
 
 | ID | Specs | Ruta | Estado | Commit |
 | --- | --- | --- | --- | --- |
-| T1 | S1-S5 | agy flash (`c1-chat`) + verificación independiente | pendiente | |
+| T1 | S1-S5 | agy flash (`c1-chat`) + verificación independiente | hecha (S1-S5 verificadas) | `ac40d88`, `ed2737b`, `c2856ac` |
 | T2 | S6-S10 | agy flash (`a1-accesibilidad`) + verificación independiente | hecha (S6-S10 verificadas) | `3ff4902`, `6c9337d`, `a904d8e` |
 | T3 | S11-S14 | agy flash (`p1-pagina-reserva`) + verificación independiente | pendiente | |
 
@@ -44,4 +44,5 @@ Ruta: delegación a agy por preferencia del usuario (el orquestador no escribe c
 - **L1** (07-11-2026, Miguel): "[…] en este proyecto en el github tenemos unas issues asignadas para corregir, quiero que revises de que trata, elabores un plan con ayuda de gentle-ai y ejecutes la tarea usando la metodología de trabajo que ya hemos usado, como Argon tiene pocos tokens puedes usar subagentes tuyos para reemplazarlo"
 - **L2** Exploración sobre `77af94d`: líneas de las issues confirmadas; #15.1 confirmado en `DepthCarousel.jsx:398,447,467`; #14.5 verificado (pin y scrub siguen con movimiento reducido). Plan escrito; espera aprobación de Miguel.
 - **L3** (07-11-2026, Miguel): "Lo del bracket no importa que el codigo lo haya hecho juan, si se nos asigno a nosotros corregirlo, lo corregimos y ya". S12 incluye el bracket.
+- **L4** (07-11-2026) Plan aprobado por Miguel ("apruebo, arranca con el #13"); commit del plan `db1ff02`. T1 hecha: 245 tests y lint en verde, snapshot de instrucciones igual al de la base, 8 tests en RED contra la base. Docs del contrato al día en `AGENTS.md` y `README.md`. Siguiente: T2 (#14).
 - **L5** (07-11-2026) T2 hecha en `fix/accesibilidad-mis-reservas-navbar` (T1 está en el PR #18). Primer intento de agy detenido por memoria; Miguel autorizó relanzar ("Si, ya cerre todos los otros procesos de aplicaciones"). Verificación en Chrome headless de S6-S10; una corrección de S8 (`aria-controls` de la pestaña inactiva apuntaba a un panel inexistente). Siguiente: T3 (#15).

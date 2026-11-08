@@ -65,10 +65,17 @@ function TestHarness({
   }, [canchasIniciales, dias, guardarTorneoPrevio, reserva, reservarEvento]);
 
   useEffect(() => {
-    if (reserva.canchaIds.length >= canchasIniciales.length && horasIniciales.length > 0 && reserva.horasSel.length === 0) {
-      horasIniciales.forEach((h) => reserva.elegirHora(h));
+    if (reserva.canchaIds.length >= canchasIniciales.length && horasIniciales.length > 0) {
+      if (modo === 'torneo') {
+        const j1 = reserva.jornadas?.[1]?.horas || [];
+        if (j1.length === 0) {
+          horasIniciales.forEach((h) => reserva.elegirHoraFase(1, h));
+        }
+      } else if (reserva.horasSel.length === 0) {
+        horasIniciales.forEach((h) => reserva.elegirHora(h));
+      }
     }
-  }, [canchasIniciales.length, horasIniciales, reserva]);
+  }, [canchasIniciales.length, horasIniciales, modo, reserva]);
 
   if (!listo) {
     return null;
@@ -187,7 +194,7 @@ describe('FormularioReserva - Prop seccion y renderizado público', () => {
         <TestHarness
           modo="torneo"
           seccion="fechas"
-          canchasIniciales={['futbol-1', 'futbol-2']}
+          canchasIniciales={['futbol-1']}
           horasIniciales={['08:00']}
           guardarTorneoPrevio={true}
         />
