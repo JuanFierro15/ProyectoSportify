@@ -80,5 +80,5 @@ Resolver los hallazgos `P1-01`, `P1-03`, `P1-05`, `P1-08` (parte CSS) y `P2-06` 
 
 ## Verificación al terminar
 
-- Ejecuta `& "C:\Users\MIGUEL ANGEL\.gemini\antigravity-cli\skills\impeccable\scripts\impeccable.cmd" detect --json src` y verifica que devuelva `[]` (exit code `0`).
+- Ejecuta `impeccable detect --json src` y verifica que devuelva `[]` (exit code `0`).
 - Ejecuta `npx vitest run` y `npm run lint`.

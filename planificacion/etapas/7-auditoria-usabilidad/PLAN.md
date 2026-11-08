@@ -1,6 +1,6 @@
 # Etapa 7 — Auditoría de usabilidad y mejoras del sitio web (`usability-improve`)
 
-> **Estado**: Informe completo de la auditoría de usabilidad (`impeccable`) listo para ejecutarse sobre la rama `usability-improve` una vez se haga merge del PR #2 (`torneo-immplementation`).
+> **Estado**: Ejecutado sobre la rama `usability-improve` e integrado en `main` (`0e7a6f8`, PR #3; ver `REPORTE.md`).
 > **Rama destino**: `usability-improve`
 > **Carpeta en `planificacion/`**: `planificacion/etapas/7-auditoria-usabilidad/`
 > **Auditoría realizada con**: `impeccable` (`audit.md` + `critique.md` + `impeccable detect --json src`) + `modern-web-guidance` (`forms`)
@@ -140,12 +140,12 @@
 | `u1` | `u1-prevencion-errores-reservas` | `P0-03`, `P0-04`, `P1-04`, `P1-06`, `P1-07`, `P2-05` | `src/components/reservas/useReserva.js`, `src/components/reservas/torneo/{AsignacionManual,AlertaTiempo,CalendarioTorneo}.jsx`, `src/components/reservas/{FormularioReserva,TarjetaCanchaCarrusel}.jsx`, `src/components/shared/SelectorDia.jsx` | Ola 1 |
 | `u2` | `u2-contacto-mis-reservas-y-voucher` | `P0-01`, `P2-02`, `P2-03`, `P2-07` | `src/lib/{validacion,cancelacion}.js`, `src/components/layout/{Navbar,Footer}.{jsx,css}`, `src/components/reservas/{VoucherReserva,ConfirmacionReserva}.{jsx,css}`, `src/components/canchas/VistaCanchas.jsx` | Ola 2 |
 | `u3` | `u3-accesibilidad-contraste-y-tokens` | `P1-01`, `P1-03`, `P1-05`, `P1-08`, `P2-06` | `src/lib/canchas.js`, `src/components/reservas/torneo/Bracket.css`, `src/components/reservas/{FormularioReserva,CanchasElegidas,SelectorModo}.css`, `src/components/canchas/VistaCanchas.css`, `src/components/shared/SelectorDia.css` | Ola 3 |
-| `u4` | `u4-carrusel-touch-targets-y-perf` | `P0-02`, `P1-02`, `P2-01`, `P2-04`, `P3-01` | `src/components/reactbits/{DepthCarousel,AccordionGallery}.{jsx,css}`, `src/components/chatbot/Chatbot.css`, `src/components/hero/DeporteHero.jsx`, `src/pages/PaginaInicio.jsx`, `src/data/deportes.js` | Ola 4 |
+| `u4` | `u4-carrusel-touch-targets-y-perf` | `P0-02`, `P1-02`, `P2-01`, `P2-04`, `P3-01` | `src/components/reactbits/{DepthCarousel,AccordionGallery}.{jsx,css}`, `src/components/chatbot/Chatbot.css`, `src/components/hero/DeporteHero.jsx`, `src/components/layout/PaginaInicio.jsx`, `src/data/deportes.js` | Ola 4 |
 
 ### Verificación en `usability-improve`
 1. `npx vitest run` (todas las suites unitarias y de integración en verde)
 2. `npm run lint` (`0 errors`, `0 warnings`)
-3. `& "C:\Users\MIGUEL ANGEL\.gemini\antigravity-cli\skills\impeccable\scripts\impeccable.cmd" detect --json src` (`[]`, exit code `0`)
+3. `impeccable detect --json src` (`[]`, exit code `0`)
 4. `npm run build` (build de producción limpio)
 
 ### Commits previstos en `usability-improve` (`commits-atomicos`)

@@ -72,4 +72,4 @@ Resolver los hallazgos `P0-02`, `P1-02`, `P1-08` (en `DepthCarousel`), `P2-01` y
 ## Verificación al terminar
 
 - Ejecuta `npx vitest run`, `npm run lint` y `npm run build`.
-- Ejecuta `& "C:\Users\MIGUEL ANGEL\.gemini\antigravity-cli\skills\impeccable\scripts\impeccable.cmd" detect --json src` y verifica `0` hallazgos.
+- Ejecuta `impeccable detect --json src` y verifica `0` hallazgos.

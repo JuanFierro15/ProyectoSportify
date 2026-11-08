@@ -11,7 +11,7 @@ conversacional** que también reserva y cancela.
 ![Foundation](https://img.shields.io/badge/Foundation-6.8-1779BA)
 ![GSAP](https://img.shields.io/badge/GSAP-3.13-88CE02)
 ![Gemini](https://img.shields.io/badge/Gemini-function%20calling-8E75B2?logo=googlegemini&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-197%20en%20verde-2EA44F)
+![Tests](https://img.shields.io/badge/tests-230%20en%20verde-2EA44F)
 
 ![Hero de voley playa con el video de fondo y el botón del asistente](docs/capturas/inicio.webp)
 
@@ -108,15 +108,15 @@ se genera un **código de reserva** (`SPF-XXXXXX`, con botón para copiarlo en
 un clic) y un **código QR sobre fondo blanco** para garantizar su lectura
 óptica. El QR contiene los datos de la reserva (tipo, fecha, horario, cancha,
 nombre y total) y se puede descargar para mostrarlo al llegar, junto al resumen
-de las condiciones de abono y cancelación y acceso directo a **Mis reservas**.
+de las condiciones de abono y cancelación (que recuerda que se puede consultar o
+cancelar en **Mis reservas** con el código).
 
 ![Pantalla de confirmación en tema oscuro con código de reserva SPF y código QR sobre fondo blanco](docs/capturas/confirmacion-qr.webp)
 
 ### Mis reservas
 
-Desde el botón **Mis reservas** de la barra de navegación (o desde la pantalla
-de confirmación) cualquier persona puede consultar sus reservas vigentes sin
-necesidad de cuenta:
+Desde el botón **Mis reservas** de la barra de navegación cualquier persona
+puede consultar sus reservas vigentes sin necesidad de cuenta:
 
 - **Búsqueda por código** (`SPF-XXXXXX`, sin importar mayúsculas o minúsculas)
   o por **nombre y teléfono** (ignora tildes y espacios).
@@ -464,7 +464,7 @@ probarlo en local:
 ## Pruebas
 
 ```bash
-npm test                          # 197 tests en 16 archivos (Vitest)
+npm test                          # 230 tests en 20 archivos (Vitest)
 npm run lint                      # ESLint sobre src, api y scripts
 npm run build                     # build de producción en /dist
 ```
