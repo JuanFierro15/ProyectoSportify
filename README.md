@@ -11,7 +11,7 @@ conversacional** que también reserva y cancela.
 ![Foundation](https://img.shields.io/badge/Foundation-6.8-1779BA)
 ![GSAP](https://img.shields.io/badge/GSAP-3.13-88CE02)
 ![Gemini](https://img.shields.io/badge/Gemini-function%20calling-8E75B2?logo=googlegemini&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-230%20en%20verde-2EA44F)
+![Tests](https://img.shields.io/badge/tests-275%20en%20verde-2EA44F)
 
 ![Hero de voley playa con el video de fondo y el botón del asistente](docs/capturas/inicio.webp)
 
@@ -464,7 +464,7 @@ probarlo en local:
 ## Pruebas
 
 ```bash
-npm test                          # 230 tests en 20 archivos (Vitest)
+npm test                          # 275 tests en 28 archivos (Vitest)
 npm run lint                      # ESLint sobre src, api y scripts
 npm run build                     # build de producción en /dist
 ```
