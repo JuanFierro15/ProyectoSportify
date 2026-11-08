@@ -380,6 +380,15 @@
     max-width: 100%;
   }
 
+  /* Entre 900px y 64em el lienzo de escritorio también desborda en horizontal: mismo snap que en celular */
+  .bracket-torneo__canvas-scroll {
+    scroll-snap-type: x proximity;
+  }
+
+  .bracket-torneo__canvas-scroll .bracket-torneo__col-header {
+    scroll-snap-align: start;
+  }
+
   /* Entre 900px y 64em el bracket usa el lienzo de escritorio dentro del asistente */
   .bracket-torneo__movil,
   .bracket-torneo__canvas-scroll {

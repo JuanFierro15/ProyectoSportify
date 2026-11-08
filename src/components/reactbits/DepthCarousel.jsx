@@ -366,18 +366,21 @@ const DepthCarousel = ({
     };
   }, [autoplay, autoplayDelay, count, navigateBy]);
 
+  // Acota solo por focusRef (el índice lógico) cuando la lista se achica: con
+  // loop, posRef pasa de count durante un arrastre o una animación y no indica
+  // un índice fuera de rango. notify mantiene al padre sincronizado.
   useEffect(() => {
-    if (count > 0 && (posRef.current >= count || focusRef.current >= count || active >= count)) {
+    if (count > 0 && focusRef.current >= count) {
       tweenRef.current?.kill();
       const nuevo = count - 1;
       posRef.current = nuevo;
       focusRef.current = nuevo;
-      setActive(nuevo);
+      notify(nuevo);
       layout(nuevo);
       return;
     }
     layout(posRef.current);
-  }, [layout, depth, spread, tilt, tiltDirection, visibleCards, falloff, blur, cardWidth, cardHeight, radius, count, active]);
+  }, [layout, notify, depth, spread, tilt, tiltDirection, visibleCards, falloff, blur, cardWidth, cardHeight, radius, count]);
 
   useEffect(
     () => () => {

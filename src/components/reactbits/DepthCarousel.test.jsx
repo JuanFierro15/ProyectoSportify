@@ -1,6 +1,6 @@
 import React from 'react';
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import DepthCarousel from './DepthCarousel';
 
 describe('DepthCarousel (S11)', () => {
@@ -67,5 +67,43 @@ describe('DepthCarousel (S11)', () => {
     const dotsActualizados = screen.getAllByRole('button', { name: /ir a la cancha/i });
     const dotsPresionados = dotsActualizados.filter((dot) => dot.getAttribute('aria-pressed') === 'true');
     expect(dotsPresionados).toHaveLength(1);
+  });
+
+  it('al arrastrar de la última tarjeta a la primera, el último onChange coincide con la tarjeta activa', () => {
+    const items = [
+      { id: '1', image: '1.jpg' },
+      { id: '2', image: '2.jpg' },
+      { id: '3', image: '3.jpg' },
+    ];
+    const onChange = vi.fn();
+    render(
+      <DepthCarousel
+        items={items}
+        initialIndex={2}
+        autoScale={false}
+        onChange={onChange}
+        renderOverlay={(item, _i, esActiva) => (esActiva ? <span>activa-{item.id}</span> : null)}
+      />
+    );
+
+    const carrusel = document.querySelector('.depth-carousel');
+    carrusel.setPointerCapture = () => {};
+    // Movimiento lento (velocidad casi nula) para que la posición final dependa solo del recorrido.
+    let reloj = 0;
+    const ahora = vi.spyOn(performance, 'now').mockImplementation(() => (reloj += 1000));
+    // Arrastre hacia la izquierda de algo más de una tarjeta (paso de 165 px con cardWidth 300):
+    // con loop, la posición queda en ~3,1, por encima de count.
+    fireEvent.pointerDown(carrusel, { clientX: 1000, pointerId: 1 });
+    fireEvent.pointerMove(carrusel, { clientX: 900, pointerId: 1 });
+    fireEvent.pointerMove(carrusel, { clientX: 818, pointerId: 1 });
+    fireEvent.pointerUp(carrusel, { clientX: 818, pointerId: 1 });
+    ahora.mockRestore();
+
+    expect(onChange).toHaveBeenCalled();
+    const [indiceFinal] = onChange.mock.calls.at(-1);
+    const activa = screen.getByText(/^activa-/);
+    expect(activa).toHaveTextContent(`activa-${items[indiceFinal].id}`);
+    const dots = screen.getAllByRole('button', { name: /ir a la cancha/i });
+    expect(dots[indiceFinal]).toHaveAttribute('aria-pressed', 'true');
   });
 });
