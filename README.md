@@ -530,7 +530,8 @@ El sitio está en Vercel y **cada push a `main` despliega a producción**.
 - **Movimiento reducido:** respeto estricto de `prefers-reduced-motion`:
   desactiva las animaciones GSAP de entrada, las transiciones de la
   confirmación, el zoom lento de las fotos del carrusel y el panel del
-  asistente, mostrando los estados de inmediato sin transiciones innecesarias.
+  asistente, mostrando los estados de inmediato sin transiciones innecesarias;
+  los heros no se fijan ni se animan con el scroll.
 - Todo indicador visual de disponibilidad va con texto ("10 de 13 horarios
   libres", "ocupado", "completo").
 - El color de acento de cada deporte se aplica con un color de texto que
