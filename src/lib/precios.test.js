@@ -3,7 +3,16 @@ import {
   calcularPrecioEvento,
   calcularPrecioJornadas,
   finDeFranja,
+  formatoPrecioCorto,
 } from './precios';
+
+describe('formatoPrecioCorto', () => {
+  test('formatea valores a pesos colombianos sin espacios', () => {
+    expect(formatoPrecioCorto(45000)).toBe('$45.000');
+    expect(formatoPrecioCorto(60000)).toBe('$60.000');
+    expect(formatoPrecioCorto(120000)).toBe('$120.000');
+  });
+});
 
 describe('calcularPrecio (cancha de 45.000 por hora)', () => {
   test('1 hora: sin descuento ni agua', () => {
