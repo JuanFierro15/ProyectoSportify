@@ -85,7 +85,7 @@ Cada bloque deja su resultado en `bloques/<bloque>/reporte.md` (no un
 - Código: agy `gemini-3.8-flash-high`, un bloque por issue, en orden #13 → #14 →
   #15, cada uno en su rama y en segundo plano (no dos a la vez: 8 GB de RAM).
   Tests primero en RED, como siempre.
-- Pruebas: en lugar de Argon, un subagente de Claude (Sonnet) en segundo plano
+- Pruebas: en lugar de Argon, un subagente verificador independiente en segundo plano
   por bloque: `npm test`, `npm run lint`, `npm run build` y la prueba en el
   navegador que pide cada issue (Chrome headless contra `npm run preview`;
   #14 a mano con teclado: Tab con el navbar oculto).
