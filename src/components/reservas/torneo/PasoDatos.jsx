@@ -25,6 +25,7 @@ function PasoDatos({ reserva }) {
               type="number"
               min="1"
               max={MAX_INVITADOS}
+              step="1"
               placeholder="Ej. 20"
               className="formulario-reserva__input"
               value={reserva.invitados}
