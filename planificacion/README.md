@@ -17,11 +17,16 @@ planificacion/
 │   └── <n>-<nombre>/
 │       ├── PLAN.md         plan aprobado de la etapa
 │       ├── PROMPT.md       prompt con el que se arrancó la ejecución (si lo hubo)
+│       ├── PROGRESO.md     avance para retomar entre sesiones (etapa 9)
 │       ├── REPORTE.md      reporte final
-│       ├── revision/       capturas, antes/después, prototipos (si los hubo)
+│       ├── referencia/     maquetas HTML de referencia (etapa 9)
+│       ├── revision/       capturas, antes/después, mediciones y verificaciones (si los hubo)
 │       ├── bloques/        una carpeta por bloque delegado a agy
 │       └── logs/           salida de agy (no se versiona)
 └── herramientas/           scripts de apoyo (capturas del README en capturas/)
+
+odd/
+└── tasks/                  especificaciones y seguimiento de tareas ODD (p. ej. asistente-torneo-movil.md)
 ```
 
 ## Etapas
@@ -34,10 +39,10 @@ planificacion/
 | `4-organizar-planificacion` | Esta estructura: etapas históricas, herramientas y el índice (30-10) | Juan Fierro | sí | no | sí | (sin agy) |
 | `5-torneo-multidia` | Torneos multi-día por fases (jornadas), canchas efectivas por fase y validación cronológica (30-10) | Miguel Medina | sí | no | sí | t1, t2, t3 |
 | `6-bloqueo-cronologico-torneo` | Bloqueo cronológico preventivo de días y horas entre fases del torneo (31-10) | Miguel Medina | sí | no | sí | b1 |
-| `7-auditoria-usabilidad` | Auditoría integral de usabilidad (`impeccable`) y mejoras de prevención de errores, A11y y móvil (planificado para `usability-improve` tras merge de PR #2) | Miguel Medina (auditoría) y Juan Fierro (ejecución, 31-10) | sí | no | sí | u1, u2, u3, u4 |
-| `8-cierre-sustentacion` | Cierre antes de la sustentación del 20-11: chat y negocio al día con torneos, invitados en cumpleaños, pestañas con flechas, pruebas integrales, README y capturas; Bloque 7 descartado (fusionada en `e6a167c`; faltan las pruebas manuales de `z5` y `z6`, de Juan Fierro) | Juan Manuel Villalba (coordina Juan Fierro) | sí | no | sí | z1 a z6 |
-| `9-rediseno-pagina-de-reserva` | **Hecha, falta la aprobación de capturas y el PR.** Rediseño visual de la página de reserva y la confirmación en el tema oscuro del inicio, llaves simétricas con la final al centro, indicador de pasos y README y capturas al día (rama `etapa-9-rediseno-reserva`, 06/07-11) | Miguel Medina (revisa y fusiona Juan Fierro) | sí | sí | sí | a0, r1 a r6 (con verificaciones v1 a v4) |
-| `10-asistente-torneo-secciones` | Frente B del asistente de torneo en móvil (issue #6): prop `seccion` en `FormularioReserva` con los bloques en `torneo/Paso*.jsx`, y el bracket con scroll propio a 390 y 960 px (rama `feat/asistente-torneo-movil-secciones`, 07-11) | Miguel Medina | sí | no | sí | f1, f2 (con verificaciones v1 a v3) |
+| `7-auditoria-usabilidad` | Auditoría integral de usabilidad (`impeccable`) y mejoras de prevención de errores, A11y y móvil (rama `usability-improve`, integrada en `main` en `0e7a6f8`) | Miguel Medina (auditoría) y Juan Fierro (ejecución, 31-10) | sí | no | sí | u1, u2, u3, u4 |
+| `8-cierre-sustentacion` | Cierre antes de la sustentación del 20-11: chat y negocio al día con torneos, invitados en cumpleaños, pestañas con flechas, pruebas integrales, README y capturas; Bloque 7 descartado (fusionada en `e6a167c`; pruebas manuales de `z5` y `z6` hechas el 07-11) | Juan Manuel Villalba (coordina Juan Fierro) | sí | no | sí | z1 a z6 |
+| `9-rediseno-pagina-de-reserva` | Rediseño visual de la página de reserva y la confirmación en el tema oscuro del inicio, llaves simétricas con la final al centro, indicador de pasos y README y capturas al día (rama `etapa-9-rediseno-reserva`, 06/07-11; fusionada en `main` en `307d883`) | Miguel Medina (revisa y fusiona Juan Fierro) | sí | sí | sí | a0, r1 a r7 (con verificaciones v1 a v4 y v7) |
+| `10-asistente-torneo-secciones` | Frente B del asistente de torneo en móvil (issue #6): prop `seccion` en `FormularioReserva` con los bloques en `torneo/Paso*.jsx`, y el bracket con scroll propio a 390 y 960 px (rama `feat/asistente-torneo-movil-secciones`, 07-11; integrada en `main` en `77af94d` junto con el frente A) | Miguel Medina | sí | no | sí | f1, f2 (con verificaciones v1 a v3) |
 
 Antes del flujo por etapas (sin plan ni reporte, solo commits):
 
@@ -85,6 +90,24 @@ inicio).
 | Cierre sustentación | `z2-invitados-vacio-y-pestanas` | Invitados en voucher y confirmación de cumpleaños, aviso de estado vacío y navegación con flechas en pestañas de deporte | `8e1a203`, `d5c9757`, `ab3f6d2` | `z2.log` |
 | Cierre sustentación | `z3-pruebas-integrales` | Pruebas integrales de inicio a fin en `1440×900` y `390×844` registradas en `REPORTE.md` (`E1`–`E6` en su sección 7) | (en `REPORTE.md`) | (en sesión) |
 | Cierre sustentación | `z4-documentacion-y-capturas` | Actualización de `README.md`, 12 capturas en `docs/capturas/`, script `capturas.mjs`, `planificacion/` y `GEMINI.md` | `9418642` | (en sesión) |
+| Rediseño reserva | `a0-capturas-antes` | Capturas "antes" contra producción (`revision/antes/`, 20) y script `revision/capturas-etapa9.mjs` | `41538fd` | `a0.log` |
+| Rediseño reserva | `r1-tema-y-encabezado` | Tokens `--reserva-*`, navbar oscuro en la reserva, encabezado con foto y velo, foco del `h1`, selector de modo con íconos, pestañas con subrayado del acento, carrusel oscuro y overrides de Foundation (dos intentos) | `4ed9980` | `r1.log` (`-intento1`) |
+| Rediseño reserva | `v1-verificacion-r1` | Verificación de `r1` en navegador (3 defectos detectados, corregidos y recomprobados en `instruccion-recomprobacion.md`) | `4ed9980` | `v1.log` |
+| Rediseño reserva | `r2-dia-horario-y-datos` | Tarjetas de sección, Día, Horario por franjas con leyenda, Tus datos, `CanchasElegidas`, `AlertaTiempo` y `AsignacionManual` en tema oscuro (dos intentos) | `fa9c96b` | `r2.log` (`-intento1`) |
+| Rediseño reserva | `v2-verificacion-r2` | Verificación de `r2` en navegador (7 defectos detectados, corregidos y recomprobados en `instruccion-recomprobacion.md`) | `fa9c96b` | `v2.log` |
+| Rediseño reserva | `r3-tiquete-y-confirmacion` | Comprobante con forma de tiquete y confirmación en tema oscuro con QR sobre fondo blanco (dos intentos) | `deaecc3` | `r3.log` (`-intento1`) |
+| Rediseño reserva | `v3-verificacion-r3` | Verificación de `r3` en navegador (2 defectos detectados, corregidos y recomprobados en `instruccion-recomprobacion.md`) | `deaecc3` | `v3.log` |
+| Rediseño reserva | `r4-llaves` | `SeccionLlaves` a ancho completo, llaves simétricas y por rondas en celular, "Partido N", `IndicadorPasos` y pruebas en `Torneo.test.jsx` (dos intentos) | `f063059` | `r4.log` (`-intento1`) |
+| Rediseño reserva | `v4-verificacion-r4` | Verificación de `r4` en navegador (5 defectos detectados, corregidos y recomprobados en `instruccion-recomprobacion.md`) | `f063059` | `v4.log` |
+| Rediseño reserva | `r5-verificacion` | Capturas "después" (`revision/despues/`, 20), casos A1–A5, B1–B7 y C1–C4, teclado, movimiento reducido, contraste (`revision/verificacion-final.md`) y 5 capturas de `docs/capturas/` | `276e3d5` | `r5.log` |
+| Rediseño reserva | `r6-readme` | Actualización de `README.md` y reporte de la etapa 9 (dos intentos: el primero cortado por memoria) | `a660ad7` | `r6.log` (`-intento1`) |
+| Rediseño reserva | `r7-conectores` | Corrección de los conectores SVG entre partidos de las llaves en `Bracket.jsx` | `4083de8` | `r7.log` |
+| Rediseño reserva | `v7-verificacion-conectores` | Verificación con Playwright de los conectores de las llaves con 4, 8 y 16 equipos (escritorio, celular y confirmación) y actualización de capturas | `4083de8` | `v7.log` |
+| Asistente torneo secciones | `f1-secciones-formulario` | Prop `seccion` en `FormularioReserva`, seis bloques extraídos a `torneo/Paso*.jsx` y 7 pruebas en `FormularioReserva.test.jsx` | `71fb582` | `f1.log` |
+| Asistente torneo secciones | `v1-medicion-390` | Medición a `390×844` de los seis pasos antes de B2 y base de capturas a `1440×900` (`revision/v1/medicion.md`) | (en `revision/v1/medicion.md`) | `v1.log` |
+| Asistente torneo secciones | `f2-css-movil` | Contención del ancho del bracket y del formulario bajo `(max-width: 63.9375em)` | `2eafffa`, `442a92b` | `f2.log` |
+| Asistente torneo secciones | `v2-verificacion-final` | Verificación final de S2, S7 y S8 a `390×844`, `960×800` y `1440×900` (`revision/v2/verificacion.md`) | `b055327` | `v2.log` |
+| Asistente torneo secciones | `v3-recheck-960` | Recomprobación acotada de S8 en `960×800` y `390×844` tras incluir `.bracket-torneo__canvas-scroll` (`revision/v2/verificacion.md`) | `b055327` | `v3.log` |
 
 ## Cómo trabajar en equipo
 
@@ -114,8 +137,8 @@ instrucción y daña las tildes en PowerShell 5.1. Nunca Flash Lite.
    `instruccion.md` a `instruccion-intento1.md`, escribe `retoma.md` y vuelve
    a armar con `base.md` + `retoma.md` + `tarea.md`.
 6. Agrega la fila del bloque al índice de este archivo.
-7. Si una regla general cambia, actualiza `comun/base.md` y avisa al equipo
-   (cada uno actualiza su `GEMINI.md` local).
+7. Si una regla general cambia, actualiza `AGENTS.md` (guía compartida del
+   proyecto en la raíz, versionada desde el 07-11) y `comun/base.md`.
 
 ## Herramientas
 

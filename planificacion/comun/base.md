@@ -8,9 +8,9 @@ cumpleaños, eventos especiales y un chatbot.
 - Stack fijo: React + Vite, Foundation (foundation-sites), GSAP con
   ScrollTrigger, sin base de datos (estado de React + localStorage + JSON
   semilla), chatbot con Gemini detrás de una función de Vercel (`/api/chat`).
-- La guía completa del proyecto está en `GEMINI.md` (raíz; cada integrante lo
-  tiene en local): léela antes de empezar y respétala. La parte del plan que
-  te toca va copiada en tu tarea.
+- La guía completa del proyecto está en `AGENTS.md` (raíz, versionado): léela
+  antes de empezar y respétala. La parte del plan que te toca va copiada en tu
+  tarea.
 - Todo el texto en español, con tildes correctas y tuteo neutro (nada de
   voseo).
 - **No hagas commits ni push**, ni cambies ramas. Solo edita los archivos que
