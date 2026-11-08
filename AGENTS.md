@@ -488,11 +488,18 @@ el plan del chatbot está en `planificacion/etapas/1-chatbot/PLAN.md`.
 - **Contrato**:
   - Petición `POST` JSON (máx. 48 KB): `mensaje` (1-500 caracteres),
     `historial` `[{ rol: 'usuario' | 'bot', texto }]` (últimos 20),
-    `contexto` `{ fechaHoy, horaActual, canchas, disponibilidad: [{ canchaId,
-    fecha, franjasLibres }] }` (hoy + 6 días, sin franjas ya pasadas).
+    `contexto` `{ fechaHoy, horaActual, disponibilidad: [{ canchaId,
+    fecha, franjasLibres }] }` (hoy + 6 días, sin franjas ya pasadas;
+    `fechaHoy` tiene que ser una fecha real). Un `canchas` en el contexto se
+    ignora: el catálogo sale de `canchas.json`.
   - Respuesta siempre `{ respuesta, sugerencias (máx. 3), accion | null }`,
-    también en errores (405 método, 400 petición inválida; si fallan todos
-    los modelos, 429/504/502 según `respuestaFinal`).
+    también en errores (405 método, 400 petición inválida, 500 si falla armar
+    el contexto; si fallan todos los modelos, 429/504/502 según
+    `respuestaFinal`). El widget guarda toda respuesta con `!res.ok` como
+    mensaje con `error: true`, que no entra al historial.
+  - Con una tarjeta pendiente, `detectarSiNo(texto, tipo)`: "cancelar" es sí
+    en una de cancelación, no en una de reserva y ninguno de los dos en la
+    lista de opciones.
   - Acciones: `CONFIRMAR_RESERVA` (`canchaId`, `fecha`, `horas`, `nombre`,
     `telefono` normalizados), `BUSCAR_CANCELACION` (`nombre`, `telefono` y
     filtros opcionales) y `ABRIR_SECCION` (`seccion`: canchas | eventos |
