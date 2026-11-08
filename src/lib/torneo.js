@@ -51,6 +51,14 @@ export function partidosPorRonda(equipos) {
   return rondas;
 }
 
+export function maxCanchasTorneo(equipos) {
+  const rondas = partidosPorRonda(equipos);
+  if (rondas.length === 0) {
+    return MAX_CANCHAS_TORNEO;
+  }
+  return Math.min(MAX_CANCHAS_TORNEO, Math.max(...rondas));
+}
+
 export function turnosPorRonda(equipos, canchas) {
   const c = Math.max(1, Number(canchas));
   return partidosPorRonda(equipos).map((p) => Math.ceil(p / c));
@@ -221,14 +229,15 @@ export function sugerenciasTiempo({
     `Amplía la franja horaria a al menos ${horasMin} ${horasMin === 1 ? 'hora' : 'horas'} (${horasMin * 60} min).`
   );
 
-  if (c < MAX_CANCHAS_TORNEO) {
+  const maxCanchas = maxCanchasTorneo(equipos);
+  if (c < maxCanchas) {
     const minMax = minutosRequeridos({
       equipos: Number(equipos),
-      canchas: MAX_CANCHAS_TORNEO,
+      canchas: maxCanchas,
       minutosTurno,
     });
     sugerencias.push(
-      `Agrega más canchas del mismo deporte (con ${MAX_CANCHAS_TORNEO} canchas en paralelo tomaría ${minMax} min).`
+      `Agrega más canchas del mismo deporte (con ${maxCanchas} canchas en paralelo tomaría ${minMax} min).`
     );
   }
 
@@ -246,12 +255,16 @@ export function sugerenciasTiempo({
   return sugerencias;
 }
 
-export function validarCanchasTorneo(canchasElegidas) {
+export function validarCanchasTorneo(canchasElegidas, equipos) {
   if (!Array.isArray(canchasElegidas) || canchasElegidas.length === 0) {
     return 'Elige al menos una cancha.';
   }
-  if (canchasElegidas.length > MAX_CANCHAS_TORNEO) {
-    return 'Elige máximo 3 canchas para el torneo.';
+  const maxCanchas = maxCanchasTorneo(equipos);
+  if (canchasElegidas.length > maxCanchas) {
+    if (maxCanchas < MAX_CANCHAS_TORNEO) {
+      return `Con ${Number(equipos)} equipos se juegan como máximo ${maxCanchas} partidos a la vez: elige hasta ${maxCanchas} canchas.`;
+    }
+    return `Elige máximo ${MAX_CANCHAS_TORNEO} canchas para el torneo.`;
   }
   if (new Set(canchasElegidas.map((c) => c.deporte)).size > 1) {
     return 'Todas las canchas del torneo deben ser del mismo deporte.';

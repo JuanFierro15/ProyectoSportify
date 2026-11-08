@@ -283,6 +283,15 @@ describe('AsistenteTorneo y VistaCanchas (frente A)', () => {
       expect(within(indicador).getByText('Llaves')).toBeInTheDocument();
       expect(within(indicador).getByText('Tus datos')).toBeInTheDocument();
       expect(within(indicador).queryByText('Resumen')).not.toBeInTheDocument();
+
+      // Subtítulo inicial con 8 equipos: hasta 3 canchas; al elegir 4 equipos cambia a hasta 2 canchas
+      expect(
+        screen.getByText(/Elige hasta 3 canchas de un deporte/i)
+      ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /4 equipos \(3 partidos\)/i }));
+      expect(
+        screen.getByText(/Elige hasta 2 canchas de un deporte/i)
+      ).toBeInTheDocument();
     });
 
     it('en móvil (< 64em) activa el asistente y conserva el estado al cambiar de paso', async () => {

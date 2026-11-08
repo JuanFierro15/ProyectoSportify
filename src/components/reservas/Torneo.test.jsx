@@ -985,4 +985,188 @@ describe('Modo Torneo - Pruebas de integración', () => {
       'Ese horario ya no está libre en las canchas elegidas. Elige otro.'
     );
   });
+
+  it('16. S6: con 4 equipos no permite agregar una tercera cancha y explica el motivo; al bajar de 8 a 4 equipos con 3 canchas deja las primeras 2 con aviso y solo guarda/cobra esas 2', () => {
+    let diasCapturados = [];
+    function CapturadorDias() {
+      const { dias } = useReservas();
+      diasCapturados = dias;
+      return null;
+    }
+
+    // Parte A: En el hook, con 4 equipos el tope es 2 canchas (alternarCancha, alternarDeporte, motivoNoAgregable, topeCanchasAlcanzado)
+    let diasHook = [];
+    function ProbarHookS6() {
+      const { dias } = useReservas();
+      diasHook = dias;
+      return useReserva({ activo: true, modoInicial: 'torneo' });
+    }
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result, unmount: unmountHook } = renderHook(
+      () => ProbarHookS6(),
+      { wrapper }
+    );
+
+    act(() => {
+      result.current.cambiarEquiposTorneo(4);
+      result.current.alternarCancha('futbol-1');
+      result.current.alternarCancha('futbol-2');
+    });
+
+    expect(result.current.canchaIds).toEqual(['futbol-1', 'futbol-2']);
+    expect(result.current.topeCanchasAlcanzado).toBe(true);
+    expect(result.current.motivoNoAgregable('futbol-3')).toBe(
+      'Con 4 equipos se juegan como máximo 2 partidos a la vez: elige hasta 2 canchas.'
+    );
+
+    // Intentar agregar una tercera cancha no la agrega y muestra el aviso
+    act(() => {
+      result.current.alternarCancha('futbol-3');
+    });
+    expect(result.current.canchaIds).toEqual(['futbol-1', 'futbol-2']);
+    expect(result.current.error).toBe(
+      'Con 4 equipos se juegan como máximo 2 partidos a la vez: elige hasta 2 canchas.'
+    );
+
+    // alternarDeporte con 4 equipos tampoco supera 2 canchas
+    act(() => {
+      result.current.alternarCancha('futbol-1');
+      result.current.alternarCancha('futbol-2');
+    });
+    expect(result.current.canchaIds).toEqual([]);
+    act(() => {
+      result.current.alternarDeporte('futbol');
+    });
+    expect(result.current.canchaIds).toEqual(['futbol-1', 'futbol-2']);
+
+    // Cumpleaños conserva sus reglas (permite las 3 canchas sin límite de torneo)
+    act(() => {
+      result.current.cambiarModo('cumpleanos');
+    });
+    act(() => {
+      result.current.alternarCancha('futbol-3');
+    });
+    expect(result.current.canchaIds).toEqual(['futbol-1', 'futbol-2', 'futbol-3']);
+
+    // Al volver a Torneo con 4 equipos, recorta a 2 canchas
+    act(() => {
+      result.current.cambiarModo('torneo');
+    });
+    expect(result.current.canchaIds).toEqual(['futbol-1', 'futbol-2']);
+
+    // Al bajar de 8 a 4 equipos con 3 canchas en el hook, deja las primeras 2 y al confirmar el QR solo lleva esas 2
+    act(() => {
+      result.current.cambiarEquiposTorneo(8);
+    });
+    act(() => {
+      result.current.alternarCancha('futbol-3');
+    });
+    expect(result.current.canchaIds).toEqual(['futbol-1', 'futbol-2', 'futbol-3']);
+
+    act(() => {
+      result.current.cambiarEquiposTorneo(4);
+    });
+    expect(result.current.canchaIds).toEqual(['futbol-1', 'futbol-2']);
+    expect(result.current.error).toBe(
+      'Con 4 equipos se juegan como máximo 2 partidos a la vez: se dejaron las primeras 2 canchas elegidas.'
+    );
+
+    // Confirmar en el hook y verificar que resumen.canchas y textoQr solo contienen las 2 canchas usadas
+    act(() => {
+      result.current.cambiarFechaFase(1, diasHook[1]);
+      result.current.cambiarFechaFase(2, diasHook[2]);
+    });
+    act(() => {
+      result.current.elegirHoraFase(1, '14:00');
+      result.current.elegirHoraFase(2, '15:00');
+      result.current.cambiarNombre('Elena Vargas');
+    });
+    act(() => {
+      result.current.confirmar();
+    });
+    expect(result.current.confirmado).not.toBeNull();
+    expect(result.current.confirmado.resumen.canchas).toEqual([
+      'Cancha Fútbol 1',
+      'Cancha Fútbol 2',
+    ]);
+    expect(result.current.confirmado.textoQr).toContain('Cancha Fútbol 1');
+    expect(result.current.confirmado.textoQr).toContain('Cancha Fútbol 2');
+    expect(result.current.confirmado.textoQr).not.toContain('Cancha Fútbol 3');
+
+    unmountHook();
+    window.localStorage.clear();
+
+    // Parte B: En la UI, pasar de 8 a 4 equipos con 3 canchas conserva las primeras 2 en orden de selección,
+    // quita la tercera con aviso, y al confirmar solo guarda y muestra en confirmación/QR las 2 canchas usadas
+    render(
+      <ReservasProvider>
+        <CapturadorDias />
+        <FlujoTorneoPrueba
+          canchasIniciales={['futbol-2', 'futbol-3', 'futbol-1']}
+        />
+      </ReservasProvider>
+    );
+
+    const btnCancha1 = screen.getByRole('button', { name: 'Cancha Fútbol 1' });
+    const btnCancha2 = screen.getByRole('button', { name: 'Cancha Fútbol 2' });
+    const btnCancha3 = screen.getByRole('button', { name: 'Cancha Fútbol 3' });
+
+    expect(btnCancha2).toHaveAttribute('aria-pressed', 'true');
+    expect(btnCancha3).toHaveAttribute('aria-pressed', 'true');
+    expect(btnCancha1).toHaveAttribute('aria-pressed', 'true');
+
+    // Bajar de 8 a 4 equipos
+    fireEvent.click(screen.getByRole('button', { name: /4 equipos \(3 partidos\)/i }));
+
+    // Conserva las primeras 2 en orden de selección ('futbol-2', 'futbol-3') y quita la extra ('futbol-1')
+    expect(btnCancha2).toHaveAttribute('aria-pressed', 'true');
+    expect(btnCancha3).toHaveAttribute('aria-pressed', 'true');
+    expect(btnCancha1).toHaveAttribute('aria-pressed', 'false');
+
+    // Muestra aviso explicando por qué se dejaron 2 canchas
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Con 4 equipos se juegan como máximo 2 partidos a la vez: se dejaron las primeras 2 canchas elegidas.'
+    );
+
+    // Intentar volver a agregar la tercera cancha ('futbol-1') con 4 equipos no la agrega y muestra el aviso de tope
+    fireEvent.click(btnCancha1);
+    expect(btnCancha1).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Con 4 equipos se juegan como máximo 2 partidos a la vez: elige hasta 2 canchas.'
+    );
+
+    // Programar Semifinal y Final y confirmar
+    const seccionSemi = screen.getByLabelText('Fase 1: Semifinal');
+    const seccionFinal = screen.getByLabelText('Fase 2: Final');
+    fireEvent.click(within(seccionSemi).getAllByRole('button')[1]);
+    fireEvent.click(screen.getByRole('button', { name: 'Semifinal 14:00' }));
+    fireEvent.click(within(seccionFinal).getAllByRole('button')[2]);
+    fireEvent.click(screen.getByRole('button', { name: 'Final 15:00' }));
+
+    fireEvent.change(screen.getByLabelText(/Nombre/i), {
+      target: { value: 'Elena Vargas' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar reserva/i }));
+
+    const confirmacion = screen
+      .getByText('Reserva confirmada')
+      .closest('.confirmacion-reserva');
+    expect(confirmacion).toBeInTheDocument();
+    // La confirmación muestra solo Cancha Fútbol 2 y Cancha Fútbol 3, nunca Cancha Fútbol 1
+    expect(within(confirmacion).getAllByText(/Cancha Fútbol 2/i).length).toBeGreaterThan(0);
+    expect(within(confirmacion).getAllByText(/Cancha Fútbol 3/i).length).toBeGreaterThan(0);
+    expect(within(confirmacion).queryByText(/Cancha Fútbol 1/i)).not.toBeInTheDocument();
+
+    const dataGuardada = JSON.parse(
+      window.localStorage.getItem('sportify_reservas_v2')
+    );
+    const torneoGuardado = dataGuardada.reservas.find(
+      (r) => r.subtipo === 'torneo'
+    );
+    expect(torneoGuardado.canchaIds).toEqual(['futbol-2', 'futbol-3']);
+    expect(torneoGuardado.bloques[0].canchaIds).toEqual(['futbol-2', 'futbol-3']);
+    expect(torneoGuardado.bloques[0].fecha).toBe(diasCapturados[1]);
+    expect(torneoGuardado.bloques[1].canchaIds).toEqual(['futbol-2']);
+    expect(torneoGuardado.bloques[1].fecha).toBe(diasCapturados[2]);
+  });
 });
