@@ -54,10 +54,11 @@ node scripts/probar-chat.mjs [url] [ids...]  # casos de prueba de /api/chat
 - Tests: Vitest (jsdom, `globals: true`) + Testing Library. Los de lógica pura
   viven junto a su módulo en `src/lib/*.test.js` (precios, validación, fechas,
   horarios, código de reserva, datos del negocio, chat, cancelación, torneos,
-  rutas, canchas y respaldo de modelo). De interfaz:
-  `src/components/reservas/Torneo.test.jsx` (torneo y cumpleaños),
-  `FormularioReserva.test.jsx` (prop `seccion`), los del asistente en
-  `src/components/reservas/torneo/` (`AsistenteTorneo`, `useAsistenteTorneo`) y
+  pasos del torneo en `pasosTorneo.test.js`, rutas, canchas y respaldo de
+  modelo). De interfaz: `src/components/reservas/Torneo.test.jsx` (torneo y
+  cumpleaños), `src/components/reservas/FormularioReserva.test.jsx` (prop
+  `seccion`), los del asistente en `src/components/reservas/torneo/`
+  (`AsistenteTorneo.test.jsx` y `useAsistenteTorneo.test.jsx`) y
   `src/components/layout/MisReservas.test.jsx`. `api/_lib/funciones.test.js`
   cubre las funciones del chat y `src/App.test.jsx` es un smoke test. `src/setupTests.js` carga
   `@testing-library/jest-dom/vitest` y simula `matchMedia`,
@@ -134,6 +135,10 @@ nunca acceder a `localStorage` fuera de este archivo.
     `fasesDelTorneo`, `validarJornadas` (orden cronológico entre fases),
     `validarCanchasTorneo`, `sortearEquipos`, `validarCrucesManuales`,
     `programarTorneo` y `armarTorneo`.
+  - `pasosTorneo.js`: pasos del torneo (`PASOS_TORNEO`: `canchas`, `formato`,
+    `fechas`, `llaves`, `datos`, `resumen`), `estadoPasosTorneo(reserva)`
+    (completitud y motivo de cada paso) y `pasosAlcanzables(estados)` (los
+    completos y el primero incompleto), JS puro y con tests.
   - `horarios.js`: selección de horas de la reserva, pura y con tests —
     `alternarHoraIndividual` (modo cancha) y `seleccionarRango` (eventos).
   - `codigoReserva.js`: `generarCodigo` y `textoQr` (texto que lleva el QR).
@@ -325,8 +330,12 @@ nunca acceder a `localStorage` fuera de este archivo.
     cancha (modo cancha) o los libres en todas las elegidas (eventos).
   - `torneo/`: `CalendarioTorneo` (día y horario por fase, con bloqueo de lo
     anterior a la fase previa), `Bracket` (llaves; también en la confirmación),
-    `AsignacionManual` (cruces manuales con intercambio) y `AlertaTiempo`
-    (tiempo insuficiente, con acción para bajar a 15 min por partido).
+    `SeccionLlaves` (llaves a ancho completo), `IndicadorPasos` (5 pasos en
+    escritorio, 6 clicables en móvil), `AsignacionManual` (cruces manuales con
+    intercambio), `AlertaTiempo` (tiempo insuficiente, con acción para bajar a
+    15 min por partido), `AsistenteTorneo` y `useAsistenteTorneo` (asistente por
+    pasos en móvil) y los bloques `PasoFormato`, `PasoFechas`, `PasoCapacidad`,
+    `PasoLlaves`, `PasoDatos` y `PasoGuardados` (`Paso*.jsx`).
   - **Asistente del torneo en móvil** (desde el 07-11-2026; spec en
     `odd/tasks/asistente-torneo-movil.md`): bajo `large`
     (`(max-width: 63.9375em)`) el modo torneo muestra un paso a la vez; en
@@ -428,7 +437,7 @@ el plan del chatbot está en `planificacion/etapas/1-chatbot/PLAN.md`.
     - Cadena: `GEMINI_MODEL` + `GEMINI_MODELOS_RESPALDO` (comas; sin definir =
       `gemini-3.1-flash-lite,gemini-3.6-flash`; vacía = sin respaldo), sin
       duplicados, máx. 3.
-    - Pasa al siguiente ante 503, 500, 429, 404 o tiempo agotado; corta ante
+    - Pasa al siguiente ante 504, 503, 500, 429, 404 o tiempo agotado; corta ante
       400/401/403 (problema de la petición o de la key).
     - Presupuesto 17 s (el widget aborta a los 20 s): primer intento hasta
       7 s, los siguientes hasta 6 s, y no intenta con menos de 2,5 s.
@@ -602,18 +611,18 @@ el plan del chatbot está en `planificacion/etapas/1-chatbot/PLAN.md`.
   330 KB; todo cerca de 1,1 MB). `docs/` no entra al build (lista blanca de
   `.vercelignore`).
 - Cómo se tomaron (por si hay que repetirlas): un script Node 24 sin
-  dependencias (el script está versionado en
-  `planificacion/herramientas/capturas/capturas.mjs` (correr desde la raíz con
-  `preview` arriba; perfil y verificación en la carpeta temporal del sistema)) que abre
+  dependencias (`planificacion/herramientas/capturas/capturas.mjs`; correr desde
+  la raíz con `npm run build` + `npm run preview` arriba, perfil y verificación
+  en la carpeta temporal del sistema) que abre
   `chrome.exe --headless=new --remote-debugging-port=9333` con un
   `--user-data-dir` temporal, lo maneja por CDP con el `WebSocket` nativo y
   captura con `Page.captureScreenshot` (`format: 'webp'`, calidad 82) contra
-  producción. Escritorio 1440×900; celular 390×844 con DPR 2. Las de la
-  página de reserva (`vista-canchas`, `reserva-voucher`, `modo-torneo`) se
-  pueden tomar contra `npm run build` + `npm run preview` (4173), navegando a
-  `/reservar/padel` y desplazando con `window.scrollBy` (la página no usa
-  `/api`). Al terminar, matar el árbol del proceso de `preview` (detener la
-  shell deja vivo Vite en 4173). Detalles que importan:
+  `http://localhost:4173` (`npm run preview`). Escritorio 1440×900; celular
+  390×844 con DPR 2. Las de la página de reserva (`vista-canchas`,
+  `reserva-voucher`, `modo-torneo`, `movil-torneo`) navegan a `/reservar/...` y
+  desplazan con `window.scrollBy` (la página no usa `/api`). Al terminar, matar
+  el árbol del proceso de `preview` (detener la shell deja vivo Vite en 4173).
+  Detalles que importan:
   - Los heros se capturan con 400 px de scroll dentro de su sección (con 0 no
     aparece el texto); la sección está dentro de un `.pin-spacer`.
   - Elegir **mañana** en el `SelectorDia`: de noche, hoy no tiene franjas y
