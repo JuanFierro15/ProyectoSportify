@@ -6,6 +6,7 @@ import negocio from '../../data/negocio.json';
 import canchasData from '../../data/canchas.json';
 import { enlaceTelefono, formatoTelefono, textoHorario } from '../../lib/negocio';
 import { esClicNormal, rutaReserva } from '../../lib/rutas';
+import useIrACanchas from './useIrACanchas';
 import './Footer.css';
 
 /**
@@ -16,30 +17,14 @@ import './Footer.css';
  */
 function Footer() {
   const year = new Date().getFullYear();
-  const { deporteAbierto, abrirVista, irASeccion } = useVistaCanchas();
+  const { deporteAbierto, irASeccion } = useVistaCanchas();
+  const irACanchas = useIrACanchas();
   const { direccion, zona, ciudad, telefono } = negocio;
 
   const manejarSeccion = (id) => (e) => {
     if (deporteAbierto && esClicNormal(e)) {
       e.preventDefault();
       irASeccion(id);
-    }
-  };
-
-  const irACanchas = (e) => {
-    if (!esClicNormal(e)) return;
-    e.preventDefault();
-    if (deporteAbierto) {
-      const prefiereReducido =
-        typeof window !== 'undefined' &&
-        typeof window.matchMedia === 'function' &&
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      window.scrollTo({
-        top: 0,
-        behavior: prefiereReducido ? 'auto' : 'smooth',
-      });
-    } else {
-      abrirVista(DEPORTES[0].slug);
     }
   };
 

@@ -27,6 +27,7 @@
 
 .calendario-torneo__fase:hover {
   border-color: var(--accent, #5bd67d);
+  box-shadow: 0 4px 12px -2px color-mix(in srgb, var(--accent, #5bd67d) 15%, transparent);
 }
 
 .calendario-torneo__cabecera {
@@ -95,3 +96,11 @@
   border: 1px solid #ef4444;
   color: #fca5a5;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .calendario-torneo__fase {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+

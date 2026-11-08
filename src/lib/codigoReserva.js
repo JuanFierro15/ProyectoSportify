@@ -9,7 +9,6 @@ import { formatoPrecio, finDeFranja } from './precios';
 
 // Sin 0/O ni 1/I para que el código se pueda dictar sin confusiones.
 const ALFABETO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-export const REGEX_CODIGO = /^SPF-[A-HJ-NP-Z2-9]{6}$/;
 
 export function generarCodigo(aleatorio = Math.random) {
   let sufijo = '';

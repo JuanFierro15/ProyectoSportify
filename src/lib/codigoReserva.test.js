@@ -1,15 +1,28 @@
 import { formatoPrecio } from './precios';
-import { REGEX_CODIGO, generarCodigo, textoQr } from './codigoReserva';
+import { generarCodigo, textoQr } from './codigoReserva';
 
 describe('generarCodigo', () => {
-  test('cumple REGEX_CODIGO al llamarlo varias veces', () => {
-    for (let i = 0; i < 20; i += 1) {
-      expect(generarCodigo()).toMatch(REGEX_CODIGO);
-    }
-  });
-
   test('con función aleatoria fija devuelve SPF-AAAAAA', () => {
     expect(generarCodigo(() => 0)).toBe('SPF-AAAAAA');
+  });
+
+  test('llamado muchas veces nunca produce los caracteres ambiguos 0, O, 1 ni I y respeta el formato SPF- más 6 caracteres de su alfabeto', () => {
+    const patronCodigo = /^SPF-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/;
+    const ambiguos = /[0O1I]/;
+
+    // Barrido determinista de las 32 posiciones del alfabeto
+    for (let pos = 0; pos < 32; pos += 1) {
+      const codigo = generarCodigo(() => pos / 32);
+      expect(codigo).toMatch(patronCodigo);
+      expect(codigo.slice(4)).not.toMatch(ambiguos);
+    }
+
+    // Muestreo aleatorio amplio
+    for (let i = 0; i < 300; i += 1) {
+      const codigo = generarCodigo();
+      expect(codigo).toMatch(patronCodigo);
+      expect(codigo.slice(4)).not.toMatch(ambiguos);
+    }
   });
 });
 

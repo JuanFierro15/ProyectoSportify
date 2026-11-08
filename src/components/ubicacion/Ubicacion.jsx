@@ -9,7 +9,7 @@ import './Ubicacion.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Sección de ubicación y datos de contacto del local; datos cargados desde local.json y canchas.json.
+// Sección de ubicación y datos de contacto del local; datos cargados desde negocio.json y canchas.json.
 function Ubicacion() {
   const rootRef = useRef(null);
   const mapaRef = useRef(null);

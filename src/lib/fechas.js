@@ -40,6 +40,18 @@ export function fechaCompleta(iso) {
   return `${dia[0].toUpperCase()}${dia.slice(1)} ${d.getDate()} de ${MES_LARGO[d.getMonth()]}`;
 }
 
+// Fecha en minúscula inicial para incluir a mitad de frase.
+export function fechaEnFrase(fecha) {
+  if (!fecha) {
+    return '';
+  }
+  const str = fechaCompleta(fecha);
+  if (!str) {
+    return '';
+  }
+  return str.replace(/^\p{Lu}/u, (l) => l.toLowerCase());
+}
+
 // Fecha de hoy en hora local, como ISO `YYYY-MM-DD`.
 function hoyISO() {
   const d = new Date();

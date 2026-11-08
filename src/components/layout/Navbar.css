@@ -23,9 +23,22 @@
   box-shadow: none !important;
 }
 
+/* Al recibir foco mediante navegación por teclado, se muestra inmediatamente */
+.site-header--hidden:focus-within {
+  transform: none;
+}
+
 /* Estado visible: posicionado en el tope */
 .site-header--visible {
   transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header {
+    transition: background-color 0.25s ease,
+      border-color 0.25s ease,
+      box-shadow 0.25s ease;
+  }
 }
 
 /* ==========================================================================

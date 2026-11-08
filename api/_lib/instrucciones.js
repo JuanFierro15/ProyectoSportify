@@ -7,7 +7,7 @@ import { DEPORTES } from '../../src/data/deportes.js';
 import { fechasVentana } from '../../src/lib/validacion.js';
 import { horaAmPm, fechaCompleta } from '../../src/lib/fechas.js';
 import {
-  formatoPrecio,
+  formatoPrecioCorto,
   MAX_HORAS_SEGUIDAS,
   MIN_HORAS_BENEFICIO,
   DESCUENTO_POR_HORA,
@@ -15,11 +15,6 @@ import {
 } from '../../src/lib/precios.js';
 import { formatoTelefono } from '../../src/lib/negocio.js';
 import { MAX_CANCHAS_TORNEO, OPCIONES_EQUIPOS } from '../../src/lib/torneo.js';
-
-// '$ 60.000' (con espacio de no separación) -> '$60.000', como lo escribe el chat.
-export function precioChat(valor) {
-  return formatoPrecio.format(valor).replace(/\s/g, '');
-}
 
 export function construirInstrucciones(contexto) {
   const reglas = [
@@ -51,7 +46,7 @@ export function construirInstrucciones(contexto) {
     `Demanda: ${negocioData.demanda.nota} Alta: ${negocioData.demanda.alta.join('; ')}. Baja: ${negocioData.demanda.baja.join('; ')}.`,
     `Pagos: métodos: ${negocioData.pagos.metodos.join(', ')}; abono del ${negocioData.pagos.abonoPorcentaje} % del total, enviado dentro de las ${negocioData.pagos.abonoPlazoHoras} horas siguientes a la reserva por ${negocioData.pagos.abonoMedios.join(' o ')}; esta es la política del local.`,
     `Cancelación: sin costo hasta ${negocioData.cancelacion.horasMinimas} horas antes; ${negocioData.cancelacion.condicion}`,
-    `Parqueadero: carros ${precioChat(negocioData.servicios.parqueadero.carros)}, motos ${precioChat(negocioData.servicios.parqueadero.motos)}. ${negocioData.servicios.parqueadero.nota}`,
+    `Parqueadero: carros ${formatoPrecioCorto(negocioData.servicios.parqueadero.carros)}, motos ${formatoPrecioCorto(negocioData.servicios.parqueadero.motos)}. ${negocioData.servicios.parqueadero.nota}`,
     `Vestuarios: ${negocioData.servicios.vestuarios}`,
     `Cafetería: ${negocioData.servicios.cafeteria}`,
     `Zonas comunes: ${negocioData.servicios.zonasComunes}`,
@@ -62,13 +57,13 @@ export function construirInstrucciones(contexto) {
     .map((c) => {
       const dep = DEPORTES.find((d) => d.slug === c.deporte);
       const nombreDeporte = dep ? dep.nombre : c.deporte;
-      return `${c.id}: ${c.nombre} (${nombreDeporte}), ${precioChat(c.precioHora)} por hora`;
+      return `${c.id}: ${c.nombre} (${nombreDeporte}), ${formatoPrecioCorto(c.precioHora)} por hora`;
     })
     .join('\n');
 
   const preciosReservas = [
     lineasCanchas,
-    `Las reservas de una cancha son de 1 a ${MAX_HORAS_SEGUIDAS} horas seguidas; desde ${MIN_HORAS_BENEFICIO} horas seguidas cada hora cuesta ${precioChat(DESCUENTO_POR_HORA)} menos y se regala un pack de agua. El usuario puede decir "cancha 1 de voley" para voley-1, etc.`,
+    `Las reservas de una cancha son de 1 a ${MAX_HORAS_SEGUIDAS} horas seguidas; desde ${MIN_HORAS_BENEFICIO} horas seguidas cada hora cuesta ${formatoPrecioCorto(DESCUENTO_POR_HORA)} menos y se regala un pack de agua. El usuario puede decir "cancha 1 de voley" para voley-1, etc.`,
   ].join('\n');
 
   const lineasEventos = negocioData.eventos.map((e) => `${e.label}: ${e.detalle}`).join('\n');

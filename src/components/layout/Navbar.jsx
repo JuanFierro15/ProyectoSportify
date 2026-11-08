@@ -5,6 +5,7 @@ import { useVistaCanchas } from '../../context/VistaCanchasContext';
 import { DEPORTES } from '../../data/deportes';
 import { esClicNormal, rutaReserva } from '../../lib/rutas';
 import MisReservas from './MisReservas';
+import useIrACanchas from './useIrACanchas';
 import './Navbar.css';
 
 /**
@@ -25,7 +26,8 @@ import './Navbar.css';
  *   y bajan a esa sección (`irASeccion`); "Canchas" sube al tope de la misma página.
  */
 function Navbar() {
-  const { deporteAbierto, abrirVista, irASeccion } = useVistaCanchas();
+  const { deporteAbierto, irASeccion } = useVistaCanchas();
+  const irACanchas = useIrACanchas();
   const [visible, setVisible] = useState(true);
   const [sobreHero, setSobreHero] = useState(() => !deporteAbierto);
   const [misReservasAbierto, setMisReservasAbierto] = useState(false);
@@ -87,23 +89,6 @@ function Navbar() {
     if (deporteAbierto && esClicNormal(e)) {
       e.preventDefault();
       irASeccion('hero-placeholder');
-    }
-  };
-
-  const irACanchas = (e) => {
-    if (!esClicNormal(e)) return;
-    e.preventDefault();
-    if (deporteAbierto) {
-      const prefiereReducido =
-        typeof window !== 'undefined' &&
-        typeof window.matchMedia === 'function' &&
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      window.scrollTo({
-        top: 0,
-        behavior: prefiereReducido ? 'auto' : 'smooth',
-      });
-    } else {
-      abrirVista(DEPORTES[0].slug);
     }
   };
 
