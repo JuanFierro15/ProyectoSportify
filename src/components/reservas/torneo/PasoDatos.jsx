@@ -10,6 +10,7 @@ import { MAX_INVITADOS } from '../useReserva';
  * @returns {React.ReactElement}
  */
 function PasoDatos({ reserva }) {
+  const esEvento = reserva.esEvento ?? reserva.modo !== 'cancha';
   return (
     <fieldset className="formulario-reserva__campo formulario-reserva__contacto">
       <legend>Tus datos</legend>
@@ -94,7 +95,9 @@ function PasoDatos({ reserva }) {
         </div>
       </div>
       <p className="formulario-reserva__nota-contacto">
-        Con el teléfono puedes cancelar desde el chat. Sin él, solo con el código de la reserva.
+        {esEvento
+          ? 'Con el teléfono puedes consultar tu reserva en Mis reservas; sin él, solo con el código. Para cancelar un evento hay que llamar al local.'
+          : 'Con el teléfono puedes cancelar desde el chat. Sin él, solo con el código de la reserva.'}
       </p>
     </fieldset>
   );
