@@ -82,7 +82,11 @@ Context + `useReducer` que se espeja en `localStorage`
 nunca acceder a `localStorage` fuera de este archivo.
 
 - **Ventana de 7 días**: hoy + 6 (`dias`). Por cancha y fecha solo se guarda
-  la lista de horas ocupadas (`ocupados`); el resto se infiere libre.
+  la lista de horas ocupadas (`ocupados`); el resto se infiere libre. Si la
+  pestaña sigue abierta al cambiar el día, la acción `RENOVAR_VENTANA` (al
+  recuperar el foco o la visibilidad) rehace la ventana con
+  `fusionarConSemilla`, y `useReserva` pasa la fecha elegida y las fases que
+  quedaron fuera al nuevo hoy. Una fecha fuera de `dias` nunca está libre.
 - **`src/data/canchas.json`** es la semilla: `horas` base (común) +
   `ocupadosSemilla` por cancha (por offset de día, 0 = hoy) + campos de
   **catálogo** por cancha: `precioHora`, `imagen`, `descripcion`,
@@ -109,7 +113,14 @@ nunca acceder a `localStorage` fuera de este archivo.
     genera en `reservar` / `reservarEvento` antes de despachar.
   - El choque se valida dos veces: antes de despachar (`reservar` /
     `reservarEvento` devuelven `{ ok, codigo }` o `{ ok: false, error }` sin
-    tocar el estado) y otra vez dentro del reducer.
+    tocar el estado) y otra vez dentro del reducer, que ante un rechazo
+    devuelve el estado intacto (el estado no tiene campo `error`). En eventos
+    las dos validaciones comparten `validarReservaEvento`: celdas libres,
+    horas consecutivas por bloque y, en torneos, el orden entre fases
+    (`validarJornadas`).
+  - Torneo: si una hora de una fase deja de estar libre (cambian canchas,
+    equipos, día o disponibilidad), se limpia la franja entera de esa fase
+    con aviso, nunca solo esa hora (dejaría un hueco), y solo en modo torneo.
   - **Cancelación** (acción `CANCELAR`, función `cancelar(reservaId)` →
     `{ ok, error }`, mismo patrón de doble validación): solo reservas
     `individual`, hasta `negocio.cancelacion.horasMinimas` (6) horas antes de
@@ -129,7 +140,9 @@ nunca acceder a `localStorage` fuera de este archivo.
     `formatoPrecio` en otros archivos.
   - `torneo.js`: reglas de torneos, JS puro sin imports (lo importa `api/`) —
     `OPCIONES_EQUIPOS` (4, 8, 16), `OPCIONES_DURACION` (15, 20, 30 min),
-    `MAX_CANCHAS_TORNEO` (3, de un solo deporte), `DESEMPATES` por deporte
+    `MAX_CANCHAS_TORNEO` (3, de un solo deporte), `maxCanchasTorneo(equipos)`
+    (el tope real: los partidos de la fase más grande, hasta 3; 4 equipos →
+    2 canchas; decisión de Juan del 07-11-2026), `DESEMPATES` por deporte
     (penales en fútbol, tie-break en voley playa, super tie-break en pádel),
     `fasesDelTorneo`, `validarJornadas` (orden cronológico entre fases),
     `validarCanchasTorneo`, `sortearEquipos`, `validarCrucesManuales`,

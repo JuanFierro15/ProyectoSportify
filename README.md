@@ -140,7 +140,8 @@ cada tipo de reserva:
     barra inferior fija con **Anterior** y **Siguiente**, el motivo cuando aún
     no se puede avanzar y un indicador para saltar a los pasos ya completos o
     al primero pendiente;
-  - se eligen de **1 a 3 canchas de un mismo deporte**;
+  - se eligen de **1 a 3 canchas de un mismo deporte**, nunca más que los
+    partidos que se juegan a la vez (con 4 equipos, hasta 2 canchas);
   - se configura el formato de **4, 8 o 16 equipos** (de 2 a 4 fases: octavos,
     cuartos, semifinal y final), la duración de cada partido (**15, 20 o 30
     min**) y el emparejamiento (**sorteo aleatorio** o **cruces manuales**
@@ -246,7 +247,7 @@ mano.
 | Ventana de reserva | Hoy y los 6 días siguientes; las horas de hoy que ya empezaron no se pueden reservar |
 | Reserva de cancha | De 1 a 3 horas seguidas |
 | Beneficio | Desde 2 horas seguidas: $5.000 menos por hora y un pack de agua gratis (por cancha y jornada en eventos/torneos) |
-| Torneos | De 1 a 3 canchas de un mismo deporte, 4/8/16 equipos por fases de eliminación directa en uno o varios días y bracket interactivo |
+| Torneos | De 1 a 3 canchas de un mismo deporte (hasta 2 con 4 equipos), 4/8/16 equipos por fases de eliminación directa en uno o varios días y bracket interactivo |
 | Cumpleaños | Varias canchas (incluso de distintos deportes), un rango de horas consecutivas y hasta 100 invitados; bloqueo todo o nada |
 | Datos de la reserva | Nombre obligatorio (solo letras); teléfono opcional en el formulario y obligatorio en el chat (10 dígitos, empieza por 3). Una reserva sin teléfono solo se consulta o cancela por su código `SPF-XXXXXX` en **Mis reservas** |
 | Abono | 50 % del total en las 2 horas siguientes, por Nequi o transferencia Bancolombia |
