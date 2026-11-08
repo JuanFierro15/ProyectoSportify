@@ -10,6 +10,7 @@
  * - Dots accesibles: contenedor role="group" con aria-label="Elegir cancha" y botones con aria-pressed.
  * - Rueda del ratón: no previene el scroll vertical nativo (P0-02); solo mueve el carrusel con
  *   gesto horizontal o con Shift + rueda (con Shift usa deltaY como desplazamiento).
+ * - Acota índice activo: cuando cambia count, si el índice activo/posición queda fuera de rango se acota a count - 1.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -366,8 +367,17 @@ const DepthCarousel = ({
   }, [autoplay, autoplayDelay, count, navigateBy]);
 
   useEffect(() => {
+    if (count > 0 && (posRef.current >= count || focusRef.current >= count || active >= count)) {
+      tweenRef.current?.kill();
+      const nuevo = count - 1;
+      posRef.current = nuevo;
+      focusRef.current = nuevo;
+      setActive(nuevo);
+      layout(nuevo);
+      return;
+    }
     layout(posRef.current);
-  }, [layout, depth, spread, tilt, tiltDirection, visibleCards, falloff, blur, cardWidth, cardHeight, radius, count]);
+  }, [layout, depth, spread, tilt, tiltDirection, visibleCards, falloff, blur, cardWidth, cardHeight, radius, count, active]);
 
   useEffect(
     () => () => {
