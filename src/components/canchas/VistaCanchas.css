@@ -833,22 +833,33 @@
   .vista-canchas__visor-contenido {
     transition: none;
   }
-}
 
-/* Respeta prefers-reduced-motion: sin deslizamiento del switch/tabs, sin
-   transición de color entre deportes ni hover-lift. */
-@media (prefers-reduced-motion: reduce) {
-  .vista-canchas,
-  .vista-canchas *,
-  .vista-canchas *::before,
-  .vista-canchas *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-property: color, background-color, border-color, opacity, box-shadow !important;
+  .cancha-card {
+    transition: none;
   }
 
   .cancha-card:hover {
     transform: none;
+  }
+
+  .vista-canchas .cancha-card.vista-canchas__card-estatica {
+    transition: border-color 0.2s ease;
+  }
+
+  .vista-canchas__visor-cta {
+    transition: background-color 0.2s ease, color 0.35s ease;
+  }
+
+  .vista-canchas__visor-cta:hover {
+    transform: none;
+  }
+
+  .vista-canchas__confirmacion {
+    transition: none;
+  }
+
+  .vista-canchas__filtro .switch .switch-paddle::after {
+    transition: background-color 0.18s ease;
   }
 }
 
@@ -940,6 +951,12 @@
   background: transparent;
   border-radius: 8px;
   transition: all 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vista-canchas .button.hollow:not(.formulario-reserva__hora):not(.formulario-reserva__pill):not(.alerta-tiempo__accion) {
+    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  }
 }
 
 .vista-canchas .button.hollow:not(.formulario-reserva__hora):not(.formulario-reserva__pill):not(.alerta-tiempo__accion):hover,
