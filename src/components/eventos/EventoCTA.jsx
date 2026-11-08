@@ -6,7 +6,9 @@ import { useVistaCanchas } from '../../context/VistaCanchasContext';
 import { DEPORTES, deportePorSlug } from '../../data/deportes';
 import { canchasDelDeporte, imagenGrandeCancha } from '../../lib/canchas';
 import { esClicNormal, rutaReserva } from '../../lib/rutas';
+import { textoHorario } from '../../lib/negocio';
 import negocio from '../../data/negocio.json';
+import canchasData from '../../data/canchas.json';
 import AccordionGallery from '../reactbits/AccordionGallery';
 import './EventoCTA.css';
 
@@ -42,7 +44,7 @@ function EventoCTA() {
     { valor: DEPORTES.length, etiqueta: 'deportes' },
     { valor: canchas.length, etiqueta: 'canchas combinables' },
     { valor: dias.length, etiqueta: 'días de disponibilidad' },
-    { texto: '08–21 h', etiqueta: 'horario diario' },
+    { texto: textoHorario(canchasData.horas).replace(' - ', '–'), etiqueta: 'horario diario' },
   ];
 
   useEffect(() => {

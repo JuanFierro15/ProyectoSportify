@@ -140,7 +140,8 @@ cada tipo de reserva:
     barra inferior fija con **Anterior** y **Siguiente**, el motivo cuando aún
     no se puede avanzar y un indicador para saltar a los pasos ya completos o
     al primero pendiente;
-  - se eligen de **1 a 3 canchas de un mismo deporte**;
+  - se eligen de **1 a 3 canchas de un mismo deporte**, nunca más que los
+    partidos que se juegan a la vez (con 4 equipos, hasta 2 canchas);
   - se configura el formato de **4, 8 o 16 equipos** (de 2 a 4 fases: octavos,
     cuartos, semifinal y final), la duración de cada partido (**15, 20 o 30
     min**) y el emparejamiento (**sorteo aleatorio** o **cruces manuales**
@@ -246,7 +247,7 @@ mano.
 | Ventana de reserva | Hoy y los 6 días siguientes; las horas de hoy que ya empezaron no se pueden reservar |
 | Reserva de cancha | De 1 a 3 horas seguidas |
 | Beneficio | Desde 2 horas seguidas: $5.000 menos por hora y un pack de agua gratis (por cancha y jornada en eventos/torneos) |
-| Torneos | De 1 a 3 canchas de un mismo deporte, 4/8/16 equipos por fases de eliminación directa en uno o varios días y bracket interactivo |
+| Torneos | De 1 a 3 canchas de un mismo deporte (hasta 2 con 4 equipos), 4/8/16 equipos por fases de eliminación directa en uno o varios días y bracket interactivo |
 | Cumpleaños | Varias canchas (incluso de distintos deportes), un rango de horas consecutivas y hasta 100 invitados; bloqueo todo o nada |
 | Datos de la reserva | Nombre obligatorio (solo letras); teléfono opcional en el formulario y obligatorio en el chat (10 dígitos, empieza por 3). Una reserva sin teléfono solo se consulta o cancela por su código `SPF-XXXXXX` en **Mis reservas** |
 | Abono | 50 % del total en las 2 horas siguientes, por Nequi o transferencia Bancolombia |
@@ -339,7 +340,7 @@ sequenceDiagram
 
 | Parte | Detalle |
 |---|---|
-| Petición | `POST` JSON (máx. 48 KB): `mensaje` (1-500 caracteres), `historial` (últimos 20 turnos) y `contexto` (fecha, hora, canchas y franjas libres de 7 días) |
+| Petición | `POST` JSON (máx. 48 KB): `mensaje` (1-500 caracteres), `historial` (últimos 20 turnos) y `contexto` (fecha, hora y franjas libres de 7 días; el catálogo sale de `canchas.json`) |
 | Respuesta | Siempre `{ respuesta, sugerencias, accion }`, también en los errores |
 | Acciones | `CONFIRMAR_RESERVA`, `BUSCAR_CANCELACION`, `ABRIR_SECCION` o `null` |
 | Errores | 405 método, 400 petición inválida y, cuando fallan todos los modelos: 429 si todos agotaron su cuota, 504 si alguno se colgó y 502 en los demás casos |
@@ -529,7 +530,8 @@ El sitio está en Vercel y **cada push a `main` despliega a producción**.
 - **Movimiento reducido:** respeto estricto de `prefers-reduced-motion`:
   desactiva las animaciones GSAP de entrada, las transiciones de la
   confirmación, el zoom lento de las fotos del carrusel y el panel del
-  asistente, mostrando los estados de inmediato sin transiciones innecesarias.
+  asistente, mostrando los estados de inmediato sin transiciones innecesarias;
+  los heros no se fijan ni se animan con el scroll.
 - Todo indicador visual de disponibilidad va con texto ("10 de 13 horarios
   libres", "ocupado", "completo").
 - El color de acento de cada deporte se aplica con un color de texto que

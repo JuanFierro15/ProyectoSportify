@@ -116,6 +116,11 @@
   color: #0f172a;
 }
 
+.mis-reservas__pestana:focus-visible {
+  outline: 2px solid var(--color-marca, #f6a94b);
+  outline-offset: 2px;
+}
+
 .mis-reservas__pestana--activa {
   background: #ffffff;
   color: #0f172a;

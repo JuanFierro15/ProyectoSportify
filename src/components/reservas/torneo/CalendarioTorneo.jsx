@@ -213,7 +213,7 @@ export function CalendarioTorneo({
                               (ocupada ? ' formulario-reserva__hora--ocupado' : '') +
                               (sel ? ' formulario-reserva__hora--sel' : ' hollow')
                             }
-                            disabled={!libre}
+                            disabled={!libre && !sel}
                             aria-pressed={sel}
                             aria-label={ariaLabel}
                             data-hora={hora}

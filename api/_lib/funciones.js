@@ -13,7 +13,7 @@ import {
   validarPropuestaReserva,
   fechasVentana,
 } from '../../src/lib/validacion.js';
-import { horaAmPm, fechaCompleta } from '../../src/lib/fechas.js';
+import { horaAmPm, fechaEnFrase } from '../../src/lib/fechas.js';
 import { finDeFranja } from '../../src/lib/precios.js';
 
 export const TEXTOS = Object.freeze({
@@ -220,8 +220,7 @@ export function procesarLlamada(llamada, contexto) {
     const nombreCancha = cancha?.nombre ?? propuesta.canchaId;
     const horaInicio = horaAmPm(horas[0]);
     const horaFin = horaAmPm(finDeFranja(horas[horas.length - 1]));
-    // fechaCompleta empieza en mayúscula (voucher); aquí va a mitad de frase.
-    const fechaTexto = fechaCompleta(propuesta.fecha).replace(/^\p{Lu}/u, (l) => l.toLowerCase());
+    const fechaTexto = fechaEnFrase(propuesta.fecha);
 
     const respuesta = `Revisa los datos: ${nombreCancha}, ${fechaTexto}, de ${horaInicio} a ${horaFin}, a nombre de ${nombre}. Confírmalos para hacer la reserva.`;
 

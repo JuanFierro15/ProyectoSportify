@@ -94,21 +94,7 @@ describe('contextoChat', () => {
 
     expect(resultado.fechaHoy).toBe('2026-10-12');
     expect(resultado.horaActual).toBe('10:15');
-
-    expect(resultado.canchas).toEqual([
-      {
-        id: 'voley-1',
-        nombre: 'Cancha Voley Playa 1',
-        deporte: 'voley-playa',
-        precioHora: 45000,
-      },
-      {
-        id: 'padel-1',
-        nombre: 'Pista Pádel 1',
-        deporte: 'padel',
-        precioHora: 55000,
-      },
-    ]);
+    expect(resultado.canchas).toBeUndefined();
 
     expect(resultado.disponibilidad).toHaveLength(4);
     expect(resultado.disponibilidad).toEqual([
@@ -218,6 +204,7 @@ describe('parsearConversacion', () => {
 
 describe('mensajes y textos de reserva y cancelación en chat', () => {
   test('detectarSiNo detecta respuestas afirmativas, negativas y descarta otras', () => {
+    // Sin tipo: comportamiento previo idéntico
     expect(detectarSiNo('Sí')).toBe('si');
     expect(detectarSiNo('¡Dale!')).toBe('si');
     expect(detectarSiNo('sí, confirmo')).toBe('si');
@@ -228,6 +215,23 @@ describe('mensajes y textos de reserva y cancelación en chat', () => {
     expect(detectarSiNo('sí, pero a las 10')).toBeNull();
     expect(detectarSiNo('quiero otra hora')).toBeNull();
     expect(detectarSiNo('')).toBeNull();
+
+    // Con 'cancelacion': cancelar confirma la cancelación
+    expect(detectarSiNo('cancelar', 'cancelacion')).toBe('si');
+    expect(detectarSiNo('cancela', 'cancelacion')).toBe('si');
+    expect(detectarSiNo('Cancelar.', 'cancelacion')).toBe('si');
+    expect(detectarSiNo('sí, cancélala', 'cancelacion')).toBe('si');
+    expect(detectarSiNo('no', 'cancelacion')).toBe('no');
+
+    // Con 'reserva': cancelar rechaza la propuesta de reserva
+    expect(detectarSiNo('cancelar', 'reserva')).toBe('no');
+    expect(detectarSiNo('cancela', 'reserva')).toBe('no');
+    expect(detectarSiNo('sí', 'reserva')).toBe('si');
+
+    // Con 'opciones': cancelar no es ni sí ni no
+    expect(detectarSiNo('cancelar', 'opciones')).toBeNull();
+    expect(detectarSiNo('cancela', 'opciones')).toBeNull();
+    expect(detectarSiNo('no', 'opciones')).toBe('no');
   });
 
   test('mensajeReservaHecha con total 45000 contiene abono del 50%, medios, teléfono y código', () => {

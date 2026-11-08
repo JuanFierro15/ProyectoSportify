@@ -86,7 +86,21 @@ export default {
       );
     }
 
-    const contexto = prepararContexto(contextoBruto);
+    let contexto;
+    let systemInstruction;
+    try {
+      contexto = prepararContexto(contextoBruto);
+      systemInstruction = construirInstrucciones(contexto);
+    } catch (error) {
+      console.error('[chat] error al preparar el contexto:', error.name);
+      return Response.json(
+        { respuesta: TEXTOS.generico, sugerencias: [], accion: null },
+        {
+          status: 500,
+          headers: { 'Cache-Control': 'no-store' },
+        }
+      );
+    }
 
     const turnos = historial.map((h) => ({
       role: h.rol === 'usuario' ? 'user' : 'model',
@@ -119,7 +133,7 @@ export default {
     const ai = new GoogleGenAI({ apiKey });
 
     const config = {
-      systemInstruction: construirInstrucciones(contexto),
+      systemInstruction,
       thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
       maxOutputTokens: 400,
       tools: [{ functionDeclarations: declaraciones() }],

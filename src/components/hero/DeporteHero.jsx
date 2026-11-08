@@ -70,14 +70,13 @@ function DeporteHero({
     const seccion = rootRef.current;
     const contenido = contenidoRef.current;
     const video = videoRef.current;
-    const prefersReducedMotion =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Progreso objetivo del scroll (0..1) que persigue el bucle del ticker.
-    let progresoObjetivo = 0;
+    const mm = gsap.matchMedia(rootRef);
 
-    const ctx = gsap.context(() => {
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      // Progreso objetivo del scroll (0..1) que persigue el bucle del ticker.
+      let progresoObjetivo = 0;
+
       // Timeline del PIN + CONTENIDO (el video NO va aquí).
       const tl = gsap.timeline({
         defaults: { ease: 'none' },
@@ -116,33 +115,32 @@ function DeporteHero({
         { autoAlpha: 0, scale: 1.06, y: -14, ease: 'power2.in', duration: 0.15 },
         0.85
       );
-    }, rootRef);
 
-    // Bucle que acerca el frame del video al objetivo sin encolar seeks.
-    const seguirVideo = () => {
-      const dur = video.duration;
-      if (!dur || video.seeking) return; // aún buscando -> no pedir otro seek
-      const objetivo = progresoObjetivo * dur;
-      const delta = objetivo - video.currentTime;
-      if (Math.abs(delta) < 0.033) return; // ~1 frame: nada que hacer
-      video.currentTime += delta * SUAVIZADO;
-    };
+      // Bucle que acerca el frame del video al objetivo sin encolar seeks.
+      const seguirVideo = () => {
+        const dur = video?.duration;
+        if (!dur || video?.seeking) return; // aún buscando -> no pedir otro seek
+        const objetivo = progresoObjetivo * dur;
+        const delta = objetivo - video.currentTime;
+        if (Math.abs(delta) < 0.033) return; // ~1 frame: nada que hacer
+        video.currentTime += delta * SUAVIZADO;
+      };
 
-    if (!prefersReducedMotion) {
       gsap.ticker.add(seguirVideo);
-    }
 
-    // La duración del video llega de forma asíncrona y de ella depende el largo
-    // del pin -> re-medir cuando esté disponible.
-    const onLoadedMetadata = () => ScrollTrigger.refresh();
-    video.addEventListener('loadedmetadata', onLoadedMetadata);
+      // La duración del video llega de forma asíncrona y de ella depende el largo
+      // del pin -> re-medir cuando esté disponible.
+      const onLoadedMetadata = () => ScrollTrigger.refresh();
+      video?.addEventListener('loadedmetadata', onLoadedMetadata);
+
+      return () => {
+        gsap.ticker.remove(seguirVideo);
+        video?.removeEventListener('loadedmetadata', onLoadedMetadata);
+      };
+    });
 
     return () => {
-      if (!prefersReducedMotion) {
-        gsap.ticker.remove(seguirVideo);
-      }
-      video.removeEventListener('loadedmetadata', onLoadedMetadata);
-      ctx.revert();
+      mm.revert();
     };
   }, []);
 

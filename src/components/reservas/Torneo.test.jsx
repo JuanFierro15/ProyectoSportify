@@ -1,12 +1,13 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, within, renderHook, act } from '@testing-library/react';
-import { ReservasProvider, useReservas } from '../../context/ReservasContext';
+import ReservasContext, { ReservasProvider, useReservas } from '../../context/ReservasContext';
 import useReserva from './useReserva';
 import FormularioReserva from './FormularioReserva';
 import VoucherReserva from './VoucherReserva';
 import ConfirmacionReserva from './ConfirmacionReserva';
 import AlertaTiempo from './torneo/AlertaTiempo';
+import CalendarioTorneo from './torneo/CalendarioTorneo';
 import IndicadorPasos from './torneo/IndicadorPasos';
 import SeccionLlaves from './torneo/SeccionLlaves';
 import { fechaCompleta } from '../../lib/fechas';
@@ -553,6 +554,229 @@ describe('Modo Torneo - Pruebas de integración', () => {
     expect(result.current.puedeConfirmar).toBe(false);
   });
 
+  it('9b. En cumpleaños, invitados decimales (2.5) se rechaza y el input tiene step="1"', () => {
+    function FlujoCumplePrueba() {
+      const { dias } = useReservas();
+      const reserva = useReserva({
+        activo: true,
+        modoInicial: 'cumpleanos',
+      });
+
+      const initRef = useRef(false);
+      useEffect(() => {
+        if (!initRef.current) {
+          initRef.current = true;
+          reserva.cambiarFecha(dias[1]);
+          reserva.alternarCancha('futbol-1');
+        }
+      }, [dias, reserva]);
+
+      return (
+        <div>
+          <FormularioReserva reserva={reserva} dias={dias} />
+          <VoucherReserva
+            tipoEtiqueta={reserva.modoInfo.tipoEtiqueta}
+            fechaTexto={fechaCompleta(reserva.fecha)}
+            horas={reserva.horasSel}
+            precio={reserva.precio}
+            puedeConfirmar={reserva.puedeConfirmar}
+            motivoBloqueo={reserva.motivoBloqueo}
+            onConfirmar={reserva.confirmar}
+            onCancelar={reserva.reiniciar}
+            invitados={reserva.invitados}
+          />
+        </div>
+      );
+    }
+
+    render(
+      <ReservasProvider>
+        <FlujoCumplePrueba />
+      </ReservasProvider>
+    );
+
+    const inputInvitados = screen.getByLabelText(/^Invitados$/i);
+    expect(inputInvitados).toHaveAttribute('step', '1');
+
+    fireEvent.click(screen.getByRole('button', { name: /14:00/i }));
+    fireEvent.change(screen.getByLabelText(/Nombre/i), { target: { value: 'Ana Gómez' } });
+    fireEvent.change(inputInvitados, { target: { value: '2.5' } });
+
+    const btnConfirmar = screen.getByRole('button', { name: /Confirmar reserva/i });
+    expect(btnConfirmar).toBeDisabled();
+    expect(screen.getByText('Indica cuántos invitados vienen.')).toBeInTheDocument();
+
+    fireEvent.change(inputInvitados, { target: { value: '20' } });
+    expect(btnConfirmar).toBeEnabled();
+  });
+
+  it('9c. "Limpiar selección" limpia los datos conservando el modo actual en vez de volver a modoInicial', () => {
+    function FlujoCambioModo() {
+      const { dias, canchas } = useReservas();
+      const reserva = useReserva({
+        activo: true,
+        modoInicial: 'torneo',
+        canchaInicial: canchas.find((c) => c.id === 'futbol-1') || null,
+      });
+
+      return (
+        <div>
+          <div data-testid="modo-actual">{reserva.modo}</div>
+          <button type="button" onClick={() => reserva.cambiarModo('cancha')}>
+            Ir a Cancha
+          </button>
+          <FormularioReserva reserva={reserva} dias={dias} />
+          <VoucherReserva
+            tipoEtiqueta={reserva.modoInfo.tipoEtiqueta}
+            fechaTexto={fechaCompleta(reserva.fecha)}
+            horas={reserva.horasSel}
+            precio={reserva.precio}
+            puedeConfirmar={reserva.puedeConfirmar}
+            motivoBloqueo={reserva.motivoBloqueo}
+            onConfirmar={reserva.confirmar}
+            onCancelar={reserva.reiniciar}
+          />
+        </div>
+      );
+    }
+
+    render(
+      <ReservasProvider>
+        <FlujoCambioModo />
+      </ReservasProvider>
+    );
+
+    expect(screen.getByTestId('modo-actual')).toHaveTextContent('torneo');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ir a Cancha' }));
+    expect(screen.getByTestId('modo-actual')).toHaveTextContent('cancha');
+
+    const inputNombre = screen.getByLabelText(/Nombre/i);
+    fireEvent.change(inputNombre, { target: { value: 'Carlos Ruiz' } });
+    expect(inputNombre).toHaveValue('Carlos Ruiz');
+
+    fireEvent.click(screen.getByRole('button', { name: /Limpiar selección/i }));
+
+    expect(screen.getByTestId('modo-actual')).toHaveTextContent('cancha');
+    expect(screen.getByLabelText(/Nombre/i)).toHaveValue('');
+  });
+
+  it('9d. Renueva la ventana de 7 días al cruzar la medianoche y recuperar el foco o visibilidad: "Hoy" es el nuevo día y ayer desaparece', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-08T10:00:00'));
+
+    try {
+      let ctxRef = null;
+      let reservaRef = null;
+      function VistaConSelector() {
+        const ctx = useReservas();
+        ctxRef = ctx;
+        const reserva = useReserva({
+          activo: true,
+          modoInicial: 'cancha',
+          canchaInicial: ctx.canchas[0],
+        });
+        reservaRef = reserva;
+        return <FormularioReserva reserva={reserva} dias={ctx.dias} />;
+      }
+
+      const removeWindowSpy = vi.spyOn(window, 'removeEventListener');
+      const { unmount } = render(
+        <ReservasProvider>
+          <VistaConSelector />
+        </ReservasProvider>
+      );
+
+      expect(ctxRef.dias[0]).toBe('2026-11-08');
+      const btnHoy8 = screen.getByRole('button', { name: /Hoy 8 de nov/i });
+      expect(btnHoy8).toBeInTheDocument();
+      expect(btnHoy8).toHaveAttribute('aria-pressed', 'true');
+
+      // Elegimos una hora de hoy (2026-11-08) antes de cruzar la medianoche
+      fireEvent.click(screen.getByRole('button', { name: '20:00' }));
+      expect(reservaRef.horasSel).toEqual(['20:00']);
+      expect(reservaRef.jornadas[1].fecha).toBe('2026-11-08');
+
+      // Reservamos una hora mañana (2026-11-09) para comprobar que se conserva tras renovar la ventana
+      act(() => {
+        ctxRef.reservar({
+          canchaId: 'futbol-1',
+          fecha: '2026-11-09',
+          horas: ['14:00'],
+          nombre: 'Pedro',
+        });
+      });
+
+      // Cruzamos la medianoche al 9 de noviembre y recuperamos el foco
+      vi.setSystemTime(new Date('2026-11-09T00:05:00'));
+      act(() => {
+        window.dispatchEvent(new Event('focus'));
+      });
+
+      expect(ctxRef.dias[0]).toBe('2026-11-09');
+      expect(ctxRef.dias).not.toContain('2026-11-08');
+      expect(ctxRef.dias).toHaveLength(7);
+
+      // El día seleccionado pasa al nuevo hoy y las horas elegidas de ayer se limpian
+      const btnHoy9 = screen.getByRole('button', { name: /Hoy 9 de nov/i });
+      expect(btnHoy9).toBeInTheDocument();
+      expect(btnHoy9).toHaveAttribute('aria-pressed', 'true');
+      expect(reservaRef.fecha).toBe('2026-11-09');
+      expect(reservaRef.horasSel).toEqual([]);
+      expect(reservaRef.jornadas[1]).toEqual({ fecha: '2026-11-09', horas: [] });
+      expect(screen.queryByRole('button', { name: /8 de nov/i })).not.toBeInTheDocument();
+
+      // Las franjas de ayer no se ofrecen como disponibles y no se puede reservar ayer
+      expect(
+        ctxRef.disponibilidad('futbol-1', '2026-11-08').some((s) => s.disponible)
+      ).toBe(false);
+      const guardado = JSON.parse(window.localStorage.getItem('sportify_reservas_v2'));
+      expect(guardado.ocupados['futbol-1']['2026-11-08']).toBeUndefined();
+      expect(guardado.ocupados['futbol-1']['2026-11-09']).toContain('14:00');
+      expect(
+        ctxRef.reservar({
+          canchaId: 'futbol-1',
+          fecha: '2026-11-08',
+          horas: ['20:00'],
+          nombre: 'Pedro',
+        }).ok
+      ).toBe(false);
+
+      // Segundo cruce de medianoche al 10 de noviembre con visibilitychange (incluyendo fase de torneo con horas en el día que vence)
+      act(() => {
+        reservaRef.cambiarModo('torneo');
+      });
+      act(() => {
+        reservaRef.elegirHoraFase(1, '10:00');
+        reservaRef.elegirHoraFase(1, '11:00');
+      });
+      expect(reservaRef.jornadas[1]).toEqual({
+        fecha: '2026-11-09',
+        horas: ['10:00', '11:00'],
+      });
+
+      vi.setSystemTime(new Date('2026-11-10T00:10:00'));
+      act(() => {
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+
+      expect(ctxRef.dias[0]).toBe('2026-11-10');
+      expect(reservaRef.fecha).toBe('2026-11-10');
+      expect(reservaRef.jornadas[1]).toEqual({
+        fecha: '2026-11-10',
+        horas: [],
+      });
+      expect(
+        ctxRef.disponibilidad('futbol-1', '2026-11-09').some((s) => s.disponible)
+      ).toBe(false);
+
+      unmount();
+      expect(removeWindowSpy).toHaveBeenCalledWith('focus', expect.any(Function));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('10. En cumpleaños muestra la cantidad de invitados en voucher y confirmación; en cancha y torneo no', () => {
     function FlujoModosPrueba({ modoInicial }) {
       const { dias, canchas } = useReservas();
@@ -695,5 +919,629 @@ describe('Modo Torneo - Pruebas de integración', () => {
     expect(pasoCanchas).not.toHaveAttribute('aria-current');
     const pasoFechas = within(listaPasos).getByText('Fechas por fase').closest('li');
     expect(pasoFechas).toHaveAttribute('aria-current', 'step');
+  });
+
+  it('13. S1: quita horas de fase que dejan de estar libres (canchas, equipos, disponibilidad o fallo al confirmar) con aviso y nunca deshabilita una hora elegida', () => {
+    const { unmount } = render(
+      <ReservasProvider>
+        <FlujoTorneoPrueba
+          canchasIniciales={['voley-1']}
+          diaInicialIndex={1}
+        />
+      </ReservasProvider>
+    );
+
+    // a) Cambio de canchas: en dias[1], voley-1 tiene 14:00, 15:00 y 16:00 libres; voley-2 tiene 14:00 y 15:00 ocupadas y 16:00 libre.
+    const btn14 = screen.getByRole('button', { name: /Cuartos de final 14:00/i });
+    const btn16 = screen.getByRole('button', { name: /Cuartos de final 16:00/i });
+    fireEvent.click(btn14);
+    fireEvent.click(btn16);
+    expect(btn14).toHaveAttribute('aria-pressed', 'true');
+    expect(btn16).toHaveAttribute('aria-pressed', 'true');
+
+    // Al agregar voley-2, donde 14:00 y 15:00 están ocupadas, se limpia toda la franja de la fase y se muestra el aviso
+    fireEvent.click(screen.getByRole('button', { name: 'Cancha Voley Playa 2' }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Ese horario ya no está libre en las canchas elegidas. Elige otro.'
+    );
+    expect(
+      screen.getByRole('button', { name: /Cuartos de final 14:00/i })
+    ).toHaveAttribute('aria-pressed', 'false');
+    expect(
+      screen.getByRole('button', { name: /Cuartos de final 15:00/i })
+    ).toHaveAttribute('aria-pressed', 'false');
+    expect(
+      screen.getByRole('button', { name: /Cuartos de final 16:00/i })
+    ).toHaveAttribute('aria-pressed', 'false');
+
+    unmount();
+
+    // b) Cambio de equipos y de disponibilidad + limpieza tras fallo al confirmar
+    let ctxRef = null;
+    function ProbarHookConContexto() {
+      ctxRef = useReservas();
+      return useReserva({ activo: true, modoInicial: 'torneo' });
+    }
+
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result, unmount: unmountHook } = renderHook(() => ProbarHookConContexto(), {
+      wrapper,
+    });
+
+    // Con 4 equipos y ['voley-1', 'voley-2']: Fase 1 (Semifinal) usa 2 canchas; Fase 2 (Final) usa solo 1 ('voley-1').
+    // En dias[1], 14:00 está libre en voley-1 y ocupada en voley-2 -> libre en Fase 2 con 4 equipos.
+    act(() => {
+      result.current.cambiarEquiposTorneo(4);
+      result.current.alternarCancha('voley-1');
+      result.current.alternarCancha('voley-2');
+      result.current.cambiarFechaFase(1, ctxRef.dias[1]);
+      result.current.cambiarFechaFase(2, ctxRef.dias[1]);
+    });
+
+    act(() => {
+      result.current.elegirHoraFase(2, '14:00');
+    });
+    expect(result.current.jornadas[2].horas).toEqual(['14:00']);
+
+    // Al subir a 8 equipos, la ronda 2 pasa a ser Semifinal (2 canchas: voley-1 y voley-2), donde 14:00 está ocupada en voley-2
+    act(() => {
+      result.current.cambiarEquiposTorneo(8);
+    });
+    expect(result.current.jornadas[2].horas).toEqual([]);
+    expect(result.current.error).toBe(
+      'Ese horario ya no está libre en las canchas elegidas. Elige otro.'
+    );
+
+    // c) Cambio de disponibilidad externa en la hora intermedia de un rango de 3 horas:
+    // en dias[1], 10:00, 11:00 y 12:00 están libres en voley-1 y voley-2; al ocuparse 11:00 (hora del medio) se limpia todo el rango (sin dejar hueco)
+    act(() => {
+      result.current.elegirHoraFase(1, '10:00');
+    });
+    act(() => {
+      result.current.elegirHoraFase(1, '12:00');
+    });
+    expect(result.current.jornadas[1].horas).toEqual(['10:00', '11:00', '12:00']);
+
+    act(() => {
+      ctxRef.reservar({
+        canchaId: 'voley-2',
+        fecha: ctxRef.dias[1],
+        horas: ['11:00'],
+        nombre: 'Laura Perez',
+      });
+    });
+    expect(result.current.jornadas[1].horas).toEqual([]);
+    expect(result.current.error).toBe(
+      'Ese horario ya no está libre en las canchas elegidas. Elige otro.'
+    );
+
+    unmountHook();
+
+    // d) En CalendarioTorneo una hora ya elegida nunca queda disabled aunque esLibreFase devuelva false
+    const onElegirHoraFase = vi.fn();
+    const { unmount: unmountCal } = render(
+      <CalendarioTorneo
+        fases={[
+          {
+            ronda: 1,
+            nombreRonda: 'Semifinal',
+            partidos: 2,
+            canchasEfectivas: 2,
+            canchaIds: ['voley-1', 'voley-2'],
+            turnos: 1,
+            minutosRequeridos: 30,
+            horasMinimas: 1,
+          },
+        ]}
+        jornadas={{ 1: { fecha: '2026-11-10', horas: ['14:00'] } }}
+        validacionesJornadas={[]}
+        dias={['2026-11-10']}
+        horasBase={['14:00', '15:00']}
+        canchas={[]}
+        canchaIds={['voley-1', 'voley-2']}
+        duracionPartido={20}
+        onElegirHoraFase={onElegirHoraFase}
+        esLibreFase={() => false}
+      />
+    );
+
+    const btnElegidaOcupada = screen.getByRole('button', { name: /Semifinal 14:00/i });
+    const btnNoElegidaOcupada = screen.getByRole('button', { name: /Semifinal 15:00/i });
+    expect(btnElegidaOcupada).not.toBeDisabled();
+    expect(btnNoElegidaOcupada).toBeDisabled();
+    fireEvent.click(btnElegidaOcupada);
+    expect(onElegirHoraFase).toHaveBeenCalledWith(1, '14:00');
+    unmountCal();
+
+    // e) Tras un fallo al confirmar en torneo, limpia también las horas en conflicto de jornadas
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-08T07:00:00'));
+    window.localStorage.clear();
+
+    const { result: resConfirm, unmount: unmountConfirm } = renderHook(
+      () => ProbarHookConContexto(),
+      { wrapper }
+    );
+
+    act(() => {
+      resConfirm.current.cambiarEquiposTorneo(4);
+      resConfirm.current.alternarCancha('futbol-1');
+      resConfirm.current.alternarCancha('futbol-2');
+      resConfirm.current.cambiarFechaFase(1, ctxRef.dias[0]);
+      resConfirm.current.cambiarFechaFase(2, ctxRef.dias[1]);
+    });
+
+    act(() => {
+      resConfirm.current.elegirHoraFase(1, '10:00');
+    });
+    act(() => {
+      resConfirm.current.elegirHoraFase(1, '11:00');
+      resConfirm.current.elegirHoraFase(2, '15:00');
+      resConfirm.current.cambiarNombre('Carlos Ruiz');
+    });
+
+    expect(resConfirm.current.jornadas[1].horas).toEqual(['10:00', '11:00']);
+    expect(resConfirm.current.puedeConfirmar).toBe(true);
+
+    // Avanza el reloj a las 10:30 del mismo día sin re-renderizar antes de confirmar:
+    // 10:00 en dias[0] ya empezó, por lo que reservarEvento falla y confirmar limpia toda la franja de la fase 1 en conflicto
+    vi.setSystemTime(new Date('2026-11-08T10:30:00'));
+
+    act(() => {
+      resConfirm.current.confirmar();
+    });
+
+    expect(resConfirm.current.confirmado).toBeNull();
+    expect(resConfirm.current.error).toBe(
+      'Alguna cancha u horario del evento ya no está disponible. No se reservó nada.'
+    );
+    expect(resConfirm.current.jornadas[1].horas).toEqual([]);
+    expect(resConfirm.current.jornadas[2].horas).toEqual(['15:00']);
+    expect(ctxRef.reservas).toHaveLength(0);
+
+    unmountConfirm();
+    vi.useRealTimers();
+
+    // f) Si confirmar falla sin que haya choque de disponibilidad (p. ej. error de orden entre fases),
+    // muestra el error devuelto y NO borra las horas elegidas de ninguna fase
+    const errorOrden =
+      'Final debe jugarse después de que termine Semifinal (2026-11-10 a las 15:00).';
+    function WrapperRechazoSinChoque({ children }) {
+      return (
+        <ReservasProvider>
+          <InterceptarReservarEvento>{children}</InterceptarReservarEvento>
+        </ReservasProvider>
+      );
+    }
+    let diasSinChoque = [];
+    function InterceptarReservarEvento({ children }) {
+      const ctx = useReservas();
+      diasSinChoque = ctx.dias;
+      const valor = useMemo(
+        () => ({
+          ...ctx,
+          reservarEvento: () => ({ ok: false, error: errorOrden }),
+        }),
+        [ctx]
+      );
+      return (
+        <ReservasContext.Provider value={valor}>
+          {children}
+        </ReservasContext.Provider>
+      );
+    }
+
+    const { result: resSinChoque, unmount: unmountSinChoque } = renderHook(
+      () => useReserva({ activo: true, modoInicial: 'torneo' }),
+      { wrapper: WrapperRechazoSinChoque }
+    );
+
+    act(() => {
+      resSinChoque.current.cambiarEquiposTorneo(4);
+      resSinChoque.current.alternarCancha('futbol-1');
+      resSinChoque.current.cambiarFechaFase(1, diasSinChoque[1]);
+      resSinChoque.current.cambiarFechaFase(2, diasSinChoque[2]);
+    });
+    act(() => {
+      resSinChoque.current.elegirHoraFase(1, '10:00');
+    });
+    act(() => {
+      resSinChoque.current.elegirHoraFase(1, '11:00');
+      resSinChoque.current.elegirHoraFase(2, '14:00');
+      resSinChoque.current.cambiarNombre('Carlos Ruiz');
+    });
+
+    expect(resSinChoque.current.puedeConfirmar).toBe(true);
+
+    act(() => {
+      resSinChoque.current.confirmar();
+    });
+
+    expect(resSinChoque.current.confirmado).toBeNull();
+    expect(resSinChoque.current.error).toBe(errorOrden);
+    expect(resSinChoque.current.jornadas[1].horas).toEqual(['10:00', '11:00']);
+    expect(resSinChoque.current.jornadas[2].horas).toEqual(['14:00']);
+
+    unmountSinChoque();
+  });
+
+  it('14. S2: cambiarFecha en modo torneo avisa y limpia el rango si la fase 1 tiene conflicto en el nuevo día', () => {
+    let diasRef = [];
+    function ProbarHook() {
+      const { dias } = useReservas();
+      diasRef = dias;
+      return useReserva({ activo: true, modoInicial: 'torneo' });
+    }
+
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => ProbarHook(), { wrapper });
+
+    // En voley-1, dias[1] tiene 15:00-17:00 libres y en dias[2] 16:00 está ocupada.
+    act(() => {
+      result.current.alternarCancha('voley-1');
+      result.current.cambiarFechaFase(1, diasRef[1]);
+    });
+    act(() => {
+      result.current.elegirHoraFase(1, '15:00');
+    });
+    act(() => {
+      result.current.elegirHoraFase(1, '17:00');
+    });
+    expect(result.current.jornadas[1]).toEqual({
+      fecha: diasRef[1],
+      horas: ['15:00', '16:00', '17:00'],
+    });
+
+    act(() => {
+      result.current.cambiarFecha(diasRef[2]);
+    });
+    expect(result.current.jornadas[1]).toEqual({
+      fecha: diasRef[2],
+      horas: [],
+    });
+    expect(result.current.error).toBe(
+      'Ese horario ya no está libre en las canchas elegidas. Elige otro.'
+    );
+  });
+
+  it('14b. S2: fuera de modo torneo (Cumpleaños o Cancha) cambiarFecha actualiza la fecha de la fase 1 y conserva sus horas; al volver a Torneo revalida y avisa si hay choque', () => {
+    let diasRef = [];
+    function ProbarHook() {
+      const { dias, canchas } = useReservas();
+      diasRef = dias;
+      return useReserva({
+        activo: true,
+        modoInicial: 'torneo',
+        canchaInicial: canchas.find((c) => c.id === 'voley-1') || null,
+      });
+    }
+
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => ProbarHook(), { wrapper });
+
+    // a) En Cumpleaños: cambiarFecha actualiza la fecha de la fase 1 pero conserva sus horas sin aviso;
+    // al volver a Torneo, el efecto revalida, limpia el rango por el choque en 16:00 y muestra el aviso.
+    act(() => {
+      result.current.alternarCancha('voley-1');
+      result.current.cambiarFechaFase(1, diasRef[1]);
+    });
+    act(() => {
+      result.current.elegirHoraFase(1, '15:00');
+    });
+    act(() => {
+      result.current.elegirHoraFase(1, '17:00');
+    });
+    expect(result.current.jornadas[1]).toEqual({
+      fecha: diasRef[1],
+      horas: ['15:00', '16:00', '17:00'],
+    });
+
+    act(() => {
+      result.current.cambiarModo('cumpleanos');
+    });
+    act(() => {
+      result.current.cambiarFecha(diasRef[2]);
+    });
+    expect(result.current.error).toBeNull();
+    expect(result.current.jornadas[1]).toEqual({
+      fecha: diasRef[2],
+      horas: ['15:00', '16:00', '17:00'],
+    });
+
+    act(() => {
+      result.current.cambiarModo('torneo');
+    });
+
+    expect(result.current.modo).toBe('torneo');
+    expect(result.current.jornadas[1]).toEqual({
+      fecha: diasRef[2],
+      horas: [],
+    });
+    expect(result.current.error).toBe(
+      'Ese horario ya no está libre en las canchas elegidas. Elige otro.'
+    );
+
+    // b) En modo cancha (incluso con canchaIds vacío) cambiar a un día libre (dias[4]) conserva las horas de la fase 1
+    // Además, cambiarFechaFase y elegirHoraFase en el mismo lote act() no se pisan entre sí (Point 4)
+    act(() => {
+      result.current.cambiarFechaFase(1, diasRef[1]);
+      result.current.elegirHoraFase(1, '14:00');
+      result.current.elegirHoraFase(1, '15:00');
+    });
+    expect(result.current.jornadas[1]).toEqual({
+      fecha: diasRef[1],
+      horas: ['14:00', '15:00'],
+    });
+
+    act(() => {
+      result.current.cambiarModo('cumpleanos');
+    });
+    act(() => {
+      result.current.alternarCancha('voley-1'); // deja canchaIds vacío fuera de torneo
+      result.current.cambiarModo('cancha');
+    });
+    expect(result.current.canchaIds).toEqual([]);
+
+    act(() => {
+      result.current.cambiarFecha(diasRef[4]);
+    });
+    expect(result.current.jornadas[1]).toEqual({
+      fecha: diasRef[4],
+      horas: ['14:00', '15:00'],
+    });
+
+    act(() => {
+      result.current.cambiarModo('torneo');
+    });
+    expect(result.current.canchaIds).toEqual(['voley-1']);
+    expect(result.current.jornadas[1]).toEqual({
+      fecha: diasRef[4],
+      horas: ['14:00', '15:00'],
+    });
+    expect(result.current.error).toBeNull();
+  });
+
+  it('15. En modo Cumpleaños no aparece aviso de torneo ni se tocan las fases hasta volver a Torneo (entonces corre la limpieza)', () => {
+    let ctxRef = null;
+    function ProbarHookConContexto() {
+      ctxRef = useReservas();
+      return useReserva({ activo: true, modoInicial: 'torneo' });
+    }
+
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => ProbarHookConContexto(), { wrapper });
+
+    // En Torneo: elegimos voley-1 en dias[1] y un rango de 3 horas (14:00, 15:00, 16:00) en la fase 1
+    act(() => {
+      result.current.alternarCancha('voley-1');
+      result.current.cambiarFechaFase(1, ctxRef.dias[1]);
+    });
+    act(() => {
+      result.current.elegirHoraFase(1, '14:00');
+    });
+    act(() => {
+      result.current.elegirHoraFase(1, '16:00');
+    });
+    expect(result.current.jornadas[1].horas).toEqual(['14:00', '15:00', '16:00']);
+
+    // Cambiamos a modo Cumpleaños
+    act(() => {
+      result.current.cambiarModo('cumpleanos');
+    });
+    expect(result.current.modo).toBe('cumpleanos');
+    expect(result.current.error).toBeNull();
+
+    // Estando en Cumpleaños, se ocupa la hora intermedia (15:00) de la fase 1:
+    // no debe aparecer el aviso de torneo ni deben tocarse las fases mientras estemos fuera de Torneo
+    act(() => {
+      ctxRef.reservar({
+        canchaId: 'voley-1',
+        fecha: ctxRef.dias[1],
+        horas: ['15:00'],
+        nombre: 'Mario Gomez',
+      });
+    });
+
+    expect(result.current.modo).toBe('cumpleanos');
+    expect(result.current.error).toBeNull();
+    expect(result.current.jornadas[1].horas).toEqual(['14:00', '15:00', '16:00']);
+
+    // Al volver a Torneo, el efecto de limpieza corre, limpia el rango completo de la fase 1 y muestra el aviso
+    act(() => {
+      result.current.cambiarModo('torneo');
+    });
+
+    expect(result.current.modo).toBe('torneo');
+    expect(result.current.jornadas[1].horas).toEqual([]);
+    expect(result.current.error).toBe(
+      'Ese horario ya no está libre en las canchas elegidas. Elige otro.'
+    );
+  });
+
+  it('16. S6: con 4 equipos no permite agregar una tercera cancha y explica el motivo; al bajar de 8 a 4 equipos con 3 canchas deja las primeras 2 con aviso y solo guarda/cobra esas 2', () => {
+    let diasCapturados = [];
+    function CapturadorDias() {
+      const { dias } = useReservas();
+      diasCapturados = dias;
+      return null;
+    }
+
+    // Parte A: En el hook, con 4 equipos el tope es 2 canchas (alternarCancha, alternarDeporte, motivoNoAgregable)
+    let diasHook = [];
+    function ProbarHookS6() {
+      const { dias } = useReservas();
+      diasHook = dias;
+      return useReserva({ activo: true, modoInicial: 'torneo' });
+    }
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result, unmount: unmountHook } = renderHook(
+      () => ProbarHookS6(),
+      { wrapper }
+    );
+
+    act(() => {
+      result.current.cambiarEquiposTorneo(4);
+      result.current.alternarCancha('futbol-1');
+      result.current.alternarCancha('futbol-2');
+    });
+
+    expect(result.current.canchaIds).toEqual(['futbol-1', 'futbol-2']);
+    expect(result.current.motivoNoAgregable('futbol-3')).toBe(
+      'Con 4 equipos se juegan como máximo 2 partidos a la vez: elige hasta 2 canchas.'
+    );
+
+    // Intentar agregar una tercera cancha no la agrega y muestra el aviso
+    act(() => {
+      result.current.alternarCancha('futbol-3');
+    });
+    expect(result.current.canchaIds).toEqual(['futbol-1', 'futbol-2']);
+    expect(result.current.error).toBe(
+      'Con 4 equipos se juegan como máximo 2 partidos a la vez: elige hasta 2 canchas.'
+    );
+
+    // alternarDeporte con 4 equipos tampoco supera 2 canchas
+    act(() => {
+      result.current.alternarCancha('futbol-1');
+      result.current.alternarCancha('futbol-2');
+    });
+    expect(result.current.canchaIds).toEqual([]);
+    act(() => {
+      result.current.alternarDeporte('futbol');
+    });
+    expect(result.current.canchaIds).toEqual(['futbol-1', 'futbol-2']);
+
+    // Cumpleaños conserva sus reglas (permite las 3 canchas sin límite de torneo)
+    act(() => {
+      result.current.cambiarModo('cumpleanos');
+    });
+    act(() => {
+      result.current.alternarCancha('futbol-3');
+    });
+    expect(result.current.canchaIds).toEqual(['futbol-1', 'futbol-2', 'futbol-3']);
+
+    // Al volver a Torneo con 4 equipos, recorta a 2 canchas y muestra el aviso S6
+    act(() => {
+      result.current.cambiarModo('torneo');
+    });
+    expect(result.current.canchaIds).toEqual(['futbol-1', 'futbol-2']);
+    expect(result.current.error).toBe(
+      'Con 4 equipos se juegan como máximo 2 partidos a la vez: se dejaron las primeras 2 canchas elegidas.'
+    );
+
+    // Al bajar de 8 a 4 equipos con 3 canchas en el hook, deja las primeras 2 y al confirmar el QR solo lleva esas 2
+    act(() => {
+      result.current.cambiarEquiposTorneo(8);
+    });
+    act(() => {
+      result.current.alternarCancha('futbol-3');
+    });
+    expect(result.current.canchaIds).toEqual(['futbol-1', 'futbol-2', 'futbol-3']);
+
+    act(() => {
+      result.current.cambiarEquiposTorneo(4);
+    });
+    expect(result.current.canchaIds).toEqual(['futbol-1', 'futbol-2']);
+    expect(result.current.error).toBe(
+      'Con 4 equipos se juegan como máximo 2 partidos a la vez: se dejaron las primeras 2 canchas elegidas.'
+    );
+
+    // Confirmar en el hook y verificar que resumen.canchas y textoQr solo contienen las 2 canchas usadas
+    act(() => {
+      result.current.cambiarFechaFase(1, diasHook[1]);
+      result.current.cambiarFechaFase(2, diasHook[2]);
+    });
+    act(() => {
+      result.current.elegirHoraFase(1, '14:00');
+      result.current.elegirHoraFase(2, '15:00');
+      result.current.cambiarNombre('Elena Vargas');
+    });
+    act(() => {
+      result.current.confirmar();
+    });
+    expect(result.current.confirmado).not.toBeNull();
+    expect(result.current.confirmado.resumen.canchas).toEqual([
+      'Cancha Fútbol 1',
+      'Cancha Fútbol 2',
+    ]);
+    expect(result.current.confirmado.textoQr).toContain('Cancha Fútbol 1');
+    expect(result.current.confirmado.textoQr).toContain('Cancha Fútbol 2');
+    expect(result.current.confirmado.textoQr).not.toContain('Cancha Fútbol 3');
+
+    unmountHook();
+    window.localStorage.clear();
+
+    // Parte B: En la UI, pasar de 8 a 4 equipos con 3 canchas conserva las primeras 2 en orden de selección,
+    // quita la tercera con aviso, y al confirmar solo guarda y muestra en confirmación/QR las 2 canchas usadas
+    render(
+      <ReservasProvider>
+        <CapturadorDias />
+        <FlujoTorneoPrueba
+          canchasIniciales={['futbol-2', 'futbol-3', 'futbol-1']}
+        />
+      </ReservasProvider>
+    );
+
+    const btnCancha1 = screen.getByRole('button', { name: 'Cancha Fútbol 1' });
+    const btnCancha2 = screen.getByRole('button', { name: 'Cancha Fútbol 2' });
+    const btnCancha3 = screen.getByRole('button', { name: 'Cancha Fútbol 3' });
+
+    expect(btnCancha2).toHaveAttribute('aria-pressed', 'true');
+    expect(btnCancha3).toHaveAttribute('aria-pressed', 'true');
+    expect(btnCancha1).toHaveAttribute('aria-pressed', 'true');
+
+    // Bajar de 8 a 4 equipos
+    fireEvent.click(screen.getByRole('button', { name: /4 equipos \(3 partidos\)/i }));
+
+    // Conserva las primeras 2 en orden de selección ('futbol-2', 'futbol-3') y quita la extra ('futbol-1')
+    expect(btnCancha2).toHaveAttribute('aria-pressed', 'true');
+    expect(btnCancha3).toHaveAttribute('aria-pressed', 'true');
+    expect(btnCancha1).toHaveAttribute('aria-pressed', 'false');
+
+    // Muestra aviso explicando por qué se dejaron 2 canchas
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Con 4 equipos se juegan como máximo 2 partidos a la vez: se dejaron las primeras 2 canchas elegidas.'
+    );
+
+    // Intentar volver a agregar la tercera cancha ('futbol-1') con 4 equipos no la agrega y muestra el aviso de tope
+    fireEvent.click(btnCancha1);
+    expect(btnCancha1).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Con 4 equipos se juegan como máximo 2 partidos a la vez: elige hasta 2 canchas.'
+    );
+
+    // Programar Semifinal y Final y confirmar
+    const seccionSemi = screen.getByLabelText('Fase 1: Semifinal');
+    const seccionFinal = screen.getByLabelText('Fase 2: Final');
+    fireEvent.click(within(seccionSemi).getAllByRole('button')[1]);
+    fireEvent.click(screen.getByRole('button', { name: 'Semifinal 14:00' }));
+    fireEvent.click(within(seccionFinal).getAllByRole('button')[2]);
+    fireEvent.click(screen.getByRole('button', { name: 'Final 15:00' }));
+
+    fireEvent.change(screen.getByLabelText(/Nombre/i), {
+      target: { value: 'Elena Vargas' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar reserva/i }));
+
+    const confirmacion = screen
+      .getByText('Reserva confirmada')
+      .closest('.confirmacion-reserva');
+    expect(confirmacion).toBeInTheDocument();
+    // La confirmación muestra solo Cancha Fútbol 2 y Cancha Fútbol 3, nunca Cancha Fútbol 1
+    expect(within(confirmacion).getAllByText(/Cancha Fútbol 2/i).length).toBeGreaterThan(0);
+    expect(within(confirmacion).getAllByText(/Cancha Fútbol 3/i).length).toBeGreaterThan(0);
+    expect(within(confirmacion).queryByText(/Cancha Fútbol 1/i)).not.toBeInTheDocument();
+
+    const dataGuardada = JSON.parse(
+      window.localStorage.getItem('sportify_reservas_v2')
+    );
+    const torneoGuardado = dataGuardada.reservas.find(
+      (r) => r.subtipo === 'torneo'
+    );
+    expect(torneoGuardado.canchaIds).toEqual(['futbol-2', 'futbol-3']);
+    expect(torneoGuardado.bloques[0].canchaIds).toEqual(['futbol-2', 'futbol-3']);
+    expect(torneoGuardado.bloques[0].fecha).toBe(diasCapturados[1]);
+    expect(torneoGuardado.bloques[1].canchaIds).toEqual(['futbol-2']);
+    expect(torneoGuardado.bloques[1].fecha).toBe(diasCapturados[2]);
   });
 });

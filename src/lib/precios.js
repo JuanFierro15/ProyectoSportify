@@ -3,8 +3,8 @@
  *
  * Desde MIN_HORAS_BENEFICIO horas seguidas, cada hora baja DESCUENTO_POR_HORA
  * y se regala un pack de agua. Aplica igual a todos los deportes; estas reglas
- * aplican también a eventos (por cancha). Única fuente de estas reglas: el
- * modal, el panel de detalle y el contexto la reutilizan.
+ * aplican también a eventos (por cancha). Única fuente de estas reglas: la
+ * página de reserva, el panel de detalle y el contexto la reutilizan.
  */
 
 export const MAX_HORAS_SEGUIDAS = 3;
@@ -16,6 +16,11 @@ export const formatoPrecio = new Intl.NumberFormat('es-CO', {
   currency: 'COP',
   maximumFractionDigits: 0,
 });
+
+// '$ 45.000' (con espacio de no separación) -> '$45.000', formato corto del chat.
+export function formatoPrecioCorto(valor) {
+  return formatoPrecio.format(valor).replace(/\s/g, '');
+}
 
 export function calcularPrecio(precioHora, nHoras) {
   const conBeneficio = nHoras >= MIN_HORAS_BENEFICIO;
@@ -33,7 +38,7 @@ export function calcularPrecio(precioHora, nHoras) {
   };
 }
 
-// El modal de reserva lo usa para el voucher en todos los modos (con una sola
+// La página de reserva lo usa para el voucher en todos los modos (con una sola
 // cancha en modo Cancha) y el contexto para guardar el total de los eventos.
 export function calcularPrecioEvento(canchas, nHoras) {
   if (!canchas || canchas.length === 0 || !nHoras) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AlertCircle,
   CheckCircle2,
@@ -57,6 +57,21 @@ function obtenerNombresCanchas(r, todasLasCanchas) {
   return 'Cancha asignada';
 }
 
+const PESTANAS = [
+  {
+    id: 'codigo',
+    label: 'Por código',
+    tabId: 'mis-reservas-tab-codigo',
+    panelId: 'mis-reservas-panel-codigo',
+  },
+  {
+    id: 'datos',
+    label: 'Por nombre y teléfono',
+    tabId: 'mis-reservas-tab-datos',
+    panelId: 'mis-reservas-panel-datos',
+  },
+];
+
 /**
  * Diálogo modal accesible para consultar y cancelar reservas.
  * Permite buscar por código de reserva o por nombre y teléfono.
@@ -64,6 +79,8 @@ function obtenerNombresCanchas(r, todasLasCanchas) {
 function MisReservas({ abierto, onCerrar, botonDisparadorRef }) {
   const dialogRef = useRef(null);
   const primerInputRef = useRef(null);
+  const tabsRef = useRef([]);
+  const abiertoPrevioRef = useRef(abierto);
   const { reservas, canchas, cancelar } = useReservas();
 
   const [pestana, setPestana] = useState('codigo'); // 'codigo' | 'datos'
@@ -81,7 +98,26 @@ function MisReservas({ abierto, onCerrar, botonDisparadorRef }) {
   const [mensajeExito, setMensajeExito] = useState(null);
   const [errorCancelacion, setErrorCancelacion] = useState(null);
 
-  // Apertura y cierre del diálogo nativo
+  const limpiarResultadosYErrores = useCallback(() => {
+    setErrCodigo('');
+    setErrNombre('');
+    setErrTelefono('');
+    setResultados(null);
+    setQrVisibleId(null);
+    setCancelandoId(null);
+    setMensajeExito(null);
+    setErrorCancelacion(null);
+  }, []);
+
+  const reiniciarEstado = useCallback(() => {
+    setPestana('codigo');
+    setCodigoInput('');
+    setNombreInput('');
+    setTelefonoInput('');
+    limpiarResultadosYErrores();
+  }, [limpiarResultadosYErrores]);
+
+  // Apertura del diálogo nativo y foco inicial
   useEffect(() => {
     const dlg = dialogRef.current;
     if (!dlg) return;
@@ -92,12 +128,6 @@ function MisReservas({ abierto, onCerrar, botonDisparadorRef }) {
         dlg.setAttribute('open', '');
       }
       primerInputRef.current?.focus();
-    } else if (!abierto && dlg.open) {
-      if (typeof dlg.close === 'function') {
-        dlg.close();
-      } else {
-        dlg.removeAttribute('open');
-      }
     }
   }, [abierto]);
 
@@ -118,12 +148,17 @@ function MisReservas({ abierto, onCerrar, botonDisparadorRef }) {
     };
   }, [abierto]);
 
-  // Retorno del foco al botón del navbar al cerrar
+  // Retorno del foco al botón del navbar solo en la transición abierto -> cerrado
+  // y reinicio del estado de búsqueda
   useEffect(() => {
-    if (!abierto && botonDisparadorRef?.current) {
-      botonDisparadorRef.current.focus();
+    if (abiertoPrevioRef.current && !abierto) {
+      reiniciarEstado();
+      if (botonDisparadorRef?.current) {
+        botonDisparadorRef.current.focus();
+      }
     }
-  }, [abierto, botonDisparadorRef]);
+    abiertoPrevioRef.current = abierto;
+  }, [abierto, botonDisparadorRef, reiniciarEstado]);
 
   // Animación de entrada GSAP respetando prefers-reduced-motion
   useEffect(() => {
@@ -147,14 +182,41 @@ function MisReservas({ abierto, onCerrar, botonDisparadorRef }) {
 
   const cambiarPestana = (nuevaPestana) => {
     setPestana(nuevaPestana);
-    setErrCodigo('');
-    setErrNombre('');
-    setErrTelefono('');
-    setResultados(null);
-    setQrVisibleId(null);
-    setCancelandoId(null);
-    setMensajeExito(null);
-    setErrorCancelacion(null);
+    limpiarResultadosYErrores();
+  };
+
+  const activarPestana = (nuevaPestana, enfocar = false) => {
+    cambiarPestana(nuevaPestana);
+    if (enfocar) {
+      const idx = PESTANAS.findIndex((p) => p.id === nuevaPestana);
+      if (idx !== -1) {
+        tabsRef.current[idx]?.focus();
+      }
+    }
+  };
+
+  const manejarTecladoPestana = (e, idxActual) => {
+    const total = PESTANAS.length;
+    if (total === 0) return;
+    let nuevoIdx = -1;
+    if (e.key === 'ArrowRight') {
+      nuevoIdx = (idxActual + 1) % total;
+    } else if (e.key === 'ArrowLeft') {
+      nuevoIdx = (idxActual - 1 + total) % total;
+    } else if (e.key === 'Home') {
+      nuevoIdx = 0;
+    } else if (e.key === 'End') {
+      nuevoIdx = total - 1;
+    }
+    if (nuevoIdx !== -1) {
+      e.preventDefault();
+      activarPestana(PESTANAS[nuevoIdx].id, true);
+    }
+  };
+
+  const manejarCerrar = () => {
+    reiniciarEstado();
+    onCerrar();
   };
 
   const manejarBuscarCodigo = (e) => {
@@ -231,10 +293,10 @@ function MisReservas({ abierto, onCerrar, botonDisparadorRef }) {
       ref={dialogRef}
       className="mis-reservas"
       aria-labelledby="mis-reservas-titulo"
-      onClose={onCerrar}
+      onClose={manejarCerrar}
       onClick={(e) => {
         if (!e.target.closest('.mis-reservas__contenido')) {
-          onCerrar();
+          manejarCerrar();
         }
       }}
     >
@@ -243,7 +305,7 @@ function MisReservas({ abierto, onCerrar, botonDisparadorRef }) {
           type="button"
           className="mis-reservas__cerrar"
           aria-label="Cerrar"
-          onClick={onCerrar}
+          onClick={manejarCerrar}
         >
           <X size={20} aria-hidden="true" />
         </button>
@@ -256,102 +318,116 @@ function MisReservas({ abierto, onCerrar, botonDisparadorRef }) {
         </div>
 
         <div className="mis-reservas__pestanas" role="tablist" aria-label="Método de búsqueda">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={pestana === 'codigo'}
-            className={`mis-reservas__pestana ${
-              pestana === 'codigo' ? 'mis-reservas__pestana--activa' : ''
-            }`}
-            onClick={() => cambiarPestana('codigo')}
-          >
-            Por código
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={pestana === 'datos'}
-            className={`mis-reservas__pestana ${
-              pestana === 'datos' ? 'mis-reservas__pestana--activa' : ''
-            }`}
-            onClick={() => cambiarPestana('datos')}
-          >
-            Por nombre y teléfono
-          </button>
+          {PESTANAS.map((p, idx) => {
+            const esActiva = pestana === p.id;
+            return (
+              <button
+                key={p.id}
+                ref={(el) => {
+                  tabsRef.current[idx] = el;
+                }}
+                id={p.tabId}
+                type="button"
+                role="tab"
+                aria-selected={esActiva}
+                aria-controls={esActiva ? p.panelId : undefined}
+                tabIndex={esActiva ? 0 : -1}
+                className={`mis-reservas__pestana ${
+                  esActiva ? 'mis-reservas__pestana--activa' : ''
+                }`}
+                onClick={() => activarPestana(p.id)}
+                onKeyDown={(e) => manejarTecladoPestana(e, idx)}
+              >
+                {p.label}
+              </button>
+            );
+          })}
         </div>
 
         {pestana === 'codigo' ? (
-          <form onSubmit={manejarBuscarCodigo} className="mis-reservas__form" noValidate>
-            <div className="mis-reservas__campo">
-              <label htmlFor="mis-reservas-codigo" className="mis-reservas__etiqueta">
-                Código de reserva
-              </label>
-              <div className="mis-reservas__input-con-boton">
+          <div
+            id="mis-reservas-panel-codigo"
+            role="tabpanel"
+            aria-labelledby="mis-reservas-tab-codigo"
+          >
+            <form onSubmit={manejarBuscarCodigo} className="mis-reservas__form" noValidate>
+              <div className="mis-reservas__campo">
+                <label htmlFor="mis-reservas-codigo" className="mis-reservas__etiqueta">
+                  Código de reserva
+                </label>
+                <div className="mis-reservas__input-con-boton">
+                  <input
+                    ref={primerInputRef}
+                    id="mis-reservas-codigo"
+                    type="text"
+                    className={`mis-reservas__input ${errCodigo ? 'is-invalid-input' : ''}`}
+                    placeholder="SPF-XXXXXX"
+                    value={codigoInput}
+                    onChange={(e) => {
+                      setCodigoInput(e.target.value);
+                      if (errCodigo) setErrCodigo('');
+                    }}
+                    autoCapitalize="characters"
+                  />
+                  <button type="submit" className="button mis-reservas__btn-buscar">
+                    <Search size={16} aria-hidden="true" />
+                    <span>Buscar</span>
+                  </button>
+                </div>
+                {errCodigo && <span className="form-error is-visible">{errCodigo}</span>}
+              </div>
+            </form>
+          </div>
+        ) : (
+          <div
+            id="mis-reservas-panel-datos"
+            role="tabpanel"
+            aria-labelledby="mis-reservas-tab-datos"
+          >
+            <form onSubmit={manejarBuscarDatos} className="mis-reservas__form" noValidate>
+              <div className="mis-reservas__campo">
+                <label htmlFor="mis-reservas-nombre" className="mis-reservas__etiqueta">
+                  Nombre completo
+                </label>
                 <input
                   ref={primerInputRef}
-                  id="mis-reservas-codigo"
+                  id="mis-reservas-nombre"
                   type="text"
-                  className={`mis-reservas__input ${errCodigo ? 'is-invalid-input' : ''}`}
-                  placeholder="SPF-XXXXXX"
-                  value={codigoInput}
+                  className={`mis-reservas__input ${errNombre ? 'is-invalid-input' : ''}`}
+                  placeholder="Como registraste la reserva"
+                  value={nombreInput}
                   onChange={(e) => {
-                    setCodigoInput(e.target.value);
-                    if (errCodigo) setErrCodigo('');
+                    setNombreInput(limpiarNombre(e.target.value));
+                    if (errNombre) setErrNombre('');
                   }}
-                  autoCapitalize="characters"
                 />
-                <button type="submit" className="button mis-reservas__btn-buscar">
-                  <Search size={16} aria-hidden="true" />
-                  <span>Buscar</span>
-                </button>
+                {errNombre && <span className="form-error is-visible">{errNombre}</span>}
               </div>
-              {errCodigo && <span className="form-error is-visible">{errCodigo}</span>}
-            </div>
-          </form>
-        ) : (
-          <form onSubmit={manejarBuscarDatos} className="mis-reservas__form" noValidate>
-            <div className="mis-reservas__campo">
-              <label htmlFor="mis-reservas-nombre" className="mis-reservas__etiqueta">
-                Nombre completo
-              </label>
-              <input
-                ref={primerInputRef}
-                id="mis-reservas-nombre"
-                type="text"
-                className={`mis-reservas__input ${errNombre ? 'is-invalid-input' : ''}`}
-                placeholder="Como registraste la reserva"
-                value={nombreInput}
-                onChange={(e) => {
-                  setNombreInput(limpiarNombre(e.target.value));
-                  if (errNombre) setErrNombre('');
-                }}
-              />
-              {errNombre && <span className="form-error is-visible">{errNombre}</span>}
-            </div>
 
-            <div className="mis-reservas__campo">
-              <label htmlFor="mis-reservas-telefono" className="mis-reservas__etiqueta">
-                Teléfono
-              </label>
-              <input
-                id="mis-reservas-telefono"
-                type="tel"
-                className={`mis-reservas__input ${errTelefono ? 'is-invalid-input' : ''}`}
-                placeholder="300 123 4567"
-                value={telefonoInput}
-                onChange={(e) => {
-                  setTelefonoInput(limpiarTelefono(e.target.value));
-                  if (errTelefono) setErrTelefono('');
-                }}
-              />
-              {errTelefono && <span className="form-error is-visible">{errTelefono}</span>}
-            </div>
+              <div className="mis-reservas__campo">
+                <label htmlFor="mis-reservas-telefono" className="mis-reservas__etiqueta">
+                  Teléfono
+                </label>
+                <input
+                  id="mis-reservas-telefono"
+                  type="tel"
+                  className={`mis-reservas__input ${errTelefono ? 'is-invalid-input' : ''}`}
+                  placeholder="300 123 4567"
+                  value={telefonoInput}
+                  onChange={(e) => {
+                    setTelefonoInput(limpiarTelefono(e.target.value));
+                    if (errTelefono) setErrTelefono('');
+                  }}
+                />
+                {errTelefono && <span className="form-error is-visible">{errTelefono}</span>}
+              </div>
 
-            <button type="submit" className="button expanded mis-reservas__btn-buscar-datos">
-              <Search size={16} aria-hidden="true" />
-              <span>Buscar reservas</span>
-            </button>
-          </form>
+              <button type="submit" className="button expanded mis-reservas__btn-buscar-datos">
+                <Search size={16} aria-hidden="true" />
+                <span>Buscar reservas</span>
+              </button>
+            </form>
+          </div>
         )}
 
         {mensajeExito && (

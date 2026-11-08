@@ -4,6 +4,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import ReservasContext from '../../context/ReservasContext';
 import Bracket, { fechaCorta } from './torneo/Bracket';
 import { finDeFranja, formatoPrecio } from '../../lib/precios';
+import { formatoTelefono } from '../../lib/negocio';
 import negocio from '../../data/negocio.json';
 import './ConfirmacionReserva.css';
 
@@ -92,6 +93,12 @@ function ConfirmacionReserva({ codigo, textoQr, resumen = {}, onListo }) {
   const mediosAbono = Array.isArray(negocio.pagos?.abonoMedios)
     ? negocio.pagos.abonoMedios.join(' o ')
     : '';
+
+  const esEvento = Boolean(
+    torneo ||
+      invitados > 0 ||
+      (tipoEtiqueta && tipoEtiqueta !== 'Reserva de cancha')
+  );
 
   return (
     <div className="confirmacion-reserva">
@@ -237,7 +244,9 @@ function ConfirmacionReserva({ codigo, textoQr, resumen = {}, onListo }) {
             Cancelación sin costo hasta {negocio.cancelacion.horasMinimas} horas antes. {negocio.cancelacion.condicion}
           </li>
           <li>
-            Puedes consultar o cancelar tu reserva en Mis reservas, con tu código.
+            {esEvento
+              ? `Puedes consultar tu reserva en Mis reservas, con tu código. Para cancelarla, comunícate con el local al ${formatoTelefono(negocio.telefono)}.`
+              : 'Puedes consultar o cancelar tu reserva en Mis reservas, con tu código.'}
           </li>
         </ul>
       </div>
