@@ -24,7 +24,9 @@ import {
   armarTorneo,
   desempateDe,
   fasesDelTorneo,
+  limpiarJornadasConChoque,
   maxCanchasTorneo,
+  mensajeTopeCanchas,
   minutosPorTurno,
   minutosRequeridos,
   partidosPorRonda,
@@ -128,6 +130,20 @@ function normalizarJornadasCascada(jornadasActuales, fases = [], dias = [], hora
   return copia;
 }
 
+function moverFechaJornadas(jornadasActuales, iso) {
+  const actualizadas = { ...jornadasActuales };
+  Object.keys(actualizadas).forEach((rondaKey) => {
+    const j = actualizadas[rondaKey];
+    if (!j || !j.horas || j.horas.length === 0 || Number(rondaKey) === 1) {
+      actualizadas[rondaKey] = {
+        ...j,
+        fecha: iso,
+      };
+    }
+  });
+  return actualizadas;
+}
+
 function calcularMotivoNoAgregable(id, modoActual, idsActuales, todasLasCanchas, equipos) {
   if (modoActual !== 'torneo' || idsActuales.includes(id)) {
     return null;
@@ -139,11 +155,11 @@ function calcularMotivoNoAgregable(id, modoActual, idsActuales, todasLasCanchas,
       return `Solo canchas de ${deportePorSlug(primera.deporte)?.nombre}`;
     }
   }
-  const maxCanchas = maxCanchasTorneo(equipos);
-  if (idsActuales.length >= maxCanchas) {
-    return maxCanchas < MAX_CANCHAS_TORNEO
-      ? `Con ${Number(equipos)} equipos se juegan como máximo ${maxCanchas} partidos a la vez: elige hasta ${maxCanchas} canchas.`
-      : `Máx. ${maxCanchas} canchas`;
+  const topeCanchas = maxCanchasTorneo(equipos);
+  if (idsActuales.length >= topeCanchas) {
+    return topeCanchas < MAX_CANCHAS_TORNEO
+      ? mensajeTopeCanchas(equipos)
+      : `Máx. ${topeCanchas} canchas`;
   }
   return null;
 }
@@ -178,8 +194,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
   const [confirmado, setConfirmado] = useState(null);
 
   const prevActivoRef = useRef(false);
-  const jornadasRef = useRef(jornadas);
-  jornadasRef.current = jornadas;
+  const maxCanchas = maxCanchasTorneo(equipos);
 
   const reiniciar = useCallback(() => {
     setFecha(dias[0]);
@@ -281,14 +296,14 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
   );
 
   const esLibreFase = useCallback(
-    (ronda, hora) => {
+    (ronda, hora, jornadasBase = jornadas) => {
       const numRonda = Number(ronda);
       const fase = fases.find((f) => f.ronda === numRonda);
       if (!fase || fase.canchaIds.length === 0) {
         return false;
       }
 
-      const jActual = jornadas[numRonda];
+      const jActual = jornadasBase[numRonda];
       const fechaFase = (jActual && jActual.fecha) || fecha;
       if (!fechaFase) return false;
 
@@ -300,7 +315,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
       // Bloqueo cronológico preventivo: no permitir horas anteriores o iguales al fin
       // de una fase previa que se juegue el mismo día (ni fechas anteriores).
       for (let rPrev = 1; rPrev < numRonda; rPrev += 1) {
-        const jPrevia = jornadas[rPrev];
+        const jPrevia = jornadasBase[rPrev];
         if (!jPrevia || !jPrevia.fecha) continue;
         if (fechaFase < jPrevia.fecha) {
           return false;
@@ -319,10 +334,10 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
         }
       }
 
-      const otraRondaSolapada = Object.keys(jornadas).some((rKey) => {
+      const otraRondaSolapada = Object.keys(jornadasBase).some((rKey) => {
         const otraRonda = Number(rKey);
         if (otraRonda === numRonda) return false;
-        const jOtra = jornadas[otraRonda];
+        const jOtra = jornadasBase[otraRonda];
         if (!jOtra || jOtra.fecha !== fechaFase || !Array.isArray(jOtra.horas)) {
           return false;
         }
@@ -425,12 +440,10 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
         );
         setJornadas((prev) => inicializarJornadas(n, fecha, prev));
         if (modo === 'torneo') {
-          const maxCanchas = maxCanchasTorneo(n);
-          if (canchaIds.length > maxCanchas) {
-            setCanchaIds((prev) => prev.slice(0, maxCanchas));
-            setError(
-              `Con ${n} equipos se juegan como máximo ${maxCanchas} partidos a la vez: se dejaron las primeras ${maxCanchas} canchas elegidas.`
-            );
+          const topeCanchas = maxCanchasTorneo(n);
+          if (canchaIds.length > topeCanchas) {
+            setCanchaIds((prev) => prev.slice(0, topeCanchas));
+            setError(mensajeTopeCanchas(n, { recorte: true }));
           }
         }
       }
@@ -492,53 +505,55 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
   const elegirHoraFase = useCallback(
     (ronda, hora) => {
       const numRonda = Number(ronda);
-      const prevJornadas = jornadasRef.current;
-      const jActual = prevJornadas[numRonda] || { fecha, horas: [] };
-      const horasActuales = Array.isArray(jActual.horas) ? jActual.horas : [];
+      const calcularEleccion = (baseJornadas) => {
+        const jActual = baseJornadas[numRonda] || { fecha, horas: [] };
+        const horasActuales = Array.isArray(jActual.horas) ? jActual.horas : [];
+        const libreEnRonda = (h) => esLibreFase(numRonda, h, baseJornadas);
 
-      if (horasActuales.includes(hora) && !esLibreFase(numRonda, hora)) {
-        setError(null);
-        const siguiente = normalizarJornadasCascada(
-          {
-            ...prevJornadas,
-            [numRonda]: {
-              ...jActual,
-              horas: [],
-            },
-          },
-          fases,
-          dias,
-          horasBase
+        if (horasActuales.includes(hora) && !libreEnRonda(hora)) {
+          const { jornadas: limpias } = limpiarJornadasConChoque(
+            baseJornadas,
+            (r, h) => (r === numRonda ? libreEnRonda(h) : true)
+          );
+          return {
+            jornadas: normalizarJornadasCascada(limpias, fases, dias, horasBase),
+            error: null,
+          };
+        }
+
+        const res = seleccionarRango(
+          horasActuales,
+          hora,
+          horasBase,
+          libreEnRonda
         );
-        jornadasRef.current = siguiente;
-        setJornadas(siguiente);
-        return;
-      }
 
-      const res = seleccionarRango(
-        horasActuales,
-        hora,
-        horasBase,
-        (h) => esLibreFase(numRonda, h)
-      );
+        return {
+          jornadas: normalizarJornadasCascada(
+            {
+              ...baseJornadas,
+              [numRonda]: {
+                ...jActual,
+                horas: res.sel,
+              },
+            },
+            fases,
+            dias,
+            horasBase
+          ),
+          error: res.error || null,
+        };
+      };
 
-      setError(res.error || null);
-      const siguiente = normalizarJornadasCascada(
-        {
-          ...prevJornadas,
-          [numRonda]: {
-            ...jActual,
-            horas: res.sel,
-          },
-        },
-        fases,
-        dias,
-        horasBase
+      const precalculado = calcularEleccion(jornadas);
+      setError(precalculado.error);
+      setJornadas((prev) =>
+        prev === jornadas
+          ? precalculado.jornadas
+          : calcularEleccion(prev).jornadas
       );
-      jornadasRef.current = siguiente;
-      setJornadas(siguiente);
     },
-    [fecha, horasBase, esLibreFase, fases, dias]
+    [jornadas, fecha, horasBase, esLibreFase, fases, dias]
   );
 
   const torneoPlan = useMemo(() => {
@@ -716,36 +731,16 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     if (!tieneHorasFase) return;
 
     if (canchaIds.length === 0) {
-      setJornadas((prev) => {
-        const siguiente = {};
-        Object.keys(prev).forEach((rKey) => {
-          siguiente[rKey] = {
-            ...prev[rKey],
-            horas: [],
-          };
-        });
-        return siguiente;
-      });
+      setJornadas((prev) => limpiarJornadasConChoque(prev, () => false).jornadas);
       return;
     }
 
-    let algunaNoLibre = false;
-    const siguiente = {};
-    Object.keys(jornadas).forEach((rKey) => {
-      const r = Number(rKey);
-      const j = jornadas[rKey];
-      const horasActuales = Array.isArray(j?.horas) ? j.horas : [];
-      const faseConChoque = horasActuales.some((h) => !esLibreFase(r, h));
-      if (faseConChoque) {
-        algunaNoLibre = true;
-      }
-      siguiente[rKey] = {
-        ...j,
-        horas: faseConChoque ? [] : horasActuales,
-      };
-    });
+    const { jornadas: siguiente, huboChoque } = limpiarJornadasConChoque(
+      jornadas,
+      esLibreFase
+    );
 
-    if (algunaNoLibre) {
+    if (huboChoque) {
       setJornadas(normalizarJornadasCascada(siguiente, fases, dias, horasBase));
       setError('Ese horario ya no está libre en las canchas elegidas. Elige otro.');
     }
@@ -754,22 +749,35 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
   const cambiarModo = useCallback(
     (nuevo) => {
       if (nuevo === modo) return;
+      let avisoModo = null;
       if (nuevo === 'torneo') {
         if (modo === 'cancha') {
           setCanchaIds(canchaSel ? [canchaSel.id] : []);
         } else if (modo === 'cumpleanos') {
-          setCanchaIds((prevIds) => {
-            if (prevIds.length === 0) return [];
-            const canchasActuales = prevIds
+          const recortarCanchas = (ids) => {
+            if (ids.length === 0) return { ids: [], recortoPorTope: false };
+            const canchasActuales = ids
               .map((id) => canchas.find((c) => c.id === id))
               .filter(Boolean);
-            if (canchasActuales.length === 0) return [];
+            if (canchasActuales.length === 0) {
+              return { ids: [], recortoPorTope: false };
+            }
             const primerDeporte = canchasActuales[0].deporte;
-            const filtradas = canchasActuales
-              .filter((c) => c.deporte === primerDeporte)
-              .slice(0, maxCanchasTorneo(equipos));
-            return filtradas.map((c) => c.id);
-          });
+            const delMismoDeporte = canchasActuales.filter(
+              (c) => c.deporte === primerDeporte
+            );
+            return {
+              ids: delMismoDeporte.slice(0, maxCanchas).map((c) => c.id),
+              recortoPorTope: delMismoDeporte.length > maxCanchas,
+            };
+          };
+          const precalculado = recortarCanchas(canchaIds);
+          if (precalculado.recortoPorTope) {
+            avisoModo = mensajeTopeCanchas(equipos, { recorte: true });
+          }
+          setCanchaIds((prevIds) =>
+            prevIds === canchaIds ? precalculado.ids : recortarCanchas(prevIds).ids
+          );
         }
       } else if (modo === 'cancha' && nuevo !== 'cancha') {
         setCanchaIds(canchaSel ? [canchaSel.id] : []);
@@ -778,9 +786,9 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
       }
       setModo(nuevo);
       setHorasSel([]);
-      setError(null);
+      setError(avisoModo);
     },
-    [modo, canchaSel, canchaIds, canchas, equipos]
+    [modo, canchaSel, canchaIds, canchas, maxCanchas, equipos]
   );
 
   const elegirCancha = useCallback((id) => {
@@ -788,8 +796,6 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     setHorasSel([]);
     setError(null);
   }, []);
-
-  const maxCanchas = maxCanchasTorneo(equipos);
 
   const motivoNoAgregable = useCallback(
     (id) => calcularMotivoNoAgregable(id, modo, canchaIds, canchas, equipos),
@@ -868,44 +874,38 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     (iso) => {
       setFecha(iso);
       setHorasSel([]);
-      let huboConflictoFase1 = false;
-      setJornadas((prev) => {
-        const actualizadas = { ...prev };
-        const fase1 = fases.find((f) => f.ronda === 1);
-        const canchasFase1 = fase1 ? fase1.canchaIds : canchaIds;
-        Object.keys(actualizadas).forEach((rondaKey) => {
-          const j = actualizadas[rondaKey];
-          if (!j || !j.horas || j.horas.length === 0 || Number(rondaKey) === 1) {
-            const horasPrevias = Array.isArray(j?.horas) ? j.horas : [];
-            const todasValidas =
-              horasPrevias.length > 0 &&
-              canchasFase1.length > 0 &&
-              horasPrevias.every((h) =>
-                canchasFase1.every((cid) =>
-                  disponibilidad(cid, iso).some(
-                    (slot) => slot.hora === h && slot.disponible
-                  )
-                )
-              );
-            if (horasPrevias.length > 0 && !todasValidas) {
-              huboConflictoFase1 = true;
-            }
-            actualizadas[rondaKey] = {
-              ...j,
-              fecha: iso,
-              horas: todasValidas ? horasPrevias : [],
-            };
-          }
-        });
-        return normalizarJornadasCascada(actualizadas, fases, dias, horasBase);
-      });
+
+      if (modo !== 'torneo') {
+        setJornadas((prev) => moverFechaJornadas(prev, iso));
+        setError(null);
+        return;
+      }
+
+      const calcularCambioTorneo = (base) => {
+        const conFecha = moverFechaJornadas(base, iso);
+        const { jornadas: limpias, huboChoque } = limpiarJornadasConChoque(
+          conFecha,
+          (r, h) => esLibreFase(r, h, conFecha)
+        );
+        return {
+          jornadas: normalizarJornadasCascada(limpias, fases, dias, horasBase),
+          huboChoque,
+        };
+      };
+
+      const precalculado = calcularCambioTorneo(jornadas);
+      setJornadas((prev) =>
+        prev === jornadas
+          ? precalculado.jornadas
+          : calcularCambioTorneo(prev).jornadas
+      );
       setError(
-        modo === 'torneo' && huboConflictoFase1
+        precalculado.huboChoque
           ? 'Ese horario ya no está libre en las canchas elegidas. Elige otro.'
           : null
       );
     },
-    [fases, canchaIds, disponibilidad, dias, horasBase, modo]
+    [modo, jornadas, esLibreFase, fases, dias, horasBase]
   );
 
   const cambiarNombre = useCallback((valor) => {
@@ -997,30 +997,14 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     if (!res.ok) {
       setError(res.error);
       if (modo === 'torneo') {
+        // Si el rechazo no se debe a un choque de disponibilidad (p. ej. orden
+        // cronológico entre fases), se muestra el error devuelto sin borrar horas.
         setJornadas((prev) => {
-          const siguiente = {};
-          let algunaQuitada = false;
-          Object.keys(prev).forEach((rKey) => {
-            const r = Number(rKey);
-            const j = prev[rKey];
-            const horasActuales = Array.isArray(j?.horas) ? j.horas : [];
-            const faseConChoque = horasActuales.some((h) => !esLibreFase(r, h));
-            if (faseConChoque) {
-              algunaQuitada = true;
-            }
-            siguiente[rKey] = {
-              ...j,
-              horas: faseConChoque ? [] : horasActuales,
-            };
-          });
-          if (!algunaQuitada) {
-            Object.keys(siguiente).forEach((rKey) => {
-              siguiente[rKey] = {
-                ...siguiente[rKey],
-                horas: [],
-              };
-            });
-          }
+          const { jornadas: siguiente, huboChoque } = limpiarJornadasConChoque(
+            prev,
+            (r, h) => esLibreFase(r, h, prev)
+          );
+          if (!huboChoque) return prev;
           return normalizarJornadasCascada(siguiente, fases, dias, horasBase);
         });
       } else {

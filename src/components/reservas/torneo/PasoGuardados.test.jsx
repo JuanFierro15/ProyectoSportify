@@ -70,7 +70,47 @@ describe('PasoGuardados', () => {
     window.localStorage.clear();
   });
 
-  it('muestra fecha legible con fechaCompleta, hora de fin con finDeFranja y todas las fases de un torneo de 2 fases', () => {
+  it('con torneo.jornadas poblado (camino real de producción) muestra fecha legible con fechaCompleta y hora de fin con finDeFranja en las 2 fases', () => {
+    let diasCapturados = [];
+    let reservasCapturadas = [];
+    function CapturarEstado() {
+      const { dias, reservas } = useReservas();
+      diasCapturados = dias;
+      reservasCapturadas = reservas;
+      return null;
+    }
+
+    const { container } = render(
+      <ReservasProvider>
+        <CapturarEstado />
+        <GuardarYMostrarTorneo incluirJornadasEnTorneo={true} />
+      </ReservasProvider>
+    );
+
+    expect(reservasCapturadas).toHaveLength(1);
+    expect(reservasCapturadas[0].torneo.jornadas).toHaveLength(2);
+
+    const fechaFase1 = fechaCompleta(diasCapturados[1]);
+    const fechaFase2 = fechaCompleta(diasCapturados[2]);
+
+    expect(screen.getByText('Torneos reservados (1)')).toBeInTheDocument();
+
+    const textoCompleto = container.textContent;
+    expect(textoCompleto).toContain(fechaFase1);
+    expect(textoCompleto).toContain(fechaFase2);
+    expect(textoCompleto).not.toContain(diasCapturados[1]);
+    expect(textoCompleto).not.toContain(diasCapturados[2]);
+
+    expect(textoCompleto).toContain('14:00 a 16:00');
+    expect(textoCompleto).toContain('16:00 a 18:00');
+    expect(textoCompleto).not.toContain('14:00 a 15:00');
+    expect(textoCompleto).not.toContain('16:00 a 17:00');
+
+    expect(screen.getByText(/^Semifinal:$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Final:$/i)).toBeInTheDocument();
+  });
+
+  it('como respaldo sin torneo.jornadas usa bloques y muestra fecha legible, hora de fin correcta y ambas fases', () => {
     let diasCapturados = [];
     function CapturarDias() {
       const { dias } = useReservas();

@@ -6,6 +6,8 @@ import {
   useReservas,
   reducer,
   crearEstadoInicial,
+  ERROR_EVENTO_NO_DISPONIBLE,
+  ERROR_EVENTO_HORAS_NO_SEGUIDAS,
 } from './ReservasContext';
 
 const STORAGE_KEY = 'sportify_reservas_v2';
@@ -152,7 +154,7 @@ describe('ReservasContext y reducer — doble validación de eventos (S3, S4)', 
     expect(result.current.reservas).toEqual([]);
     expect(JSON.parse(window.localStorage.getItem(STORAGE_KEY))).toEqual(guardadoInicial);
 
-    // 2. Cumpleaños con horas no consecutivas en reservarEvento
+    // 2. Cumpleaños con horas no consecutivas en reservarEvento devuelve el mensaje propio de rango sin saltos
     let resCumple;
     act(() => {
       resCumple = result.current.reservarEvento({
@@ -168,10 +170,55 @@ describe('ReservasContext y reducer — doble validación de eventos (S3, S4)', 
     expect(resCumple).toEqual({
       ok: false,
       error:
-        'Alguna cancha u horario del evento ya no está disponible. No se reservó nada.',
+        'Las horas del evento deben ser seguidas. Elige un rango sin saltos.',
     });
+    expect(resCumple.error).toBe(ERROR_EVENTO_HORAS_NO_SEGUIDAS);
     expect(result.current.reservas).toEqual([]);
     expect(JSON.parse(window.localStorage.getItem(STORAGE_KEY))).toEqual(guardadoInicial);
+
+    // 2b. Torneo con horas no consecutivas en un bloque también devuelve el mensaje de rango sin saltos
+    let resTorneoSaltos;
+    act(() => {
+      resTorneoSaltos = result.current.reservarEvento({
+        subtipo: 'torneo',
+        fecha: dia4,
+        canchaIds: ['voley-1'],
+        horas: ['09:00', '11:00'],
+        bloques: [
+          {
+            ronda: 1,
+            nombreRonda: 'Final',
+            fecha: dia4,
+            canchaIds: ['voley-1'],
+            horas: ['09:00', '11:00'],
+          },
+        ],
+        nombre: 'Pedro Gómez',
+      });
+    });
+
+    expect(resTorneoSaltos).toEqual({
+      ok: false,
+      error: ERROR_EVENTO_HORAS_NO_SEGUIDAS,
+    });
+
+    // 2c. Cancha ocupada devuelve ERROR_EVENTO_NO_DISPONIBLE
+    let resOcupada;
+    act(() => {
+      resOcupada = result.current.reservarEvento({
+        subtipo: 'cumpleanos',
+        fecha: dia1,
+        canchaIds: ['voley-2'],
+        horas: ['14:00'],
+        invitados: 15,
+        nombre: 'Pedro Gómez',
+      });
+    });
+
+    expect(resOcupada).toEqual({
+      ok: false,
+      error: ERROR_EVENTO_NO_DISPONIBLE,
+    });
 
     // 3. Cumpleaños válido con 4 horas consecutivas sí se guarda y persiste en localStorage
     let resCumpleOk;

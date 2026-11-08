@@ -46,6 +46,11 @@ import { validarJornadas } from '../lib/torneo';
 const STORAGE_KEY = 'sportify_reservas_v2';
 const DIAS_VENTANA = 7;
 
+export const ERROR_EVENTO_NO_DISPONIBLE =
+  'Alguna cancha u horario del evento ya no está disponible. No se reservó nada.';
+export const ERROR_EVENTO_HORAS_NO_SEGUIDAS =
+  'Las horas del evento deben ser seguidas. Elige un rango sin saltos.';
+
 const ReservasContext = createContext(null);
 
 // Fecha (YYYY-MM-DD, hora local) a `offset` días de hoy.
@@ -178,6 +183,15 @@ function horaLibre(state, canchaId, fecha, hora) {
   return !ocup.includes(hora);
 }
 
+function horasConsecutivas(horasBase, horas) {
+  if (!Array.isArray(horasBase) || !Array.isArray(horas) || horas.length === 0) {
+    return false;
+  }
+  const inicio = horasBase.indexOf(horas[0]);
+  if (inicio < 0) return false;
+  return horas.every((h, i) => horasBase[inicio + i] === h);
+}
+
 // ¿Las horas pedidas son consecutivas (franjas de 1 h una tras otra) y todas
 // están libres? Sirve para la reserva individual de 1 a 3 horas seguidas y
 // para eventos (sin tope de 3 h cuando se pasa max = Infinity).
@@ -185,10 +199,10 @@ function bloqueLibre(state, canchaId, fecha, horas, max = MAX_HORAS_SEGUIDAS) {
   const cancha = state.canchas.find((c) => c.id === canchaId);
   if (!cancha || !Array.isArray(horas) || horas.length === 0) return false;
   if (horas.length > max) return false;
-  const inicio = cancha.horas.indexOf(horas[0]);
-  if (inicio < 0) return false;
-  const consecutivas = horas.every((h, i) => cancha.horas[inicio + i] === h);
-  return consecutivas && horas.every((h) => horaLibre(state, canchaId, fecha, h));
+  return (
+    horasConsecutivas(cancha.horas, horas) &&
+    horas.every((h) => horaLibre(state, canchaId, fecha, h))
+  );
 }
 
 function validarReservaEvento(state, datos = {}) {
@@ -207,8 +221,7 @@ function validarReservaEvento(state, datos = {}) {
     if (!bloquesValidos) {
       return {
         ok: false,
-        error:
-          'Alguna cancha u horario del evento ya no está disponible. No se reservó nada.',
+        error: ERROR_EVENTO_NO_DISPONIBLE,
       };
     }
 
@@ -234,33 +247,32 @@ function validarReservaEvento(state, datos = {}) {
       };
     }
 
-    const celdasVistas = new Set();
-    let hayConflicto = false;
     for (const b of bloques) {
       for (const cid of b.canchaIds) {
-        if (!bloqueLibre(state, cid, b.fecha, b.horas, Infinity)) {
-          hayConflicto = true;
-          break;
+        const cancha = state.canchas.find((c) => c.id === cid);
+        if (!cancha) {
+          return { ok: false, error: ERROR_EVENTO_NO_DISPONIBLE };
         }
+        if (!horasConsecutivas(cancha.horas, b.horas)) {
+          return { ok: false, error: ERROR_EVENTO_HORAS_NO_SEGUIDAS };
+        }
+      }
+    }
+
+    const celdasVistas = new Set();
+    for (const b of bloques) {
+      for (const cid of b.canchaIds) {
         for (const h of b.horas) {
           const clave = `${cid}__${b.fecha}__${h}`;
-          if (celdasVistas.has(clave)) {
-            hayConflicto = true;
-            break;
+          if (!horaLibre(state, cid, b.fecha, h) || celdasVistas.has(clave)) {
+            return {
+              ok: false,
+              error: ERROR_EVENTO_NO_DISPONIBLE,
+            };
           }
           celdasVistas.add(clave);
         }
-        if (hayConflicto) break;
       }
-      if (hayConflicto) break;
-    }
-
-    if (hayConflicto) {
-      return {
-        ok: false,
-        error:
-          'Alguna cancha u horario del evento ya no está disponible. No se reservó nada.',
-      };
     }
 
     return { ok: true };
@@ -275,14 +287,30 @@ function validarReservaEvento(state, datos = {}) {
     return { ok: false, error: 'Faltan datos del evento.' };
   }
 
-  const hayConflicto = canchaIds.some(
-    (cid) => !bloqueLibre(state, cid, fecha, horas, Infinity)
+  const canchasEvento = canchaIds.map((cid) =>
+    state.canchas.find((c) => c.id === cid)
+  );
+  if (canchasEvento.some((c) => !c)) {
+    return { ok: false, error: ERROR_EVENTO_NO_DISPONIBLE };
+  }
+
+  const sonSeguidas = canchasEvento.every((c) =>
+    horasConsecutivas(c.horas, horas)
+  );
+  if (!sonSeguidas) {
+    return {
+      ok: false,
+      error: ERROR_EVENTO_HORAS_NO_SEGUIDAS,
+    };
+  }
+
+  const hayConflicto = canchaIds.some((cid) =>
+    horas.some((h) => !horaLibre(state, cid, fecha, h))
   );
   if (hayConflicto) {
     return {
       ok: false,
-      error:
-        'Alguna cancha u horario del evento ya no está disponible. No se reservó nada.',
+      error: ERROR_EVENTO_NO_DISPONIBLE,
     };
   }
 

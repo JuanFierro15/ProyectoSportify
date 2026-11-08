@@ -59,6 +59,36 @@ export function maxCanchasTorneo(equipos) {
   return Math.min(MAX_CANCHAS_TORNEO, Math.max(...rondas));
 }
 
+export function mensajeTopeCanchas(equipos, { recorte = false } = {}) {
+  const n = Number(equipos);
+  const tope = maxCanchasTorneo(n);
+  const accion = recorte
+    ? `se dejaron las primeras ${tope} canchas elegidas`
+    : `elige hasta ${tope} canchas`;
+  return `Con ${n} equipos se juegan como máximo ${tope} partidos a la vez: ${accion}.`;
+}
+
+export function limpiarJornadasConChoque(jornadas = {}, esHoraLibreFase) {
+  let huboChoque = false;
+  const siguiente = {};
+  Object.keys(jornadas).forEach((rKey) => {
+    const r = Number(rKey);
+    const j = jornadas[rKey];
+    const horasActuales = Array.isArray(j?.horas) ? j.horas : [];
+    const faseConChoque =
+      horasActuales.length > 0 &&
+      horasActuales.some((h) => !esHoraLibreFase(r, h));
+    if (faseConChoque) {
+      huboChoque = true;
+    }
+    siguiente[rKey] = {
+      ...j,
+      horas: faseConChoque ? [] : horasActuales,
+    };
+  });
+  return { jornadas: siguiente, huboChoque };
+}
+
 export function turnosPorRonda(equipos, canchas) {
   const c = Math.max(1, Number(canchas));
   return partidosPorRonda(equipos).map((p) => Math.ceil(p / c));
@@ -262,7 +292,7 @@ export function validarCanchasTorneo(canchasElegidas, equipos) {
   const maxCanchas = maxCanchasTorneo(equipos);
   if (canchasElegidas.length > maxCanchas) {
     if (maxCanchas < MAX_CANCHAS_TORNEO) {
-      return `Con ${Number(equipos)} equipos se juegan como máximo ${maxCanchas} partidos a la vez: elige hasta ${maxCanchas} canchas.`;
+      return mensajeTopeCanchas(equipos);
     }
     return `Elige máximo ${MAX_CANCHAS_TORNEO} canchas para el torneo.`;
   }

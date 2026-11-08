@@ -9,6 +9,8 @@ import {
   minutosPorTurno,
   partidosPorRonda,
   maxCanchasTorneo,
+  mensajeTopeCanchas,
+  limpiarJornadasConChoque,
   turnosPorRonda,
   minutosRequeridos,
   validarFranja,
@@ -69,6 +71,40 @@ describe('Estructura de rondas y cálculo de tiempo', () => {
     expect(maxCanchasTorneo(6)).toBe(MAX_CANCHAS_TORNEO);
     expect(maxCanchasTorneo(0)).toBe(MAX_CANCHAS_TORNEO);
     expect(maxCanchasTorneo()).toBe(MAX_CANCHAS_TORNEO);
+  });
+
+  test('mensajeTopeCanchas construye el aviso de límite y el de recorte', () => {
+    expect(mensajeTopeCanchas(4)).toBe(
+      'Con 4 equipos se juegan como máximo 2 partidos a la vez: elige hasta 2 canchas.'
+    );
+    expect(mensajeTopeCanchas(4, { recorte: true })).toBe(
+      'Con 4 equipos se juegan como máximo 2 partidos a la vez: se dejaron las primeras 2 canchas elegidas.'
+    );
+  });
+
+  test('limpiarJornadasConChoque limpia la franja entera de las fases con alguna hora ocupada y conserva el resto', () => {
+    const jornadas = {
+      1: { fecha: '2026-11-10', horas: ['14:00', '15:00'] },
+      2: { fecha: '2026-11-11', horas: ['16:00'] },
+    };
+
+    const conChoque = limpiarJornadasConChoque(
+      jornadas,
+      (r, h) => !(r === 1 && h === '15:00')
+    );
+    expect(conChoque).toEqual({
+      huboChoque: true,
+      jornadas: {
+        1: { fecha: '2026-11-10', horas: [] },
+        2: { fecha: '2026-11-11', horas: ['16:00'] },
+      },
+    });
+
+    const sinChoque = limpiarJornadasConChoque(jornadas, () => true);
+    expect(sinChoque).toEqual({
+      huboChoque: false,
+      jornadas,
+    });
   });
 
   test('turnosPorRonda distribuye partidos según canchas disponibles', () => {
