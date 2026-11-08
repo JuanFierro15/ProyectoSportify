@@ -5,9 +5,12 @@
  */
 
 import negocio from '../data/negocio.json';
-import { formatoPrecio, finDeFranja } from './precios';
-import { horaAmPm, fechaCompleta } from './fechas';
+import { formatoPrecioCorto, finDeFranja } from './precios';
+import { horaAmPm, fechaEnFrase } from './fechas';
 import { formatoTelefono } from './negocio';
+
+export { formatoPrecioCorto, formatoPrecioCorto as precioTexto } from './precios';
+export { fechaEnFrase } from './fechas';
 
 export const MAX_TURNOS = 20;
 export const MAX_MENSAJE = 500;
@@ -44,13 +47,6 @@ export function contextoChat({ dias = [], canchas = [], disponibilidad, ahora = 
   const fechaHoy = dias[0] || '';
   const horaActual = horaLocal(ahora);
 
-  const canchasFiltradas = canchas.map(({ id, nombre, deporte, precioHora }) => ({
-    id,
-    nombre,
-    deporte,
-    precioHora,
-  }));
-
   const disponibilidadTotal = [];
   for (const c of canchas) {
     for (const fecha of dias) {
@@ -69,7 +65,6 @@ export function contextoChat({ dias = [], canchas = [], disponibilidad, ahora = 
   return {
     fechaHoy,
     horaActual,
-    canchas: canchasFiltradas,
     disponibilidad: disponibilidadTotal,
   };
 }
@@ -162,19 +157,6 @@ export function parsearConversacion(texto) {
 // Textos fijos que agrega el navegador (no el modelo). Son mensajes del bot
 // normales: entran al historial para que el modelo sepa qué pasó.
 
-// '$ 45.000' (con espacio de no separación) -> '$45.000', como en el chat.
-export function precioTexto(valor) {
-  return formatoPrecio.format(valor).replace(/\s/g, '');
-}
-
-export function fechaEnFrase(fecha) {
-  const str = fechaCompleta(fecha);
-  if (!str) {
-    return '';
-  }
-  return str[0].toLowerCase() + str.slice(1);
-}
-
 export function rangoHoras(horas) {
   if (!Array.isArray(horas) || horas.length === 0) {
     return '';
@@ -208,9 +190,19 @@ const RESPUESTAS_NO = new Set([
   'no por favor',
 ]);
 
+const RESPUESTAS_CANCELAR = new Set([
+  'cancela',
+  'cancelar',
+  'cancelala',
+  'si cancelala',
+  'si cancela',
+]);
+
 // Respuesta a una tarjeta pendiente: compara el mensaje COMPLETO normalizado
 // (sin tildes ni signos). "sí, pero a las 10" no es un sí: devuelve null.
-export function detectarSiNo(texto) {
+// Con 'cancelacion', "cancelar" confirma; con 'opciones' no es ni sí ni no;
+// con 'reserva' o sin tipo, "cancelar" es 'no'.
+export function detectarSiNo(texto, tipo) {
   if (texto == null) {
     return null;
   }
@@ -225,6 +217,30 @@ export function detectarSiNo(texto) {
   if (!normalizado) {
     return null;
   }
+
+  if (tipo === 'cancelacion') {
+    if (RESPUESTAS_SI.has(normalizado) || RESPUESTAS_CANCELAR.has(normalizado)) {
+      return 'si';
+    }
+    if (RESPUESTAS_NO.has(normalizado)) {
+      return 'no';
+    }
+    return null;
+  }
+
+  if (tipo === 'opciones') {
+    if (RESPUESTAS_CANCELAR.has(normalizado)) {
+      return null;
+    }
+    if (RESPUESTAS_SI.has(normalizado)) {
+      return 'si';
+    }
+    if (RESPUESTAS_NO.has(normalizado)) {
+      return 'no';
+    }
+    return null;
+  }
+
   if (RESPUESTAS_SI.has(normalizado)) {
     return 'si';
   }
@@ -248,7 +264,7 @@ export function mensajeReservaHecha({ canchaNombre, fecha, horas, codigo, total 
   const tel = formatoTelefono(negocio.telefono);
   const abono = Math.round((total * pct) / 100);
 
-  return `${cerrarFrase(`Listo, tu reserva quedó confirmada: ${canchaNombre}, ${fechaEnFrase(fecha)}, ${rangoHoras(horas)}`)} Código: ${codigo}. Total: ${precioTexto(total)}. Para asegurarla, envía un abono del ${pct} % (${precioTexto(abono)}) por ${medios.join(' o ')} en las próximas ${plazo} horas; escríbenos al ${tel} para recibir los datos de pago.`;
+  return `${cerrarFrase(`Listo, tu reserva quedó confirmada: ${canchaNombre}, ${fechaEnFrase(fecha)}, ${rangoHoras(horas)}`)} Código: ${codigo}. Total: ${formatoPrecioCorto(total)}. Para asegurarla, envía un abono del ${pct} % (${formatoPrecioCorto(abono)}) por ${medios.join(' o ')} en las próximas ${plazo} horas; escríbenos al ${tel} para recibir los datos de pago.`;
 }
 
 export function mensajeChoque({ canchaNombre, fecha, libres }) {
