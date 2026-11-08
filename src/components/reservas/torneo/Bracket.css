@@ -366,6 +366,11 @@
   padding-bottom: 0.75rem;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+}
+
+.bracket-torneo__movil .bracket-torneo__col-header {
+  scroll-snap-align: start;
 }
 
 /* En móvil (< 64em): evita que el bracket aporte su ancho intrínseco al grid padre y desplaza dentro de su caja */
