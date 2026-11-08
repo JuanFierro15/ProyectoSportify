@@ -17,6 +17,11 @@ export const formatoPrecio = new Intl.NumberFormat('es-CO', {
   maximumFractionDigits: 0,
 });
 
+// '$ 45.000' (con espacio de no separación) -> '$45.000', formato corto del chat.
+export function formatoPrecioCorto(valor) {
+  return formatoPrecio.format(valor).replace(/\s/g, '');
+}
+
 export function calcularPrecio(precioHora, nHoras) {
   const conBeneficio = nHoras >= MIN_HORAS_BENEFICIO;
   const descuentoHora = conBeneficio ? DESCUENTO_POR_HORA : 0;

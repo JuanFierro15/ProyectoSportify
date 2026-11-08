@@ -20,7 +20,7 @@ import {
 // espera y error. Solo lee de useReservas; nunca envía reservas ni datos
 // personales en el contexto.
 export default function useChatbot() {
-  const { dias, canchas, disponibilidad } = useReservas();
+  const { dias, canchas, disponibilidad, reservas } = useReservas();
 
   const [mensajes, setMensajes] = useState(() => {
     try {
@@ -38,7 +38,6 @@ export default function useChatbot() {
   });
 
   const [esperando, setEsperando] = useState(false);
-  const [error, setError] = useState(false);
 
   const peticionEnCursoRef = useRef(false);
   // Sube con cada "Nueva conversación": una respuesta que llega de una
@@ -48,6 +47,8 @@ export default function useChatbot() {
   const timeoutIdRef = useRef(null);
   const mensajesRef = useRef(mensajes);
   mensajesRef.current = mensajes;
+  const reservasRef = useRef(reservas);
+  reservasRef.current = reservas;
 
   useEffect(() => {
     try {
@@ -170,8 +171,16 @@ export default function useChatbot() {
       }
 
       if (pendiente) {
-        const decision = detectarSiNo(mensaje);
         const esOpciones = Array.isArray(pendiente.opciones);
+        const tipoPendiente = esOpciones
+          ? 'opciones'
+          : pendiente.tarjeta?.tipo === 'cancelacion'
+          ? 'cancelacion'
+          : pendiente.accion?.tipo === 'CONFIRMAR_RESERVA'
+          ? 'reserva'
+          : undefined;
+
+        const decision = detectarSiNo(mensaje, tipoPendiente);
 
         if (esOpciones) {
           if (decision === 'no') {
@@ -219,7 +228,6 @@ export default function useChatbot() {
 
       peticionEnCursoRef.current = true;
       setEsperando(true);
-      setError(false);
 
       const mensajeUsuario = {
         id: crearId(),
@@ -260,6 +268,20 @@ export default function useChatbot() {
         }
         if (generacion !== generacionRef.current) return;
 
+        if (!res.ok) {
+          const textoRespuesta =
+            typeof json?.respuesta === 'string' && json.respuesta.trim() !== ''
+              ? json.respuesta.trim()
+              : TEXTO_ERROR_CHAT;
+          agregarMensaje({
+            texto: textoRespuesta,
+            sugerencias: [],
+            accion: null,
+            error: true,
+          });
+          return;
+        }
+
         const respuestaNormalizada = normalizarRespuesta(json);
         if (respuestaNormalizada) {
           if (respuestaNormalizada.accion?.tipo === 'CONFIRMAR_RESERVA') {
@@ -276,11 +298,10 @@ export default function useChatbot() {
               accion: respuestaNormalizada.accion,
             });
             if (respuestaNormalizada.accion?.tipo === 'BUSCAR_CANCELACION') {
-              manejarBusqueda(respuestaNormalizada.accion);
+              manejarBusqueda(respuestaNormalizada.accion, reservasRef.current);
             }
           }
         } else {
-          setError(true);
           agregarMensaje({
             texto: TEXTO_ERROR_CHAT,
             sugerencias: [],
@@ -291,7 +312,6 @@ export default function useChatbot() {
       } catch {
         // Abortada por "Nueva conversación": no se agrega nada.
         if (generacion !== generacionRef.current) return;
-        setError(true);
         agregarMensaje({
           texto: TEXTO_ERROR_CHAT,
           sugerencias: [],
@@ -338,7 +358,6 @@ export default function useChatbot() {
     }
     peticionEnCursoRef.current = false;
     setEsperando(false);
-    setError(false);
     const bienvenida = mensajeBienvenida();
     mensajesRef.current = [bienvenida];
     setMensajes([bienvenida]);
@@ -355,7 +374,6 @@ export default function useChatbot() {
     mensajes,
     enviar,
     esperando,
-    error,
     reiniciar,
     confirmarTarjeta,
     rechazarTarjeta,

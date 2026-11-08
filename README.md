@@ -340,7 +340,7 @@ sequenceDiagram
 
 | Parte | Detalle |
 |---|---|
-| Petición | `POST` JSON (máx. 48 KB): `mensaje` (1-500 caracteres), `historial` (últimos 20 turnos) y `contexto` (fecha, hora, canchas y franjas libres de 7 días) |
+| Petición | `POST` JSON (máx. 48 KB): `mensaje` (1-500 caracteres), `historial` (últimos 20 turnos) y `contexto` (fecha, hora y franjas libres de 7 días; el catálogo sale de `canchas.json`) |
 | Respuesta | Siempre `{ respuesta, sugerencias, accion }`, también en los errores |
 | Acciones | `CONFIRMAR_RESERVA`, `BUSCAR_CANCELACION`, `ABRIR_SECCION` o `null` |
 | Errores | 405 método, 400 petición inválida y, cuando fallan todos los modelos: 429 si todos agotaron su cuota, 504 si alguno se colgó y 502 en los demás casos |
