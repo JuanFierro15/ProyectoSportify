@@ -549,9 +549,232 @@ describe('Modo Torneo - Pruebas de integración', () => {
       result.current.setInvitados('150');
     });
 
-    expect(result.current.horasSel).toEqual(['14:00']);
+    expect( result.current.horasSel).toEqual(['14:00']);
     expect(result.current.motivoBloqueo).toBe('Máximo 100 invitados.');
     expect(result.current.puedeConfirmar).toBe(false);
+  });
+
+  it('9b. En cumpleaños, invitados decimales (2.5) se rechaza y el input tiene step="1"', () => {
+    function FlujoCumplePrueba() {
+      const { dias } = useReservas();
+      const reserva = useReserva({
+        activo: true,
+        modoInicial: 'cumpleanos',
+      });
+
+      const initRef = useRef(false);
+      useEffect(() => {
+        if (!initRef.current) {
+          initRef.current = true;
+          reserva.cambiarFecha(dias[1]);
+          reserva.alternarCancha('futbol-1');
+        }
+      }, [dias, reserva]);
+
+      return (
+        <div>
+          <FormularioReserva reserva={reserva} dias={dias} />
+          <VoucherReserva
+            tipoEtiqueta={reserva.modoInfo.tipoEtiqueta}
+            fechaTexto={fechaCompleta(reserva.fecha)}
+            horas={reserva.horasSel}
+            precio={reserva.precio}
+            puedeConfirmar={reserva.puedeConfirmar}
+            motivoBloqueo={reserva.motivoBloqueo}
+            onConfirmar={reserva.confirmar}
+            onCancelar={reserva.reiniciar}
+            invitados={reserva.invitados}
+          />
+        </div>
+      );
+    }
+
+    render(
+      <ReservasProvider>
+        <FlujoCumplePrueba />
+      </ReservasProvider>
+    );
+
+    const inputInvitados = screen.getByLabelText(/^Invitados$/i);
+    expect(inputInvitados).toHaveAttribute('step', '1');
+
+    fireEvent.click(screen.getByRole('button', { name: /14:00/i }));
+    fireEvent.change(screen.getByLabelText(/Nombre/i), { target: { value: 'Ana Gómez' } });
+    fireEvent.change(inputInvitados, { target: { value: '2.5' } });
+
+    const btnConfirmar = screen.getByRole('button', { name: /Confirmar reserva/i });
+    expect(btnConfirmar).toBeDisabled();
+    expect(screen.getByText('Indica cuántos invitados vienen.')).toBeInTheDocument();
+
+    fireEvent.change(inputInvitados, { target: { value: '20' } });
+    expect(btnConfirmar).toBeEnabled();
+  });
+
+  it('9c. "Limpiar selección" limpia los datos conservando el modo actual en vez de volver a modoInicial', () => {
+    function FlujoCambioModo() {
+      const { dias, canchas } = useReservas();
+      const reserva = useReserva({
+        activo: true,
+        modoInicial: 'torneo',
+        canchaInicial: canchas.find((c) => c.id === 'futbol-1') || null,
+      });
+
+      return (
+        <div>
+          <div data-testid="modo-actual">{reserva.modo}</div>
+          <button type="button" onClick={() => reserva.cambiarModo('cancha')}>
+            Ir a Cancha
+          </button>
+          <FormularioReserva reserva={reserva} dias={dias} />
+          <VoucherReserva
+            tipoEtiqueta={reserva.modoInfo.tipoEtiqueta}
+            fechaTexto={fechaCompleta(reserva.fecha)}
+            horas={reserva.horasSel}
+            precio={reserva.precio}
+            puedeConfirmar={reserva.puedeConfirmar}
+            motivoBloqueo={reserva.motivoBloqueo}
+            onConfirmar={reserva.confirmar}
+            onCancelar={reserva.reiniciar}
+          />
+        </div>
+      );
+    }
+
+    render(
+      <ReservasProvider>
+        <FlujoCambioModo />
+      </ReservasProvider>
+    );
+
+    expect(screen.getByTestId('modo-actual')).toHaveTextContent('torneo');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ir a Cancha' }));
+    expect(screen.getByTestId('modo-actual')).toHaveTextContent('cancha');
+
+    const inputNombre = screen.getByLabelText(/Nombre/i);
+    fireEvent.change(inputNombre, { target: { value: 'Carlos Ruiz' } });
+    expect(inputNombre).toHaveValue('Carlos Ruiz');
+
+    fireEvent.click(screen.getByRole('button', { name: /Limpiar selección/i }));
+
+    expect(screen.getByTestId('modo-actual')).toHaveTextContent('cancha');
+    expect(screen.getByLabelText(/Nombre/i)).toHaveValue('');
+  });
+
+  it('9d. Renueva la ventana de 7 días al cruzar la medianoche y recuperar el foco o visibilidad: "Hoy" es el nuevo día y ayer desaparece', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-08T10:00:00'));
+
+    try {
+      let ctxRef = null;
+      let reservaRef = null;
+      function VistaConSelector() {
+        const ctx = useReservas();
+        ctxRef = ctx;
+        const reserva = useReserva({
+          activo: true,
+          modoInicial: 'cancha',
+          canchaInicial: ctx.canchas[0],
+        });
+        reservaRef = reserva;
+        return <FormularioReserva reserva={reserva} dias={ctx.dias} />;
+      }
+
+      const removeWindowSpy = vi.spyOn(window, 'removeEventListener');
+      const { unmount } = render(
+        <ReservasProvider>
+          <VistaConSelector />
+        </ReservasProvider>
+      );
+
+      expect(ctxRef.dias[0]).toBe('2026-11-08');
+      const btnHoy8 = screen.getByRole('button', { name: /Hoy 8 de nov/i });
+      expect(btnHoy8).toBeInTheDocument();
+      expect(btnHoy8).toHaveAttribute('aria-pressed', 'true');
+
+      // Elegimos una hora de hoy (2026-11-08) antes de cruzar la medianoche
+      fireEvent.click(screen.getByRole('button', { name: '20:00' }));
+      expect(reservaRef.horasSel).toEqual(['20:00']);
+      expect(reservaRef.jornadas[1].fecha).toBe('2026-11-08');
+
+      // Reservamos una hora mañana (2026-11-09) para comprobar que se conserva tras renovar la ventana
+      act(() => {
+        ctxRef.reservar({
+          canchaId: 'futbol-1',
+          fecha: '2026-11-09',
+          horas: ['14:00'],
+          nombre: 'Pedro',
+        });
+      });
+
+      // Cruzamos la medianoche al 9 de noviembre y recuperamos el foco
+      vi.setSystemTime(new Date('2026-11-09T00:05:00'));
+      act(() => {
+        window.dispatchEvent(new Event('focus'));
+      });
+
+      expect(ctxRef.dias[0]).toBe('2026-11-09');
+      expect(ctxRef.dias).not.toContain('2026-11-08');
+      expect(ctxRef.dias).toHaveLength(7);
+
+      // El día seleccionado pasa al nuevo hoy y las horas elegidas de ayer se limpian
+      const btnHoy9 = screen.getByRole('button', { name: /Hoy 9 de nov/i });
+      expect(btnHoy9).toBeInTheDocument();
+      expect(btnHoy9).toHaveAttribute('aria-pressed', 'true');
+      expect(reservaRef.fecha).toBe('2026-11-09');
+      expect(reservaRef.horasSel).toEqual([]);
+      expect(reservaRef.jornadas[1]).toEqual({ fecha: '2026-11-09', horas: [] });
+      expect(screen.queryByRole('button', { name: /8 de nov/i })).not.toBeInTheDocument();
+
+      // Las franjas de ayer no se ofrecen como disponibles y no se puede reservar ayer
+      expect(
+        ctxRef.disponibilidad('futbol-1', '2026-11-08').some((s) => s.disponible)
+      ).toBe(false);
+      const guardado = JSON.parse(window.localStorage.getItem('sportify_reservas_v2'));
+      expect(guardado.ocupados['futbol-1']['2026-11-08']).toBeUndefined();
+      expect(guardado.ocupados['futbol-1']['2026-11-09']).toContain('14:00');
+      expect(
+        ctxRef.reservar({
+          canchaId: 'futbol-1',
+          fecha: '2026-11-08',
+          horas: ['20:00'],
+          nombre: 'Pedro',
+        }).ok
+      ).toBe(false);
+
+      // Segundo cruce de medianoche al 10 de noviembre con visibilitychange (incluyendo fase de torneo con horas en el día que vence)
+      act(() => {
+        reservaRef.cambiarModo('torneo');
+      });
+      act(() => {
+        reservaRef.elegirHoraFase(1, '10:00');
+        reservaRef.elegirHoraFase(1, '11:00');
+      });
+      expect(reservaRef.jornadas[1]).toEqual({
+        fecha: '2026-11-09',
+        horas: ['10:00', '11:00'],
+      });
+
+      vi.setSystemTime(new Date('2026-11-10T00:10:00'));
+      act(() => {
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+
+      expect(ctxRef.dias[0]).toBe('2026-11-10');
+      expect(reservaRef.fecha).toBe('2026-11-10');
+      expect(reservaRef.jornadas[1]).toEqual({
+        fecha: '2026-11-10',
+        horas: [],
+      });
+      expect(
+        ctxRef.disponibilidad('futbol-1', '2026-11-09').some((s) => s.disponible)
+      ).toBe(false);
+
+      unmount();
+      expect(removeWindowSpy).toHaveBeenCalledWith('focus', expect.any(Function));
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('10. En cumpleaños muestra la cantidad de invitados en voucher y confirmación; en cancha y torneo no', () => {

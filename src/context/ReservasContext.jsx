@@ -159,11 +159,12 @@ export function crearEstadoInicial() {
 function calcularDisponibilidad(state, canchaId, fecha) {
   const cancha = state.canchas.find((c) => c.id === canchaId);
   if (!cancha) return [];
+  const enVentana = state.dias.includes(fecha);
   const ocup =
     (state.ocupados[canchaId] && state.ocupados[canchaId][fecha]) || [];
   return cancha.horas.map((hora) => ({
     hora,
-    disponible: !ocup.includes(hora) && !esHoraPasada(fecha, hora),
+    disponible: enVentana && !ocup.includes(hora) && !esHoraPasada(fecha, hora),
   }));
 }
 
@@ -519,6 +520,25 @@ export function reducer(state, action) {
     case 'LIMPIAR_ERROR':
       return state.error ? { ...state, error: null } : state;
 
+    case 'RENOVAR_VENTANA': {
+      const dias = ventanaDias();
+      if (state.dias[0] === dias[0]) {
+        return state;
+      }
+      const semillaOcup = ocupadosSemilla(dias);
+      const ocupados = fusionarConSemilla(
+        state.canchas,
+        dias,
+        state.ocupados,
+        semillaOcup
+      );
+      return {
+        ...state,
+        dias,
+        ocupados,
+      };
+    }
+
     default:
       return state;
   }
@@ -538,6 +558,21 @@ export function ReservasProvider({ children }) {
       // Sin persistencia (modo privado, cuota llena...): sigue en memoria.
     }
   }, [state.ocupados, state.reservas]);
+
+  useEffect(() => {
+    const renovarSiCambioElDia = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        return;
+      }
+      dispatch({ type: 'RENOVAR_VENTANA' });
+    };
+    window.addEventListener('focus', renovarSiCambioElDia);
+    document.addEventListener('visibilitychange', renovarSiCambioElDia);
+    return () => {
+      window.removeEventListener('focus', renovarSiCambioElDia);
+      document.removeEventListener('visibilitychange', renovarSiCambioElDia);
+    };
+  }, []);
 
   const disponibilidad = useCallback(
     (canchaId, fecha) => calcularDisponibilidad(state, canchaId, fecha),
