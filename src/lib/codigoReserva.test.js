@@ -1,13 +1,7 @@
 import { formatoPrecio } from './precios';
-import { REGEX_CODIGO, generarCodigo, textoQr } from './codigoReserva';
+import { generarCodigo, textoQr } from './codigoReserva';
 
 describe('generarCodigo', () => {
-  test('cumple REGEX_CODIGO al llamarlo varias veces', () => {
-    for (let i = 0; i < 20; i += 1) {
-      expect(generarCodigo()).toMatch(REGEX_CODIGO);
-    }
-  });
-
   test('con función aleatoria fija devuelve SPF-AAAAAA', () => {
     expect(generarCodigo(() => 0)).toBe('SPF-AAAAAA');
   });

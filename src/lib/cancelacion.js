@@ -1,6 +1,6 @@
 // Cancelación de reservas individuales (lógica pura): cuándo se puede cancelar,
 // cómo queda el estado y búsqueda de las reservas de una persona. La usan
-// ReservasContext (acción CANCELAR) y el chat; el panel admin (Bloque 7) debe reutilizarla.
+// ReservasContext (acción CANCELAR), el chat y Mis reservas.
 
 import negocio from '../data/negocio.json';
 import { formatoTelefono } from './negocio';

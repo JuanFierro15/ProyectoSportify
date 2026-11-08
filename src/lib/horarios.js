@@ -1,5 +1,5 @@
 /**
- * Reglas de selección de horas del modal de reserva unificado.
+ * Reglas de selección de horas de la página de reserva unificada.
  *
  * Funciones puras: `horas` es la lista base del día en orden (por ejemplo,
  * ['08:00', ..., '20:00']) y la selección siempre es un bloque contiguo

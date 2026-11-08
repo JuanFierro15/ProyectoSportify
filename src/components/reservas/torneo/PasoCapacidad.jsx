@@ -1,9 +1,8 @@
 import React from 'react';
-import AlertaTiempo from './AlertaTiempo';
 
 /**
- * Bloque de capacidad y tiempo estimado: métricas de canchas, turnos,
- * desglose por fases y alerta de franja insuficiente.
+ * Bloque de capacidad y tiempo estimado: métricas de canchas, turnos
+ * y desglose por fases.
  *
  * @param {Object} props
  * @param {Object} props.reserva Objeto de estado y acciones devuelto por useReserva
@@ -44,21 +43,6 @@ function PasoCapacidad({ reserva }) {
           </div>
         </div>
       )}
-
-      {reserva.horasSel.length > 0 &&
-        reserva.torneoPlan?.validacionFranja &&
-        !reserva.torneoPlan.validacionFranja.alcanza && (
-          <AlertaTiempo
-            equipos={Number(reserva.equipos)}
-            canchasCount={Math.max(1, reserva.canchaIds.length)}
-            minutosRequeridos={reserva.torneoPlan.minutosRequeridos}
-            disponibles={reserva.torneoPlan.validacionFranja.disponibles}
-            deficit={reserva.torneoPlan.validacionFranja.deficit}
-            sugerencias={reserva.torneoPlan.sugerencias}
-            duracionPartido={reserva.duracionPartido}
-            onCambiarDuracion={reserva.setDuracionPartido}
-          />
-        )}
     </div>
   );
 }

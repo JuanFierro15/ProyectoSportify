@@ -5,6 +5,8 @@
  * utilizable tanto en frontend como en pruebas.
  */
 
+import { OPCIONES_EQUIPOS } from './torneo.js';
+
 export const PASOS_TORNEO = [
   { id: 'canchas', etiqueta: 'Canchas' },
   { id: 'formato', etiqueta: 'Formato' },
@@ -40,7 +42,7 @@ export function estadoPasosTorneo(reserva) {
 
   // 2. Formato
   const formatoCompleto = Boolean(
-    [4, 8, 16].includes(Number(r.equipos)) && r.duracionPartido
+    OPCIONES_EQUIPOS.includes(Number(r.equipos)) && r.duracionPartido
   );
   let motivoFormato = '';
   if (!formatoCompleto) {
