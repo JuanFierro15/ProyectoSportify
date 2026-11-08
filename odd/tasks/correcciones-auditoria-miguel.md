@@ -35,7 +35,7 @@ Las citas entre comillas son textuales de las issues. Las decisiones marcadas "(
 | --- | --- | --- | --- | --- |
 | T1 | S1-S5 | agy flash (`c1-chat`) + verificación Claude | pendiente | |
 | T2 | S6-S10 | agy flash (`a1-accesibilidad`) + verificación Claude | pendiente | |
-| T3 | S11-S14 | agy flash (`p1-pagina-reserva`) + verificación Claude | pendiente | |
+| T3 | S11-S14 | agy flash (`p1-pagina-reserva`) + verificación Claude | hecha (S11-S14 verificadas) | `daa308e`, `dfb874f`, `5331437` |
 
 Ruta: delegación a agy por preferencia del usuario (el orquestador no escribe código), no por tamaño.
 
@@ -44,3 +44,4 @@ Ruta: delegación a agy por preferencia del usuario (el orquestador no escribe c
 - **L1** (07-11-2026, Miguel): "Claude en este proyecto en el github tenemos unas issues asignadas para corregir, quiero que revises de que trata, elabores un plan con ayuda de gentle-ai y ejecutes la tarea usando la metodología de trabajo que ya hemos usado, como Argon tiene pocos tokens puedes usar subagentes tuyos para reemplazarlo"
 - **L2** Exploración sobre `77af94d`: líneas de las issues confirmadas; #15.1 confirmado en `DepthCarousel.jsx:398,447,467`; #14.5 verificado (pin y scrub siguen con movimiento reducido). Plan escrito; espera aprobación de Miguel.
 - **L3** (07-11-2026, Miguel): "Lo del bracket no importa que el codigo lo haya hecho juan, si se nos asigno a nosotros corregirlo, lo corregimos y ya". S12 incluye el bracket.
+- **L6** (07-11-2026) T3 hecha en `fix/pagina-reserva-carrusel` (T1 en el PR #18 y T2 en el PR #19). S12: `.selector-dia` ya no desborda desde la etapa 9 (grid de 7 columnas), así que el snap solo va en el bracket móvil. Una corrección (regla `hollow` sin efecto, snap inútil en `.selector-dia`, indentación).
