@@ -2,7 +2,7 @@ Etapa 9: rediseño visual de la página de reserva y de las llaves del torneo.
 
 Carpeta de la etapa: `planificacion/etapas/9-rediseno-pagina-de-reserva/`. Este mensaje ya está guardado ahí como `PROMPT.md`, junto con dos maquetas: `referencia/cancha.html` y `referencia/torneo.html`. Ábrelas en el navegador desde esa carpeta (toman las fotos de `public/img/canchas/`). Son la referencia visual; si algo de las maquetas choca con este mensaje, mandan los colores, medidas y textos de aquí. Escribe `PLAN.md` y espera la aprobación de Juan Fierro antes de implementar.
 
-**Responsable:** Miguel Medina. Revisa y fusiona: Juan Fierro. Antes de empezar lee `CLAUDE.md` (raíz; no se versiona, pídele a Juan Fierro la copia actual), `planificacion/README.md` y el `REPORTE.md` de la etapa 8.
+**Responsable:** Miguel Medina. Revisa y fusiona: Juan Fierro. Antes de empezar lee `CLAUDE.md` / `AGENTS.md` (raíz; ya se versionan desde el 07-11), `planificacion/README.md` y el `REPORTE.md` de la etapa 8.
 
 ## Contexto
 

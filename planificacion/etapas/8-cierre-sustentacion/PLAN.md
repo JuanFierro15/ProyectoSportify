@@ -223,7 +223,7 @@ Revisa también el diagrama de arquitectura (desde la línea 200) por si falta a
 - En el reporte de la etapa 7, marcar como resuelto el "Pendiente" (PR hecho, README en esta etapa,
   entrada a torneo decidida aquí).
 
-**Guías locales (`GEMINI.md` y `CLAUDE.md`, no se versionan):** actualiza tu `GEMINI.md` con lo de abajo
+**Guías del proyecto (`AGENTS.md` y `CLAUDE.md` ya se versionan desde el 07-11; `GEMINI.md` local):** actualiza tu guía con lo de abajo
 y copia la misma lista en `REPORTE.md`, para que Juan Fierro y Miguel actualicen las suyas:
 
 - Bloque 7 descartado: quitarlo de la lista de bloques y de las notas sobre el panel y el QR.

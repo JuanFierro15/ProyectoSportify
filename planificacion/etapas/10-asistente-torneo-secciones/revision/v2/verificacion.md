@@ -2,7 +2,7 @@
 
 Verificación independiente en modo solo lectura sobre `http://localhost:4173` (`npm run build` + `npm run preview`).
 - Suite de pruebas y linter: `npm test` (**20 archivos, 227 tests pasan**) y `npm run lint` (**0 errores, 0 warnings**).
-- Carpeta temporal externa: `C:\Users\MIGUEL ANGEL\AppData\Local\Temp\sportify-v2-678952`.
+- Carpeta temporal externa: `sportify-v2-678952` (en la carpeta temporal del sistema).
 
 ---
 
@@ -154,7 +154,7 @@ Se repitieron las 8 capturas de viewport (`1440×900`, `mobile: false`, `DPR: 1`
 ## Recomprobación v3
 
 Recomprobación sobre la corrección en `src/components/reservas/torneo/Bracket.css` (que agrega `.bracket-torneo__canvas-scroll` a `contain: inline-size` bajo `@media screen and (max-width: 63.9375em)`), con el mismo estado de `v2` (dos canchas de fútbol, mañana, horas por fase y `"Ana Gómez"` / `"3001234567"`).
-- Carpeta temporal externa: `C:\Users\MIGUEL ANGEL\AppData\Local\Temp\sportify-v3-894bea`.
+- Carpeta temporal externa: `sportify-v3-894bea` (en la carpeta temporal del sistema).
 
 ### 1. Tabla de valores en `960×800` (`mobile: true`, DPR 1) y `390×844` (`mobile: true`, DPR 2)
 

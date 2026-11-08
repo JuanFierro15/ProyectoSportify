@@ -2,7 +2,7 @@
 
 **Responsable:** Miguel Medina. **Revisa y fusiona:** Juan Fierro.
 **Rama:** `etapa-9-rediseno-reserva`, desde `main` en `e00922e`. **Fechas:** 06 y 07-11-2026.
-**Estado:** implementada y verificada; PR #5 abierto, falta que Juan Fierro lo apruebe y lo fusione (antes del 18-11).
+**Estado:** implementada, verificada y fusionada en `main` (PR #5, `307d883`, 07-11-2026).
 
 La página de reserva (modos Cancha, Torneo y Cumpleaños) y la confirmación pasaron al tema oscuro del inicio. El comprobante ahora tiene forma de tiquete y las llaves del torneo son simétricas, con la final al centro. No cambió cómo se reserva, ni precios, ni validaciones, ni datos: no se tocaron `src/lib/`, `src/data/`, `src/context/`, `api/` ni `useReserva.js`.
 
@@ -72,8 +72,8 @@ Ningún texto baja de 4,5:1. El PROMPT pedía `#7a7a7a` para las horas reservada
 
 ## 6. Pendiente y observaciones
 
-1. **Que Juan Fierro apruebe y fusione el PR #5** antes del 18-11.
+1. **PR #5 aprobado y fusionado en `main` (`307d883`)** por Juan Fierro el 07-11-2026.
 2. **Conectores de las llaves (corregido en `r7`):** Miguel Medina reportó una línea torcida que no apuntaba a ningún partido. La causa: en `Bracket.jsx`, el segundo trazo de cada par de partidos usaba la forma abreviada `{ x1: xStart, y1, ... }`, que toma el `y` del partido de arriba en lugar del de abajo. La línea bajaba en diagonal y el partido de abajo quedaba sin conector (en los dos lados de la vista simétrica y en la compacta). Se corrigió y se comprobó en el navegador con Playwright, con 4, 8 y 16 equipos, en escritorio, celular y la confirmación: todos los tramos son horizontales o verticales y llegan al centro del partido siguiente (desvío menor de 1 px). Se rehicieron las capturas "después" y `docs/capturas/torneo-bracket.webp`.
 3. **"Formato" del indicador de pasos** aparece completo desde el inicio, como se decidió en el PLAN.
-4. Las pruebas manuales `z5` y `z6` de la etapa 8 (de Juan Fierro) siguen pendientes y no son parte de esta etapa.
+4. Las pruebas manuales `z5` y `z6` de la etapa 8 (de Juan Fierro) se cerraron en producción el 07-11-2026 tras fusionar esta etapa (ver el `REPORTE.md` de la etapa 8, secciones 8 y 9).
 5. **Ajustes de la revisión de Juan Fierro (07-11):** el `legend` de cada `fieldset` del formulario ("Día", "Horario", "Tus datos") quedaba montado sobre el borde superior de la tarjeta; ahora flota dentro de ella. En el comprobante, "− $ 10.000" de "Descuento por horas seguidas" se salía del margen derecho, y la línea "2 horas de $ 115.000 (− $ 5.000/h)" se partía en un lugar raro: ahora el descuento va en su propio renglón ("−$ 5.000 por hora"). Se rehicieron las 20 capturas de `revision/despues/` y `vista-canchas`, `reserva-voucher` y `modo-torneo` de `docs/capturas/`.
