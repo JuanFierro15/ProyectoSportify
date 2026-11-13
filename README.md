@@ -11,7 +11,7 @@ conversacional** que también reserva y cancela.
 ![Foundation](https://img.shields.io/badge/Foundation-6.8-1779BA)
 ![GSAP](https://img.shields.io/badge/GSAP-3.13-88CE02)
 ![Gemini](https://img.shields.io/badge/Gemini-function%20calling-8E75B2?logo=googlegemini&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-275%20en%20verde-2EA44F)
+![Tests](https://img.shields.io/badge/tests-282%20en%20verde-2EA44F)
 
 ![Hero de voley playa con el video de fondo y el botón del asistente](docs/capturas/inicio.webp)
 
@@ -147,10 +147,11 @@ cada tipo de reserva:
     min**) y el emparejamiento (**sorteo aleatorio** o **cruces manuales**
     editables en la primera ronda). El desempate depende del deporte: **penales**
     en fútbol, **tie-break** en voley playa y **super tie-break** en pádel;
-  - cada fase se programa en su propio día y rango de horas dentro de la
-    ventana de 7 días (en fechas crecientes o el mismo día después de cerrar la
-    fase previa), con alertas si el tiempo elegido no alcanza y acción rápida
-    para bajar a partidos de 15 min;
+  - cada fase se programa desde su propia **pestaña** (mostrando una fase a la
+    vez con el resumen del horario elegido o aviso si hay alertas) en su propio
+    día y rango de horas dentro de la ventana de 7 días (en fechas crecientes o
+    el mismo día después de cerrar la fase previa), con alertas si el tiempo
+    elegido no alcanza y acción rápida para bajar a partidos de 15 min;
   - incluye **llaves interactivas (bracket)** a ancho completo con los partidos
     numerados como **"Partido N"** en orden de juego y la indicación de ganador
     en rondas posteriores. En **escritorio** son **simétricas con la final al
@@ -167,7 +168,7 @@ cada tipo de reserva:
 
 | Programación por fases del torneo | Bracket interactivo del torneo |
 |:---:|:---:|
-| <img src="docs/capturas/modo-torneo.webp" alt="Programación por fases del torneo en tema oscuro con selector de día, horario por franjas y comprobante con forma de tiquete" width="440"> | <img src="docs/capturas/torneo-bracket.webp" alt="Llaves simétricas del torneo a ancho completo con la final al centro, trofeo y partidos numerados en orden de juego" width="440"> |
+| <img src="docs/capturas/modo-torneo.webp" alt="Programación por fases del torneo en pestañas con tema oscuro, selector de día, horario por franjas y comprobante con forma de tiquete" width="440"> | <img src="docs/capturas/torneo-bracket.webp" alt="Llaves simétricas del torneo a ancho completo con la final al centro, trofeo y partidos numerados en orden de juego" width="440"> |
 
 La sección **Eventos y torneos** de la página muestra cifras reales del local
 (deportes, canchas, días y horario, con un conteo animado) y una galería por
@@ -464,7 +465,7 @@ probarlo en local:
 ## Pruebas
 
 ```bash
-npm test                          # 275 tests en 28 archivos (Vitest)
+npm test                          # 282 tests en 29 archivos (Vitest)
 npm run lint                      # ESLint sobre src, api y scripts
 npm run build                     # build de producción en /dist
 ```
