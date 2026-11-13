@@ -45,8 +45,7 @@ node scripts/probar-chat.mjs [url] [ids...]  # casos de prueba de /api/chat
   los argumentos y los errores de `catch`, como hacía CRA. React Hooks solo con
   `rules-of-hooks` y `exhaustive-deps` (el preset v7 trae reglas del React
   Compiler: no activarlo sin revisar el código). `eslint-plugin-react` no
-  acepta ESLint 10. El handler de `api/chat.js` es `export default { fetch }`
-  (forma estándar de Vercel): no cambiarla.
+  acepta ESLint 10.
 - Ids de `probar-chat.mjs`: `disponibilidad`, `reservalo`, `reservalo-varias`,
   `datos-validos`, `nombre-invalido`, `telefono-invalido`, `hora-ocupada`,
   `ubicacion`, `parqueadero`, `fuera-de-tema`, `torneo-proceso`,
@@ -71,9 +70,8 @@ node scripts/probar-chat.mjs [url] [ids...]  # casos de prueba de /api/chat
 - El equipo tiene poca RAM: no correr `npm run dev`, `vercel dev` ni
   `npm run preview` a la vez (`vercel dev` levanta su propio servidor de Vite).
 - `.env` y `.env.local` NO se versionan (están en `.gitignore`); la plantilla
-  es `.env.example`. Las variables `VITE_*` quedan incrustadas en el
-  bundle del cliente: nunca poner ahí una API key. `GEMINI_API_KEY` y
-  `GEMINI_MODEL` solo las lee `/api/chat`.
+  es `.env.example` (las reglas de `VITE_*` y la key están en "Reglas que
+  no se pueden romper").
 
 ## Antes de tocar X, lee
 
@@ -113,6 +111,7 @@ node scripts/probar-chat.mjs [url] [ids...]  # casos de prueba de /api/chat
 - **IDs de anclaje** de `PaginaInicio.jsx` (`#hero-placeholder`, `#eventos`, `#ubicacion`): no renombrar sin actualizar a quien los usa.
 - No redefinir `formatoPrecio` en otros archivos. No hardcodear colores de deporte fuera de `src/data/deportes.js`; `estiloAcento(acento)` es la única función que arma el estilo en línea. Tokens globales de `z-index` en `src/App.css` (`--z-chatbot` 1100, `--z-barra-asistente` 900): nada de z-index sueltos.
 - Gemini nunca escribe reservas. Regla: el modelo propone, el usuario confirma y el código valida y ejecuta. Nada se escribe sin esa confirmación.
+- Todo modelo de la cadena de `/api/chat` debe aceptar `thinkingLevel: MINIMAL`; si no, el chat responde 400 (ver "Respaldo de modelo" en `docs/agentes/chatbot.md`).
 - **Cada push a `main` despliega a producción.**
 - No quemar la cuota gratuita de Gemini con diagnósticos (ver "Cuotas" en `docs/agentes/chatbot.md`); leer el detalle del 429 (`quotaId`, `quotaValue`) antes de cambiar de modelo.
 
