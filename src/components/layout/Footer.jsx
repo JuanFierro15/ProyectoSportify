@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUp, Clock, Compass, Phone } from 'lucide-react';
+import { Clock, Compass, Phone } from 'lucide-react';
 import { useVistaCanchas } from '../../context/VistaCanchasContext';
 import { DEPORTES } from '../../data/deportes';
 import negocio from '../../data/negocio.json';
@@ -107,14 +107,6 @@ function Footer() {
             <p className="footer__copy">
               &copy; {year} Sportify &middot; Proyecto universitario
             </p>
-            <a
-              className="footer__volver"
-              href="#hero-placeholder"
-              onClick={manejarSeccion('hero-placeholder')}
-            >
-              Volver arriba
-              <ArrowUp size={14} aria-hidden="true" />
-            </a>
           </div>
         </div>
       </div>
