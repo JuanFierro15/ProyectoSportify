@@ -244,6 +244,7 @@ describe('Modo Torneo - Pruebas de integración', () => {
     fireEvent.click(btnDia2Cuartos);
 
     // Los botones de días anteriores (dias[0] y dias[1]) en Semifinal y Final quedan disabled y muestran "bloqueado"
+    fireEvent.click(screen.getByRole('tab', { name: /Semifinal/i }));
     const diasSemi = within(seccionSemi).getAllByRole('button').slice(0, 7);
     expect(diasSemi[0]).toBeDisabled();
     expect(diasSemi[0]).toHaveTextContent(/bloqueado/i);
@@ -255,6 +256,7 @@ describe('Modo Torneo - Pruebas de integración', () => {
     expect(diasSemi[2]).toHaveAttribute('aria-pressed', 'true');
 
     // En Final también quedan bloqueados los días anteriores y avanza a dias[2]
+    fireEvent.click(screen.getByRole('tab', { name: /^Final\b/i }));
     const diasFinal = within(seccionFinal).getAllByRole('button').slice(0, 7);
     expect(diasFinal[0]).toBeDisabled();
     expect(diasFinal[0]).toHaveTextContent(/bloqueado/i);
@@ -264,10 +266,12 @@ describe('Modo Torneo - Pruebas de integración', () => {
     expect(diasFinal[2]).toHaveAttribute('aria-pressed', 'true');
 
     // Cuartos de final selecciona 14:00 en dias[2]
+    fireEvent.click(screen.getByRole('tab', { name: /Cuartos de final/i }));
     const btnHoraCuartos14 = screen.getByRole('button', { name: 'Cuartos de final 14:00' });
     fireEvent.click(btnHoraCuartos14);
 
     // En Semifinal (mismo día dias[2]), los botones de hora <= 14:00 están disabled
+    fireEvent.click(screen.getByRole('tab', { name: /Semifinal/i }));
     const btnHoraSemi14 = screen.getByRole('button', { name: 'Semifinal 14:00' });
     expect(btnHoraSemi14).toBeDisabled();
 
@@ -357,11 +361,13 @@ describe('Modo Torneo - Pruebas de integración', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cuartos de final 14:00' }));
 
     // 2. Semifinal en el día 3 (diasCapturados[2]) a las 15:00 (requiere 1 h con 2 canchas)
+    fireEvent.click(screen.getByRole('tab', { name: /Semifinal/i }));
     const btnDia2Semi = within(seccionSemi).getAllByRole('button')[2];
     fireEvent.click(btnDia2Semi);
     fireEvent.click(screen.getByRole('button', { name: 'Semifinal 15:00' }));
 
     // 3. Final en el día 4 (diasCapturados[3]) a las 16:00 (requiere 1 h con 1 cancha)
+    fireEvent.click(screen.getByRole('tab', { name: /^Final\b/i }));
     const btnDia3Final = within(seccionFinal).getAllByRole('button')[3];
     fireEvent.click(btnDia3Final);
     fireEvent.click(screen.getByRole('button', { name: 'Final 16:00' }));
@@ -1515,6 +1521,7 @@ describe('Modo Torneo - Pruebas de integración', () => {
     const seccionFinal = screen.getByLabelText('Fase 2: Final');
     fireEvent.click(within(seccionSemi).getAllByRole('button')[1]);
     fireEvent.click(screen.getByRole('button', { name: 'Semifinal 14:00' }));
+    fireEvent.click(screen.getByRole('tab', { name: /^Final\b/i }));
     fireEvent.click(within(seccionFinal).getAllByRole('button')[2]);
     fireEvent.click(screen.getByRole('button', { name: 'Final 15:00' }));
 
