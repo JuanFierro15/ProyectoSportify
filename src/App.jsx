@@ -34,6 +34,16 @@ function AppContenido() {
 
   return (
     <div className="App">
+      <a
+        href="#contenido-principal"
+        className="skip-link"
+        onClick={() => {
+          document.getElementById('contenido-principal')?.focus();
+        }}
+      >
+        Saltar al contenido principal
+      </a>
+
       <Navbar />
 
       {deporteAbierto ? <VistaCanchas key={apertura} /> : <PaginaInicio />}

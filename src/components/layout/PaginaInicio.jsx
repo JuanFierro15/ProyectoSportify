@@ -98,7 +98,7 @@ function PaginaInicio() {
   }, [leerDestinoInicio, limpiarDestinoInicio]);
 
   return (
-    <>
+    <main id="contenido-principal" tabIndex={-1}>
       <div id="hero-placeholder">
         {DEPORTES.map((d, i) => (
           <DeporteHero
@@ -120,7 +120,7 @@ function PaginaInicio() {
       <EventoCTA />
 
       <Ubicacion />
-    </>
+    </main>
   );
 }
 
