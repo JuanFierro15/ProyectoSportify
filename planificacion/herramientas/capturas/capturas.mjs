@@ -473,6 +473,8 @@ async function main() {
       await sleep(300);
 
       // Fase 1 (Cuartos de final): día 2, 11:00 a 13:00 (2 h)
+      await clickElement('#tab-fase-1');
+      await sleep(150);
       await clickElement('.calendario-torneo__fase[data-ronda="1"] .selector-dia button:nth-child(2)');
       await sleep(150);
       await clickElement('.calendario-torneo__fase[data-ronda="1"] .formulario-reserva__horas button[data-hora="11:00"]');
@@ -481,16 +483,24 @@ async function main() {
       await sleep(150);
 
       // Fase 2 (Semifinal): día 3, 11:00 (1 h)
+      await clickElement('#tab-fase-2');
+      await sleep(150);
       await clickElement('.calendario-torneo__fase[data-ronda="2"] .selector-dia button:nth-child(3)');
       await sleep(150);
       await clickElement('.calendario-torneo__fase[data-ronda="2"] .formulario-reserva__horas button[data-hora="11:00"]');
       await sleep(150);
 
       // Fase 3 (Final): día 4, 11:00 (1 h)
+      await clickElement('#tab-fase-3');
+      await sleep(150);
       await clickElement('.calendario-torneo__fase[data-ronda="3"] .selector-dia button:nth-child(4)');
       await sleep(150);
       await clickElement('.calendario-torneo__fase[data-ronda="3"] .formulario-reserva__horas button[data-hora="11:00"]');
       await sleep(150);
+
+      // Volver a la fase 1 para mostrarla visible junto a las pestañas ya programadas
+      await clickElement('#tab-fase-1');
+      await sleep(200);
 
       await typeText('#reserva-nombre', 'Club Pádel Huila');
       await typeText('#reserva-telefono', '3109876543');
@@ -532,6 +542,8 @@ async function main() {
       await sleep(350);
 
       // Fase 1 (Cuartos de final): día 2, 11:00 a 13:00 (2 h)
+      await clickElement('#tab-fase-1');
+      await sleep(150);
       await clickElement('.calendario-torneo__fase[data-ronda="1"] .selector-dia button:nth-child(2)');
       await sleep(150);
       await clickElement('.calendario-torneo__fase[data-ronda="1"] .formulario-reserva__horas button[data-hora="11:00"]');
@@ -540,12 +552,16 @@ async function main() {
       await sleep(150);
 
       // Fase 2 (Semifinal): día 3, 11:00 (1 h)
+      await clickElement('#tab-fase-2');
+      await sleep(150);
       await clickElement('.calendario-torneo__fase[data-ronda="2"] .selector-dia button:nth-child(3)');
       await sleep(150);
       await clickElement('.calendario-torneo__fase[data-ronda="2"] .formulario-reserva__horas button[data-hora="11:00"]');
       await sleep(150);
 
       // Fase 3 (Final): día 4, 11:00 (1 h)
+      await clickElement('#tab-fase-3');
+      await sleep(150);
       await clickElement('.calendario-torneo__fase[data-ronda="3"] .selector-dia button:nth-child(4)');
       await sleep(150);
       await clickElement('.calendario-torneo__fase[data-ronda="3"] .formulario-reserva__horas button[data-hora="11:00"]');

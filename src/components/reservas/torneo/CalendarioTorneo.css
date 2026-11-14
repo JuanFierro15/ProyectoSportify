@@ -1,33 +1,168 @@
-/* CalendarioTorneo — Programación por fases en modo oscuro */
+/* CalendarioTorneo — Programación por fases en pestañas (tema oscuro) */
 
 .calendario-torneo {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0.75rem;
   margin-bottom: 1.5rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
-.calendario-torneo__fase {
+.calendario-torneo > .formulario-reserva__nota {
+  margin: 0;
+}
+
+.calendario-torneo__tarjeta {
   background: var(--reserva-seccion, #161616);
   border: 1px solid var(--reserva-seccion-borde, #2a2a2a);
   border-radius: 16px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.calendario-torneo__pestanas {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0.25rem;
+  padding: 0.35rem 0.35rem 0;
+  max-width: 100%;
+  min-width: 0;
+  /* Aísla el ancho intrínseco de las pestañas (min-width: max-content) para que no ensanche
+     .asistente-torneo dentro del grid 1fr de .vista-canchas__reserva en móvil y haga scroll interno. */
+  contain: inline-size;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  background: color-mix(
+    in srgb,
+    var(--reserva-control, #1f1f1f) 55%,
+    var(--reserva-seccion, #161616)
+  );
+  border-bottom: 1px solid var(--reserva-seccion-borde, #2a2a2a);
+}
+
+.calendario-torneo__pestanas::-webkit-scrollbar {
+  display: none;
+}
+
+.calendario-torneo__pestana {
+  position: relative;
+  flex: 1 0 auto;
+  scroll-snap-align: start;
+  min-height: 44px;
+  min-width: max-content;
+  padding: 0.75rem 1rem 0.85rem;
+  margin: 0;
+  border: none;
+  border-radius: 10px 10px 0 0;
+  background: transparent;
+  color: var(--reserva-texto-2, #c4c4c4);
+  font: inherit;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.2rem;
+  cursor: pointer;
+  transition: color 0.18s ease, background-color 0.18s ease;
+}
+
+.calendario-torneo__pestana:hover {
+  color: var(--reserva-texto, #f2f2f2);
+  background: color-mix(in srgb, var(--accent, #5bd67d) 8%, transparent);
+}
+
+.calendario-torneo__pestana:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.calendario-torneo__pestana:focus-visible {
+  outline: 2px solid var(--accent, #5bd67d);
+  outline-offset: -2px;
+}
+
+.calendario-torneo__pestana--activa,
+.calendario-torneo__pestana[aria-selected='true'] {
+  color: var(--reserva-texto, #f2f2f2);
+  background: var(--reserva-seccion, #161616);
+}
+
+.calendario-torneo__pestana--activa::after,
+.calendario-torneo__pestana[aria-selected='true']::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  border-bottom: 3px solid var(--accent, #5bd67d);
+}
+
+.calendario-torneo__pestana-cabecera {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.calendario-torneo__pestana-nombre {
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.calendario-torneo__pestana-estado {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--reserva-texto-tenue, #a8a8a8);
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.calendario-torneo__pestana--activa .calendario-torneo__pestana-estado {
+  color: var(--accent, #5bd67d);
+}
+
+.calendario-torneo__pestana-icono {
+  color: #fca5a5;
+  flex-shrink: 0;
+}
+
+.calendario-torneo__pestana--alerta .calendario-torneo__pestana-estado,
+.calendario-torneo__pestana--activa.calendario-torneo__pestana--alerta .calendario-torneo__pestana-estado {
+  color: #fca5a5;
+}
+
+.calendario-torneo__pestana-aviso {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #fca5a5;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.calendario-torneo__fase {
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  box-shadow: none;
-  transition: border-color 0.18s ease;
+  min-width: 0;
+}
+
+.calendario-torneo__fase[hidden] {
+  display: none;
 }
 
 @media screen and (max-width: 39.9375em) {
+  .calendario-torneo__pestana {
+    padding: 0.65rem 0.85rem 0.75rem;
+  }
+
   .calendario-torneo__fase {
     padding: 1.25rem 0.85rem;
   }
-}
-
-.calendario-torneo__fase:hover {
-  border-color: var(--accent, #5bd67d);
-  box-shadow: 0 4px 12px -2px color-mix(in srgb, var(--accent, #5bd67d) 15%, transparent);
 }
 
 .calendario-torneo__cabecera {
@@ -97,10 +232,59 @@
   color: #fca5a5;
 }
 
+.calendario-torneo__pie-panel {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--reserva-seccion-borde, #2a2a2a);
+}
+
+.calendario-torneo__siguiente-fase.button,
+.calendario-torneo__siguiente-fase.button.hollow,
+.vista-canchas .calendario-torneo__siguiente-fase.button,
+.vista-canchas .calendario-torneo__siguiente-fase.button.hollow {
+  margin: 0;
+  min-height: 44px;
+  padding: 0 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 10px;
+  border: 1px solid var(--accent, #5bd67d);
+  background: transparent;
+  color: var(--accent, #5bd67d);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.calendario-torneo__siguiente-fase.button:hover,
+.calendario-torneo__siguiente-fase.button.hollow:hover,
+.vista-canchas .calendario-torneo__siguiente-fase.button:hover,
+.vista-canchas .calendario-torneo__siguiente-fase.button.hollow:hover {
+  background: color-mix(in srgb, var(--accent, #5bd67d) 15%, transparent);
+  color: var(--reserva-texto, #f2f2f2);
+  border-color: var(--accent, #5bd67d);
+}
+
+.calendario-torneo__siguiente-fase.button:focus:not(:focus-visible),
+.vista-canchas .calendario-torneo__siguiente-fase.button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.calendario-torneo__siguiente-fase.button:focus-visible,
+.vista-canchas .calendario-torneo__siguiente-fase.button:focus-visible {
+  outline: 2px solid var(--accent, #5bd67d);
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .calendario-torneo__fase {
+  .calendario-torneo__pestana,
+  .calendario-torneo__fase,
+  .calendario-torneo__siguiente-fase {
     transition: none !important;
     transform: none !important;
   }
 }
-
