@@ -147,7 +147,7 @@ describe('CalendarioTorneo - pestañas por fase', () => {
     expect(document.activeElement).toBe(tabFinal);
   });
 
-  it('conserva la selección de día y hora al cambiar de pestaña y muestra el rango horario o "Sin horario"', () => {
+  it('muestra en cada pestaña el rango horario o "Sin horario" y la selección sigue visible al volver', () => {
     function CalendarioConEstado() {
       const [jornadas, setJornadas] = useState(() => jornadasVacias());
 
@@ -223,7 +223,7 @@ describe('CalendarioTorneo - pestañas por fase', () => {
     );
   });
 
-  it('muestra aviso accesible en la pestaña cuando una fase tiene ordenValido: false o alcanza: false', () => {
+  it('muestra aviso visible en la pestaña cuando una fase tiene ordenValido: false o alcanza: false con horas elegidas', () => {
     const jornadas = {
       ...jornadasVacias(),
       2: { fecha: DIAS[0], horas: ['10:00'] },
@@ -254,14 +254,38 @@ describe('CalendarioTorneo - pestañas por fase', () => {
     const tabSemi = screen.getByRole('tab', { name: /Semifinal/i });
     const tabFinal = screen.getByRole('tab', { name: /^Final\b/i });
 
-    expect(tabCuartos).not.toHaveTextContent('tiene un aviso');
+    expect(tabCuartos).not.toHaveTextContent('Revisa el horario');
     expect(tabCuartos).not.toHaveClass('calendario-torneo__pestana--alerta');
 
-    expect(tabSemi).toHaveTextContent('tiene un aviso');
+    expect(tabSemi).toHaveTextContent('Revisa el horario');
+    expect(within(tabSemi).getByText('Revisa el horario')).not.toHaveClass('show-for-sr');
     expect(tabSemi).toHaveClass('calendario-torneo__pestana--alerta');
 
-    expect(tabFinal).toHaveTextContent('tiene un aviso');
+    expect(tabFinal).toHaveTextContent('Revisa el horario');
+    expect(within(tabFinal).getByText('Revisa el horario')).not.toHaveClass('show-for-sr');
     expect(tabFinal).toHaveClass('calendario-torneo__pestana--alerta');
+  });
+
+  it('no muestra aviso en la pestaña si la fase aún no tiene horas elegidas aunque alcanza sea false', () => {
+    renderCalendario({
+      jornadas: jornadasVacias(),
+      validacionesJornadas: [
+        { ronda: 1, ordenValido: true, alcanza: false, disponibles: 0, deficit: 60 },
+        { ronda: 2, ordenValido: true, alcanza: false, disponibles: 0, deficit: 60 },
+        { ronda: 3, ordenValido: true, alcanza: false, disponibles: 0, deficit: 60 },
+      ],
+    });
+
+    const tabCuartos = screen.getByRole('tab', { name: /Cuartos de final/i });
+    const tabSemi = screen.getByRole('tab', { name: /Semifinal/i });
+    const tabFinal = screen.getByRole('tab', { name: /^Final\b/i });
+
+    expect(tabCuartos).not.toHaveTextContent('Revisa el horario');
+    expect(tabCuartos).not.toHaveClass('calendario-torneo__pestana--alerta');
+    expect(tabSemi).not.toHaveTextContent('Revisa el horario');
+    expect(tabSemi).not.toHaveClass('calendario-torneo__pestana--alerta');
+    expect(tabFinal).not.toHaveTextContent('Revisa el horario');
+    expect(tabFinal).not.toHaveClass('calendario-torneo__pestana--alerta');
   });
 
   it('vuelve automáticamente a la primera fase si las fases se reducen y la activa desaparece', () => {
@@ -291,11 +315,32 @@ describe('CalendarioTorneo - pestañas por fase', () => {
       />
     );
 
-    const tabs = screen.getAllByRole('tab');
-    expect(tabs).toHaveLength(2);
-    expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
-    expect(tabs[0]).toHaveTextContent('Semifinal');
+    const tabsReducidas = screen.getAllByRole('tab');
+    expect(tabsReducidas).toHaveLength(2);
+    expect(tabsReducidas[0]).toHaveAttribute('aria-selected', 'true');
+    expect(tabsReducidas[0]).toHaveTextContent('Semifinal');
     expect(screen.getByLabelText('Fase 1: Semifinal')).not.toHaveAttribute('hidden');
+
+    // Al volver a las 3 fases, la activa sigue siendo la primera (el useEffect actualizó faseActiva)
+    rerender(
+      <CalendarioTorneo
+        fases={FASES_BASE}
+        jornadas={jornadasVacias(FASES_BASE)}
+        validacionesJornadas={[]}
+        dias={DIAS}
+        horasBase={HORAS_BASE}
+        canchas={CANCHAS}
+        canchaIds={['futbol-1', 'futbol-2']}
+        duracionPartido={20}
+        esLibreFase={() => true}
+      />
+    );
+
+    const tabsRestauradas = screen.getAllByRole('tab');
+    expect(tabsRestauradas).toHaveLength(3);
+    expect(tabsRestauradas[0]).toHaveAttribute('aria-selected', 'true');
+    expect(tabsRestauradas[2]).toHaveAttribute('aria-selected', 'false');
+    expect(screen.getByLabelText('Fase 1: Cuartos de final')).not.toHaveAttribute('hidden');
   });
 
   it('el botón "Siguiente fase" activa la siguiente pestaña con foco y no aparece en la última fase', () => {

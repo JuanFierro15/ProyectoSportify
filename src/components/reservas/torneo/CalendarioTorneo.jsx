@@ -203,21 +203,25 @@ export function CalendarioTorneo({
                       {fase.nombreRonda}
                     </span>
                     {tieneAviso && (
-                      <>
-                        {' '}
-                        <AlertTriangle
-                          size={14}
-                          aria-hidden="true"
-                          className="calendario-torneo__pestana-icono"
-                        />
-                        <span className="show-for-sr"> (tiene un aviso)</span>
-                      </>
+                      <AlertTriangle
+                        size={14}
+                        aria-hidden="true"
+                        className="calendario-torneo__pestana-icono"
+                      />
                     )}
                   </span>
                   {' '}
                   <span className="calendario-torneo__pestana-estado">
                     {subtextoEstado}
                   </span>
+                  {tieneAviso && (
+                    <>
+                      {' '}
+                      <span className="calendario-torneo__pestana-aviso">
+                        Revisa el horario
+                      </span>
+                    </>
+                  )}
                 </button>
               );
             })}

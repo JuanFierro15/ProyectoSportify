@@ -30,6 +30,9 @@
   padding: 0.35rem 0.35rem 0;
   max-width: 100%;
   min-width: 0;
+  /* Aísla el ancho intrínseco de las pestañas (min-width: max-content) para que no ensanche
+     .asistente-torneo dentro del grid 1fr de .vista-canchas__reserva en móvil y haga scroll interno. */
+  contain: inline-size;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
@@ -123,12 +126,21 @@
 }
 
 .calendario-torneo__pestana-icono {
-  color: #fbbf24;
+  color: #fca5a5;
   flex-shrink: 0;
 }
 
-.calendario-torneo__pestana--alerta .calendario-torneo__pestana-estado {
-  color: #fbbf24;
+.calendario-torneo__pestana--alerta .calendario-torneo__pestana-estado,
+.calendario-torneo__pestana--activa.calendario-torneo__pestana--alerta .calendario-torneo__pestana-estado {
+  color: #fca5a5;
+}
+
+.calendario-torneo__pestana-aviso {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #fca5a5;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .calendario-torneo__fase {
