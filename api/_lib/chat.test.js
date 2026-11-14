@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { TEXTOS } from './_lib/funciones.js';
+import { TEXTOS } from './funciones.js';
 
 const generateContentMock = vi.fn();
 
@@ -59,7 +59,7 @@ describe('handler /api/chat', () => {
     };
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(console, 'warn').mockImplementation(() => {});
-    handler = (await import('./chat.js')).default;
+    handler = (await import('../chat.js')).default;
   });
 
   afterEach(() => {
@@ -84,6 +84,12 @@ describe('handler /api/chat', () => {
       crearRequest(cuerpoValido(), { contentType: 'text/plain' })
     );
     expect(resTipo.status).toBe(400);
+    expect(await resTipo.json()).toEqual({
+      respuesta: TEXTOS.invalida,
+      sugerencias: [],
+      accion: null,
+    });
+    expect(generateContentMock).not.toHaveBeenCalled();
 
     const gigante = JSON.stringify({
       ...cuerpoValido(),
@@ -91,6 +97,11 @@ describe('handler /api/chat', () => {
     });
     const resTamano = await handler.fetch(crearRequest(gigante));
     expect(resTamano.status).toBe(400);
+    expect(await resTamano.json()).toEqual({
+      respuesta: TEXTOS.invalida,
+      sugerencias: [],
+      accion: null,
+    });
     expect(generateContentMock).not.toHaveBeenCalled();
   });
 
@@ -202,7 +213,7 @@ describe('handler /api/chat', () => {
     });
 
     vi.resetModules();
-    handler = (await import('./chat.js')).default;
+    handler = (await import('../chat.js')).default;
     generateContentMock.mockReset();
 
     const errTimeout = Object.assign(new Error('Timed out'), { name: 'TimeoutError' });
