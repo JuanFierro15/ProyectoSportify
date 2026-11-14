@@ -57,9 +57,13 @@ node scripts/probar-chat.mjs [url] [ids...]  # casos de prueba de /api/chat
   modelo). De interfaz: `src/components/reservas/Torneo.test.jsx` (torneo y
   cumpleaños), `src/components/reservas/FormularioReserva.test.jsx` (prop
   `seccion`), los del asistente en `src/components/reservas/torneo/`
-  (`AsistenteTorneo.test.jsx` y `useAsistenteTorneo.test.jsx`) y
-  `src/components/layout/MisReservas.test.jsx`. `api/_lib/funciones.test.js`
-  cubre las funciones del chat y `src/App.test.jsx` es un smoke test. `src/setupTests.js` carga
+  (`AsistenteTorneo.test.jsx` y `useAsistenteTorneo.test.jsx`),
+  `src/components/layout/MisReservas.test.jsx` y
+  `src/components/chatbot/Chatbot.test.jsx` (widget: portal, Escape,
+  comprobante, nueva conversación). `api/_lib/funciones.test.js` cubre las
+  funciones del chat, `api/_lib/chat.test.js` cubre el handler de `/api/chat`
+  (respaldo de modelos, 400/405/429/500/502/504) y `src/App.test.jsx` es un
+  smoke test. `src/setupTests.js` carga
   `@testing-library/jest-dom/vitest` y simula `matchMedia`,
   `IntersectionObserver`, `ResizeObserver`, `HTMLMediaElement` y
   `window.scrollTo`. Relojes falsos con `vi` (`import { vi } from 'vitest'`).
@@ -109,7 +113,7 @@ node scripts/probar-chat.mjs [url] [ids...]  # casos de prueba de /api/chat
 - Las variables `VITE_*` quedan incrustadas en el bundle del cliente: nunca poner ahí una API key. `GEMINI_API_KEY` y `GEMINI_MODEL` solo las lee `/api/chat`. **Nunca imprimir el valor de la key ni de ningún secreto** (ni en código, logs o reportes): de la key solo se dice si existe, si está vacía y cuántos caracteres tiene.
 - El bracket tiene ancho fijo (616-646 px): bajo `large`, `contain: inline-size` en `.bracket-torneo__movil` y `.bracket-torneo__canvas-scroll` evita que ensanche la página y lo deja desplazarse dentro de su caja. No quitarlo.
 - **IDs de anclaje** de `PaginaInicio.jsx` (`#hero-placeholder`, `#eventos`, `#ubicacion`): no renombrar sin actualizar a quien los usa.
-- No redefinir `formatoPrecio` en otros archivos. No hardcodear colores de deporte fuera de `src/data/deportes.js`; `estiloAcento(acento)` es la única función que arma el estilo en línea. Tokens globales de `z-index` en `src/App.css` (`--z-chatbot` 1100, `--z-barra-asistente` 900): nada de z-index sueltos.
+- No redefinir `formatoPrecio` en otros archivos. No hardcodear colores de deporte fuera de `src/data/deportes.js`; `estiloAcento(acento)` es la única función que arma el estilo en línea. Tokens globales de `z-index` en `src/App.css` (`--z-skip-link` 1200, `--z-chatbot` 1100, `--z-barra-asistente` 900): nada de z-index sueltos.
 - Gemini nunca escribe reservas. Regla: el modelo propone, el usuario confirma y el código valida y ejecuta. Nada se escribe sin esa confirmación.
 - Todo modelo de la cadena de `/api/chat` debe aceptar `thinkingLevel: MINIMAL`; si no, el chat responde 400 (ver "Respaldo de modelo" en `docs/agentes/chatbot.md`).
 - **Cada push a `main` despliega a producción.**
@@ -178,5 +182,5 @@ Aplica a todos los bloques:
   fondo (`margin-top: auto`); filas incompletas con `grid-x align-center`.
 - **Disponibilidad explícita**: todo indicador visual (colores, puntos) va con
   texto claro ("6 de 13 horarios disponibles") y leyenda.
-- Animaciones GSAP siempre dentro de `gsap.context()` con `ctx.revert()` en
-  el cleanup.
+- Animaciones GSAP siempre dentro de `gsap.context()` o `gsap.matchMedia(scope)`,
+  con `ctx.revert()` / `mm.revert()` en el cleanup.

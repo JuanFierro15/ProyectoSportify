@@ -86,14 +86,25 @@ function Navbar() {
   const irAInicio = (e) => {
     setVisible(true);
     setSobreHero(true);
-    if (deporteAbierto && esClicNormal(e)) {
+    if (esClicNormal(e)) {
       e.preventDefault();
-      irASeccion('hero-placeholder');
+      if (deporteAbierto) {
+        irASeccion('hero-placeholder');
+      } else {
+        const prefiereReducido =
+          typeof window !== 'undefined' &&
+          typeof window.matchMedia === 'function' &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({
+          top: 0,
+          behavior: prefiereReducido ? 'auto' : 'smooth',
+        });
+      }
     }
   };
 
   const manejarSeccion = (id) => (e) => {
-    if (deporteAbierto && esClicNormal(e)) {
+    if (esClicNormal(e)) {
       e.preventDefault();
       irASeccion(id);
     }

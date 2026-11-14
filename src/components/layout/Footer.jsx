@@ -22,7 +22,7 @@ function Footer() {
   const { direccion, zona, ciudad, telefono } = negocio;
 
   const manejarSeccion = (id) => (e) => {
-    if (deporteAbierto && esClicNormal(e)) {
+    if (esClicNormal(e)) {
       e.preventDefault();
       irASeccion(id);
     }

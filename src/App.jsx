@@ -6,6 +6,7 @@ import PaginaInicio from './components/layout/PaginaInicio';
 import VistaCanchas from './components/canchas/VistaCanchas';
 import Chatbot from './components/chatbot/Chatbot';
 import Footer from './components/layout/Footer';
+import { esClicNormal } from './lib/rutas';
 import './App.css';
 
 // Esqueleto de la aplicación.
@@ -32,8 +33,32 @@ function App() {
 function AppContenido() {
   const { deporteAbierto, apertura } = useVistaCanchas();
 
+  const manejarSkipLink = (e) => {
+    if (!esClicNormal(e)) return;
+    e.preventDefault();
+    const principal = document.getElementById('contenido-principal');
+    if (!principal) return;
+    principal.focus({ preventScroll: true });
+    const prefiereReducido =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    principal.scrollIntoView?.({
+      behavior: prefiereReducido ? 'auto' : 'smooth',
+      block: 'start',
+    });
+  };
+
   return (
     <div className="App">
+      <a
+        href="#contenido-principal"
+        className="skip-link"
+        onClick={manejarSkipLink}
+      >
+        Saltar al contenido principal
+      </a>
+
       <Navbar />
 
       {deporteAbierto ? <VistaCanchas key={apertura} /> : <PaginaInicio />}

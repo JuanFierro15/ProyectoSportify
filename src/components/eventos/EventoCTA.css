@@ -182,7 +182,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .evento-cta__stat {
+  .evento-cta__stat,
+  .evento-cta__boton.button.large {
     transition: none;
+  }
+
+  .evento-cta__boton.button.large:hover,
+  .evento-cta__boton.button.large:focus {
+    transform: none;
   }
 }

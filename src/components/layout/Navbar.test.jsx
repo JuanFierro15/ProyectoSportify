@@ -93,4 +93,92 @@ describe('Navbar y useIrACanchas (S9)', () => {
 
     spyScroll.mockRestore();
   });
+
+  test('en inicio, los enlaces de sección en Navbar y Footer desplazan suavemente mediante scrollIntoView', () => {
+    const eventos = document.createElement('section');
+    eventos.id = 'eventos';
+    const spyScrollIntoView = vi.fn();
+    eventos.scrollIntoView = spyScrollIntoView;
+    document.body.appendChild(eventos);
+
+    const ubicacion = document.createElement('section');
+    ubicacion.id = 'ubicacion';
+    const spyScrollUbicacion = vi.fn();
+    ubicacion.scrollIntoView = spyScrollUbicacion;
+    document.body.appendChild(ubicacion);
+
+    try {
+      render(
+        <ReservasProvider>
+          <VistaCanchasProvider>
+            <Navbar />
+            <Footer />
+          </VistaCanchasProvider>
+        </ReservasProvider>
+      );
+
+      fireEvent.click(screen.getAllByRole('link', { name: /eventos/i })[0]);
+      expect(spyScrollIntoView).toHaveBeenCalledWith(
+        expect.objectContaining({ behavior: 'smooth', block: 'start' })
+      );
+
+      fireEvent.click(screen.getAllByRole('link', { name: 'Ubicación' })[1]);
+      expect(spyScrollUbicacion).toHaveBeenCalledWith(
+        expect.objectContaining({ behavior: 'smooth', block: 'start' })
+      );
+    } finally {
+      eventos.remove();
+      ubicacion.remove();
+    }
+  });
+
+  test('en inicio, el clic en "Inicio" del navbar desplaza al tope suavemente', () => {
+    const spyScroll = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+
+    try {
+      render(
+        <ReservasProvider>
+          <VistaCanchasProvider>
+            <Navbar />
+          </VistaCanchasProvider>
+        </ReservasProvider>
+      );
+
+      fireEvent.click(screen.getByRole('link', { name: 'Inicio' }));
+      expect(spyScroll).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
+    } finally {
+      spyScroll.mockRestore();
+    }
+  });
+
+  test('en inicio, el clic en "Inicio" del navbar usa behavior auto con prefers-reduced-motion: reduce', () => {
+    const matchMediaOriginal = window.matchMedia;
+    const spyScroll = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query === '(prefers-reduced-motion: reduce)',
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }));
+
+    try {
+      render(
+        <ReservasProvider>
+          <VistaCanchasProvider>
+            <Navbar />
+          </VistaCanchasProvider>
+        </ReservasProvider>
+      );
+
+      fireEvent.click(screen.getByRole('link', { name: 'Inicio' }));
+      expect(spyScroll).toHaveBeenCalledWith({ top: 0, behavior: 'auto' });
+    } finally {
+      window.matchMedia = matchMediaOriginal;
+      spyScroll.mockRestore();
+    }
+  });
 });

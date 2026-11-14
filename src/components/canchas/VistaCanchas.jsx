@@ -532,6 +532,8 @@ function VistaCanchas() {
 
   return (
     <main
+      id="contenido-principal"
+      tabIndex={-1}
       className="vista-canchas"
       ref={rootRef}
       data-sport={deporteAbierto || undefined}

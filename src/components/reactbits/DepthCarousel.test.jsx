@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import DepthCarousel from './DepthCarousel';
 
 describe('DepthCarousel (S11)', () => {
@@ -105,5 +105,59 @@ describe('DepthCarousel (S11)', () => {
     expect(activa).toHaveTextContent(`activa-${items[indiceFinal].id}`);
     const dots = screen.getAllByRole('button', { name: /ir a la cancha/i });
     expect(dots[indiceFinal]).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('detiene el autoplay si prefers-reduced-motion cambia a reduce en caliente', () => {
+    vi.useFakeTimers();
+    const matchMediaOriginal = window.matchMedia;
+    let listener = null;
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      addEventListener: (_evt, cb) => {
+        listener = cb;
+      },
+      removeEventListener: () => {
+        listener = null;
+      },
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    }));
+
+    try {
+      const items = [
+        { id: '1', image: '1.jpg' },
+        { id: '2', image: '2.jpg' },
+        { id: '3', image: '3.jpg' },
+      ];
+      const onChange = vi.fn();
+
+      render(
+        <DepthCarousel
+          items={items}
+          autoplay
+          autoplayDelay={600}
+          onChange={onChange}
+        />
+      );
+
+      act(() => {
+        vi.advanceTimersByTime(650);
+      });
+      expect(onChange).toHaveBeenCalledTimes(1);
+
+      act(() => {
+        listener?.({ matches: true });
+      });
+
+      act(() => {
+        vi.advanceTimersByTime(1500);
+      });
+      expect(onChange).toHaveBeenCalledTimes(1);
+    } finally {
+      window.matchMedia = matchMediaOriginal;
+      vi.useRealTimers();
+    }
   });
 });

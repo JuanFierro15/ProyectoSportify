@@ -123,20 +123,18 @@ export function Bracket({
   }, [partidos]);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      const mm = gsap.matchMedia();
-      mm.add('(prefers-reduced-motion: no-preference)', () => {
-        gsap.from('.bracket-torneo__partido', {
-          opacity: 0,
-          y: 10,
-          duration: 0.28,
-          stagger: 0.035,
-          ease: 'power2.out',
-        });
+    const mm = gsap.matchMedia(rootRef);
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      gsap.from('.bracket-torneo__partido', {
+        opacity: 0,
+        y: 10,
+        duration: 0.28,
+        stagger: 0.035,
+        ease: 'power2.out',
       });
-    }, rootRef);
+    });
 
-    return () => ctx.revert();
+    return () => mm.revert();
   }, [partidos.length, compacto, esMovil]);
 
   // Layout simétrico para escritorio (>= 900 px)

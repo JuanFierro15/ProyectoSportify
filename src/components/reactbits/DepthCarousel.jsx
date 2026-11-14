@@ -90,7 +90,14 @@ const DepthCarousel = ({
   const dragRef = useRef(null);
   const wheelTimerRef = useRef(null);
   const autoTimerRef = useRef(null);
-  const reducedRef = useRef(false);
+  const [reducedMotion, setReducedMotion] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+  const reducedRef = useRef(reducedMotion);
+  reducedRef.current = reducedMotion;
 
   const [active, setActive] = useState(inicio);
 
@@ -322,8 +329,26 @@ const DepthCarousel = ({
   );
 
   useEffect(() => {
-    reducedRef.current = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!autoplay || reducedRef.current || count < 2) return;
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return undefined;
+    }
+    const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const actualizar = (e) => {
+      reducedRef.current = e.matches;
+      setReducedMotion(e.matches);
+    };
+    reducedRef.current = mql.matches;
+    setReducedMotion(mql.matches);
+    if (typeof mql.addEventListener === 'function') {
+      mql.addEventListener('change', actualizar);
+      return () => mql.removeEventListener('change', actualizar);
+    }
+    mql.addListener?.(actualizar);
+    return () => mql.removeListener?.(actualizar);
+  }, []);
+
+  useEffect(() => {
+    if (!autoplay || reducedMotion || count < 2) return;
     const root = rootRef.current;
     let hovered = false;
     let focused = false;
@@ -364,7 +389,7 @@ const DepthCarousel = ({
       root?.removeEventListener('focusin', onFocusIn);
       root?.removeEventListener('focusout', onFocusOut);
     };
-  }, [autoplay, autoplayDelay, count, navigateBy]);
+  }, [autoplay, autoplayDelay, count, navigateBy, reducedMotion]);
 
   // Acota solo por focusRef (el índice lógico) cuando la lista se achica: con
   // loop, posRef pasa de count durante un arrastre o una animación y no indica

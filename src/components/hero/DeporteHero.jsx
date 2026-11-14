@@ -136,11 +136,13 @@ function DeporteHero({
       return () => {
         gsap.ticker.remove(seguirVideo);
         video?.removeEventListener('loadedmetadata', onLoadedMetadata);
+        video?.pause();
       };
     });
 
     return () => {
       mm.revert();
+      video?.pause();
     };
   }, []);
 

@@ -72,19 +72,17 @@ export function CalendarioTorneo({
       return undefined;
     }
 
-    const ctx = gsap.context(() => {
-      const mm = gsap.matchMedia();
-      mm.add('(prefers-reduced-motion: no-preference)', () => {
-        gsap.from('.calendario-torneo__fase:not([hidden])', {
-          opacity: 0,
-          y: 8,
-          duration: 0.25,
-          ease: 'power2.out',
-        });
+    const mm = gsap.matchMedia(rootRef);
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      gsap.from('.calendario-torneo__fase:not([hidden])', {
+        opacity: 0,
+        y: 8,
+        duration: 0.25,
+        ease: 'power2.out',
       });
-    }, rootRef);
+    });
 
-    return () => ctx.revert();
+    return () => mm.revert();
   }, [rondaActiva]);
 
   const activarFase = (ronda, idx, enfocar = false) => {
