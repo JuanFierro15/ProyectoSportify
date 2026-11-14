@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import { vi } from 'vitest';
 import { ReservasProvider } from '../../context/ReservasContext';
 import { VistaCanchasProvider } from '../../context/VistaCanchasContext';
@@ -94,43 +94,73 @@ describe('Navbar y useIrACanchas (S9)', () => {
     spyScroll.mockRestore();
   });
 
-  test('en inicio, los enlaces de sección en Navbar y Footer desplazan suavemente mediante scrollIntoView', () => {
-    const eventos = document.createElement('section');
-    eventos.id = 'eventos';
-    const spyScrollIntoView = vi.fn();
-    eventos.scrollIntoView = spyScrollIntoView;
-    document.body.appendChild(eventos);
+  it.each([
+    {
+      origen: 'Navbar',
+      rolContenedor: 'banner',
+      seccionId: 'eventos',
+      nombreEnlace: /eventos/i,
+    },
+    {
+      origen: 'Navbar',
+      rolContenedor: 'banner',
+      seccionId: 'ubicacion',
+      nombreEnlace: 'Ubicación',
+    },
+    {
+      origen: 'Footer',
+      rolContenedor: 'contentinfo',
+      seccionId: 'eventos',
+      nombreEnlace: /eventos/i,
+    },
+    {
+      origen: 'Footer',
+      rolContenedor: 'contentinfo',
+      seccionId: 'ubicacion',
+      nombreEnlace: 'Ubicación',
+    },
+  ])(
+    'en inicio, el enlace a $seccionId en $origen desplaza suavemente con scrollIntoView en dos clics seguidos',
+    ({ rolContenedor, seccionId, nombreEnlace }) => {
+      const seccion = document.createElement('section');
+      seccion.id = seccionId;
+      const spyScrollIntoView = vi.fn();
+      seccion.scrollIntoView = spyScrollIntoView;
+      document.body.appendChild(seccion);
 
-    const ubicacion = document.createElement('section');
-    ubicacion.id = 'ubicacion';
-    const spyScrollUbicacion = vi.fn();
-    ubicacion.scrollIntoView = spyScrollUbicacion;
-    document.body.appendChild(ubicacion);
+      try {
+        render(
+          <ReservasProvider>
+            <VistaCanchasProvider>
+              <Navbar />
+              <Footer />
+            </VistaCanchasProvider>
+          </ReservasProvider>
+        );
 
-    try {
-      render(
-        <ReservasProvider>
-          <VistaCanchasProvider>
-            <Navbar />
-            <Footer />
-          </VistaCanchasProvider>
-        </ReservasProvider>
-      );
+        const contenedor = screen.getByRole(rolContenedor);
+        const enlace = within(contenedor).getByRole('link', {
+          name: nombreEnlace,
+        });
 
-      fireEvent.click(screen.getAllByRole('link', { name: /eventos/i })[0]);
-      expect(spyScrollIntoView).toHaveBeenCalledWith(
-        expect.objectContaining({ behavior: 'smooth', block: 'start' })
-      );
+        fireEvent.click(enlace);
+        expect(spyScrollIntoView).toHaveBeenCalledTimes(1);
+        expect(spyScrollIntoView).toHaveBeenNthCalledWith(
+          1,
+          expect.objectContaining({ behavior: 'smooth', block: 'start' })
+        );
 
-      fireEvent.click(screen.getAllByRole('link', { name: 'Ubicación' })[1]);
-      expect(spyScrollUbicacion).toHaveBeenCalledWith(
-        expect.objectContaining({ behavior: 'smooth', block: 'start' })
-      );
-    } finally {
-      eventos.remove();
-      ubicacion.remove();
+        fireEvent.click(enlace);
+        expect(spyScrollIntoView).toHaveBeenCalledTimes(2);
+        expect(spyScrollIntoView).toHaveBeenNthCalledWith(
+          2,
+          expect.objectContaining({ behavior: 'smooth', block: 'start' })
+        );
+      } finally {
+        seccion.remove();
+      }
     }
-  });
+  );
 
   test('en inicio, el clic en "Inicio" del navbar desplaza al tope suavemente', () => {
     const spyScroll = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
