@@ -17,6 +17,12 @@ test('la aplicación se renderiza sin errores con landmark main y skip link en i
 
   fireEvent.click(skipLink);
   expect(document.activeElement).toBe(mains[0]);
+  expect(window.location.hash).toBe('');
+
+  skipLink.focus();
+  fireEvent.click(skipLink);
+  expect(document.activeElement).toBe(mains[0]);
+  expect(window.location.hash).toBe('');
 });
 
 test('renderiza la página de reserva con un único landmark main al entrar en /reservar/padel', () => {

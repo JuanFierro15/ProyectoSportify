@@ -10,6 +10,8 @@
   --color-marca: #f6a94b;
   --color-marca-soft: color-mix(in srgb, var(--color-marca) 25%, white);
   --color-marca-contraste: #141414;
+  /* Encima del chatbot (1100) y del navbar (1000) */
+  --z-skip-link: 1200;
   /* Encima del navbar (1000) */
   --z-chatbot: 1100;
   /* Barra inferior del asistente de torneo en móvil (debajo del navbar y del chat) */
@@ -43,7 +45,7 @@
   position: fixed;
   top: -120px;
   left: 1rem;
-  z-index: calc(var(--z-chatbot) + 1);
+  z-index: var(--z-skip-link);
   display: inline-flex;
   align-items: center;
   min-height: 44px;
@@ -58,9 +60,11 @@
   transition: top 0.15s ease;
 }
 
+.skip-link:hover,
 .skip-link:focus,
 .skip-link:focus-visible {
   top: 1rem;
+  color: var(--color-marca-contraste);
   outline: 2px solid #ffffff;
   outline-offset: 2px;
 }
