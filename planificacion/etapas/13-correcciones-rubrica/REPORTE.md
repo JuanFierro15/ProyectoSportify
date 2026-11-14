@@ -21,7 +21,7 @@ Fecha de cierre de implementación: 14-11-2026.
    - `src/components/layout/PaginaInicio.jsx` y `src/components/canchas/VistaCanchas.jsx`: `<main id="contenido-principal" tabIndex={-1}>` único en ambas vistas.
    - `src/App.jsx`, `src/App.css` y `src/App.test.jsx`: enlace `.skip-link` ("Saltar al contenido principal") antes del `<header>` visible al enfocar, con traslado de foco a `#contenido-principal` (+ verificación en los 2 tests de `App.test.jsx`).
    - `src/components/layout/Navbar.jsx`, `src/components/layout/Footer.jsx` y `src/components/layout/Navbar.test.jsx`: uso uniforme de `irASeccion` en clics normales sobre enlaces de sección estando también en `/` y scroll suave al tope desde `irAInicio` respetando `prefers-reduced-motion` (+ 1 prueba en `Navbar.test.jsx`).
-   - `api/chat.test.js` (nuevo): 7 pruebas unitarias del handler `fetch` mockeando `@google/genai` (405 `GET`, 400 por `Content-Type` y tamaño > 48 KB, 500 sin `GEMINI_API_KEY`, 200 con acción `CONFIRMAR_RESERVA`, respaldo automático ante 503, corte inmediato ante 400 del SDK, 429 cuando todos superan cuota y 504 por timeout).
+   - `api/_lib/chat.test.js` (nuevo): 7 pruebas unitarias del handler `fetch` mockeando `@google/genai` (405 `GET`, 400 por `Content-Type` y tamaño > 48 KB, 500 sin `GEMINI_API_KEY`, 200 con acción `CONFIRMAR_RESERVA`, respaldo automático ante 503, corte inmediato ante 400 del SDK, 429 cuando todos superan cuota y 504 por timeout).
 
 ## Verificación con números
 

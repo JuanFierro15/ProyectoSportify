@@ -58,15 +58,15 @@ Cada bloque tiene archivos disjuntos para evitar conflictos. Según la disponibi
 |---|---|---|---|---|---|
 | 1 | `c1-chatbot-contraste-y-tests` | `agy` (`gemini-3.8-flash-high`) | Fondo oscuro en `.chatbot__comprobante`, `min-height: 44px` en botones de tarjeta y suite `Chatbot.test.jsx`. | `src/components/chatbot/Chatbot.css`, `src/components/chatbot/Chatbot.test.jsx` (nuevo) | `ConfirmacionReserva.css`, `api/`, `ReservasContext.jsx` |
 | 1 | `g1-gsap-y-pulido-diseno` | `agy` (`gemini-3.8-flash-high`) | `mm.revert()` en `Bracket` y `CalendarioTorneo`, `video?.pause()` en `DeporteHero`, listener dinámico de `reduced-motion` en `DepthCarousel`, touch targets `44px` en dots y chips, `reduced-motion` en `EventoCTA` y token/comentario de `z-index` en `DepthCarousel.css`. | `src/components/reservas/torneo/Bracket.jsx`, `src/components/reservas/torneo/CalendarioTorneo.jsx`, `src/components/hero/DeporteHero.jsx`, `src/components/reactbits/DepthCarousel.jsx`, `src/components/reactbits/DepthCarousel.css`, `src/components/reservas/CanchasElegidas.css`, `src/components/eventos/EventoCTA.css`, `src/components/reservas/torneo/CalendarioTorneo.test.jsx` (solo si requiere ajuste) | `Bracket.css`, `useReserva.js`, `Chatbot.css` |
-| 2 | `n1-navegabilidad-y-api-tests` | `agy` (`gemini-3.8-flash-high`) | Landmark `<main>` en `PaginaInicio`, skip link en `App`, scroll suave en `Navbar`/`Footer`, tests de `App`/`Navbar` y suite unitaria con mocks `api/chat.test.js`. | `src/App.jsx`, `src/App.css`, `src/App.test.jsx`, `src/components/layout/PaginaInicio.jsx`, `src/components/layout/Navbar.jsx`, `src/components/layout/Navbar.test.jsx`, `src/components/layout/Footer.jsx`, `src/components/canchas/VistaCanchas.jsx`, `api/chat.test.js` (nuevo) | `api/chat.js`, `src/lib/rutas.js`, `VistaCanchasContext.jsx` |
+| 2 | `n1-navegabilidad-y-api-tests` | `agy` (`gemini-3.8-flash-high`) | Landmark `<main>` en `PaginaInicio`, skip link en `App`, scroll suave en `Navbar`/`Footer`, tests de `App`/`Navbar` y suite unitaria con mocks `api/_lib/chat.test.js`. | `src/App.jsx`, `src/App.css`, `src/App.test.jsx`, `src/components/layout/PaginaInicio.jsx`, `src/components/layout/Navbar.jsx`, `src/components/layout/Navbar.test.jsx`, `src/components/layout/Footer.jsx`, `src/components/canchas/VistaCanchas.jsx`, `api/_lib/chat.test.js` (nuevo) | `api/chat.js`, `src/lib/rutas.js`, `VistaCanchasContext.jsx` |
 
 ## Verificación (caso feliz y casos límite para intentar romper el código)
 
 ### Comandos automáticos
-- `npm test` (todos los archivos en verde, incluidos `Chatbot.test.jsx` y `api/chat.test.js`).
+- `npm test` (todos los archivos en verde, incluidos `Chatbot.test.jsx` y `api/_lib/chat.test.js`).
 - `npm run lint` (0 errores, 0 warnings).
 - `npm run build` (sin errores).
-- *Nota de cuota*: no se corre `scripts/probar-chat.mjs` contra Gemini real para no gastar la cuota gratuita diaria; `api/chat.test.js` cubre el handler mediante mocks de `@google/genai`.
+- *Nota de cuota*: no se corre `scripts/probar-chat.mjs` contra Gemini real para no gastar la cuota gratuita diaria; `api/_lib/chat.test.js` cubre el handler mediante mocks de `@google/genai`.
 
 ### Casos de prueba (RED → GREEN) y revisión en navegador (`1440×900` y `390×844` sobre `npm run preview`)
 1. **Comprobante del chatbot (`c1`)**:
@@ -80,7 +80,7 @@ Cada bloque tiene archivos disjuntos para evitar conflictos. Según la disponibi
 3. **Navegabilidad y API (`n1`)**:
    - En `/` y `/reservar/padel`: verificar exactamente un `<main id="contenido-principal">` en el DOM; presionar `Tab` al cargar la página y confirmar que el primer elemento enfocado es "Saltar al contenido principal", y al activar Enter el foco pasa al `<main>`.
    - En `/`, clic normal en "Eventos especiales" y "Ubicación" (Navbar y Footer) desplaza suavemente (o `auto` con `reduced-motion`); Ctrl+clic conserva comportamiento nativo de enlace.
-   - `api/chat.test.js` (mock `@google/genai`): `GET` -> 405; sin `GEMINI_API_KEY` -> 500; payload > 48 KB o `fechaHoy: '2026-02-30'` -> 400; llamada válida -> 200 con `accion`; fallo 503 del modelo principal -> reintenta con el segundo y responde 200; error 400 del SDK -> corta sin llamar al respaldo; todos con 429 -> 429; timeout agotado -> 504.
+   - `api/_lib/chat.test.js` (mock `@google/genai`): `GET` -> 405; sin `GEMINI_API_KEY` -> 500; payload > 48 KB o `fechaHoy: '2026-02-30'` -> 400; llamada válida -> 200 con `accion`; fallo 503 del modelo principal -> reintenta con el segundo y responde 200; error 400 del SDK -> corta sin llamar al respaldo; todos con 429 -> 429; timeout agotado -> 504.
 
 ## Commits propuestos (en español, sin menciones a IA)
 
