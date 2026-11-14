@@ -5,6 +5,7 @@ Plan aprobado por Juan el 14-11-2026.
 
 ## Commits
 
+0. `docs: plan de la etapa 14 y prueba de producción a 390 px`
 1. `fix: área táctil de 44 px en las sugerencias del chat`
 2. `fix: los puntos del carrusel no tapan el botón de la tarjeta`
 3. `test: limpieza de GSAP en el torneo y pausa del video del hero`
