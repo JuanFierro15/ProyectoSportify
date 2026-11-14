@@ -57,7 +57,9 @@ node scripts/probar-chat.mjs [url] [ids...]  # casos de prueba de /api/chat
   modelo). De interfaz: `src/components/reservas/Torneo.test.jsx` (torneo y
   cumpleaños), `src/components/reservas/FormularioReserva.test.jsx` (prop
   `seccion`), los del asistente en `src/components/reservas/torneo/`
-  (`AsistenteTorneo.test.jsx` y `useAsistenteTorneo.test.jsx`),
+  (`AsistenteTorneo.test.jsx` y `useAsistenteTorneo.test.jsx`), la limpieza
+  de GSAP en `Bracket.test.jsx` y `CalendarioTorneo.test.jsx`, la pausa del
+  video en `src/components/hero/DeporteHero.test.jsx`,
   `src/components/layout/MisReservas.test.jsx` y
   `src/components/chatbot/Chatbot.test.jsx` (widget: portal, Escape,
   comprobante, nueva conversación). `api/_lib/funciones.test.js` cubre las
@@ -66,7 +68,9 @@ node scripts/probar-chat.mjs [url] [ids...]  # casos de prueba de /api/chat
   smoke test. `src/setupTests.js` carga
   `@testing-library/jest-dom/vitest` y simula `matchMedia`,
   `IntersectionObserver`, `ResizeObserver`, `HTMLMediaElement` y
-  `window.scrollTo`. Relojes falsos con `vi` (`import { vi } from 'vitest'`).
+  `window.scrollTo`; ese `matchMedia` responde `matches: false`, así que una
+  prueba que necesite correr el callback de `gsap.matchMedia` lo reemplaza y lo
+  restaura en `afterEach`. Relojes falsos con `vi` (`import { vi } from 'vitest'`).
 - Vite solo acepta JSX en `.jsx`: un archivo nuevo con JSX va en `.jsx`.
   `src/lib/*.js` y `src/data/deportes.js` se quedan en `.js` sin JSX porque los
   importa `api/`. Las rutas de `public/` se arman con
