@@ -47,6 +47,7 @@ describe('Chatbot UI', () => {
     window.matchMedia = matchMediaOriginal;
     window.sessionStorage.clear();
     window.localStorage.clear();
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
@@ -78,7 +79,9 @@ describe('Chatbot UI', () => {
 
   it('confirma una reserva propuesta, abre el comprobante y maneja Escape y Listo', async () => {
     const fecha = mananaISO();
-    globalThis.fetch = vi.fn().mockResolvedValue({
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
       json: async () => ({
@@ -93,7 +96,7 @@ describe('Chatbot UI', () => {
           telefono: '3001234567',
         },
       }),
-    });
+    }));
 
     renderChatbot();
     fireEvent.click(document.body.querySelector('.chatbot__boton'));
@@ -137,7 +140,9 @@ describe('Chatbot UI', () => {
 
   it('reinicia la conversación y cierra el comprobante abierto al pulsar Nueva conversación', async () => {
     const fecha = mananaISO();
-    globalThis.fetch = vi.fn().mockResolvedValue({
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
       json: async () => ({
@@ -152,7 +157,7 @@ describe('Chatbot UI', () => {
           telefono: '3107654321',
         },
       }),
-    });
+    }));
 
     renderChatbot();
     fireEvent.click(document.body.querySelector('.chatbot__boton'));
