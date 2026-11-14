@@ -46,6 +46,7 @@ odd/
 | `11-correcciones-auditoria-miguel` | Correcciones de la auditoría del 07-11: chat (#13), accesibilidad de Mis reservas, navbar y heros (#14) y página de reserva (#15); un PR por issue (ramas `fix/chat-cancelar-errores`, `fix/accesibilidad-mis-reservas-navbar` y `fix/pagina-reserva-carrusel`) | Miguel Medina | sí | no | por bloque (`reporte.md`) | c1, a1, p1 |
 | `12-pestanas-fases-torneo` | Fases del torneo en pestañas (`CalendarioTorneo`) y eliminación de "Volver arriba" en `Footer` (rama `feat/pestanas-fases-torneo`, fusionada en `main` en `0a09394`) | Juan Fierro | sí | no | no | (implementación directa) |
 | `13-correcciones-rubrica` | Correcciones de la evaluación por rúbrica (contraste de comprobante en chat, limpieza `matchMedia` GSAP, `<main>` + skip link, touch targets `>=44px` y tests de UI/API; rama `fix/correcciones-rubrica`, implementada el 14-11) | Juan Fierro | sí | no | sí | c1, g1, n1 |
+| `14-pendientes-pr27` | Pendientes del PR #27 y prueba de producción a 390 px: sugerencias del chat a 44 px, pastilla del carrusel, pruebas de GSAP del torneo, video del hero, 429+503 y enlaces de Navbar y Footer (rama `fix/pendientes-pr27`, en curso: plan por aprobar) | Juan Fierro | sí | no | no | p1, t1 (por lanzar) |
 
 Antes del flujo por etapas (sin plan ni reporte, solo commits):
 
