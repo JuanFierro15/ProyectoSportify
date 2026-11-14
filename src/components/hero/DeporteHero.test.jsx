@@ -51,7 +51,7 @@ describe('DeporteHero - pausa del video en el cleanup', () => {
     expect(spyPause).not.toHaveBeenCalled();
 
     unmount();
-    expect(spyPause).toHaveBeenCalled();
+    expect(spyPause).toHaveBeenCalledTimes(2);
   });
 
   it('llama a video.pause() al desmontar con prefers-reduced-motion: reduce', () => {

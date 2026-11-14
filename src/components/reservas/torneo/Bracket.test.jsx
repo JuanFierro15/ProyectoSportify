@@ -74,7 +74,7 @@ describe('Bracket - limpieza de GSAP', () => {
     expect(spyFrom).toHaveBeenCalledTimes(1);
     expect(spyFrom).toHaveBeenCalledWith(
       '.bracket-torneo__partido',
-      expect.any(Object)
+      expect.objectContaining({ opacity: 0 })
     );
   });
 
@@ -99,7 +99,7 @@ describe('Bracket - limpieza de GSAP', () => {
     expect(spyFrom).toHaveBeenCalledTimes(2);
     expect(spyFrom).toHaveBeenLastCalledWith(
       '.bracket-torneo__partido',
-      expect.any(Object)
+      expect.objectContaining({ opacity: 0 })
     );
   });
 

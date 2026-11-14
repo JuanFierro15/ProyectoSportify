@@ -424,7 +424,7 @@ describe('CalendarioTorneo - limpieza de GSAP', () => {
     expect(spyFrom).toHaveBeenCalledTimes(1);
     expect(spyFrom).toHaveBeenCalledWith(
       '.calendario-torneo__fase:not([hidden])',
-      expect.any(Object)
+      expect.objectContaining({ opacity: 0 })
     );
   });
 
@@ -447,7 +447,7 @@ describe('CalendarioTorneo - limpieza de GSAP', () => {
     expect(spyFrom).toHaveBeenCalledTimes(2);
     expect(spyFrom).toHaveBeenLastCalledWith(
       '.calendario-torneo__fase:not([hidden])',
-      expect.any(Object)
+      expect.objectContaining({ opacity: 0 })
     );
   });
 
