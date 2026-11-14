@@ -216,7 +216,9 @@ describe('handler /api/chat', () => {
     const res = await handler.fetch(crearRequest(cuerpoValido()));
     expect(res.status).toBe(502);
     expect(generateContentMock).toHaveBeenCalledTimes(1);
-    expect(await res.json()).toEqual({
+    const texto = await res.text();
+    expect(texto).not.toContain('clave-de-prueba-unitaria');
+    expect(JSON.parse(texto)).toEqual({
       respuesta: TEXTOS.generico,
       sugerencias: [],
       accion: null,
