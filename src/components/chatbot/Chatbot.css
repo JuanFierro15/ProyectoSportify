@@ -248,7 +248,11 @@
   color: color-mix(in srgb, var(--accent) 55%, #1a1a1a);
   background: #ffffff;
   border-radius: 999px;
+  min-height: 44px;
   padding: 0.35rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 0.82rem;
   cursor: pointer;
   margin: 0;

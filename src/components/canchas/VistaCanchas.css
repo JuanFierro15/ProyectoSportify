@@ -323,7 +323,7 @@
 .vista-canchas__cuerpo {
   position: relative;
   height: clamp(380px, 112vw, 600px);
-  margin-bottom: 1rem;
+  margin-bottom: 3.75rem; /* espacio para la pastilla de puntos (50 px, bottom: -40px) + 20 px de aire */
   container-type: size;
 }
 
@@ -370,7 +370,7 @@
 
 /* Puntos del carrusel debajo de la tarjeta (no encima de la foto) en tema oscuro */
 .vista-canchas__cuerpo .depth-carousel__dots {
-  bottom: 2px;
+  bottom: -40px; /* sobresale 40 px bajo la tarjeta; ligado al margin-bottom de .vista-canchas__cuerpo */
   background: #1c1c1c;
   border: 1px solid #444444;
   backdrop-filter: none;

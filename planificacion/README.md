@@ -46,6 +46,7 @@ odd/
 | `11-correcciones-auditoria-miguel` | Correcciones de la auditoría del 07-11: chat (#13), accesibilidad de Mis reservas, navbar y heros (#14) y página de reserva (#15); un PR por issue (ramas `fix/chat-cancelar-errores`, `fix/accesibilidad-mis-reservas-navbar` y `fix/pagina-reserva-carrusel`) | Miguel Medina | sí | no | por bloque (`reporte.md`) | c1, a1, p1 |
 | `12-pestanas-fases-torneo` | Fases del torneo en pestañas (`CalendarioTorneo`) y eliminación de "Volver arriba" en `Footer` (rama `feat/pestanas-fases-torneo`, fusionada en `main` en `0a09394`) | Juan Fierro | sí | no | no | (implementación directa) |
 | `13-correcciones-rubrica` | Correcciones de la evaluación por rúbrica (contraste de comprobante en chat, limpieza `matchMedia` GSAP, `<main>` + skip link, touch targets `>=44px` y tests de UI/API; rama `fix/correcciones-rubrica`, implementada el 14-11) | Juan Fierro | sí | no | sí | c1, g1, n1 |
+| `14-pendientes-pr27` | Pendientes del PR #27 y prueba de producción a 390 px: sugerencias del chat a 44 px, pastilla del carrusel, pruebas de GSAP del torneo, video del hero, 429+503 y enlaces de Navbar y Footer (rama `fix/pendientes-pr27`, implementada el 14-11, PR abierto) | Juan Fierro | sí | no | sí | p1, t1 |
 
 Antes del flujo por etapas (sin plan ni reporte, solo commits):
 
@@ -111,6 +112,8 @@ inicio).
 | Asistente torneo secciones | `f2-css-movil` | Contención del ancho del bracket y del formulario bajo `(max-width: 63.9375em)` | `2eafffa`, `442a92b` | `f2.log` |
 | Asistente torneo secciones | `v2-verificacion-final` | Verificación final de S2, S7 y S8 a `390×844`, `960×800` y `1440×900` (`revision/v2/verificacion.md`) | `b055327` | `v2.log` |
 | Asistente torneo secciones | `v3-recheck-960` | Recomprobación acotada de S8 en `960×800` y `390×844` tras incluir `.bracket-torneo__canvas-scroll` (`revision/v2/verificacion.md`) | `b055327` | `v3.log` |
+| Pendientes PR #27 | `p1-chips-y-carrusel` | Sugerencias del chat a 44 px y pastilla del carrusel bajo la tarjeta, con mediciones a 390 y 1440 px | (ver REPORTE de la etapa 14) | `p1.log` |
+| Pendientes PR #27 | `t1-pruebas` | Pruebas de limpieza GSAP (Bracket, CalendarioTorneo), pausa del video del hero, errores mixtos en `/api/chat` y enlaces de Navbar y Footer (retoma por el caso 504) | (ver REPORTE de la etapa 14) | `t1.log` (`-intento1`) |
 
 ## Cómo trabajar en equipo
 

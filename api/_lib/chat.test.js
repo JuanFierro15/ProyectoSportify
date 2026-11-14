@@ -258,4 +258,43 @@ describe('handler /api/chat', () => {
       accion: null,
     });
   });
+
+  it('devuelve 502 si los modelos fallan con errores mixtos sin tiempo agotado (429, 503, 429)', async () => {
+    const err429 = Object.assign(new Error('Quota exceeded'), { status: 429 });
+    const err503 = Object.assign(new Error('Service Unavailable'), {
+      name: 'ApiError',
+      status: 503,
+    });
+    generateContentMock
+      .mockRejectedValueOnce(err429)
+      .mockRejectedValueOnce(err503)
+      .mockRejectedValueOnce(err429);
+
+    const res = await handler.fetch(crearRequest(cuerpoValido()));
+    expect(res.status).toBe(502);
+    expect(generateContentMock).toHaveBeenCalledTimes(3);
+    expect(await res.json()).toEqual({
+      respuesta: TEXTOS.generico,
+      sugerencias: [],
+      accion: null,
+    });
+  });
+
+  it('devuelve 504 si algún modelo agota el tiempo de espera aunque los demás fallen con 429 (429, 429, TimeoutError)', async () => {
+    const err429 = Object.assign(new Error('Quota exceeded'), { status: 429 });
+    const errTimeout = Object.assign(new Error('Timed out'), { name: 'TimeoutError' });
+    generateContentMock
+      .mockRejectedValueOnce(err429)
+      .mockRejectedValueOnce(err429)
+      .mockRejectedValueOnce(errTimeout);
+
+    const res = await handler.fetch(crearRequest(cuerpoValido()));
+    expect(res.status).toBe(504);
+    expect(generateContentMock).toHaveBeenCalledTimes(3);
+    expect(await res.json()).toEqual({
+      respuesta: TEXTOS.generico,
+      sugerencias: [],
+      accion: null,
+    });
+  });
 });

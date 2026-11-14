@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
+import { gsap } from 'gsap';
 import CalendarioTorneo from './CalendarioTorneo';
 
 const DIAS = ['2026-11-13', '2026-11-14', '2026-11-15'];
@@ -370,5 +371,108 @@ describe('CalendarioTorneo - pestañas por fase', () => {
     expect(
       within(panelFinal).queryByRole('button', { name: /Siguiente fase:/i })
     ).not.toBeInTheDocument();
+  });
+});
+
+function simularMatchMedia(queryActiva) {
+  window.matchMedia = vi.fn().mockImplementation((query) => ({
+    matches: query === queryActiva,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  }));
+}
+
+function espiarMatchMediaGsap() {
+  const matchMediaReal = gsap.matchMedia;
+  const instancias = [];
+  const spyMatchMedia = vi
+    .spyOn(gsap, 'matchMedia')
+    .mockImplementation((scope) => {
+      const mm = matchMediaReal.call(gsap, scope);
+      const spyRevert = vi.spyOn(mm, 'revert');
+      instancias.push({ mm, spyRevert });
+      return mm;
+    });
+  return { spyMatchMedia, instancias };
+}
+
+describe('CalendarioTorneo - limpieza de GSAP', () => {
+  let matchMediaOriginal;
+
+  beforeEach(() => {
+    matchMediaOriginal = window.matchMedia;
+  });
+
+  afterEach(() => {
+    window.matchMedia = matchMediaOriginal;
+    vi.restoreAllMocks();
+  });
+
+  it('al montar con prefers-reduced-motion: no-preference anima .calendario-torneo__fase:not([hidden]) con gsap.from', () => {
+    simularMatchMedia('(prefers-reduced-motion: no-preference)');
+    const { spyMatchMedia } = espiarMatchMediaGsap();
+    const spyFrom = vi.spyOn(gsap, 'from');
+
+    renderCalendario();
+
+    expect(spyMatchMedia).toHaveBeenCalledTimes(1);
+    expect(spyFrom).toHaveBeenCalledTimes(1);
+    expect(spyFrom).toHaveBeenCalledWith(
+      '.calendario-torneo__fase:not([hidden])',
+      expect.objectContaining({ opacity: 0 })
+    );
+  });
+
+  it('al cambiar de fase revierte la instancia anterior de matchMedia y crea una nueva', () => {
+    simularMatchMedia('(prefers-reduced-motion: no-preference)');
+    const { spyMatchMedia, instancias } = espiarMatchMediaGsap();
+    const spyFrom = vi.spyOn(gsap, 'from');
+
+    renderCalendario();
+
+    expect(instancias).toHaveLength(1);
+    expect(instancias[0].spyRevert).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('tab', { name: /Semifinal/i }));
+
+    expect(spyMatchMedia).toHaveBeenCalledTimes(2);
+    expect(instancias).toHaveLength(2);
+    expect(instancias[0].spyRevert).toHaveBeenCalledTimes(1);
+    expect(instancias[1].spyRevert).not.toHaveBeenCalled();
+    expect(spyFrom).toHaveBeenCalledTimes(2);
+    expect(spyFrom).toHaveBeenLastCalledWith(
+      '.calendario-torneo__fase:not([hidden])',
+      expect.objectContaining({ opacity: 0 })
+    );
+  });
+
+  it('al desmontar revierte la última instancia de matchMedia', () => {
+    simularMatchMedia('(prefers-reduced-motion: no-preference)');
+    const { instancias } = espiarMatchMediaGsap();
+
+    const { unmount } = renderCalendario();
+
+    expect(instancias).toHaveLength(1);
+    expect(instancias[0].spyRevert).not.toHaveBeenCalled();
+
+    unmount();
+
+    expect(instancias[0].spyRevert).toHaveBeenCalledTimes(1);
+  });
+
+  it('con prefers-reduced-motion: reduce no llama a gsap.from', () => {
+    simularMatchMedia('(prefers-reduced-motion: reduce)');
+    const { spyMatchMedia } = espiarMatchMediaGsap();
+    const spyFrom = vi.spyOn(gsap, 'from');
+
+    renderCalendario();
+
+    expect(spyMatchMedia).toHaveBeenCalledTimes(1);
+    expect(spyFrom).not.toHaveBeenCalled();
   });
 });
