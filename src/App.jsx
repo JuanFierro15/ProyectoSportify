@@ -38,7 +38,7 @@ function AppContenido() {
     e.preventDefault();
     const principal = document.getElementById('contenido-principal');
     if (!principal) return;
-    principal.focus();
+    principal.focus({ preventScroll: true });
     const prefiereReducido =
       typeof window !== 'undefined' &&
       typeof window.matchMedia === 'function' &&
