@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TEXTOS } from './funciones.js';
+import { LIMITE_BYTES } from './peticion.js';
 
 const generateContentMock = vi.fn();
 
@@ -45,25 +46,21 @@ function crearRequest(body, { method = 'POST', contentType = 'application/json' 
 }
 
 describe('handler /api/chat', () => {
-  const envOriginal = { ...process.env };
   let handler;
 
   beforeEach(async () => {
     vi.resetModules();
     generateContentMock.mockReset();
-    process.env = {
-      ...envOriginal,
-      GEMINI_API_KEY: 'clave-de-prueba-unitaria',
-      GEMINI_MODEL: 'gemini-3.5-flash-lite',
-      GEMINI_MODELOS_RESPALDO: 'gemini-3.1-flash-lite,gemini-3.6-flash',
-    };
+    vi.stubEnv('GEMINI_API_KEY', 'clave-de-prueba-unitaria');
+    vi.stubEnv('GEMINI_MODEL', 'gemini-3.5-flash-lite');
+    vi.stubEnv('GEMINI_MODELOS_RESPALDO', 'gemini-3.1-flash-lite,gemini-3.6-flash');
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     handler = (await import('../chat.js')).default;
   });
 
   afterEach(() => {
-    process.env = envOriginal;
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
   });
 
@@ -79,7 +76,7 @@ describe('handler /api/chat', () => {
     });
   });
 
-  it('responde 400 si el Content-Type no es application/json o el cuerpo supera 48 KB', async () => {
+  it('responde 400 si el Content-Type no es application/json', async () => {
     const resTipo = await handler.fetch(
       crearRequest(cuerpoValido(), { contentType: 'text/plain' })
     );
@@ -90,28 +87,57 @@ describe('handler /api/chat', () => {
       accion: null,
     });
     expect(generateContentMock).not.toHaveBeenCalled();
+  });
 
-    const gigante = JSON.stringify({
-      ...cuerpoValido(),
-      mensaje: 'a'.repeat(49 * 1024),
-    });
-    const resTamano = await handler.fetch(crearRequest(gigante));
-    expect(resTamano.status).toBe(400);
-    expect(await resTamano.json()).toEqual({
+  it('responde 400 si el cuerpo supera LIMITE_BYTES (48 KB) y acepta exactamente el límite', async () => {
+    const base = JSON.stringify(cuerpoValido());
+    const faltan = LIMITE_BYTES - Buffer.byteLength(base, 'utf8');
+    const cuerpoEnLimite = base + ' '.repeat(faltan);
+    const cuerpoExcedido = base + ' '.repeat(faltan + 1);
+
+    expect(Buffer.byteLength(cuerpoEnLimite, 'utf8')).toBe(LIMITE_BYTES);
+    expect(Buffer.byteLength(cuerpoExcedido, 'utf8')).toBe(LIMITE_BYTES + 1);
+
+    const resExcedido = await handler.fetch(crearRequest(cuerpoExcedido));
+    expect(resExcedido.status).toBe(400);
+    expect(await resExcedido.json()).toEqual({
       respuesta: TEXTOS.invalida,
       sugerencias: [],
       accion: null,
     });
     expect(generateContentMock).not.toHaveBeenCalled();
+
+    generateContentMock.mockResolvedValueOnce({
+      functionCalls: [
+        {
+          name: 'responder',
+          args: {
+            texto: 'Cuerpo aceptado en el límite.',
+            sugerencias: [],
+          },
+        },
+      ],
+    });
+
+    const resLimite = await handler.fetch(crearRequest(cuerpoEnLimite));
+    expect(resLimite.status).toBe(200);
+    expect(generateContentMock).toHaveBeenCalledTimes(1);
+    expect(await resLimite.json()).toEqual({
+      respuesta: 'Cuerpo aceptado en el límite.',
+      sugerencias: [],
+      accion: null,
+    });
   });
 
   it('responde 500 con el contrato sin exponer la key cuando falta GEMINI_API_KEY', async () => {
-    delete process.env.GEMINI_API_KEY;
+    vi.stubEnv('GEMINI_API_KEY', '');
 
     const res = await handler.fetch(crearRequest(cuerpoValido()));
     expect(res.status).toBe(500);
     expect(res.headers.get('Cache-Control')).toBe('no-store');
-    expect(await res.json()).toEqual({
+    const texto = await res.text();
+    expect(texto).not.toContain('clave-de-prueba-unitaria');
+    expect(JSON.parse(texto)).toEqual({
       respuesta: TEXTOS.generico,
       sugerencias: [],
       accion: null,
@@ -149,20 +175,21 @@ describe('handler /api/chat', () => {
     });
   });
 
-  it('cambia al modelo de respaldo ante un 503 del principal y responde 200', async () => {
+  it('llega al tercer modelo de respaldo cuando los dos primeros fallan con 503 y responde 200', async () => {
     const err503 = Object.assign(new Error('Service Unavailable'), {
       name: 'ApiError',
       status: 503,
     });
     generateContentMock
       .mockRejectedValueOnce(err503)
+      .mockRejectedValueOnce(err503)
       .mockResolvedValueOnce({
         functionCalls: [
           {
             name: 'responder',
             args: {
-              texto: 'Sí, tenemos franjas libres mañana.',
-              sugerencias: ['Ver horarios'],
+              texto: 'Respuesta desde el tercer modelo.',
+              sugerencias: [],
             },
           },
         ],
@@ -170,12 +197,11 @@ describe('handler /api/chat', () => {
 
     const res = await handler.fetch(crearRequest(cuerpoValido()));
     expect(res.status).toBe(200);
-    expect(generateContentMock).toHaveBeenCalledTimes(2);
-    expect(generateContentMock.mock.calls[0][0].model).toBe('gemini-3.5-flash-lite');
-    expect(generateContentMock.mock.calls[1][0].model).toBe('gemini-3.1-flash-lite');
+    expect(generateContentMock).toHaveBeenCalledTimes(3);
+    expect(generateContentMock.mock.calls[2][0].model).toBe('gemini-3.6-flash');
     expect(await res.json()).toEqual({
-      respuesta: 'Sí, tenemos franjas libres mañana.',
-      sugerencias: ['Ver horarios'],
+      respuesta: 'Respuesta desde el tercer modelo.',
+      sugerencias: [],
       accion: null,
     });
   });
@@ -197,34 +223,34 @@ describe('handler /api/chat', () => {
     });
   });
 
-  it('devuelve 429 si todos los modelos fallan por cuota y 504 si hay timeout', async () => {
+  it('devuelve 429 si todos los modelos fallan por cuota', async () => {
     const err429 = Object.assign(new Error('Quota exceeded'), { status: 429 });
     generateContentMock
       .mockRejectedValueOnce(err429)
       .mockRejectedValueOnce(err429)
       .mockRejectedValueOnce(err429);
 
-    const res429 = await handler.fetch(crearRequest(cuerpoValido()));
-    expect(res429.status).toBe(429);
-    expect(await res429.json()).toEqual({
+    const res = await handler.fetch(crearRequest(cuerpoValido()));
+    expect(res.status).toBe(429);
+    expect(generateContentMock).toHaveBeenCalledTimes(3);
+    expect(await res.json()).toEqual({
       respuesta: TEXTOS.limite,
       sugerencias: [],
       accion: null,
     });
+  });
 
-    vi.resetModules();
-    handler = (await import('../chat.js')).default;
-    generateContentMock.mockReset();
-
+  it('devuelve 504 si todos los modelos agotan el tiempo de espera', async () => {
     const errTimeout = Object.assign(new Error('Timed out'), { name: 'TimeoutError' });
     generateContentMock
       .mockRejectedValueOnce(errTimeout)
       .mockRejectedValueOnce(errTimeout)
       .mockRejectedValueOnce(errTimeout);
 
-    const res504 = await handler.fetch(crearRequest(cuerpoValido()));
-    expect(res504.status).toBe(504);
-    expect(await res504.json()).toEqual({
+    const res = await handler.fetch(crearRequest(cuerpoValido()));
+    expect(res.status).toBe(504);
+    expect(generateContentMock).toHaveBeenCalledTimes(3);
+    expect(await res.json()).toEqual({
       respuesta: TEXTOS.generico,
       sugerencias: [],
       accion: null,
