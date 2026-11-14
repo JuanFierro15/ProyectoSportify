@@ -93,4 +93,40 @@ describe('Navbar y useIrACanchas (S9)', () => {
 
     spyScroll.mockRestore();
   });
+
+  test('en inicio, los enlaces de sección en Navbar y Footer desplazan suavemente mediante scrollIntoView', () => {
+    const eventos = document.createElement('section');
+    eventos.id = 'eventos';
+    const spyScrollIntoView = vi.fn();
+    eventos.scrollIntoView = spyScrollIntoView;
+    document.body.appendChild(eventos);
+
+    const ubicacion = document.createElement('section');
+    ubicacion.id = 'ubicacion';
+    const spyScrollUbicacion = vi.fn();
+    ubicacion.scrollIntoView = spyScrollUbicacion;
+    document.body.appendChild(ubicacion);
+
+    render(
+      <ReservasProvider>
+        <VistaCanchasProvider>
+          <Navbar />
+          <Footer />
+        </VistaCanchasProvider>
+      </ReservasProvider>
+    );
+
+    fireEvent.click(screen.getAllByRole('link', { name: /eventos/i })[0]);
+    expect(spyScrollIntoView).toHaveBeenCalledWith(
+      expect.objectContaining({ behavior: 'smooth', block: 'start' })
+    );
+
+    fireEvent.click(screen.getAllByRole('link', { name: 'Ubicación' })[1]);
+    expect(spyScrollUbicacion).toHaveBeenCalledWith(
+      expect.objectContaining({ behavior: 'smooth', block: 'start' })
+    );
+
+    eventos.remove();
+    ubicacion.remove();
+  });
 });
