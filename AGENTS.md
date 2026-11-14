@@ -57,9 +57,13 @@ node scripts/probar-chat.mjs [url] [ids...]  # casos de prueba de /api/chat
   modelo). De interfaz: `src/components/reservas/Torneo.test.jsx` (torneo y
   cumpleaños), `src/components/reservas/FormularioReserva.test.jsx` (prop
   `seccion`), los del asistente en `src/components/reservas/torneo/`
-  (`AsistenteTorneo.test.jsx` y `useAsistenteTorneo.test.jsx`) y
-  `src/components/layout/MisReservas.test.jsx`. `api/_lib/funciones.test.js`
-  cubre las funciones del chat y `src/App.test.jsx` es un smoke test. `src/setupTests.js` carga
+  (`AsistenteTorneo.test.jsx` y `useAsistenteTorneo.test.jsx`),
+  `src/components/layout/MisReservas.test.jsx` y
+  `src/components/chatbot/Chatbot.test.jsx` (widget: portal, Escape,
+  comprobante, nueva conversación). `api/_lib/funciones.test.js` cubre las
+  funciones del chat, `api/_lib/chat.test.js` cubre el handler de `/api/chat`
+  (respaldo de modelos, 400/405/429/500/502/504) y `src/App.test.jsx` es un
+  smoke test. `src/setupTests.js` carga
   `@testing-library/jest-dom/vitest` y simula `matchMedia`,
   `IntersectionObserver`, `ResizeObserver`, `HTMLMediaElement` y
   `window.scrollTo`. Relojes falsos con `vi` (`import { vi } from 'vitest'`).
