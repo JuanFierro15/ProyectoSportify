@@ -47,6 +47,7 @@ odd/
 | `12-pestanas-fases-torneo` | Fases del torneo en pestañas (`CalendarioTorneo`) y eliminación de "Volver arriba" en `Footer` (rama `feat/pestanas-fases-torneo`, fusionada en `main` en `0a09394`) | Juan Fierro | sí | no | no | (implementación directa) |
 | `13-correcciones-rubrica` | Correcciones de la evaluación por rúbrica (contraste de comprobante en chat, limpieza `matchMedia` GSAP, `<main>` + skip link, touch targets `>=44px` y tests de UI/API; rama `fix/correcciones-rubrica`, implementada el 14-11) | Juan Fierro | sí | no | sí | c1, g1, n1 |
 | `14-pendientes-pr27` | Pendientes del PR #27 y prueba de producción a 390 px: sugerencias del chat a 44 px, pastilla del carrusel, pruebas de GSAP del torneo, video del hero, 429+503 y enlaces de Navbar y Footer (rama `fix/pendientes-pr27`, implementada el 14-11, PR abierto) | Juan Fierro | sí | no | sí | p1, t1 |
+| `15-horas-torneo-por-cancha` | Horas por cancha y salteadas en las fases del torneo, y aviso con confirmación cuando sobran horas sin partido (rama `feat/horas-torneo-por-cancha`, en curso: plan por aprobar) | Juan Fierro | sí | no | no | l1, c1, u1, v1 (por lanzar) |
 
 Antes del flujo por etapas (sin plan ni reporte, solo commits):
 
