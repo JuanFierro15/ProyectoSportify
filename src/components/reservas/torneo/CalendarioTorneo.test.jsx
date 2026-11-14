@@ -288,7 +288,7 @@ describe('CalendarioTorneo - pestañas por fase', () => {
     expect(tabFinal).not.toHaveClass('calendario-torneo__pestana--alerta');
   });
 
-  it('vuelve automáticamente a la primera fase si las fases se reducen y la activa desaparece', () => {
+  it('vuelve a la primera fase si la activa desaparece al reducir las fases y la mantiene al volver a 3 fases', () => {
     const { rerender } = renderCalendario();
 
     const tabFinal = screen.getByRole('tab', { name: /^Final\b/i });
