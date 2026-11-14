@@ -1,0 +1,599 @@
+{
+  "base": "http://localhost:4173",
+  "soloMedidas": false,
+  "chat": {
+    "390": {
+      "iniciales": {
+        "chips": [
+          {
+            "texto": "¿Qué horarios hay libres hoy?",
+            "height": 44,
+            "top": 681.6,
+            "bottom": 725.6,
+            "tapaInput": false,
+            "tapaEnviar": false
+          },
+          {
+            "texto": "¿Cuánto cuesta una hora?",
+            "height": 44,
+            "top": 732,
+            "bottom": 776,
+            "tapaInput": false,
+            "tapaEnviar": false
+          },
+          {
+            "texto": "¿Dónde quedan?",
+            "height": 44,
+            "top": 732,
+            "bottom": 776,
+            "tapaInput": false,
+            "tapaEnviar": false
+          }
+        ],
+        "inputTop": 788,
+        "enviarTop": 788
+      },
+      "textoInicial2": "¿Cuánto cuesta una hora?",
+      "mockChips": {
+        "chips": [
+          {
+            "texto": "A",
+            "height": 44,
+            "top": 732,
+            "bottom": 776,
+            "tapaInput": false,
+            "tapaEnviar": false
+          },
+          {
+            "texto": "B",
+            "height": 44,
+            "top": 732,
+            "bottom": 776,
+            "tapaInput": false,
+            "tapaEnviar": false
+          },
+          {
+            "texto": "C",
+            "height": 44,
+            "top": 732,
+            "bottom": 776,
+            "tapaInput": false,
+            "tapaEnviar": false
+          }
+        ],
+        "inputTop": 788,
+        "enviarTop": 788
+      },
+      "segundoChip": {
+        "esperado": "B",
+        "enviado": "B"
+      },
+      "ultimoChip": {
+        "esperado": "C",
+        "enviado": "C"
+      },
+      "mockCalls": 3
+    },
+    "1440": {
+      "iniciales": {
+        "chips": [
+          {
+            "texto": "¿Qué horarios hay libres hoy?",
+            "height": 44,
+            "top": 644.6,
+            "bottom": 688.6,
+            "tapaInput": false,
+            "tapaEnviar": false
+          },
+          {
+            "texto": "¿Cuánto cuesta una hora?",
+            "height": 44,
+            "top": 695,
+            "bottom": 739,
+            "tapaInput": false,
+            "tapaEnviar": false
+          },
+          {
+            "texto": "¿Dónde quedan?",
+            "height": 44,
+            "top": 695,
+            "bottom": 739,
+            "tapaInput": false,
+            "tapaEnviar": false
+          }
+        ],
+        "inputTop": 751,
+        "enviarTop": 751
+      },
+      "textoInicial2": "¿Cuánto cuesta una hora?",
+      "mockChips": {
+        "chips": [
+          {
+            "texto": "A",
+            "height": 44,
+            "top": 695,
+            "bottom": 739,
+            "tapaInput": false,
+            "tapaEnviar": false
+          },
+          {
+            "texto": "B",
+            "height": 44,
+            "top": 695,
+            "bottom": 739,
+            "tapaInput": false,
+            "tapaEnviar": false
+          },
+          {
+            "texto": "C",
+            "height": 44,
+            "top": 695,
+            "bottom": 739,
+            "tapaInput": false,
+            "tapaEnviar": false
+          }
+        ],
+        "inputTop": 751,
+        "enviarTop": 751
+      },
+      "segundoChip": {
+        "esperado": "B",
+        "enviado": "B"
+      },
+      "ultimoChip": {
+        "esperado": "C",
+        "enviado": "C"
+      },
+      "mockCalls": 3
+    }
+  },
+  "carrusel": {
+    "390:/reservar/padel": {
+      "ruta": "/reservar/padel",
+      "etiqueta": "390",
+      "desborde": {
+        "vw": 390,
+        "sw": 390,
+        "sinDesborde": true,
+        "fuera": []
+      },
+      "medidas": {
+        "cuerpo": {
+          "top": 533.4,
+          "bottom": 970.2,
+          "height": 436.8
+        },
+        "card": {
+          "top": 563.1,
+          "bottom": 940.5,
+          "height": 377.4
+        },
+        "btn": {
+          "top": 891.8,
+          "bottom": 922.1,
+          "height": 30.3
+        },
+        "dots": {
+          "left": 120,
+          "right": 270,
+          "top": 960.2,
+          "bottom": 1010.2,
+          "height": 50
+        },
+        "distDotsCard": 19.7,
+        "distDotsBtn": 38.1,
+        "distSiguienteDots": 20,
+        "solapeFlechas": false,
+        "gapFlechaIzq": 50,
+        "gapFlechaDer": 50
+      },
+      "clics": [
+        {
+          "clic": 1,
+          "activo": 1
+        },
+        {
+          "clic": 2,
+          "activo": 2
+        },
+        {
+          "clic": 2,
+          "activo": 2
+        }
+      ]
+    },
+    "390:/reservar/voley-playa": {
+      "ruta": "/reservar/voley-playa",
+      "etiqueta": "390",
+      "desborde": {
+        "vw": 390,
+        "sw": 390,
+        "sinDesborde": true,
+        "fuera": []
+      },
+      "medidas": {
+        "cuerpo": {
+          "top": 533.4,
+          "bottom": 970.2,
+          "height": 436.8
+        },
+        "card": {
+          "top": 563.1,
+          "bottom": 940.5,
+          "height": 377.4
+        },
+        "btn": {
+          "top": 891.8,
+          "bottom": 922.1,
+          "height": 30.3
+        },
+        "dots": {
+          "left": 120,
+          "right": 270,
+          "top": 960.2,
+          "bottom": 1010.2,
+          "height": 50
+        },
+        "distDotsCard": 19.7,
+        "distDotsBtn": 38.1,
+        "distSiguienteDots": 20,
+        "solapeFlechas": false,
+        "gapFlechaIzq": 50,
+        "gapFlechaDer": 50
+      },
+      "clics": [
+        {
+          "clic": 1,
+          "activo": 1
+        },
+        {
+          "clic": 2,
+          "activo": 2
+        },
+        {
+          "clic": 2,
+          "activo": 2
+        }
+      ]
+    },
+    "390:/reservar/futbol": {
+      "ruta": "/reservar/futbol",
+      "etiqueta": "390",
+      "desborde": {
+        "vw": 390,
+        "sw": 390,
+        "sinDesborde": true,
+        "fuera": []
+      },
+      "medidas": {
+        "cuerpo": {
+          "top": 533.4,
+          "bottom": 970.2,
+          "height": 436.8
+        },
+        "card": {
+          "top": 563.1,
+          "bottom": 940.5,
+          "height": 377.4
+        },
+        "btn": {
+          "top": 891.8,
+          "bottom": 922.1,
+          "height": 30.3
+        },
+        "dots": {
+          "left": 120,
+          "right": 270,
+          "top": 960.2,
+          "bottom": 1010.2,
+          "height": 50
+        },
+        "distDotsCard": 19.7,
+        "distDotsBtn": 38.1,
+        "distSiguienteDots": 20,
+        "solapeFlechas": false,
+        "gapFlechaIzq": 50,
+        "gapFlechaDer": 50
+      },
+      "clics": [
+        {
+          "clic": 1,
+          "activo": 1
+        },
+        {
+          "clic": 2,
+          "activo": 2
+        },
+        {
+          "clic": 2,
+          "activo": 2
+        }
+      ]
+    },
+    "390:/reservar/padel?modo=torneo": {
+      "ruta": "/reservar/padel?modo=torneo",
+      "etiqueta": "390",
+      "desborde": {
+        "vw": 390,
+        "sw": 390,
+        "sinDesborde": true,
+        "fuera": []
+      },
+      "medidas": {
+        "cuerpo": {
+          "top": 756.2,
+          "bottom": 1193,
+          "height": 436.8
+        },
+        "card": {
+          "top": 785.9,
+          "bottom": 1163.3,
+          "height": 377.4
+        },
+        "btn": {
+          "top": 1111.7,
+          "bottom": 1144.9,
+          "height": 33.2
+        },
+        "dots": {
+          "left": 120,
+          "right": 270,
+          "top": 1183,
+          "bottom": 1233,
+          "height": 50
+        },
+        "distDotsCard": 19.7,
+        "distDotsBtn": 38.1,
+        "distSiguienteDots": 20,
+        "solapeFlechas": false,
+        "gapFlechaIzq": 50,
+        "gapFlechaDer": 50
+      },
+      "clics": [
+        {
+          "clic": 1,
+          "activo": 1
+        },
+        {
+          "clic": 2,
+          "activo": 2
+        },
+        {
+          "clic": 2,
+          "activo": 2
+        }
+      ]
+    },
+    "1440:/reservar/padel": {
+      "ruta": "/reservar/padel",
+      "etiqueta": "1440",
+      "desborde": {
+        "vw": 1440,
+        "sw": 1440,
+        "sinDesborde": true,
+        "fuera": []
+      },
+      "medidas": {
+        "cuerpo": {
+          "top": 497,
+          "bottom": 1097,
+          "height": 600
+        },
+        "card": {
+          "top": 521,
+          "bottom": 1073,
+          "height": 552
+        },
+        "btn": {
+          "top": 1024.3,
+          "bottom": 1054.6,
+          "height": 30.3
+        },
+        "dots": {
+          "left": 459,
+          "right": 609,
+          "top": 1087,
+          "bottom": 1137,
+          "height": 50
+        },
+        "distDotsCard": 14,
+        "distDotsBtn": 32.4,
+        "distSiguienteDots": 20,
+        "solapeFlechas": false,
+        "gapFlechaIzq": 264,
+        "gapFlechaDer": 264
+      },
+      "clics": [
+        {
+          "clic": 1,
+          "activo": 1
+        },
+        {
+          "clic": 2,
+          "activo": 2
+        },
+        {
+          "clic": 2,
+          "activo": 2
+        }
+      ]
+    },
+    "1440:/reservar/voley-playa": {
+      "ruta": "/reservar/voley-playa",
+      "etiqueta": "1440",
+      "desborde": {
+        "vw": 1440,
+        "sw": 1440,
+        "sinDesborde": true,
+        "fuera": []
+      },
+      "medidas": {
+        "cuerpo": {
+          "top": 497,
+          "bottom": 1097,
+          "height": 600
+        },
+        "card": {
+          "top": 521,
+          "bottom": 1073,
+          "height": 552
+        },
+        "btn": {
+          "top": 1024.3,
+          "bottom": 1054.6,
+          "height": 30.3
+        },
+        "dots": {
+          "left": 459,
+          "right": 609,
+          "top": 1087,
+          "bottom": 1137,
+          "height": 50
+        },
+        "distDotsCard": 14,
+        "distDotsBtn": 32.4,
+        "distSiguienteDots": 20,
+        "solapeFlechas": false,
+        "gapFlechaIzq": 264,
+        "gapFlechaDer": 264
+      },
+      "clics": [
+        {
+          "clic": 1,
+          "activo": 1
+        },
+        {
+          "clic": 2,
+          "activo": 2
+        },
+        {
+          "clic": 2,
+          "activo": 2
+        }
+      ]
+    },
+    "1440:/reservar/futbol": {
+      "ruta": "/reservar/futbol",
+      "etiqueta": "1440",
+      "desborde": {
+        "vw": 1440,
+        "sw": 1440,
+        "sinDesborde": true,
+        "fuera": []
+      },
+      "medidas": {
+        "cuerpo": {
+          "top": 497,
+          "bottom": 1097,
+          "height": 600
+        },
+        "card": {
+          "top": 521,
+          "bottom": 1073,
+          "height": 552
+        },
+        "btn": {
+          "top": 1024.3,
+          "bottom": 1054.6,
+          "height": 30.3
+        },
+        "dots": {
+          "left": 459,
+          "right": 609,
+          "top": 1087,
+          "bottom": 1137,
+          "height": 50
+        },
+        "distDotsCard": 14,
+        "distDotsBtn": 32.4,
+        "distSiguienteDots": 20,
+        "solapeFlechas": false,
+        "gapFlechaIzq": 264,
+        "gapFlechaDer": 264
+      },
+      "clics": [
+        {
+          "clic": 1,
+          "activo": 1
+        },
+        {
+          "clic": 2,
+          "activo": 2
+        },
+        {
+          "clic": 2,
+          "activo": 2
+        }
+      ]
+    },
+    "1440:/reservar/padel?modo=torneo": {
+      "ruta": "/reservar/padel?modo=torneo",
+      "etiqueta": "1440",
+      "desborde": {
+        "vw": 1440,
+        "sw": 1440,
+        "sinDesborde": true,
+        "fuera": []
+      },
+      "medidas": {
+        "cuerpo": {
+          "top": 505,
+          "bottom": 1105,
+          "height": 600
+        },
+        "card": {
+          "top": 529,
+          "bottom": 1081,
+          "height": 552
+        },
+        "btn": {
+          "top": 1029.4,
+          "bottom": 1062.6,
+          "height": 33.2
+        },
+        "dots": {
+          "left": 459,
+          "right": 609,
+          "top": 1095,
+          "bottom": 1145,
+          "height": 50
+        },
+        "distDotsCard": 14,
+        "distDotsBtn": 32.4,
+        "distSiguienteDots": 20,
+        "solapeFlechas": false,
+        "gapFlechaIzq": 264,
+        "gapFlechaDer": 264
+      },
+      "clics": [
+        {
+          "clic": 1,
+          "activo": 1
+        },
+        {
+          "clic": 2,
+          "activo": 2
+        },
+        {
+          "clic": 2,
+          "activo": 2
+        }
+      ]
+    }
+  },
+  "reducedMotion": {
+    "rmCarrusel": {
+      "matchesReduce": true,
+      "sinDesborde": true,
+      "imgAnim": "none",
+      "dotTrans": "0s",
+      "dotAfterTrans": "0s"
+    },
+    "rmChat": {
+      "panelAbierto": true,
+      "chipHeight": 44,
+      "chipTrans": "0s"
+    }
+  },
+  "errores": []
+}

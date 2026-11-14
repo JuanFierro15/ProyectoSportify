@@ -7,7 +7,7 @@ Herramienta: Chrome headless por CDP (`prueba390.mjs`, en esta carpeta), viewpor
 
 | Caso | Resultado |
 | --- | --- |
-| Desborde horizontal en `/`, `/reservar/padel` y `/reservar/voley?modo=torneo` | Ninguno (`scrollWidth` = 390 en las tres) |
+| Desborde horizontal en `/`, `/reservar/padel` y `/reservar/voley?modo=torneo` | Ninguno (`scrollWidth` = 390 en las tres). Corrección posterior: el slug es `voley-playa`; `/reservar/voley` redirige al inicio, así que la tercera medición repitió el inicio. El bloque p1 midió `/reservar/voley-playa` y `/reservar/padel?modo=torneo` sin desborde |
 | `<main>` único con `id="contenido-principal"` | 1 en inicio y 1 en reserva |
 | Skip link con Tab real | Primer foco; visible en `top: 16px`; texto `#141414` sobre `#f6a94b` (`01-skip-link-tab.png`) |
 | Skip link con Enter, y clic repetido | Foco al `<main>`, sin hash en la URL |

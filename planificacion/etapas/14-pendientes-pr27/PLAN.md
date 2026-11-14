@@ -1,6 +1,6 @@
 # Etapa 14: pendientes del PR #27
 
-Estado: **Por aprobar** (14-11-2026).
+Estado: **Aprobado** por Juan e implementado (14-11-2026); ver `REPORTE.md`.
 Rama: `fix/pendientes-pr27` (desde `main`, `2cf1cc4`).
 Responsable: Juan Fierro.
 
@@ -40,7 +40,7 @@ regresiones; salen dos hallazgos de diseño (P1 y P6).
    montar `DeporteHero`, desmontar y esperar la llamada. Probar también con reduced-motion,
    donde el callback de `mm.add` no corre y la pausa debe venir del cleanup externo.
 4. **P4:** dos casos nuevos en `api/_lib/chat.test.js`: 429, 503, 429 → 502 con
-   `TEXTOS.generico` y 3 llamadas; y 429, 429, timeout → 502 (no 429 ni 504), para fijar
+   `TEXTOS.generico` y 3 llamadas; y 429, 429, timeout → 504 (alguno agotó el tiempo; corregido tras el intento 1 de t1), para fijar
    el borde de `respuestaFinal`.
 5. **P5:** completar las cuatro combinaciones (Navbar y Footer × Eventos y Ubicación)
    con `it.each`, y repetir un clic para probar la acción repetida.
