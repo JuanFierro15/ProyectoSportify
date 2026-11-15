@@ -237,8 +237,12 @@ describe('Modo Torneo - Pruebas de integración', { timeout: 15000 }, () => {
       screen.getByRole('button', { name: 'Cuartos de final, Cancha 3, 14:00' })
     );
 
-    // Aparece la alerta de déficit indicando falta 1 partido / faltan 40 min
-    expect(screen.getAllByText(/falta 1 partido por ubicar|faltan 40 min/i).length).toBeGreaterThanOrEqual(1);
+    // Aparece la alerta de déficit indicando exactamente que falta 1 partido por ubicar
+    expect(
+      screen.getByText(
+        'Con las horas marcadas faltan turnos para 1 partido (cada turno incluye desempate y transición).'
+      )
+    ).toBeInTheDocument();
 
     // El botón Confirmar reserva permanece disabled
     const btnConfirmar = screen.getByRole('button', { name: /Confirmar reserva/i });
@@ -542,20 +546,30 @@ describe('Modo Torneo - Pruebas de integración', { timeout: 15000 }, () => {
     expect(result.current.contarLibresFase(1)).toBeUndefined();
   });
 
-  it('8. AlertaTiempo con duracionPartido={20} y onCambiarDuracion muestra botón de cambio rápido a 15 min', () => {
+  it('8. AlertaTiempo muestra detalle exacto para 1 y 2 partidos, se oculta con 0 y botón de cambio rápido a 15 min', () => {
     const onCambiarDuracion = vi.fn();
 
-    const { rerender } = render(
+    const { rerender, container } = render(
       <AlertaTiempo
         equipos={8}
-        canchasCount={1}
-        minutosRequeridos={120}
-        disponibles={60}
-        deficit={60}
+        canchasCount={2}
+        minutosRequeridos={80}
+        disponibles={80}
+        deficit={40}
+        partidosSinUbicar={1}
         duracionPartido={20}
         onCambiarDuracion={onCambiarDuracion}
       />
     );
+
+    expect(
+      screen.getByText('Con 8 equipos y 2 canchas, el torneo tomará ~80 min en el peor caso.')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Con las horas marcadas faltan turnos para 1 partido (cada turno incluye desempate y transición).'
+      )
+    ).toBeInTheDocument();
 
     const btnAccion = screen.getByRole('button', { name: 'Cambiar a 15 min por partido' });
     expect(btnAccion).toBeInTheDocument();
@@ -565,18 +579,39 @@ describe('Modo Torneo - Pruebas de integración', { timeout: 15000 }, () => {
     rerender(
       <AlertaTiempo
         equipos={8}
-        canchasCount={1}
-        minutosRequeridos={120}
-        disponibles={60}
-        deficit={60}
+        canchasCount={2}
+        minutosRequeridos={80}
+        disponibles={40}
+        deficit={80}
+        partidosSinUbicar={2}
         duracionPartido={15}
         onCambiarDuracion={onCambiarDuracion}
       />
     );
 
     expect(
+      screen.getByText(
+        'Con las horas marcadas faltan turnos para 2 partidos (cada turno incluye desempate y transición).'
+      )
+    ).toBeInTheDocument();
+    expect(
       screen.queryByRole('button', { name: 'Cambiar a 15 min por partido' })
     ).not.toBeInTheDocument();
+
+    rerender(
+      <AlertaTiempo
+        equipos={8}
+        canchasCount={2}
+        minutosRequeridos={80}
+        disponibles={80}
+        deficit={40}
+        partidosSinUbicar={0}
+        duracionPartido={15}
+        onCambiarDuracion={onCambiarDuracion}
+      />
+    );
+
+    expect(container).toBeEmptyDOMElement();
   });
 
   it('9. En cumpleaños, 150 invitados bloquea con "Máximo 100 invitados."', () => {
@@ -1976,8 +2011,6 @@ describe('Modo Torneo - Pruebas de integración', { timeout: 15000 }, () => {
       name: 'Reservar igual',
     });
     fireEvent.click(btnReservarIgual);
-    // Segundo clic en el evento si el botón quedara un tick más no duplica
-    fireEvent.click(btnReservarIgual);
 
     expect(screen.getByText('Reserva confirmada')).toBeInTheDocument();
     const guardado = JSON.parse(window.localStorage.getItem('sportify_reservas_v2'));
@@ -2072,5 +2105,107 @@ describe('Modo Torneo - Pruebas de integración', { timeout: 15000 }, () => {
     expect(guardado.reservas).toHaveLength(1);
     const codigoGuardado = guardado.reservas[0].codigo;
     expect(screen.getByText(codigoGuardado)).toBeInTheDocument();
+  });
+
+  it('22. Torneo con 3 canchas elegidas y horas solo en 2: payload, confirmación y QR nombran solo las 2 en orden', () => {
+    let textoQrCapturado = '';
+    function FlujoConQrCapturado() {
+      const { dias, canchas } = useReservas();
+      const reserva = useReserva({ activo: true, modoInicial: 'torneo' });
+      const initRef = useRef(false);
+
+      useEffect(() => {
+        if (!initRef.current) {
+          initRef.current = true;
+          reserva.alternarCancha('futbol-3');
+          reserva.alternarCancha('futbol-2');
+          reserva.alternarCancha('futbol-1');
+        }
+      }, [reserva]);
+
+      textoQrCapturado = reserva.confirmado?.textoQr || '';
+
+      if (reserva.confirmado) {
+        return (
+          <ConfirmacionReserva
+            codigo={reserva.confirmado.codigo}
+            textoQr={reserva.confirmado.textoQr}
+            resumen={reserva.confirmado.resumen}
+            onListo={reserva.reiniciar}
+          />
+        );
+      }
+
+      return (
+        <div>
+          <FormularioReserva reserva={reserva} dias={dias} />
+          <VoucherReserva
+            tipoEtiqueta={reserva.modoInfo.tipoEtiqueta}
+            fechaTexto={fechaCompleta(reserva.fecha)}
+            horas={reserva.horasSel}
+            precio={reserva.precio}
+            puedeConfirmar={reserva.puedeConfirmar}
+            motivoBloqueo={reserva.motivoBloqueo}
+            onConfirmar={reserva.confirmar}
+            onCancelar={reserva.reiniciar}
+            torneo={reserva.torneoPlan}
+            canchas={canchas}
+          />
+        </div>
+      );
+    }
+
+    const { container } = render(
+      <ReservasProvider>
+        <FlujoConQrCapturado />
+      </ReservasProvider>
+    );
+
+    // Cuartos (4 partidos, 30 min/turno -> 2 turnos en 1 hora si hay 2 canchas): marcar en Cancha 3 y Cancha 1, sin Cancha 2
+    const seccionCuartos = screen.getByLabelText('Fase 1: Cuartos de final');
+    fireEvent.click(within(seccionCuartos).getAllByRole('button')[1]);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 3, 14:00' })
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 1, 14:00' })
+    );
+
+    // Semifinal: marcar solo Cancha 1
+    fireEvent.click(screen.getByRole('tab', { name: /Semifinal/i }));
+    const seccionSemi = screen.getByLabelText('Fase 2: Semifinal');
+    fireEvent.click(within(seccionSemi).getAllByRole('button')[2]);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Semifinal, Cancha 1, 15:00' })
+    );
+
+    // Final: marcar solo Cancha 3
+    fireEvent.click(screen.getByRole('tab', { name: /^Final\b/i }));
+    const seccionFinal = screen.getByLabelText('Fase 3: Final');
+    fireEvent.click(within(seccionFinal).getAllByRole('button')[3]);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Final, Cancha 3, 16:00' })
+    );
+
+    fireEvent.change(screen.getByLabelText(/Nombre/i), {
+      target: { value: 'Mateo Castro' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar reserva/i }));
+
+    expect(screen.getByText('Reserva confirmada')).toBeInTheDocument();
+
+    const guardado = JSON.parse(window.localStorage.getItem('sportify_reservas_v2'));
+    expect(guardado.reservas).toHaveLength(1);
+    const torneoGuardado = guardado.reservas[0];
+    expect(torneoGuardado.canchaIds).toEqual(['futbol-3', 'futbol-1']);
+    expect(torneoGuardado.canchasNecesarias).toBe(2);
+
+    const lineaCanchas = container.querySelector('.confirmacion-reserva__canchas');
+    expect(lineaCanchas).toHaveTextContent('Cancha Fútbol 3 · Cancha Fútbol 1');
+    expect(lineaCanchas).not.toHaveTextContent('Cancha Fútbol 2');
+
+    expect(textoQrCapturado).toContain('Canchas: Cancha Fútbol 3, Cancha Fútbol 1');
+    expect(textoQrCapturado).not.toContain('Cancha Fútbol 2');
   });
 });

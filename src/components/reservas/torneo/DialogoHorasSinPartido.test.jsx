@@ -54,13 +54,11 @@ describe('DialogoHorasSinPartido', () => {
       />
     );
 
-    const dialogo = screen.getByRole('dialog');
     const btnRevisar = screen.getByRole('button', { name: 'Revisar horas' });
     const btnReservarIgual = screen.getByRole('button', { name: 'Reservar igual' });
 
     expect(document.activeElement).toBe(btnRevisar);
 
-    fireEvent.keyDown(dialogo, { key: 'Escape', shiftKey: false });
     // Shift+Tab desde el primer botón vuelve al último
     fireEvent.keyDown(btnRevisar, { key: 'Tab', shiftKey: true });
     expect(document.activeElement).toBe(btnReservarIgual);

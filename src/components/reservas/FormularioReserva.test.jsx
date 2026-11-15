@@ -210,7 +210,7 @@ describe('FormularioReserva - Prop seccion y renderizado público', () => {
     expect(screen.getByText(/Programación por fases/i)).toBeInTheDocument();
     expect(screen.getByText(/Capacidad y tiempo estimado/i)).toBeInTheDocument();
     expect(screen.getAllByRole('alert').length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/faltan \d+ min/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Con las horas marcadas faltan turnos para \d+ partidos? \(cada turno incluye desempate y transición\)\./).length).toBeGreaterThan(0);
 
     expect(screen.queryByText(/Cantidad de equipos/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('group', { name: 'Duración por partido' })).not.toBeInTheDocument();

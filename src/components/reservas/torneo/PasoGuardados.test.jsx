@@ -316,4 +316,42 @@ describe('PasoGuardados', () => {
     expect(texto).toContain('Pádel 2: 19:00');
     expect(texto).not.toContain('19:00 a 20:00');
   });
+
+  it('usa la prop canchas para los nombres y respalda con el id si no está en el catálogo', () => {
+    const torneoSintetico = {
+      id: 'evento__2026-11-16__1',
+      codigo: 'SPF-TEST01',
+      tipo: 'evento',
+      subtipo: 'torneo',
+      fecha: '2026-11-16',
+      torneo: {
+        equipos: 4,
+        jornadas: [
+          {
+            ronda: 1,
+            nombreRonda: 'Semifinal',
+            fecha: '2026-11-16',
+            canchaIds: ['cancha-custom-1', 'cancha-sin-catalogo'],
+            horasPorCancha: {
+              'cancha-custom-1': ['14:00'],
+              'cancha-sin-catalogo': ['15:00'],
+            },
+          },
+        ],
+      },
+    };
+
+    const { container } = render(
+      <PasoGuardados
+        torneosGuardados={[torneoSintetico]}
+        canchas={[
+          { id: 'cancha-custom-1', nombre: 'Cancha Arena 7', deporte: 'futbol' },
+        ]}
+      />
+    );
+
+    const texto = container.textContent;
+    expect(texto).toContain('Arena 7: 14:00');
+    expect(texto).toContain('cancha-sin-catalogo: 15:00');
+  });
 });

@@ -1,5 +1,4 @@
 import React from 'react';
-import datosCanchas from '../../../data/canchas.json';
 import { fechaCompleta } from '../../../lib/fechas';
 import Bracket from './Bracket';
 import {
@@ -41,9 +40,9 @@ function PasoGuardados({ torneosGuardados = [], canchas = [] }) {
               : [];
           const canchasRef = [
             ...canchasDeReserva,
-            ...(Array.isArray(datosCanchas?.canchas)
-              ? datosCanchas.canchas.filter(
-                  (c) => !canchasDeReserva.some((x) => x.id === c.id)
+            ...(Array.isArray(canchas)
+              ? canchas.filter(
+                  (c) => c && c.id && !canchasDeReserva.some((x) => x.id === c.id)
                 )
               : []),
           ];

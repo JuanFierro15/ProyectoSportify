@@ -1167,6 +1167,15 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
           })
         : null;
 
+    const bloquesTorneo = modo === 'torneo' ? torneoPlan.bloques || [] : [];
+    const idsConHorasEnBloques = new Set(
+      bloquesTorneo.flatMap((b) => (Array.isArray(b.canchaIds) ? b.canchaIds : []))
+    );
+    const canchaIdsTorneo =
+      modo === 'torneo'
+        ? canchaIds.filter((id) => idsConHorasEnBloques.has(id))
+        : canchaIds;
+
     if (modo === 'cancha') {
       res = reservar({
         canchaId: canchaSel.id,
@@ -1176,16 +1185,17 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
         telefono: telefono.trim(),
       });
     } else if (modo === 'torneo') {
-      const bloques = torneoPlan.bloques || [];
-      const primerBloque = bloques[0] || {};
+      const primerBloque = bloquesTorneo[0] || {};
+      const canchaIdsPayload =
+        canchaIdsTorneo.length > 0 ? canchaIdsTorneo : canchaIds;
       res = reservarEvento({
         subtipo: 'torneo',
         fecha: primerBloque.fecha || fecha,
-        canchaIds,
+        canchaIds: canchaIdsPayload,
         horas: primerBloque.horas || [],
-        bloques,
+        bloques: bloquesTorneo,
         equipos: Number(equipos),
-        canchasNecesarias: canchaIds.length,
+        canchasNecesarias: canchaIdsPayload.length,
         invitados: null,
         torneo: datosTorneo,
         nombre: nombre.trim(),
@@ -1256,9 +1266,13 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
         ? `${fechaCompleta(primerBloque.fecha)} a ${fechaCompleta(ultimoBloque.fecha)}`
         : fechaCompleta((primerBloque && primerBloque.fecha) || fecha);
 
-    const nombresCanchas = canchasElegidas.map((c) => c.nombre);
+    const canchasParaComprobante =
+      modo === 'torneo'
+        ? canchasElegidas.filter((c) => idsConHorasEnBloques.has(c.id))
+        : canchasElegidas;
+    const nombresCanchas = canchasParaComprobante.map((c) => c.nombre);
     const mapaNombresCanchas = Object.fromEntries(
-      canchasElegidas.map((c) => [c.id, c.nombre])
+      canchasParaComprobante.map((c) => [c.id, c.nombre])
     );
     const modoActual = MODOS.find((m) => m.valor === modo) || MODOS[0];
     const tipoEtiqueta = modoActual.tipoEtiqueta;

@@ -54,7 +54,9 @@ export function CalendarioTorneo({
   const rootRef = useRef(null);
   const tabsRef = useRef([]);
   const panelsRef = useRef({});
-  const ultimaMarcaRevisarRef = useRef(0);
+  const ultimaMarcaRevisarRef = useRef(marcaFaseARevisar);
+  // Al montar (p. ej. al volver al paso Fechas tras "Revisar horas" en móvil) se abre
+  // la fase a revisar, pero el foco solo se mueve cuando cambia la marca.
   const [faseActiva, setFaseActiva] = useState(() =>
     faseARevisar != null && fases.some((f) => f.ronda === faseARevisar)
       ? faseARevisar
@@ -473,6 +475,7 @@ export function CalendarioTorneo({
                         minutosRequeridos={fase.minutosRequeridos}
                         disponibles={val.disponibles}
                         deficit={val.deficit}
+                        partidosSinUbicar={val.partidosSinUbicar}
                         sugerencias={sugerenciasPorFase[fase.ronda] || []}
                         duracionPartido={duracionPartido}
                         onCambiarDuracion={onCambiarDuracion}

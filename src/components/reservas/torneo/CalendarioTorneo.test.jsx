@@ -381,6 +381,94 @@ describe('CalendarioTorneo - pestañas por fase', () => {
       within(panelFinal).queryByRole('button', { name: /Siguiente fase:/i })
     ).not.toBeInTheDocument();
   });
+
+  it('pasa val.partidosSinUbicar a AlertaTiempo con el texto exacto para 1 y 2 partidos', () => {
+    const jornadas = {
+      ...jornadasVacias(),
+      1: { fecha: DIAS[0], horasPorCancha: { 'futbol-1': ['10:00'] } },
+      2: { fecha: DIAS[1], horasPorCancha: { 'futbol-1': ['12:00'] } },
+    };
+
+    renderCalendario({
+      jornadas,
+      validacionesJornadas: [
+        {
+          ronda: 1,
+          ordenValido: true,
+          alcanza: false,
+          disponibles: 60,
+          deficit: 60,
+          partidosSinUbicar: 2,
+        },
+        {
+          ronda: 2,
+          ordenValido: true,
+          alcanza: false,
+          disponibles: 60,
+          deficit: 30,
+          partidosSinUbicar: 1,
+        },
+      ],
+    });
+
+    const panelCuartos = screen.getByLabelText('Fase 1: Cuartos de final');
+    expect(
+      within(panelCuartos).getByText(
+        'Con las horas marcadas faltan turnos para 2 partidos (cada turno incluye desempate y transición).'
+      )
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: /Semifinal/i }));
+    const panelSemi = screen.getByLabelText('Fase 2: Semifinal');
+    expect(
+      within(panelSemi).getByText(
+        'Con las horas marcadas faltan turnos para 1 partido (cada turno incluye desempate y transición).'
+      )
+    ).toBeInTheDocument();
+  });
+
+  it('montar con una marcaFaseARevisar ya aplicada abre esa fase sin mover el foco, y lo enfoca solo al cambiar la marca', () => {
+    const botonPrevio = document.createElement('button');
+    document.body.appendChild(botonPrevio);
+    botonPrevio.focus();
+
+    try {
+      const { rerender } = renderCalendario({
+        faseARevisar: 3,
+        marcaFaseARevisar: 1,
+      });
+
+      const tabCuartos = screen.getByRole('tab', { name: /Cuartos de final/i });
+      const tabFinal = screen.getByRole('tab', { name: /^Final\b/i });
+      const panelFinal = screen.getByLabelText('Fase 3: Final');
+
+      expect(tabCuartos).toHaveAttribute('aria-selected', 'false');
+      expect(tabFinal).toHaveAttribute('aria-selected', 'true');
+      expect(document.activeElement).toBe(botonPrevio);
+
+      // Al incrementar la marca se enfoca el panel de la fase a revisar
+      rerender(
+        <CalendarioTorneo
+          fases={FASES_BASE}
+          jornadas={jornadasVacias()}
+          validacionesJornadas={[]}
+          dias={DIAS}
+          horasBase={HORAS_BASE}
+          canchas={CANCHAS}
+          canchaIds={['futbol-1', 'futbol-2']}
+          duracionPartido={20}
+          esLibreFase={() => true}
+          faseARevisar={3}
+          marcaFaseARevisar={2}
+        />
+      );
+
+      expect(tabFinal).toHaveAttribute('aria-selected', 'true');
+      expect(document.activeElement).toBe(panelFinal);
+    } finally {
+      botonPrevio.remove();
+    }
+  });
 });
 
 function simularMatchMedia(queryActiva) {
