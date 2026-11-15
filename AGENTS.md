@@ -99,7 +99,7 @@ node scripts/probar-chat.mjs [url] [ids...]  # casos de prueba de /api/chat
 - `src/data/canchas.json`: única semilla de `horas` base, `ocupadosSemilla` y catálogo por cancha (`precioHora`, `imagen`, `descripcion`, `caracteristicas`).
 - `src/data/negocio.json`: única fuente de los datos del local (contacto, mapa, demanda, pagos y abono, cancelación, servicios y `eventos`).
 - `src/data/deportes.js`: única fuente de verdad visual por deporte (`DEPORTES`, `colorAcento`).
-- `src/lib/precios.js`: única fuente de las reglas de precio (`MAX_HORAS_SEGUIDAS`, `MIN_HORAS_BENEFICIO`, `DESCUENTO_POR_HORA`, `calcularPrecio`, `calcularPrecioEvento`, `calcularPrecioJornadas`, `finDeFranja`, `formatoPrecio`).
+- `src/lib/precios.js`: única fuente de las reglas de precio (`MAX_HORAS_SEGUIDAS`, `MIN_HORAS_BENEFICIO`, `DESCUENTO_POR_HORA`, `DESCUENTO_HORA_TORNEO`, `calcularPrecio`, `calcularPrecioEvento`, `calcularPrecioJornadas`, `finDeFranja`, `formatoPrecio`).
 - `src/lib/torneo.js` y `src/lib/pasosTorneo.js`: única fuente de las reglas de torneos por fases (`OPCIONES_EQUIPOS`, `OPCIONES_DURACION`, `maxCanchasTorneo`, `DESEMPATES`, cruces y programación) y del estado de los pasos (`PASOS_TORNEO`, `estadoPasosTorneo`, `pasosAlcanzables`).
 - `src/lib/horarios.js`, `src/lib/codigoReserva.js` y `src/lib/fechas.js`: selección de horas (`alternarHoraIndividual`, `seleccionarRango`), códigos y texto QR (`generarCodigo`, `textoQr`), y fechas/horas pasadas (`fechaCompleta`, `esHoraPasada`, `horaAmPm`).
 - `src/lib/validacion.js`: única fuente de validación de nombre, teléfono y propuestas de reserva del chat (JS puro compartido entre formulario, widget y `/api/chat`).

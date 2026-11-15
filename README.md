@@ -163,8 +163,9 @@ cada tipo de reserva:
   - se elige un **rango de horas** consecutivas (inicio y fin) y la cantidad de
     **invitados** (hasta 100), que se muestra en el comprobante y en la confirmación.
 - En ambos modos el bloqueo es **todo o nada** (si una sola celda cancha × hora
-  está ocupada, no se reserva nada) y el precio suma cada cancha y jornada con
-  las mismas reglas de descuento.
+  está ocupada, no se reserva nada) y el precio suma cada cancha y jornada: en torneo, 
+5.000 menos por hora
+  desde 1 hora; en cumpleaños, $5.000 menos por hora desde 2 horas seguidas.
 
 | Programación por fases del torneo | Bracket interactivo del torneo |
 |:---:|:---:|
