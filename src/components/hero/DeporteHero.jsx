@@ -1,12 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import {
-  modoScrollHero,
-  PUNTOS_SNAP_HERO,
-  REPOSO_HERO,
-} from '../../lib/modoHero';
+import { modoScrollHero, REPOSO_HERO } from '../../lib/modoHero';
 import { esClicNormal, rutaReserva } from '../../lib/rutas';
+import {
+  heroEstaReproduciendo,
+  registrarHeroSnap,
+} from './controladorSnapHero';
 import './DeporteHero.css';
 
 // Registro idempotente del plugin.
@@ -50,10 +50,16 @@ const SUAVIZADO = 0.3;
  *    Así, en scroll rápido no se encolan decenas de seeks que traban al
  *    decoder.
  *  - El texto/CTA hacen fade + scale (scrubbed) al principio y al final del pin.
- *  - Modo snap (`?hero=snap`): el ScrollTrigger agrega `snap` direccional con
- *    puntos `[0, 0.15, 1]` (`directional: true`) para que el hero se asiente
- *    con el CTA visible y un gesto hacia abajo complete el video.
- *  - Todo dentro de `gsap.context()` con `ctx.revert()` en el cleanup.
+ *  - Modo snap (`?hero=snap`): coordinado por un controlador único compartido
+ *    (`controladorSnapHero.js`) con estado y listeners globales. Cada hero se
+ *    asienta en reposo en 0.15 (texto y CTA visibles); un gesto hacia abajo
+ *    inicia la reproducción nativa del video con el scroll siguiendo al video
+ *    y, al terminar, desliza al siguiente hero en su punto de reposo o a
+ *    `#eventos` en el último. Hacia arriba el scroll es libre con scrub,
+ *    cualquier intervención del usuario cancela el avance automático, y
+ *    `scrollEnd` solo actúa si hubo una entrada del usuario tras la última
+ *    acción automática.
+ *  - Todo dentro de `gsap.matchMedia()` con `mm.revert()` en el cleanup.
  *  - `ScrollTrigger.refresh()` cuando el video reporta su duración, para que el
  *    largo del pin (que depende de esa duración) quede bien medido.
  */
@@ -106,18 +112,6 @@ function DeporteHero({
           pin: true,
           anticipatePin: 1,
           invalidateOnRefresh: true,
-          ...(modo === 'snap'
-            ? {
-                snap: {
-                  snapTo: PUNTOS_SNAP_HERO,
-                  directional: true,
-                  inertia: false,
-                  delay: 0.05,
-                  duration: { min: 0.8, max: 2.2 },
-                  ease: 'power1.inOut',
-                },
-              }
-            : {}),
           onUpdate: (self) => {
             progresoObjetivo = self.progress;
           },
@@ -126,6 +120,7 @@ function DeporteHero({
           },
         },
       });
+      const st = tl.scrollTrigger;
 
       // Contenido: entra en el primer tramo del pin y se va en el último.
       tl.fromTo(
@@ -152,7 +147,9 @@ function DeporteHero({
       );
 
       // Bucle que acerca el frame del video al objetivo sin encolar seeks.
+      // En modo snap, mientras reproduce de forma nativa, el controlador mueve el scroll.
       const seguirVideo = () => {
+        if (modo === 'snap' && heroEstaReproduciendo(seccion)) return;
         const dur = video?.duration;
         if (!dur || video?.seeking) return; // aún buscando -> no pedir otro seek
         const objetivo = progresoObjetivo * dur;
@@ -168,7 +165,33 @@ function DeporteHero({
       const onLoadedMetadata = () => ScrollTrigger.refresh();
       video?.addEventListener('loadedmetadata', onLoadedMetadata);
 
+      let desregistrarSnap = null;
+      let observer = null;
+      if (modo === 'snap') {
+        desregistrarSnap = registrarHeroSnap({
+          seccion,
+          video,
+          st,
+          progresoObjetivo: () => progresoObjetivo,
+        });
+
+        if (typeof IntersectionObserver !== 'undefined' && seccion && video) {
+          observer = new IntersectionObserver(
+            (entradas) => {
+              if (entradas.some((e) => e.isIntersecting)) {
+                video.preload = 'auto';
+                observer.disconnect();
+              }
+            },
+            { rootMargin: '100% 0px' }
+          );
+          observer.observe(seccion);
+        }
+      }
+
       return () => {
+        desregistrarSnap?.();
+        observer?.disconnect();
         gsap.ticker.remove(seguirVideo);
         video?.removeEventListener('loadedmetadata', onLoadedMetadata);
         video?.pause();
