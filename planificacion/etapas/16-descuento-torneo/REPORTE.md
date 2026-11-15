@@ -31,3 +31,7 @@ HEAD no cambió durante el bloque.
 ## Riesgo
 
 Cambia una regla de precio de las reservas nuevas de torneo; las guardadas conservan su total. No toca seguridad ni despliegue.
+
+## Revisión del PR #30
+
+APROBADO sin bloqueantes. Se arreglaron en la misma entrega: README y comentario de `ReservasContext.jsx` con las reglas de torneo y cumpleaños por separado, `DESCUENTO_HORA_TORNEO` en `AGENTS.md`, y pruebas de la etiqueta del ahorro (torneo y cumpleaños), la posición de la promoción, la segunda y la última línea del precio y el límite exacto del tope (15.000 → 0; 15.001 → 1). Queda el prefijo `docs:` del commit de las instrucciones del chat. Suite final: 34 archivos, 348 pruebas.
