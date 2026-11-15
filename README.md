@@ -149,7 +149,7 @@ cada tipo de reserva:
     en fútbol, **tie-break** en voley playa y **super tie-break** en pádel;
   - cada fase se programa desde su propia **pestaña** (mostrando una fase a la
     vez con el resumen del horario elegido o aviso si hay alertas) en su propio
-    día y rango de horas dentro de la ventana de 7 días (en fechas crecientes o
+    día y con las horas que elijas en cada cancha (pueden ir salteadas) dentro de la ventana de 7 días (en fechas crecientes o
     el mismo día después de cerrar la fase previa), con alertas si el tiempo
     elegido no alcanza y acción rápida para bajar a partidos de 15 min;
   - incluye **llaves interactivas (bracket)** a ancho completo con los partidos
@@ -247,7 +247,7 @@ mano.
 | Horario | Lunes a domingo, 8:00 a 21:00 (13 franjas de una hora) |
 | Ventana de reserva | Hoy y los 6 días siguientes; las horas de hoy que ya empezaron no se pueden reservar |
 | Reserva de cancha | De 1 a 3 horas seguidas |
-| Beneficio | Desde 2 horas seguidas: $5.000 menos por hora y un pack de agua gratis (por cancha y jornada en eventos/torneos) |
+| Beneficio | Desde 2 horas seguidas: $5.000 menos por hora y un pack de agua gratis (por cancha en el cumpleaños; en torneos, desde 2 horas de una misma cancha en cada fase, aunque no sean seguidas) |
 | Torneos | De 1 a 3 canchas de un mismo deporte (hasta 2 con 4 equipos), 4/8/16 equipos por fases de eliminación directa en uno o varios días y bracket interactivo |
 | Cumpleaños | Varias canchas (incluso de distintos deportes), un rango de horas consecutivas y hasta 100 invitados; bloqueo todo o nada |
 | Datos de la reserva | Nombre obligatorio (solo letras); teléfono opcional en el formulario y obligatorio en el chat (10 dígitos, empieza por 3). Una reserva sin teléfono solo se consulta o cancela por su código `SPF-XXXXXX` en **Mis reservas** |

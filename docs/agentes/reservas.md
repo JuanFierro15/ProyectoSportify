@@ -13,7 +13,7 @@ Detalle del estado en `ReservasContext`, la ventana de 7 días, la semilla `canc
 
 - **Dos tipos de reserva** (`tipo` en el mismo array `reservas`):
   - `individual`: una cancha, de 1 a 3 horas seguidas contiguas. Acción `RESERVAR`; guarda `horas`, `precioHora`, `descuentoHora`, `total`, `aguaGratis`.
-  - `evento` (torneo/cumpleaños): varias canchas y/o horas consecutivas, bloqueo **todo-o-nada** (si una celda cancha×hora está ocupada, no se reserva nada). Acción `RESERVAR_EVENTO`; guarda `total`, `ahorro` y `packsAgua` con `calcularPrecioEvento` (mismas reglas por cancha).
+  - `evento` (torneo/cumpleaños): varias canchas; horas consecutivas en el cumpleaños y, en torneo, horas por cancha que pueden ir salteadas; bloqueo **todo-o-nada** (si una celda cancha×hora está ocupada, no se reserva nada). Acción `RESERVAR_EVENTO`; guarda `total`, `ahorro` y `packsAgua` con `calcularPrecioEvento` (mismas reglas por cancha).
   - Torneos por fases: ver `docs/agentes/torneo.md`.
   - Ambos tipos guardan un `codigo` (`SPF-XXXXXX`, `generarCodigo`) que se genera en `reservar` / `reservarEvento` antes de despachar.
   - El choque se valida dos veces: antes de despachar (`reservar` / `reservarEvento` devuelven `{ ok, codigo }` o `{ ok: false, error }` sin tocar el estado) y otra vez dentro del reducer, que ante un rechazo devuelve el estado intacto (el estado no tiene campo `error`). En eventos las dos validaciones comparten `validarReservaEvento`: celdas libres y sin repetir, horas consecutivas en el cumpleaños y, en torneos, horas del horario de la cancha (pueden ir salteadas), una fecha por fase y el orden entre fases (`validarJornadas`).
