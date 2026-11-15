@@ -271,8 +271,8 @@ describe('ReservasContext y reducer — doble validación de eventos (S3, S4)', 
       'Cancha Pádel 1',
       'Cancha Pádel 2',
     ]);
-    expect(guardada.total).toBe(305000); // 120.000 (R1 padel-1) + 65.000 (R1 padel-2) + 120.000 (R2 padel-1)
-    expect(guardada.ahorro).toBe(20000);
+    expect(guardada.total).toBe(250000); // 100.000 (R1 padel-1) + 50.000 (R1 padel-2) + 100.000 (R2 padel-1)
+    expect(guardada.ahorro).toBe(75000);
     expect(guardada.packsAgua).toBe(2);
 
     const esperadoOcupados = structuredClone(ocupadosAntes);

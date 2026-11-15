@@ -21,7 +21,7 @@ Detalle del estado en `ReservasContext`, la ventana de 7 días, la semilla `canc
 
 ## Reglas compartidas (`src/lib/`)
 
-- `precios.js`: única fuente de las reglas de precio — `MAX_HORAS_SEGUIDAS` (3), `MIN_HORAS_BENEFICIO` (2), `DESCUENTO_POR_HORA` (5.000, por cada hora desde 2 seguidas, con pack de agua gratis), `calcularPrecio`, `calcularPrecioEvento` (suma por cancha con esas mismas reglas; también alimenta el voucher en modo cancha, con una sola), `calcularPrecioJornadas` (torneos: una línea por fase y cancha; el descuento cuenta desde 2 horas de esa cancha en la fase aunque no sean seguidas), `finDeFranja`, `formatoPrecio`. No redefinir `formatoPrecio` en otros archivos.
+- `precios.js`: única fuente de las reglas de precio — `MAX_HORAS_SEGUIDAS` (3), `MIN_HORAS_BENEFICIO` (2), `DESCUENTO_POR_HORA` (5.000, por cada hora desde 2 seguidas, con pack de agua gratis), `calcularPrecio`, `calcularPrecioEvento` (suma por cancha con esas mismas reglas; también alimenta el voucher en modo cancha, con una sola), `DESCUENTO_HORA_TORNEO` (15.000), `calcularPrecioJornadas` (torneos: una línea por fase y cancha; cada hora baja `DESCUENTO_HORA_TORNEO` desde 1 hora, aunque no sean seguidas, sin bajar de 0; el pack de agua, desde 2 horas de esa cancha en la fase), `finDeFranja`, `formatoPrecio`. No redefinir `formatoPrecio` en otros archivos.
 - `torneo.js` y `pasosTorneo.js`: ver `docs/agentes/torneo.md`.
 - `horarios.js`: selección de horas de la reserva, pura y con tests — `alternarHoraIndividual` (modo cancha) y `seleccionarRango` (eventos).
 - `codigoReserva.js`: `generarCodigo` y `textoQr` (texto que lleva el QR).

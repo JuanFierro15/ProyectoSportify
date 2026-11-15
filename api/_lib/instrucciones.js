@@ -11,6 +11,7 @@ import {
   MAX_HORAS_SEGUIDAS,
   MIN_HORAS_BENEFICIO,
   DESCUENTO_POR_HORA,
+  DESCUENTO_HORA_TORNEO,
   finDeFranja,
 } from '../../src/lib/precios.js';
 import { formatoTelefono } from '../../src/lib/negocio.js';
@@ -69,7 +70,7 @@ export function construirInstrucciones(contexto) {
   const lineasEventos = negocioData.eventos.map((e) => `${e.label}: ${e.detalle}`).join('\n');
   const eventos = [
     lineasEventos,
-    `Proceso: se reservan desde la página de reserva del sitio, en el modo Torneo o Cumpleaños, y se reserva todo o nada. Torneo: de 1 a ${MAX_CANCHAS_TORNEO} canchas de un solo deporte, ${OPCIONES_EQUIPOS.slice(0, -1).join(', ')} o ${OPCIONES_EQUIPOS[OPCIONES_EQUIPOS.length - 1]} equipos, y un día por cada fase con las horas que quiera en cada cancha (pueden ir salteadas y ser distintas en cada cancha), en orden cronológico dentro de los próximos 7 días: una fase empieza después de que termine la anterior. Cumpleaños: una o varias canchas, una franja de horas seguidas y el número de invitados. El precio es la suma por cancha (en torneo, por cada fase y cancha según las horas marcadas en ella) con las mismas reglas de descuento y agua desde ${MIN_HORAS_BENEFICIO} horas: seguidas en el cumpleaños, y en el torneo de una misma cancha en la fase aunque no sean seguidas.`,
+    `Proceso: se reservan desde la página de reserva del sitio, en el modo Torneo o Cumpleaños, y se reserva todo o nada. Torneo: de 1 a ${MAX_CANCHAS_TORNEO} canchas de un solo deporte, ${OPCIONES_EQUIPOS.slice(0, -1).join(', ')} o ${OPCIONES_EQUIPOS[OPCIONES_EQUIPOS.length - 1]} equipos, y un día por cada fase con las horas que quiera en cada cancha (pueden ir salteadas y ser distintas en cada cancha), en orden cronológico dentro de los próximos 7 días: una fase empieza después de que termine la anterior. Cumpleaños: una o varias canchas, una franja de horas seguidas y el número de invitados. El precio es la suma por cancha (en torneo, por cada fase y cancha según las horas marcadas en ella) con las mismas reglas de descuento y agua desde ${MIN_HORAS_BENEFICIO} horas seguidas en el cumpleaños. En el torneo cada hora cuesta ${formatoPrecioCorto(DESCUENTO_HORA_TORNEO)} menos en todas las canchas, desde 1 hora y aunque no sean seguidas, y el pack de agua llega con ${MIN_HORAS_BENEFICIO} horas o más de una misma cancha en la fase.`,
   ].join('\n');
 
   const dias = fechasVentana(contexto.fechaHoy);

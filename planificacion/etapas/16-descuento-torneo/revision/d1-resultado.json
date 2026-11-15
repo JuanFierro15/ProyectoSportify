@@ -1,0 +1,64 @@
+{
+  "base": "http://localhost:4173",
+  "movil390": {
+    "promo390": {
+      "visible": true,
+      "texto": "En torneo, cada hora cuesta $ 15.000 menos en todas las canchas, aunque no sean seguidas. Con 2 horas o más en una cancha por fase, te regalamos un pack de agua."
+    },
+    "voucher390": {
+      "total": "$ 100.000",
+      "descuentosLinea": [
+        "−$ 15.000 por hora",
+        "−$ 15.000 por hora"
+      ],
+      "totalesLinea": [
+        "$ 50.000",
+        "$ 50.000"
+      ],
+      "calculosLinea": [
+        "1 h × $ 50.000−$ 15.000 por hora",
+        "1 h × $ 50.000−$ 15.000 por hora"
+      ]
+    },
+    "desbordeCanchas390": {
+      "vw": 390,
+      "sw": 390,
+      "sinDesborde": true
+    },
+    "desbordeCalendario390": {
+      "vw": 390,
+      "sw": 390,
+      "sinDesborde": true
+    },
+    "desbordeVoucher390": {
+      "vw": 390,
+      "sw": 390,
+      "sinDesborde": true
+    }
+  },
+  "escritorio1440": {
+    "promo1440": {
+      "visible": true,
+      "texto": "En torneo, cada hora cuesta $ 15.000 menos en todas las canchas, aunque no sean seguidas. Con 2 horas o más en una cancha por fase, te regalamos un pack de agua."
+    },
+    "voucher1440": {
+      "total": "$ 50.000",
+      "descuentosLinea": [
+        "−$ 15.000 por hora"
+      ],
+      "totalesLinea": [
+        "$ 50.000"
+      ],
+      "calculosLinea": [
+        "1 h × $ 50.000−$ 15.000 por hora"
+      ]
+    },
+    "desborde1440": {
+      "vw": 1440,
+      "sw": 1440,
+      "sinDesborde": true
+    }
+  },
+  "erroresConsola": [],
+  "excepciones": []
+}

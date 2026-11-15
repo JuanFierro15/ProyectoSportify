@@ -163,8 +163,9 @@ cada tipo de reserva:
   - se elige un **rango de horas** consecutivas (inicio y fin) y la cantidad de
     **invitados** (hasta 100), que se muestra en el comprobante y en la confirmación.
 - En ambos modos el bloqueo es **todo o nada** (si una sola celda cancha × hora
-  está ocupada, no se reserva nada) y el precio suma cada cancha y jornada con
-  las mismas reglas de descuento.
+  está ocupada, no se reserva nada) y el precio suma cada cancha y jornada: en torneo, 
+5.000 menos por hora
+  desde 1 hora; en cumpleaños, $5.000 menos por hora desde 2 horas seguidas.
 
 | Programación por fases del torneo | Bracket interactivo del torneo |
 |:---:|:---:|
@@ -247,7 +248,7 @@ mano.
 | Horario | Lunes a domingo, 8:00 a 21:00 (13 franjas de una hora) |
 | Ventana de reserva | Hoy y los 6 días siguientes; las horas de hoy que ya empezaron no se pueden reservar |
 | Reserva de cancha | De 1 a 3 horas seguidas |
-| Beneficio | Desde 2 horas seguidas: $5.000 menos por hora y un pack de agua gratis (por cancha en el cumpleaños; en torneos, desde 2 horas de una misma cancha en cada fase, aunque no sean seguidas) |
+| Beneficio | Desde 2 horas seguidas: $5.000 menos por hora y un pack de agua gratis (por cancha en el cumpleaños). En torneos, cada hora cuesta $15.000 menos en todas las canchas, desde 1 hora y aunque no sean seguidas, y el pack de agua llega con 2 horas o más de una misma cancha en cada fase |
 | Torneos | De 1 a 3 canchas de un mismo deporte (hasta 2 con 4 equipos), 4/8/16 equipos por fases de eliminación directa en uno o varios días y bracket interactivo |
 | Cumpleaños | Varias canchas (incluso de distintos deportes), un rango de horas consecutivas y hasta 100 invitados; bloqueo todo o nada |
 | Datos de la reserva | Nombre obligatorio (solo letras); teléfono opcional en el formulario y obligatorio en el chat (10 dígitos, empieza por 3). Una reserva sin teléfono solo se consulta o cancela por su código `SPF-XXXXXX` en **Mis reservas** |

@@ -1,10 +1,12 @@
 /**
  * Precio de una reserva individual de varias horas seguidas y eventos.
  *
- * Desde MIN_HORAS_BENEFICIO horas seguidas (y en torneos, desde
- * MIN_HORAS_BENEFICIO horas por cancha y fase, aunque no sean seguidas), cada
- * hora baja DESCUENTO_POR_HORA y se regala un pack de agua. Aplica igual a
- * todos los deportes; estas reglas aplican también a eventos (por cancha).
+ * En individual y cumpleaños, desde MIN_HORAS_BENEFICIO horas seguidas cada
+ * hora baja DESCUENTO_POR_HORA y se regala un pack de agua por cancha. En
+ * torneos (calcularPrecioJornadas), cada hora de cada cancha baja
+ * DESCUENTO_HORA_TORNEO desde 1 hora, aunque no sean seguidas (topado a
+ * precioHora para no quedar negativo), y el pack de agua se regala desde
+ * MIN_HORAS_BENEFICIO horas por cancha y fase.
  * Única fuente de estas reglas: la página de reserva, el panel de detalle y el
  * contexto la reutilizan.
  */
@@ -12,6 +14,7 @@
 export const MAX_HORAS_SEGUIDAS = 3;
 export const MIN_HORAS_BENEFICIO = 2;
 export const DESCUENTO_POR_HORA = 5000;
+export const DESCUENTO_HORA_TORNEO = 15000;
 
 export const formatoPrecio = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -132,7 +135,15 @@ export function calcularPrecioJornadas(bloques = [], canchasCatalogo = []) {
   });
 
   const lineas = Array.from(grupos.values()).map((g) => {
-    const p = calcularPrecio(g.cancha.precioHora, g.horas.size);
+    const nHoras = g.horas.size;
+    const precioHora = g.cancha.precioHora;
+    const descuentoHora = nHoras > 0 ? Math.min(DESCUENTO_HORA_TORNEO, precioHora) : 0;
+    const precioHoraFinal = precioHora - descuentoHora;
+    const subtotal = precioHora * nHoras;
+    const total = precioHoraFinal * nHoras;
+    const ahorro = descuentoHora * nHoras;
+    const aguaGratis = nHoras >= MIN_HORAS_BENEFICIO;
+
     return {
       canchaId: g.canchaId,
       ronda: g.ronda,
@@ -142,7 +153,14 @@ export function calcularPrecioJornadas(bloques = [], canchasCatalogo = []) {
         ? `${g.nombreRonda} · ${g.cancha.nombre}`
         : g.cancha.nombre,
       deporte: g.cancha.deporte,
-      ...p,
+      nHoras,
+      precioHora,
+      descuentoHora,
+      precioHoraFinal,
+      subtotal,
+      total,
+      ahorro,
+      aguaGratis,
     };
   });
 

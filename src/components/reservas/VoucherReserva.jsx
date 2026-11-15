@@ -263,7 +263,7 @@ function VoucherReserva({
                   <div className="voucher-reserva__fila voucher-reserva__fila--ahorro">
                     <span className="voucher-reserva__etiqueta">
                       {torneo
-                        ? 'Descuento desde 2 h por cancha'
+                        ? 'Descuento de torneo por hora'
                         : 'Descuento por horas seguidas'}
                     </span>
                     <span className="voucher-reserva__valor voucher-reserva__valor--ahorro">

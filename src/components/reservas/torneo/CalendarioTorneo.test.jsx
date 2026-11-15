@@ -3,6 +3,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { gsap } from 'gsap';
 import CalendarioTorneo from './CalendarioTorneo';
+import {
+  DESCUENTO_HORA_TORNEO,
+  MIN_HORAS_BENEFICIO,
+  formatoPrecio,
+} from '../../../lib/precios';
 
 const DIAS = ['2026-11-13', '2026-11-14', '2026-11-15'];
 const HORAS_BASE = ['10:00', '11:00', '12:00', '13:00', '14:00'];
@@ -65,6 +70,21 @@ function renderCalendario(props = {}) {
 }
 
 describe('CalendarioTorneo - pestañas por fase', () => {
+  it('muestra la línea de promoción del torneo debajo del texto de ayuda', () => {
+    const { container } = renderCalendario();
+
+    const ayuda = screen.getByText(
+      /Toca una hora para marcarla o desmarcarla en cada cancha/
+    );
+    const promo = container.querySelector('.formulario-reserva__promo');
+    expect(promo).toBeInTheDocument();
+    expect(promo).toBeVisible();
+    expect(ayuda.nextElementSibling).toBe(promo);
+    expect(promo.textContent).toBe(
+      `En torneo, cada hora cuesta ${formatoPrecio.format(DESCUENTO_HORA_TORNEO)} menos en todas las canchas, aunque no sean seguidas. Con ${MIN_HORAS_BENEFICIO} horas o más en una cancha por fase, te regalamos un pack de agua.`
+    );
+  });
+
   it('renderiza una pestaña por fase dentro del tablist y solo muestra el panel activo', () => {
     renderCalendario();
 
