@@ -1,10 +1,12 @@
 /**
  * Precio de una reserva individual de varias horas seguidas y eventos.
  *
- * Desde MIN_HORAS_BENEFICIO horas seguidas, cada hora baja DESCUENTO_POR_HORA
- * y se regala un pack de agua. Aplica igual a todos los deportes; estas reglas
- * aplican también a eventos (por cancha). Única fuente de estas reglas: la
- * página de reserva, el panel de detalle y el contexto la reutilizan.
+ * Desde MIN_HORAS_BENEFICIO horas seguidas (y en torneos, desde
+ * MIN_HORAS_BENEFICIO horas por cancha y fase, aunque no sean seguidas), cada
+ * hora baja DESCUENTO_POR_HORA y se regala un pack de agua. Aplica igual a
+ * todos los deportes; estas reglas aplican también a eventos (por cancha).
+ * Única fuente de estas reglas: la página de reserva, el panel de detalle y el
+ * contexto la reutilizan.
  */
 
 export const MAX_HORAS_SEGUIDAS = 3;
@@ -86,33 +88,67 @@ export function calcularPrecioJornadas(bloques = [], canchasCatalogo = []) {
     };
   }
 
-  const lineas = [];
-  let nHoras = 0;
+  const grupos = new Map();
+  const horasPorFase = new Map();
 
-  bloques.forEach((b) => {
-    const horasBloque = Array.isArray(b.horas) ? b.horas : [];
-    const nH = horasBloque.length;
-    nHoras += nH;
+  bloques.forEach((b, idx) => {
+    if (!b) return;
+    const horasBloque = Array.isArray(b.horas)
+      ? b.horas.filter((h) => typeof h === 'string' && h.length > 0)
+      : [];
+    if (horasBloque.length === 0) return;
 
-    if (nH > 0 && Array.isArray(b.canchaIds)) {
+    const claveFase = b.ronda ? `R${b.ronda}` : `F${b.fecha || idx}`;
+    if (!horasPorFase.has(claveFase)) {
+      horasPorFase.set(claveFase, new Set());
+    }
+    const setFase = horasPorFase.get(claveFase);
+    horasBloque.forEach((h) => setFase.add(h));
+
+    if (Array.isArray(b.canchaIds)) {
       b.canchaIds.forEach((id) => {
         const c = Array.isArray(canchasCatalogo)
           ? canchasCatalogo.find((x) => x.id === id)
           : null;
-        if (c) {
-          const p = calcularPrecio(c.precioHora, nH);
-          lineas.push({
-            canchaId: b.ronda ? `R${b.ronda}-${c.id}` : `${b.fecha}-${c.id}`,
+        if (!c) return;
+
+        const clave = b.ronda ? `R${b.ronda}-${c.id}` : `${b.fecha}-${c.id}`;
+        if (!grupos.has(clave)) {
+          grupos.set(clave, {
+            canchaId: clave,
             ronda: b.ronda || null,
             nombreRonda: b.nombreRonda || null,
             fecha: b.fecha || null,
-            nombre: b.nombreRonda ? `${b.nombreRonda} · ${c.nombre}` : c.nombre,
-            deporte: c.deporte,
-            ...p,
+            cancha: c,
+            horas: new Set(),
           });
         }
+        const g = grupos.get(clave);
+        if (!g.nombreRonda && b.nombreRonda) g.nombreRonda = b.nombreRonda;
+        if (!g.fecha && b.fecha) g.fecha = b.fecha;
+        horasBloque.forEach((h) => g.horas.add(h));
       });
     }
+  });
+
+  const lineas = Array.from(grupos.values()).map((g) => {
+    const p = calcularPrecio(g.cancha.precioHora, g.horas.size);
+    return {
+      canchaId: g.canchaId,
+      ronda: g.ronda,
+      nombreRonda: g.nombreRonda,
+      fecha: g.fecha,
+      nombre: g.nombreRonda
+        ? `${g.nombreRonda} · ${g.cancha.nombre}`
+        : g.cancha.nombre,
+      deporte: g.cancha.deporte,
+      ...p,
+    };
+  });
+
+  let nHoras = 0;
+  horasPorFase.forEach((set) => {
+    nHoras += set.size;
   });
 
   const subtotal = lineas.reduce((acc, l) => acc + l.subtotal, 0);
