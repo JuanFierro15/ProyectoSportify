@@ -31,7 +31,7 @@ import { validarJornadas } from '../lib/torneo';
  *     - "individual": una cancha, de 1 a 3 horas seguidas (Bloque 4).
  *     - "evento": torneo o cumpleaños; varias canchas y/o varias horas
  *       consecutivas, bloqueadas todo-o-nada (Bloque 5). Guarda también su
- *       `total` (mismas reglas de precio por cancha, ver calcularPrecioEvento).
+ *       `total` (cumpleaños con calcularPrecioEvento; torneo con calcularPrecioJornadas).
  *   Ambos tipos guardan un `codigo` corto (SPF-XXXXXX) que se muestra en el
  *   QR de confirmación. Ambos tipos se reservan desde la misma página: la
  *   vista de canchas (VistaCanchas).

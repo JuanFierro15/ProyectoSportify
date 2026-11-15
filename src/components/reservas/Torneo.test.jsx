@@ -419,6 +419,11 @@ describe('Modo Torneo - Pruebas de integración', { timeout: 15000 }, () => {
     // Verificación de cobro por canchas efectivas (AC-013)
     const valorTotal = document.querySelector('.voucher-reserva__valor-total');
     expect(valorTotal).toHaveTextContent('450.000');
+    expect(
+      within(screen.getByLabelText('Resumen de tu reserva')).getByText(
+        'Descuento de torneo por hora'
+      )
+    ).toBeInTheDocument();
 
     // El voucher muestra el desglose de fases programadas por cancha
     expect(
@@ -2207,5 +2212,58 @@ describe('Modo Torneo - Pruebas de integración', { timeout: 15000 }, () => {
 
     expect(textoQrCapturado).toContain('Canchas: Cancha Fútbol 3, Cancha Fútbol 1');
     expect(textoQrCapturado).not.toContain('Cancha Fútbol 2');
+  });
+
+  it('23. En cumpleaños con 2 horas seguidas el voucher muestra "Descuento por horas seguidas"', () => {
+    function FlujoCumpleDescuento() {
+      const { dias } = useReservas();
+      const reserva = useReserva({
+        activo: true,
+        modoInicial: 'cumpleanos',
+      });
+
+      const initRef = useRef(false);
+      useEffect(() => {
+        if (!initRef.current) {
+          initRef.current = true;
+          reserva.cambiarFecha(dias[1]);
+          reserva.alternarCancha('futbol-1');
+        }
+      }, [dias, reserva]);
+
+      return (
+        <div>
+          <FormularioReserva reserva={reserva} dias={dias} />
+          <VoucherReserva
+            tipoEtiqueta={reserva.modoInfo.tipoEtiqueta}
+            fechaTexto={fechaCompleta(reserva.fecha)}
+            horas={reserva.horasSel}
+            precio={reserva.precio}
+            puedeConfirmar={reserva.puedeConfirmar}
+            motivoBloqueo={reserva.motivoBloqueo}
+            onConfirmar={reserva.confirmar}
+            onCancelar={reserva.reiniciar}
+            invitados={reserva.invitados}
+          />
+        </div>
+      );
+    }
+
+    render(
+      <ReservasProvider>
+        <FlujoCumpleDescuento />
+      </ReservasProvider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /14:00/i }));
+    const voucher = screen.getByLabelText('Resumen de tu reserva');
+    expect(
+      within(voucher).queryByText('Descuento por horas seguidas')
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /15:00/i }));
+    expect(
+      within(voucher).getByText('Descuento por horas seguidas')
+    ).toBeInTheDocument();
   });
 });

@@ -118,8 +118,10 @@ describe('calcularPrecioJornadas (AC-013, DD-012)', () => {
     // Formato de canchaId y nombre compuesto
     expect(res.lineas[0].canchaId).toBe('R1-c1');
     expect(res.lineas[0].nombre).toBe('Cuartos de final · Cancha 1');
+    expect(res.lineas[1].total).toBe(60000);
     expect(res.lineas[5].canchaId).toBe('R3-c1');
     expect(res.lineas[5].nombre).toBe('Final · Cancha 1');
+    expect(res.lineas[5].total).toBe(30000);
   });
 
   test('sin bloques o bloques vacíos devuelve ceros y arreglo vacío', () => {
@@ -314,6 +316,63 @@ describe('calcularPrecioJornadas (AC-013, DD-012)', () => {
       aguaGratis: true,
     });
     expect(res.total).toBe(0);
+  });
+
+  test('límite exacto del tope: precioHora 15.000 da descuentoHora 15.000 y total 0 en 1 hora; 15.001 da total 1', () => {
+    const catalogoLimite = [
+      { id: 'lim-15000', nombre: 'Cancha 15k', deporte: 'voley-playa', precioHora: 15000 },
+      { id: 'lim-15001', nombre: 'Cancha 15001', deporte: 'voley-playa', precioHora: 15001 },
+    ];
+
+    const resExacto = calcularPrecioJornadas(
+      [
+        {
+          ronda: 1,
+          nombreRonda: 'Final',
+          fecha: '2026-11-21',
+          canchaIds: ['lim-15000'],
+          horas: ['10:00'],
+        },
+      ],
+      catalogoLimite
+    );
+
+    expect(resExacto.lineas).toHaveLength(1);
+    expect(resExacto.lineas[0]).toMatchObject({
+      precioHora: 15000,
+      descuentoHora: 15000,
+      precioHoraFinal: 0,
+      subtotal: 15000,
+      total: 0,
+      ahorro: 15000,
+      aguaGratis: false,
+    });
+    expect(resExacto.total).toBe(0);
+
+    const resSobreTope = calcularPrecioJornadas(
+      [
+        {
+          ronda: 1,
+          nombreRonda: 'Final',
+          fecha: '2026-11-21',
+          canchaIds: ['lim-15001'],
+          horas: ['10:00'],
+        },
+      ],
+      catalogoLimite
+    );
+
+    expect(resSobreTope.lineas).toHaveLength(1);
+    expect(resSobreTope.lineas[0]).toMatchObject({
+      precioHora: 15001,
+      descuentoHora: 15000,
+      precioHoraFinal: 1,
+      subtotal: 15001,
+      total: 1,
+      ahorro: 15000,
+      aguaGratis: false,
+    });
+    expect(resSobreTope.total).toBe(1);
   });
 
   test('dos bloques de la misma ronda y cancha se unen en una sola línea sin repetir horas', () => {
