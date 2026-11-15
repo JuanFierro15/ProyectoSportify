@@ -82,25 +82,21 @@ describe('DeporteHero - pausa del video en el cleanup', () => {
   });
 });
 
-describe('DeporteHero - modo snap por URL', () => {
+describe('DeporteHero - controlador snap', () => {
   let matchMediaOriginal;
-  let urlOriginal;
 
   beforeEach(() => {
     matchMediaOriginal = window.matchMedia;
-    urlOriginal = window.location.href;
     vi.clearAllMocks();
   });
 
   afterEach(() => {
     window.matchMedia = matchMediaOriginal;
-    window.history.replaceState(null, '', urlOriginal);
     ScrollTrigger.getAll().forEach((t) => t.kill());
     vi.restoreAllMocks();
   });
 
-  it('con ?hero=snap y no-preference no define vars.snap y registra el hero en el controlador snap', () => {
-    window.history.replaceState(null, '', '/?hero=snap');
+  it('con no-preference no define vars.snap y registra el hero en el controlador snap', () => {
     simularMatchMedia('(prefers-reduced-motion: no-preference)');
     const spyAdd = vi.spyOn(ScrollTrigger, 'addEventListener');
 
@@ -130,9 +126,8 @@ describe('DeporteHero - modo snap por URL', () => {
     unmount();
   });
 
-  it('sin ?hero=snap no registra el hero en el controlador snap ni escucha scrollEnd', () => {
-    window.history.replaceState(null, '', '/');
-    simularMatchMedia('(prefers-reduced-motion: no-preference)');
+  it('con prefers-reduced-motion: reduce no registra el hero en el controlador snap ni escucha scrollEnd', () => {
+    simularMatchMedia('(prefers-reduced-motion: reduce)');
     const spyAdd = vi.spyOn(ScrollTrigger, 'addEventListener');
 
     const { unmount } = render(
@@ -141,7 +136,7 @@ describe('DeporteHero - modo snap por URL', () => {
       </div>
     );
 
-    expect(ScrollTrigger.getAll().length).toBeGreaterThan(0);
+    expect(ScrollTrigger.getAll()).toHaveLength(0);
     expect(registrarHeroSnap).not.toHaveBeenCalled();
     const llamadasScrollEnd = spyAdd.mock.calls.filter(
       ([evento]) => evento === 'scrollEnd'
@@ -151,8 +146,7 @@ describe('DeporteHero - modo snap por URL', () => {
     unmount();
   });
 
-  it('con ?hero=snap al desmontar se desregistra del controlador y quita scrollEnd', () => {
-    window.history.replaceState(null, '', '/?hero=snap');
+  it('al desmontar con no-preference se desregistra del controlador y quita scrollEnd', () => {
     simularMatchMedia('(prefers-reduced-motion: no-preference)');
     const spyAdd = vi.spyOn(ScrollTrigger, 'addEventListener');
     const spyRemove = vi.spyOn(ScrollTrigger, 'removeEventListener');
