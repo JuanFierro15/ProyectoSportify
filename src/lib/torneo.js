@@ -68,25 +68,168 @@ export function mensajeTopeCanchas(equipos, { recorte = false } = {}) {
   return `Con ${n} equipos se juegan como máximo ${tope} partidos a la vez: ${accion}.`;
 }
 
-export function limpiarJornadasConChoque(jornadas = {}, esHoraLibreFase) {
-  let huboChoque = false;
-  const siguiente = {};
-  Object.keys(jornadas).forEach((rKey) => {
-    const r = Number(rKey);
-    const j = jornadas[rKey];
-    const horasActuales = Array.isArray(j?.horas) ? j.horas : [];
-    const faseConChoque =
-      horasActuales.length > 0 &&
-      horasActuales.some((h) => !esHoraLibreFase(r, h));
-    if (faseConChoque) {
-      huboChoque = true;
+const ARTICULOS_RONDA = {
+  Final: { sujeto: 'La Final', verbo: 'es' },
+  Semifinal: { sujeto: 'La Semifinal', verbo: 'es' },
+  'Cuartos de final': { sujeto: 'Los Cuartos de final', verbo: 'son' },
+  'Octavos de final': { sujeto: 'Los Octavos de final', verbo: 'son' },
+};
+
+function aMinutos(hora) {
+  const [h, m] = String(hora).split(':').map(Number);
+  return h * 60 + m;
+}
+
+function compararCanchas(aId, bId, ordenIndex) {
+  const posA = ordenIndex.has(aId) ? ordenIndex.get(aId) : Infinity;
+  const posB = ordenIndex.has(bId) ? ordenIndex.get(bId) : Infinity;
+  if (posA !== posB) {
+    return posA - posB;
+  }
+  if (aId < bId) return -1;
+  if (aId > bId) return 1;
+  return 0;
+}
+
+function construirOrdenCanchas(ordenCanchas = []) {
+  const ordenIndex = new Map();
+  if (Array.isArray(ordenCanchas)) {
+    ordenCanchas.forEach((id, idx) => {
+      if (!ordenIndex.has(id)) {
+        ordenIndex.set(id, idx);
+      }
+    });
+  }
+  return ordenIndex;
+}
+
+function resolverMinutosTurno(fase) {
+  if (Number(fase?.minutosTurno) > 0) {
+    return Number(fase.minutosTurno);
+  }
+  if (Number(fase?.minutosRequeridos) > 0 && Number(fase?.turnos) > 0) {
+    return Number(fase.minutosRequeridos) / Number(fase.turnos);
+  }
+  return 30;
+}
+
+export function horasDeJornada(j) {
+  if (!j || typeof j !== 'object' || !j.horasPorCancha || typeof j.horasPorCancha !== 'object') {
+    return [];
+  }
+  const unicas = new Set();
+  Object.values(j.horasPorCancha).forEach((lista) => {
+    if (!Array.isArray(lista) || lista.length === 0) return;
+    lista.forEach((h) => {
+      if (typeof h === 'string' && h.length > 0) {
+        unicas.add(h);
+      }
+    });
+  });
+  return Array.from(unicas).sort((a, b) => aMinutos(a) - aMinutos(b));
+}
+
+export function turnosDeCancha(horas, minutosTurno) {
+  if (!Array.isArray(horas) || horas.length === 0) {
+    return [];
+  }
+  const durTurno = Number(minutosTurno);
+  if (!Number.isFinite(durTurno) || durTurno <= 0) {
+    return [];
+  }
+
+  const unicas = Array.from(
+    new Set(horas.filter((h) => typeof h === 'string' && h.length > 0))
+  ).sort((a, b) => aMinutos(a) - aMinutos(b));
+
+  if (unicas.length === 0) {
+    return [];
+  }
+
+  const tramos = [];
+  let tramoActual = [unicas[0]];
+  for (let i = 1; i < unicas.length; i += 1) {
+    if (unicas[i] === sumarMinutos(unicas[i - 1], 60)) {
+      tramoActual.push(unicas[i]);
+    } else {
+      tramos.push(tramoActual);
+      tramoActual = [unicas[i]];
     }
+  }
+  tramos.push(tramoActual);
+
+  const turnos = [];
+  tramos.forEach((tramo) => {
+    const cantidad = Math.floor((tramo.length * 60) / durTurno);
+    for (let k = 0; k < cantidad; k += 1) {
+      turnos.push(sumarMinutos(tramo[0], k * durTurno));
+    }
+  });
+  return turnos;
+}
+
+export function turnosDeFase(horasPorCancha, minutosTurno, ordenCanchas = []) {
+  if (!horasPorCancha || typeof horasPorCancha !== 'object') {
+    return [];
+  }
+  const ordenIndex = construirOrdenCanchas(ordenCanchas);
+  const turnos = [];
+
+  Object.entries(horasPorCancha).forEach(([canchaId, horas]) => {
+    turnosDeCancha(horas, minutosTurno).forEach((inicio) => {
+      turnos.push({ canchaId, inicio });
+    });
+  });
+
+  turnos.sort((a, b) => {
+    const diffHora = aMinutos(a.inicio) - aMinutos(b.inicio);
+    if (diffHora !== 0) return diffHora;
+    return compararCanchas(a.canchaId, b.canchaId, ordenIndex);
+  });
+
+  return turnos;
+}
+
+export function capacidadFase(horasPorCancha, minutosTurno) {
+  return turnosDeFase(horasPorCancha, minutosTurno).length;
+}
+
+export function limpiarJornadasConChoque(jornadas = {}, esHoraLibre) {
+  let huboChoque = false;
+  const quitadas = [];
+  const siguiente = {};
+  const mapa = jornadas || {};
+
+  Object.keys(mapa).forEach((rKey) => {
+    const r = Number(rKey);
+    const j = mapa[rKey] || {};
+    const hpc =
+      j.horasPorCancha && typeof j.horasPorCancha === 'object'
+        ? j.horasPorCancha
+        : {};
+    const nuevasHorasPorCancha = {};
+
+    Object.keys(hpc).forEach((canchaId) => {
+      const lista = Array.isArray(hpc[canchaId]) ? hpc[canchaId] : [];
+      const conservadas = [];
+      lista.forEach((h) => {
+        if (esHoraLibre(r, canchaId, h)) {
+          conservadas.push(h);
+        } else {
+          huboChoque = true;
+          quitadas.push({ ronda: r, canchaId, hora: h });
+        }
+      });
+      nuevasHorasPorCancha[canchaId] = conservadas;
+    });
+
     siguiente[rKey] = {
       ...j,
-      horas: faseConChoque ? [] : horasActuales,
+      horasPorCancha: nuevasHorasPorCancha,
     };
   });
-  return { jornadas: siguiente, huboChoque };
+
+  return { jornadas: siguiente, huboChoque, quitadas };
 }
 
 export function turnosPorRonda(equipos, canchas) {
@@ -105,32 +248,23 @@ export function minutosRequeridos({ equipos, canchas, minutosTurno }) {
   return totalTurnos * Number(minutosTurno);
 }
 
-export function validarFranja(requeridos, horasReservadas) {
-  const disponibles = Math.max(0, Number(horasReservadas)) * 60;
-  const deficit = Math.max(0, Number(requeridos) - disponibles);
-  return {
-    alcanza: deficit === 0,
-    disponibles,
-    deficit,
-  };
-}
-
 export function fasesDelTorneo({ equipos, canchaIds = [], minutosTurno = 30 }) {
   const ids = Array.isArray(canchaIds) ? canchaIds : [];
   const rondas = partidosPorRonda(equipos);
+  const minTurno = Number(minutosTurno);
   return rondas.map((partidos, idx) => {
     const ronda = idx + 1;
     const numCanchasFase = ids.length > 0 ? Math.min(ids.length, partidos) : 1;
-    const canchasFase = ids.slice(0, numCanchasFase);
     const turnos = Math.ceil(partidos / numCanchasFase);
-    const minutos = turnos * Number(minutosTurno);
+    const minutos = turnos * minTurno;
     return {
       ronda,
       nombreRonda: nombreRonda(partidos),
       partidos,
       canchasEfectivas: numCanchasFase,
-      canchaIds: canchasFase,
+      canchaIds: [...ids],
       turnos,
+      minutosTurno: minTurno,
       minutosRequeridos: minutos,
       horasMinimas: Math.ceil(minutos / 60),
     };
@@ -145,7 +279,9 @@ export function validarJornadas(fases, jornadas = {}) {
   return fases.map((fase) => {
     const j = jMap[fase.ronda] || {};
     const fecha = j.fecha || null;
-    const horas = Array.isArray(j.horas) ? j.horas : [];
+    const horas = horasDeJornada(j);
+    const minutosTurno = resolverMinutosTurno(fase);
+    const partidos = Number(fase.partidos) || 0;
 
     if (!fecha || horas.length === 0) {
       return {
@@ -155,24 +291,34 @@ export function validarJornadas(fases, jornadas = {}) {
         alcanza: false,
         ordenValido: true,
         disponibles: 0,
-        deficit: fase.minutosRequeridos,
+        deficit:
+          fase.minutosRequeridos != null
+            ? fase.minutosRequeridos
+            : partidos * minutosTurno,
+        turnosDisponibles: 0,
+        partidosSinUbicar: partidos,
         error: `Elige el día y el horario para ${fase.nombreRonda}.`,
       };
     }
 
-    const validacion = validarFranja(fase.minutosRequeridos, horas.length);
+    const turnosDisponibles = capacidadFase(j.horasPorCancha, minutosTurno);
+    const partidosSinUbicar = Math.max(0, partidos - turnosDisponibles);
+    const alcanza = partidosSinUbicar === 0;
+    const disponibles = turnosDisponibles * minutosTurno;
+    const deficit = partidosSinUbicar * minutosTurno;
+
     const horaInicio = horas[0];
     const horaFin = sumarMinutos(horas[horas.length - 1], 60);
     const ordenValido =
       !finPrevio ||
       fecha > finPrevio.fecha ||
-      (fecha === finPrevio.fecha && horaInicio >= finPrevio.horaFin);
+      (fecha === finPrevio.fecha && aMinutos(horaInicio) >= aMinutos(finPrevio.horaFin));
 
     let error = null;
     if (!ordenValido) {
       error = `${fase.nombreRonda} debe jugarse después de que termine ${finPrevio.nombreRonda} (${finPrevio.fecha} a las ${finPrevio.horaFin}).`;
-    } else if (!validacion.alcanza) {
-      error = `La franja de ${fase.nombreRonda} no alcanza (faltan ${validacion.deficit} min).`;
+    } else if (!alcanza) {
+      error = `Las horas de ${fase.nombreRonda} no alcanzan: faltan ${partidosSinUbicar} ${partidosSinUbicar === 1 ? 'partido' : 'partidos'} por ubicar.`;
     }
 
     finPrevio = { fecha, horaFin, nombreRonda: fase.nombreRonda };
@@ -181,10 +327,12 @@ export function validarJornadas(fases, jornadas = {}) {
       ronda: fase.ronda,
       nombreRonda: fase.nombreRonda,
       completa: true,
-      alcanza: validacion.alcanza,
+      alcanza,
       ordenValido,
-      disponibles: validacion.disponibles,
-      deficit: validacion.deficit,
+      disponibles,
+      deficit,
+      turnosDisponibles,
+      partidosSinUbicar,
       error,
     };
   });
@@ -195,24 +343,34 @@ export function sugerenciasTiempoFase({
   canchasTotales,
   duracionPartido,
   deporte,
-  horasReservadas,
+  horasPorCancha,
 }) {
   if (!fase) return [];
-  const validacion = validarFranja(fase.minutosRequeridos, horasReservadas);
-  if (validacion.alcanza) {
+  const minTurno =
+    Number(fase.minutosTurno) > 0
+      ? Number(fase.minutosTurno)
+      : duracionPartido != null
+      ? minutosPorTurno(duracionPartido, deporte)
+      : resolverMinutosTurno(fase);
+  const turnosDisponibles = capacidadFase(horasPorCancha, minTurno);
+  const partidos = Number(fase.partidos) || 0;
+  const faltan = Math.max(0, partidos - turnosDisponibles);
+  if (faltan === 0) {
     return [];
   }
 
   const sugerencias = [];
-  const horasMin = fase.horasMinimas;
   sugerencias.push(
-    `Amplía la franja de ${fase.nombreRonda} a al menos ${horasMin} ${horasMin === 1 ? 'hora' : 'horas'} (${horasMin * 60} min).`
+    `Marca más horas en ${fase.nombreRonda}: faltan turnos para ${faltan} ${faltan === 1 ? 'partido' : 'partidos'}.`
   );
 
-  const maxCanchas = Math.min(MAX_CANCHAS_TORNEO, fase.partidos);
+  const maxCanchas = Math.min(MAX_CANCHAS_TORNEO, partidos);
   if (Number(canchasTotales) < maxCanchas) {
-    const minTurnoActual = minutosPorTurno(duracionPartido, deporte);
-    const turnosConMax = Math.ceil(fase.partidos / maxCanchas);
+    const minTurnoActual =
+      duracionPartido != null
+        ? minutosPorTurno(duracionPartido, deporte)
+        : minTurno;
+    const turnosConMax = Math.ceil(partidos / maxCanchas);
     const minConMax = turnosConMax * minTurnoActual;
     sugerencias.push(
       `Agrega más canchas del mismo deporte (con ${maxCanchas} canchas en paralelo tomaría ${minConMax} min).`
@@ -222,7 +380,7 @@ export function sugerenciasTiempoFase({
   if (Number(duracionPartido) > OPCIONES_DURACION[0]) {
     const minTurnoCorto = minutosPorTurno(OPCIONES_DURACION[0], deporte);
     const cEfectivas = Math.max(1, fase.canchasEfectivas || 1);
-    const turnosCorto = Math.ceil(fase.partidos / cEfectivas);
+    const turnosCorto = Math.ceil(partidos / cEfectivas);
     const minCorto = turnosCorto * minTurnoCorto;
     sugerencias.push(
       `Reduce la duración por partido a ${OPCIONES_DURACION[0]} min (tomaría ${minCorto} min).`
@@ -232,57 +390,79 @@ export function sugerenciasTiempoFase({
   return sugerencias;
 }
 
-export function sugerenciasTiempo({
-  equipos,
-  canchas,
-  duracionPartido,
-  deporte,
-  horasReservadas,
-}) {
-  const c = Math.max(1, Number(canchas));
-  const minutosTurno = minutosPorTurno(duracionPartido, deporte);
-  const req = minutosRequeridos({
-    equipos: Number(equipos),
-    canchas: c,
-    minutosTurno,
-  });
-
-  const validacion = validarFranja(req, horasReservadas);
-  if (validacion.alcanza) {
+export function horasSinPartido(
+  horasPorCancha,
+  minutosTurno,
+  partidos,
+  ordenCanchas = []
+) {
+  if (!horasPorCancha || typeof horasPorCancha !== 'object') {
     return [];
   }
+  const durTurno = Number(minutosTurno);
+  if (!Number.isFinite(durTurno) || durTurno <= 0) {
+    return [];
+  }
+  const numPartidos = Math.max(0, Number(partidos) || 0);
+  const ordenIndex = construirOrdenCanchas(ordenCanchas);
+  const turnosAsignados = turnosDeFase(
+    horasPorCancha,
+    durTurno,
+    ordenCanchas
+  ).slice(0, numPartidos);
 
-  const sugerencias = [];
-
-  const horasMin = Math.ceil(req / 60);
-  sugerencias.push(
-    `Amplía la franja horaria a al menos ${horasMin} ${horasMin === 1 ? 'hora' : 'horas'} (${horasMin * 60} min).`
-  );
-
-  const maxCanchas = maxCanchasTorneo(equipos);
-  if (c < maxCanchas) {
-    const minMax = minutosRequeridos({
-      equipos: Number(equipos),
-      canchas: maxCanchas,
-      minutosTurno,
-    });
-    sugerencias.push(
-      `Agrega más canchas del mismo deporte (con ${maxCanchas} canchas en paralelo tomaría ${minMax} min).`
+  const resultado = [];
+  Object.entries(horasPorCancha).forEach(([canchaId, listaHoras]) => {
+    if (!Array.isArray(listaHoras) || listaHoras.length === 0) return;
+    const turnosCancha = turnosAsignados.filter((t) => t.canchaId === canchaId);
+    const horasUnicas = Array.from(
+      new Set(listaHoras.filter((h) => typeof h === 'string' && h.length > 0))
     );
+    horasUnicas.forEach((hora) => {
+      const hMin = aMinutos(hora);
+      const hFin = hMin + 60;
+      const usada = turnosCancha.some((t) => {
+        const ini = aMinutos(t.inicio);
+        return ini < hFin && ini + durTurno > hMin;
+      });
+      if (!usada) {
+        resultado.push({ canchaId, hora });
+      }
+    });
+  });
+
+  resultado.sort((a, b) => {
+    const diffHora = aMinutos(a.hora) - aMinutos(b.hora);
+    if (diffHora !== 0) return diffHora;
+    return compararCanchas(a.canchaId, b.canchaId, ordenIndex);
+  });
+
+  return resultado;
+}
+
+export function mensajeHorasSinPartido({
+  nombreRonda: nomRonda,
+  partidos,
+  duracionPartido,
+  horasElegidas,
+  sinPartido,
+}) {
+  const nSin = Number(sinPartido) || 0;
+  if (nSin <= 0) {
+    return '';
   }
 
-  if (Number(duracionPartido) > OPCIONES_DURACION[0]) {
-    const minCorto = minutosRequeridos({
-      equipos: Number(equipos),
-      canchas: c,
-      minutosTurno: minutosPorTurno(OPCIONES_DURACION[0], deporte),
-    });
-    sugerencias.push(
-      `Reduce la duración por partido a ${OPCIONES_DURACION[0]} min (tomaría ${minCorto} min).`
-    );
-  }
+  const infoRonda = ARTICULOS_RONDA[nomRonda] || {
+    sujeto: nomRonda,
+    verbo: String(nomRonda || '').startsWith('Los ') ? 'son' : 'es',
+  };
+  const nPartidos = Number(partidos) || 0;
+  const nElegidas = Number(horasElegidas) || 0;
+  const txtPartidos = `${nPartidos} ${nPartidos === 1 ? 'partido' : 'partidos'}`;
+  const txtHoras = `${nElegidas} ${nElegidas === 1 ? 'hora' : 'horas'}`;
+  const verboQuedar = nSin === 1 ? 'quedaría' : 'quedarían';
 
-  return sugerencias;
+  return `${infoRonda.sujeto} ${infoRonda.verbo} ${txtPartidos} de ${Number(duracionPartido)} min. Marcaste ${txtHoras} y ${nSin} ${verboQuedar} sin partido.`;
 }
 
 export function validarCanchasTorneo(canchasElegidas, equipos) {
@@ -376,32 +556,40 @@ export function programarTorneo({
     const nomRonda = nombreRonda(numPartidos);
     const partidosEstaRonda = [];
 
-    const numCanchasFase =
-      jornadas && ids.length > 0
-        ? Math.min(ids.length, numPartidos)
-        : (ids.length > 0 ? ids.length : 1);
-    const canchasFase =
-      jornadas && ids.length > 0 ? ids.slice(0, numCanchasFase) : ids;
-
     const j = (jornadas && jornadas[ronda]) || {};
     const fechaFase = j.fecha || null;
-    const horaInicioFase =
-      Array.isArray(j.horas) && j.horas.length > 0 ? j.horas[0] : horaInicio;
+    const turnosFase = jornadas
+      ? turnosDeFase(j.horasPorCancha, minutosTurno, ids)
+      : [];
+    const iniciosDistintos = [];
+    if (jornadas) {
+      for (let k = 0; k < Math.min(numPartidos, turnosFase.length); k += 1) {
+        const ini = turnosFase[k].inicio;
+        if (!iniciosDistintos.includes(ini)) {
+          iniciosDistintos.push(ini);
+        }
+      }
+    }
 
     for (let i = 0; i < numPartidos; i += 1) {
       const id = `R${ronda}-P${i + 1}`;
-      const turnoDentroDeRonda = Math.floor(i / (jornadas ? numCanchasFase : c)) + 1;
-      const turno = jornadas ? turnoDentroDeRonda : turnoBase + turnoDentroDeRonda;
-      const canchaId = jornadas
-        ? (canchasFase.length > 0 ? canchasFase[i % canchasFase.length] : null)
-        : (ids.length > 0 ? ids[i % ids.length] : null);
-      const inicio = jornadas
-        ? (horaInicioFase
-            ? sumarMinutos(horaInicioFase, (turnoDentroDeRonda - 1) * minutosTurno)
-            : null)
-        : (horaInicio
-            ? sumarMinutos(horaInicio, (turno - 1) * minutosTurno)
-            : null);
+      let canchaId;
+      let inicio;
+      let turno;
+
+      if (jornadas) {
+        const turnoObj = turnosFase[i] || null;
+        canchaId = turnoObj ? turnoObj.canchaId : null;
+        inicio = turnoObj ? turnoObj.inicio : null;
+        turno = inicio !== null ? iniciosDistintos.indexOf(inicio) + 1 : null;
+      } else {
+        const turnoDentroDeRonda = Math.floor(i / c) + 1;
+        turno = turnoBase + turnoDentroDeRonda;
+        canchaId = ids.length > 0 ? ids[i % ids.length] : null;
+        inicio = horaInicio
+          ? sumarMinutos(horaInicio, (turno - 1) * minutosTurno)
+          : null;
+      }
 
       let local;
       let visitante;
@@ -441,9 +629,7 @@ export function programarTorneo({
       partidos.push(partido);
     }
 
-    const turnosEstaRonda = Math.ceil(
-      numPartidos / (jornadas ? numCanchasFase : c)
-    );
+    const turnosEstaRonda = Math.ceil(numPartidos / c);
     turnoBase += turnosEstaRonda;
     partidosPrevios = partidosEstaRonda;
   });
@@ -463,18 +649,39 @@ export function armarTorneo({
 }) {
   const d = desempateDe(deporte);
   const minutosTurno = minutosPorTurno(duracionPartido, deporte);
+  const ids = Array.isArray(canchaIds) ? canchaIds : [];
 
   let jornadasResumen = null;
   if (jornadas) {
-    const fases = fasesDelTorneo({ equipos, canchaIds, minutosTurno });
+    const fases = fasesDelTorneo({ equipos, canchaIds: ids, minutosTurno });
     jornadasResumen = fases.map((fase) => {
       const j = jornadas[fase.ronda] || {};
+      const rawHpc =
+        j.horasPorCancha && typeof j.horasPorCancha === 'object'
+          ? j.horasPorCancha
+          : {};
+      const horasPorCancha = {};
+      Object.entries(rawHpc).forEach(([cid, lista]) => {
+        if (Array.isArray(lista) && lista.length > 0) {
+          horasPorCancha[cid] = Array.from(
+            new Set(lista.filter((h) => typeof h === 'string' && h.length > 0))
+          ).sort((a, b) => aMinutos(a) - aMinutos(b));
+        }
+      });
+      const horas = horasDeJornada({ horasPorCancha });
+      const idsEnOrden = ids.filter(
+        (cid) => Array.isArray(horasPorCancha[cid]) && horasPorCancha[cid].length > 0
+      );
+      const idsExtras = Object.keys(horasPorCancha).filter(
+        (cid) => !ids.includes(cid)
+      );
       return {
         ronda: fase.ronda,
         nombreRonda: fase.nombreRonda,
         fecha: j.fecha || null,
-        horas: Array.isArray(j.horas) ? j.horas : [],
-        canchaIds: fase.canchaIds,
+        horasPorCancha,
+        horas,
+        canchaIds: [...idsEnOrden, ...idsExtras],
         canchasEfectivas: fase.canchasEfectivas,
         partidos: fase.partidos,
         turnos: fase.turnos,
