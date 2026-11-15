@@ -17,8 +17,8 @@ Plan aprobado por Juan el 15-11-2026.
 | Bloque | Intentos | Resultado |
 | --- | --- | --- |
 | `l1-logica-torneo` | 1 | Contrato `horasPorCancha`, tramos y turnos, orden con cualquier cancha, programación por turnos reales, horas sin partido, limpieza por hora, QR por cancha |
-| `c1-validacion-reserva` | 1 (agy dio `ERROR` tras entregar todo) | Agrupación por `ronda`, `ERROR_EVENTO_FECHA_FASE`, sin horas seguidas en torneos, precio por (fase, cancha) |
-| `u1-interfaz-torneo` | 1 (agy dio `ERROR` tras entregar todo) | Filas por cancha, aviso, `DialogoHorasSinPartido`, `formatoJornadas.js`, "Mis reservas" y "Tus torneos" por fase y cancha |
+| `c1-validacion-reserva` | 1 (terminó con estado de error, pero con todo entregado) | Agrupación por `ronda`, `ERROR_EVENTO_FECHA_FASE`, sin horas seguidas en torneos, precio por (fase, cancha) |
+| `u1-interfaz-torneo` | 1 (terminó con estado de error, pero con todo entregado) | Filas por cancha, aviso, `DialogoHorasSinPartido`, `formatoJornadas.js`, "Mis reservas" y "Tus torneos" por fase y cancha |
 | `v1-verificacion` | 1 | **APROBADO**, sin bloqueantes; 3 detalles (`revision/v1-informe.md`) |
 | `f1-detalles` | 1 | Los 3 detalles de v1 y el nombre de la cancha en el QR |
 
@@ -30,7 +30,7 @@ HEAD no cambió durante los bloques (`deccb13`).
   cancha y `codigoReserva.js` en las rutas de l1.
 - `api/_lib/instrucciones.js` (una línea) y su snapshot: horas por cancha,
   salteadas, y descuento desde 2 horas de una misma cancha en el torneo. Se
-  aplicó después de u1 para no romper el snapshot mientras agy corría pruebas.
+  aplicó después de u1 para no romper el snapshot mientras se corrían las pruebas del bloque.
 - `docs/agentes/torneo.md`, `docs/agentes/reservas.md` y `AGENTS.md`.
 - `Torneo.test.jsx`: `timeout: 15000` en el `describe` de integración. La
   prueba 5 tarda 2,3 s sola y falló 1 de 4 corridas del suite completo por el
