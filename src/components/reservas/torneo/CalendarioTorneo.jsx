@@ -1,11 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Gift } from 'lucide-react';
 import SelectorDia from '../../shared/SelectorDia';
 import AlertaTiempo from './AlertaTiempo';
 import { tituloCancha } from '../../../lib/canchas';
 import { etiquetaDia } from '../../../lib/fechas';
-import { finDeFranja } from '../../../lib/precios';
+import {
+  DESCUENTO_HORA_TORNEO,
+  MIN_HORAS_BENEFICIO,
+  finDeFranja,
+  formatoPrecio,
+} from '../../../lib/precios';
 import { horasDeJornada } from '../../../lib/torneo';
 import './Bracket.css';
 import './CalendarioTorneo.css';
@@ -173,6 +178,17 @@ export function CalendarioTorneo({
 
       <p className="formulario-reserva__nota">
         Toca una hora para marcarla o desmarcarla en cada cancha. Puedes elegir horas salteadas y distintas en cada cancha.
+      </p>
+
+      <p className="formulario-reserva__promo">
+        <Gift size={16} aria-hidden="true" />
+        <span>
+          En torneo, cada hora cuesta{' '}
+          <strong>{formatoPrecio.format(DESCUENTO_HORA_TORNEO)} menos</strong>{' '}
+          en todas las canchas, aunque no sean seguidas. Con{' '}
+          {MIN_HORAS_BENEFICIO} horas o más en una cancha por fase, te regalamos
+          un <strong>pack de agua</strong>.
+        </span>
       </p>
 
       {fases.length > 0 && (

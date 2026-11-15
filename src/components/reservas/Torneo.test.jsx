@@ -15,7 +15,7 @@ import { fechaCompleta } from '../../lib/fechas';
 
 // En los tests de integración de torneos, las 3 canchas de fútbol se configuran
 // a $90.000/h sin horas ocupadas por defecto para validar limpiamente los cobros
-// por canchas efectivas (3 + 2 + 1 = 6 horas-cancha = $540.000) y la navegación multi-día.
+// por canchas efectivas (6 horas-cancha a $75.000/h con dto torneo = $450.000) y la navegación multi-día.
 vi.mock('../../data/canchas.json', async (importOriginal) => {
   const actual = await importOriginal();
   const base = actual.default || actual;
@@ -418,7 +418,7 @@ describe('Modo Torneo - Pruebas de integración', { timeout: 15000 }, () => {
 
     // Verificación de cobro por canchas efectivas (AC-013)
     const valorTotal = document.querySelector('.voucher-reserva__valor-total');
-    expect(valorTotal).toHaveTextContent('540.000');
+    expect(valorTotal).toHaveTextContent('450.000');
 
     // El voucher muestra el desglose de fases programadas por cancha
     expect(

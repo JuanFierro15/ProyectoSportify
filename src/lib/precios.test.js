@@ -1,4 +1,5 @@
 import {
+  DESCUENTO_HORA_TORNEO,
   calcularPrecio,
   calcularPrecioEvento,
   calcularPrecioJornadas,
@@ -76,10 +77,10 @@ describe('calcularPrecioJornadas (AC-013, DD-012)', () => {
     { id: 'c3', nombre: 'Cancha 3', deporte: 'futbol', precioHora: 45000 },
   ];
 
-  test('8 equipos con 3 canchas cobra canchas efectivas (3 en Cuartos, 2 en Semis, 1 en Final)', () => {
-    // Cuartos: 3 canchas, 2 horas (con descuento: 40.000 * 2 = 80.000 cada una -> 240.000, 3 packs de agua)
-    // Semifinal: 2 canchas (canchas efectivas), 1 hora (45.000 * 1 = 45.000 cada una -> 90.000, sin agua)
-    // Final: 1 cancha (cancha efectiva), 1 hora (45.000 * 1 -> 45.000, sin agua)
+  test('8 equipos con 3 canchas cobra canchas efectivas (3 en Cuartos, 2 en Semis, 1 en Final) con descuento torneo desde 1 hora', () => {
+    // Cuartos: 3 canchas, 2 horas (30.000 * 2 = 60.000 cada una -> 180.000, 3 packs de agua)
+    // Semifinal: 2 canchas (canchas efectivas), 1 hora (30.000 * 1 = 30.000 cada una -> 60.000, sin agua)
+    // Final: 1 cancha (cancha efectiva), 1 hora (30.000 * 1 -> 30.000, sin agua)
     const bloques = [
       {
         ronda: 1,
@@ -110,8 +111,8 @@ describe('calcularPrecioJornadas (AC-013, DD-012)', () => {
     expect(res.lineas).toHaveLength(6);
     expect(res.nHoras).toBe(4); // 2h + 1h + 1h
     expect(res.subtotal).toBe(3 * (45000 * 2) + 2 * (45000 * 1) + 1 * (45000 * 1)); // 270.000 + 90.000 + 45.000 = 405.000
-    expect(res.ahorro).toBe(3 * (5000 * 2)); // 30.000
-    expect(res.total).toBe(240000 + 90000 + 45000); // 375.000
+    expect(res.ahorro).toBe(9 * DESCUENTO_HORA_TORNEO); // 6h en cuartos + 2h en semis + 1h en final = 9h -> 135.000
+    expect(res.total).toBe(180000 + 60000 + 30000); // 270.000
     expect(res.packsAgua).toBe(3); // Solo en la jornada de 2 horas (Cuartos)
 
     // Formato de canchaId y nombre compuesto
@@ -145,7 +146,38 @@ describe('calcularPrecioJornadas (AC-013, DD-012)', () => {
     { id: 'padel-2', nombre: 'Cancha Pádel 2', deporte: 'padel', precioHora: 65000 },
   ];
 
-  test('2 horas salteadas en una cancha y fase aplica descuento ($60.000 x 2 en pádel, ahorro 10.000); 1 hora sin descuento', () => {
+  test('1 hora de pádel ($65.000) en una fase: total 50.000, descuentoHora 15.000, ahorro 15.000, aguaGratis false', () => {
+    const res = calcularPrecioJornadas(
+      [
+        {
+          ronda: 1,
+          nombreRonda: 'Final',
+          fecha: '2026-11-21',
+          canchaIds: ['padel-1'],
+          horas: ['19:00'],
+        },
+      ],
+      canchasPadel
+    );
+
+    expect(res.lineas).toHaveLength(1);
+    expect(res.lineas[0]).toMatchObject({
+      canchaId: 'R1-padel-1',
+      nHoras: 1,
+      precioHora: 65000,
+      descuentoHora: 15000,
+      precioHoraFinal: 50000,
+      subtotal: 65000,
+      total: 50000,
+      ahorro: 15000,
+      aguaGratis: false,
+    });
+    expect(res.total).toBe(50000);
+    expect(res.ahorro).toBe(15000);
+    expect(res.packsAgua).toBe(0);
+  });
+
+  test('2 horas salteadas en una cancha y fase aplica descuento de $15.000/h ($50.000 x 2, ahorro 30.000, agua gratis); 1 hora también descuenta $15.000/h sin agua', () => {
     const bloques = [
       {
         ronda: 1,
@@ -171,11 +203,11 @@ describe('calcularPrecioJornadas (AC-013, DD-012)', () => {
       nombre: 'Cuartos de final · Cancha Pádel 1',
       nHoras: 2,
       precioHora: 65000,
-      descuentoHora: 5000,
-      precioHoraFinal: 60000,
+      descuentoHora: 15000,
+      precioHoraFinal: 50000,
       subtotal: 130000,
-      total: 120000,
-      ahorro: 10000,
+      total: 100000,
+      ahorro: 30000,
       aguaGratis: true,
     });
     expect(res.lineas[1]).toMatchObject({
@@ -183,18 +215,105 @@ describe('calcularPrecioJornadas (AC-013, DD-012)', () => {
       nombre: 'Cuartos de final · Cancha Pádel 2',
       nHoras: 1,
       precioHora: 65000,
-      descuentoHora: 0,
-      precioHoraFinal: 65000,
+      descuentoHora: 15000,
+      precioHoraFinal: 50000,
       subtotal: 65000,
-      total: 65000,
-      ahorro: 0,
+      total: 50000,
+      ahorro: 15000,
       aguaGratis: false,
     });
     expect(res.nHoras).toBe(3);
     expect(res.subtotal).toBe(195000);
-    expect(res.ahorro).toBe(10000);
-    expect(res.total).toBe(185000);
+    expect(res.ahorro).toBe(45000);
+    expect(res.total).toBe(150000);
     expect(res.packsAgua).toBe(1);
+  });
+
+  test('2 horas salteadas de pádel en una cancha y fase: total 100.000, ahorro 30.000, aguaGratis true, packsAgua 1', () => {
+    const res = calcularPrecioJornadas(
+      [
+        {
+          ronda: 1,
+          nombreRonda: 'Semifinal',
+          fecha: '2026-11-21',
+          canchaIds: ['padel-1'],
+          horas: ['15:00', '18:00'],
+        },
+      ],
+      canchasPadel
+    );
+
+    expect(res.lineas).toHaveLength(1);
+    expect(res.lineas[0].aguaGratis).toBe(true);
+    expect(res.total).toBe(100000);
+    expect(res.ahorro).toBe(30000);
+    expect(res.packsAgua).toBe(1);
+  });
+
+  test('fútbol: 2 horas en cancha 1 de cuartos y 1 hora en cancha 2 de final -> 2 líneas (210.000 y 105.000), total 315.000, segunda y última línea exactas', () => {
+    const canchasFutbol = [
+      { id: 'futbol-1', nombre: 'Cancha Fútbol 1', deporte: 'futbol', precioHora: 120000 },
+      { id: 'futbol-2', nombre: 'Cancha Fútbol 2', deporte: 'futbol', precioHora: 120000 },
+    ];
+
+    const res = calcularPrecioJornadas(
+      [
+        {
+          ronda: 1,
+          nombreRonda: 'Cuartos de final',
+          fecha: '2026-11-21',
+          canchaIds: ['futbol-1'],
+          horas: ['14:00', '16:00'],
+        },
+        {
+          ronda: 3,
+          nombreRonda: 'Final',
+          fecha: '2026-11-22',
+          canchaIds: ['futbol-2'],
+          horas: ['18:00'],
+        },
+      ],
+      canchasFutbol
+    );
+
+    expect(res.lineas).toHaveLength(2);
+    expect(res.lineas[0].total).toBe(210000);
+    expect(res.lineas[1].total).toBe(105000);
+    expect(res.lineas.at(-1).total).toBe(105000);
+    expect(res.total).toBe(315000);
+    expect(res.ahorro).toBe(45000);
+    expect(res.packsAgua).toBe(1);
+  });
+
+  test('una cancha con precioHora 10.000 no queda negativa (descuentoHora topado a 10.000, total 0)', () => {
+    const catalogoBarato = [
+      { id: 'promo-1', nombre: 'Cancha Promo', deporte: 'voley-playa', precioHora: 10000 },
+    ];
+
+    const res = calcularPrecioJornadas(
+      [
+        {
+          ronda: 1,
+          nombreRonda: 'Final',
+          fecha: '2026-11-21',
+          canchaIds: ['promo-1'],
+          horas: ['10:00', '12:00'],
+        },
+      ],
+      catalogoBarato
+    );
+
+    expect(res.lineas).toHaveLength(1);
+    expect(res.lineas[0]).toMatchObject({
+      precioHora: 10000,
+      descuentoHora: 10000,
+      precioHoraFinal: 0,
+      subtotal: 20000,
+      total: 0,
+      ahorro: 20000,
+      aguaGratis: true,
+    });
+    expect(res.total).toBe(0);
   });
 
   test('dos bloques de la misma ronda y cancha se unen en una sola línea sin repetir horas', () => {
@@ -220,14 +339,14 @@ describe('calcularPrecioJornadas (AC-013, DD-012)', () => {
     expect(resDisjunto.lineas[0]).toMatchObject({
       canchaId: 'R1-padel-1',
       nHoras: 2,
-      precioHoraFinal: 60000,
-      total: 120000,
-      ahorro: 10000,
+      precioHoraFinal: 50000,
+      total: 100000,
+      ahorro: 30000,
       aguaGratis: true,
     });
     expect(resDisjunto.nHoras).toBe(2);
-    expect(resDisjunto.total).toBe(120000);
-    expect(resDisjunto.ahorro).toBe(10000);
+    expect(resDisjunto.total).toBe(100000);
+    expect(resDisjunto.ahorro).toBe(30000);
     expect(resDisjunto.packsAgua).toBe(1);
 
     const bloquesConRepetida = [
@@ -250,8 +369,8 @@ describe('calcularPrecioJornadas (AC-013, DD-012)', () => {
     const resRepetida = calcularPrecioJornadas(bloquesConRepetida, canchasPadel);
     expect(resRepetida.lineas).toHaveLength(1);
     expect(resRepetida.lineas[0].nHoras).toBe(3);
-    expect(resRepetida.lineas[0].total).toBe(180000);
-    expect(resRepetida.lineas[0].ahorro).toBe(15000);
+    expect(resRepetida.lineas[0].total).toBe(150000);
+    expect(resRepetida.lineas[0].ahorro).toBe(45000);
     expect(resRepetida.nHoras).toBe(3);
   });
 
@@ -274,8 +393,8 @@ describe('calcularPrecioJornadas (AC-013, DD-012)', () => {
       'R1-padel-1',
       'R1-padel-2',
     ]);
-    expect(resConRonda.total).toBe(240000);
-    expect(resConRonda.ahorro).toBe(20000);
+    expect(resConRonda.total).toBe(200000);
+    expect(resConRonda.ahorro).toBe(60000);
     expect(resConRonda.packsAgua).toBe(2);
     expect(resConRonda.nHoras).toBe(2);
 
@@ -295,7 +414,7 @@ describe('calcularPrecioJornadas (AC-013, DD-012)', () => {
       '2026-11-21-padel-1',
       '2026-11-21-padel-2',
     ]);
-    expect(resSinRonda.total).toBe(240000);
+    expect(resSinRonda.total).toBe(200000);
   });
 });
 
