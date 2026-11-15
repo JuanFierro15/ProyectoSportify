@@ -1,6 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import {
+  modoScrollHero,
+  PUNTOS_SNAP_HERO,
+  REPOSO_HERO,
+} from '../../lib/modoHero';
 import { esClicNormal, rutaReserva } from '../../lib/rutas';
 import './DeporteHero.css';
 
@@ -45,6 +50,9 @@ const SUAVIZADO = 0.3;
  *    Así, en scroll rápido no se encolan decenas de seeks que traban al
  *    decoder.
  *  - El texto/CTA hacen fade + scale (scrubbed) al principio y al final del pin.
+ *  - Modo snap (`?hero=snap`): el ScrollTrigger agrega `snap` direccional con
+ *    puntos `[0, 0.15, 1]` (`directional: true`) para que el hero se asiente
+ *    con el CTA visible y un gesto hacia abajo complete el video.
  *  - Todo dentro de `gsap.context()` con `ctx.revert()` en el cleanup.
  *  - `ScrollTrigger.refresh()` cuando el video reporta su duración, para que el
  *    largo del pin (que depende de esa duración) quede bien medido.
@@ -70,6 +78,9 @@ function DeporteHero({
     const seccion = rootRef.current;
     const contenido = contenidoRef.current;
     const video = videoRef.current;
+    const modo = modoScrollHero(
+      typeof window !== 'undefined' ? window.location.search : ''
+    );
 
     const mm = gsap.matchMedia(rootRef);
 
@@ -95,6 +106,18 @@ function DeporteHero({
           pin: true,
           anticipatePin: 1,
           invalidateOnRefresh: true,
+          ...(modo === 'snap'
+            ? {
+                snap: {
+                  snapTo: PUNTOS_SNAP_HERO,
+                  directional: true,
+                  inertia: false,
+                  delay: 0.05,
+                  duration: { min: 0.8, max: 2.2 },
+                  ease: 'power1.inOut',
+                },
+              }
+            : {}),
           onUpdate: (self) => {
             progresoObjetivo = self.progress;
           },
@@ -108,12 +131,24 @@ function DeporteHero({
       tl.fromTo(
         contenido,
         { autoAlpha: 0, scale: 0.92, y: 20 },
-        { autoAlpha: 1, scale: 1, y: 0, ease: 'power2.out', duration: 0.15 },
+        {
+          autoAlpha: 1,
+          scale: 1,
+          y: 0,
+          ease: 'power2.out',
+          duration: REPOSO_HERO,
+        },
         0
       ).to(
         contenido,
-        { autoAlpha: 0, scale: 1.06, y: -14, ease: 'power2.in', duration: 0.15 },
-        0.85
+        {
+          autoAlpha: 0,
+          scale: 1.06,
+          y: -14,
+          ease: 'power2.in',
+          duration: REPOSO_HERO,
+        },
+        1 - REPOSO_HERO
       );
 
       // Bucle que acerca el frame del video al objetivo sin encolar seeks.
