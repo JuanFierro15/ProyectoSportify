@@ -58,8 +58,6 @@ HEAD no cambió durante los bloques (`deccb13`).
 
 ## Pendientes
 
-- Rediseño de la animación GSAP del torneo: etapa siguiente (decisión del
-  plan).
 - No se probó en producción: se verifica al fusionar el PR.
 
 ## Riesgo

@@ -6,8 +6,7 @@ Responsable: Juan Fierro.
 
 ## Qué se pidió y qué hay hoy
 
-Juan pidió dos cambios en el modo torneo. Un tercero (rediseñar la animación de
-GSAP) va en otra etapa.
+Juan pidió dos cambios en el modo torneo.
 
 1. **Horas libres por cancha.** En una fase, cada cancha puede tener sus propias
    horas, salteadas: por ejemplo, en cuartos la cancha 1 a las 4 y las 6 p. m. y
@@ -157,4 +156,3 @@ snapshot, `docs/agentes/torneo.md`, `docs/agentes/reservas.md` y `AGENTS.md`.
    distintas por cancha dentro de una fase, se agranda el cambio.
 3. Descuento desde 2 horas por cancha y fase aunque no sean seguidas (decisión 9).
 4. Cumpleaños y reserva individual siguen con horas seguidas.
-5. El rediseño de la animación GSAP va en una etapa aparte, después de esta.
