@@ -3,6 +3,17 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import DeporteHero from './DeporteHero';
+import { registrarHeroSnap } from './controladorSnapHero';
+
+vi.mock('./controladorSnapHero', async (importOriginal) => {
+  const original = await importOriginal();
+  return {
+    ...original,
+    registrarHeroSnap: vi.fn((params) =>
+      vi.fn(original.registrarHeroSnap(params))
+    ),
+  };
+});
 
 const PROPS_VALIDAS = {
   nombre: 'Voley Playa',
@@ -78,6 +89,7 @@ describe('DeporteHero - modo snap por URL', () => {
   beforeEach(() => {
     matchMediaOriginal = window.matchMedia;
     urlOriginal = window.location.href;
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -87,35 +99,10 @@ describe('DeporteHero - modo snap por URL', () => {
     vi.restoreAllMocks();
   });
 
-  it('agrega snap direccional en ScrollTrigger cuando ?hero=snap está presente', () => {
+  it('con ?hero=snap y no-preference no define vars.snap y registra el hero en el controlador snap', () => {
     window.history.replaceState(null, '', '/?hero=snap');
     simularMatchMedia('(prefers-reduced-motion: no-preference)');
-
-    const { unmount } = render(
-      <div>
-        <DeporteHero {...PROPS_VALIDAS} />
-      </div>
-    );
-
-    const triggers = ScrollTrigger.getAll();
-    expect(triggers.length).toBeGreaterThan(0);
-    const triggerConSnap = triggers.find((t) => t.vars?.snap !== undefined);
-    expect(triggerConSnap).toBeDefined();
-    expect(triggerConSnap.vars.snap).toEqual({
-      snapTo: [0, 0.15, 1],
-      directional: true,
-      inertia: false,
-      delay: 0.05,
-      duration: { min: 0.8, max: 2.2 },
-      ease: 'power1.inOut',
-    });
-
-    unmount();
-  });
-
-  it('mantiene vars.snap como undefined cuando no hay parámetro ?hero=snap', () => {
-    window.history.replaceState(null, '', '/');
-    simularMatchMedia('(prefers-reduced-motion: no-preference)');
+    const spyAdd = vi.spyOn(ScrollTrigger, 'addEventListener');
 
     const { unmount } = render(
       <div>
@@ -127,6 +114,67 @@ describe('DeporteHero - modo snap por URL', () => {
     expect(triggers.length).toBeGreaterThan(0);
     expect(triggers[0].vars.snap).toBeUndefined();
 
+    expect(registrarHeroSnap).toHaveBeenCalledTimes(1);
+    expect(registrarHeroSnap).toHaveBeenCalledWith({
+      seccion: expect.any(HTMLElement),
+      video: expect.any(HTMLVideoElement),
+      st: triggers[0],
+      progresoObjetivo: expect.any(Function),
+    });
+
+    const llamadaScrollEnd = spyAdd.mock.calls.find(
+      ([evento]) => evento === 'scrollEnd'
+    );
+    expect(llamadaScrollEnd).toBeDefined();
+
     unmount();
+  });
+
+  it('sin ?hero=snap no registra el hero en el controlador snap ni escucha scrollEnd', () => {
+    window.history.replaceState(null, '', '/');
+    simularMatchMedia('(prefers-reduced-motion: no-preference)');
+    const spyAdd = vi.spyOn(ScrollTrigger, 'addEventListener');
+
+    const { unmount } = render(
+      <div>
+        <DeporteHero {...PROPS_VALIDAS} />
+      </div>
+    );
+
+    expect(ScrollTrigger.getAll().length).toBeGreaterThan(0);
+    expect(registrarHeroSnap).not.toHaveBeenCalled();
+    const llamadasScrollEnd = spyAdd.mock.calls.filter(
+      ([evento]) => evento === 'scrollEnd'
+    );
+    expect(llamadasScrollEnd).toHaveLength(0);
+
+    unmount();
+  });
+
+  it('con ?hero=snap al desmontar se desregistra del controlador y quita scrollEnd', () => {
+    window.history.replaceState(null, '', '/?hero=snap');
+    simularMatchMedia('(prefers-reduced-motion: no-preference)');
+    const spyAdd = vi.spyOn(ScrollTrigger, 'addEventListener');
+    const spyRemove = vi.spyOn(ScrollTrigger, 'removeEventListener');
+
+    const { unmount } = render(
+      <div>
+        <DeporteHero {...PROPS_VALIDAS} />
+      </div>
+    );
+
+    const desregistrar = registrarHeroSnap.mock.results[0].value;
+    expect(desregistrar).not.toHaveBeenCalled();
+
+    const llamadaScrollEnd = spyAdd.mock.calls.find(
+      ([evento]) => evento === 'scrollEnd'
+    );
+    expect(llamadaScrollEnd).toBeDefined();
+    const handler = llamadaScrollEnd[1];
+
+    unmount();
+
+    expect(desregistrar).toHaveBeenCalledTimes(1);
+    expect(spyRemove).toHaveBeenCalledWith('scrollEnd', handler);
   });
 });
