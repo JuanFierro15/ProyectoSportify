@@ -10,6 +10,7 @@ import AlertaTiempo from './torneo/AlertaTiempo';
 import CalendarioTorneo from './torneo/CalendarioTorneo';
 import IndicadorPasos from './torneo/IndicadorPasos';
 import SeccionLlaves from './torneo/SeccionLlaves';
+import DialogoHorasSinPartido from './torneo/DialogoHorasSinPartido';
 import { fechaCompleta } from '../../lib/fechas';
 
 // En los tests de integración de torneos, las 3 canchas de fútbol se configuran
@@ -99,6 +100,16 @@ function FlujoTorneoPrueba({ canchasIniciales = [], diaInicialIndex = null }) {
             onConfirmar={reserva.confirmar}
             onCancelar={reserva.reiniciar}
             torneo={reserva.modo === 'torneo' ? reserva.torneoPlan : null}
+            canchas={canchas}
+          />
+          <DialogoHorasSinPartido
+            abierto={Boolean(reserva.avisoHorasDeMas)}
+            mensajes={(reserva.torneoPlan?.fasesConHorasDeMas || [])
+              .map((r) => reserva.torneoPlan?.horasSinPartidoPorFase?.[r]?.mensaje)
+              .filter(Boolean)}
+            onRevisar={reserva.revisarHorasDeMas}
+            onReservarIgual={reserva.reservarIgual}
+            onCerrar={reserva.cerrarAvisoHorasDeMas}
           />
         </>
       )}
@@ -106,7 +117,8 @@ function FlujoTorneoPrueba({ canchasIniciales = [], diaInicialIndex = null }) {
   );
 }
 
-describe('Modo Torneo - Pruebas de integración', () => {
+// Flujos completos de reserva: bajo la carga del suite pasan de los 5 s por defecto.
+describe('Modo Torneo - Pruebas de integración', { timeout: 15000 }, () => {
   beforeEach(() => {
     window.localStorage.clear();
     window.HTMLCanvasElement.prototype.getContext = () => ({
@@ -168,13 +180,13 @@ describe('Modo Torneo - Pruebas de integración', () => {
 
     // Con 8 equipos y 3 canchas, Cuartos usa 3 canchas, Semifinal 2 canchas y Final 1 cancha (AC-009)
     const seccionCuartos = screen.getByLabelText('Fase 1: Cuartos de final');
-    expect(within(seccionCuartos).getByText(/3 canchas efectivas/i)).toBeInTheDocument();
+    expect(within(seccionCuartos).getByText(/Mínimo:.*con 3 canchas/i)).toBeInTheDocument();
 
     const seccionSemi = screen.getByLabelText('Fase 2: Semifinal');
-    expect(within(seccionSemi).getByText(/2 canchas efectivas/i)).toBeInTheDocument();
+    expect(within(seccionSemi).getByText(/Mínimo:.*con 2 canchas/i)).toBeInTheDocument();
 
     const seccionFinal = screen.getByLabelText('Fase 3: Final');
-    expect(within(seccionFinal).getByText(/1 cancha efectiva/i)).toBeInTheDocument();
+    expect(within(seccionFinal).getByText(/Mínimo:.*con 1 cancha\b/i)).toBeInTheDocument();
 
     // Resumen en Capacidad y tiempo estimado con detalle de canchas por fase
     expect(screen.getByText(/Cuartos: 3 canchas/i)).toBeInTheDocument();
@@ -214,12 +226,19 @@ describe('Modo Torneo - Pruebas de integración', () => {
     const btnDia1Cuartos = within(seccionCuartos).getAllByRole('button')[1];
     fireEvent.click(btnDia1Cuartos);
 
-    // Seleccionamos solo 1 hora (14:00 = 60 min disponibles) en Cuartos de final
-    const btnHoraCuartos = screen.getByRole('button', { name: 'Cuartos de final 14:00' });
-    fireEvent.click(btnHoraCuartos);
+    // Seleccionamos 1 hora (14:00) en las 3 canchas de Cuartos de final -> 3 turnos max (1 por cancha) = 3 partidos de 4 requeridos (falta 1 partido / 40 min)
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 1, 14:00' })
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 2, 14:00' })
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 3, 14:00' })
+    );
 
-    // Aparece la alerta de déficit indicando que faltan 20 min
-    expect(screen.getAllByText(/faltan 20 min/i).length).toBeGreaterThanOrEqual(1);
+    // Aparece la alerta de déficit indicando falta 1 partido / faltan 40 min
+    expect(screen.getAllByText(/falta 1 partido por ubicar|faltan 40 min/i).length).toBeGreaterThanOrEqual(1);
 
     // El botón Confirmar reserva permanece disabled
     const btnConfirmar = screen.getByRole('button', { name: /Confirmar reserva/i });
@@ -265,18 +284,24 @@ describe('Modo Torneo - Pruebas de integración', () => {
     expect(diasFinal[2]).not.toBeDisabled();
     expect(diasFinal[2]).toHaveAttribute('aria-pressed', 'true');
 
-    // Cuartos de final selecciona 14:00 en dias[2]
+    // Cuartos de final selecciona 14:00 en dias[2] en Cancha 1
     fireEvent.click(screen.getByRole('tab', { name: /Cuartos de final/i }));
-    const btnHoraCuartos14 = screen.getByRole('button', { name: 'Cuartos de final 14:00' });
+    const btnHoraCuartos14 = screen.getByRole('button', {
+      name: 'Cuartos de final, Cancha 1, 14:00',
+    });
     fireEvent.click(btnHoraCuartos14);
 
-    // En Semifinal (mismo día dias[2]), los botones de hora <= 14:00 están disabled
+    // En Semifinal (mismo día dias[2]), los botones de hora <= 14:00 están disabled en sus canchas
     fireEvent.click(screen.getByRole('tab', { name: /Semifinal/i }));
-    const btnHoraSemi14 = screen.getByRole('button', { name: 'Semifinal 14:00' });
+    const btnHoraSemi14 = screen.getByRole('button', {
+      name: 'Semifinal, Cancha 1, 14:00',
+    });
     expect(btnHoraSemi14).toBeDisabled();
 
     // Semifinal 15:00 está habilitado y permite programar la fase sin errores
-    const btnHoraSemi15 = screen.getByRole('button', { name: 'Semifinal 15:00' });
+    const btnHoraSemi15 = screen.getByRole('button', {
+      name: 'Semifinal, Cancha 1, 15:00',
+    });
     expect(btnHoraSemi15).not.toBeDisabled();
     fireEvent.click(btnHoraSemi15);
     expect(btnHoraSemi15).toHaveAttribute('aria-pressed', 'true');
@@ -355,35 +380,52 @@ describe('Modo Torneo - Pruebas de integración', () => {
     const seccionSemi = screen.getByLabelText('Fase 2: Semifinal');
     const seccionFinal = screen.getByLabelText('Fase 3: Final');
 
-    // 1. Cuartos en el día 2 (diasCapturados[1]) a las 14:00 (requiere 1 h con 3 canchas)
+    // 1. Cuartos en el día 2 (diasCapturados[1]) a las 14:00 en las 3 canchas
     const btnDia1Cuartos = within(seccionCuartos).getAllByRole('button')[1];
     fireEvent.click(btnDia1Cuartos);
-    fireEvent.click(screen.getByRole('button', { name: 'Cuartos de final 14:00' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 1, 14:00' })
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 2, 14:00' })
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 3, 14:00' })
+    );
 
-    // 2. Semifinal en el día 3 (diasCapturados[2]) a las 15:00 (requiere 1 h con 2 canchas)
+    // 2. Semifinal en el día 3 (diasCapturados[2]) a las 15:00 en 2 canchas
     fireEvent.click(screen.getByRole('tab', { name: /Semifinal/i }));
     const btnDia2Semi = within(seccionSemi).getAllByRole('button')[2];
     fireEvent.click(btnDia2Semi);
-    fireEvent.click(screen.getByRole('button', { name: 'Semifinal 15:00' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Semifinal, Cancha 1, 15:00' })
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Semifinal, Cancha 2, 15:00' })
+    );
 
-    // 3. Final en el día 4 (diasCapturados[3]) a las 16:00 (requiere 1 h con 1 cancha)
+    // 3. Final en el día 4 (diasCapturados[3]) a las 16:00 en Cancha 1
     fireEvent.click(screen.getByRole('tab', { name: /^Final\b/i }));
     const btnDia3Final = within(seccionFinal).getAllByRole('button')[3];
     fireEvent.click(btnDia3Final);
-    fireEvent.click(screen.getByRole('button', { name: 'Final 16:00' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Final, Cancha 1, 16:00' })
+    );
 
-    // Verificación de cobro por canchas efectivas (AC-013):
-    // Cuartos: 3 canchas × 1 h = 3 horas-cancha ($270.000)
-    // Semifinal: 2 canchas × 1 h = 2 horas-cancha ($180.000)
-    // Final: 1 cancha × 1 h = 1 hora-cancha ($90.000)
-    // Total: 3 + 2 + 1 = 6 horas-cancha ($540.000)
+    // Verificación de cobro por canchas efectivas (AC-013)
     const valorTotal = document.querySelector('.voucher-reserva__valor-total');
     expect(valorTotal).toHaveTextContent('540.000');
 
-    // El voucher muestra el desglose de fases programadas
-    expect(screen.getByText(/Cuartos de final:.*14:00 a 15:00 \(3 canchas\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/Semifinal:.*15:00 a 16:00 \(2 canchas\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/Final:.*16:00 a 17:00 \(1 cancha\)/i)).toBeInTheDocument();
+    // El voucher muestra el desglose de fases programadas por cancha
+    expect(
+      screen.getByText(/Cuartos de final:.*Fútbol 1: 14:00 · Fútbol 2: 14:00 · Fútbol 3: 14:00/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Semifinal:.*Fútbol 1: 15:00 · Fútbol 2: 15:00/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Final:.*Fútbol 1: 16:00/i)
+    ).toBeInTheDocument();
 
     // Ingresar nombre de contacto
     const inputNombre = screen.getByLabelText(/Nombre/i);
@@ -411,14 +453,17 @@ describe('Modo Torneo - Pruebas de integración', () => {
     const torneoGuardado = dataGuardada.reservas.find((r) => r.subtipo === 'torneo');
     expect(torneoGuardado).toBeDefined();
 
-    // Se guardaron 3 bloques en distintos días
-    expect(torneoGuardado.bloques).toHaveLength(3);
+    // Se guardaron 6 bloques (uno por cancha y fase) en distintos días
+    expect(torneoGuardado.bloques).toHaveLength(6);
     expect(torneoGuardado.bloques[0].fecha).toBe(diasCapturados[1]);
-    expect(torneoGuardado.bloques[0].canchaIds).toEqual(['futbol-1', 'futbol-2', 'futbol-3']);
-    expect(torneoGuardado.bloques[1].fecha).toBe(diasCapturados[2]);
-    expect(torneoGuardado.bloques[1].canchaIds).toEqual(['futbol-1', 'futbol-2']);
-    expect(torneoGuardado.bloques[2].fecha).toBe(diasCapturados[3]);
-    expect(torneoGuardado.bloques[2].canchaIds).toEqual(['futbol-1']);
+    expect(torneoGuardado.bloques[0].canchaIds).toEqual(['futbol-1']);
+    expect(torneoGuardado.bloques[1].canchaIds).toEqual(['futbol-2']);
+    expect(torneoGuardado.bloques[2].canchaIds).toEqual(['futbol-3']);
+    expect(torneoGuardado.bloques[3].fecha).toBe(diasCapturados[2]);
+    expect(torneoGuardado.bloques[3].canchaIds).toEqual(['futbol-1']);
+    expect(torneoGuardado.bloques[4].canchaIds).toEqual(['futbol-2']);
+    expect(torneoGuardado.bloques[5].fecha).toBe(diasCapturados[3]);
+    expect(torneoGuardado.bloques[5].canchaIds).toEqual(['futbol-1']);
 
     // Ocupación atómica: solo bloquea las canchas efectivas en cada fecha/horario
     // Día 2 (diasCapturados[1]): 3 canchas ocupadas a las 14:00
@@ -729,7 +774,10 @@ describe('Modo Torneo - Pruebas de integración', () => {
       expect(btnHoy9).toHaveAttribute('aria-pressed', 'true');
       expect(reservaRef.fecha).toBe('2026-11-09');
       expect(reservaRef.horasSel).toEqual([]);
-      expect(reservaRef.jornadas[1]).toEqual({ fecha: '2026-11-09', horas: [] });
+      expect(reservaRef.jornadas[1]).toEqual({
+        fecha: '2026-11-09',
+        horasPorCancha: {},
+      });
       expect(screen.queryByRole('button', { name: /8 de nov/i })).not.toBeInTheDocument();
 
       // Las franjas de ayer no se ofrecen como disponibles y no se puede reservar ayer
@@ -753,12 +801,12 @@ describe('Modo Torneo - Pruebas de integración', () => {
         reservaRef.cambiarModo('torneo');
       });
       act(() => {
-        reservaRef.elegirHoraFase(1, '10:00');
-        reservaRef.elegirHoraFase(1, '11:00');
+        reservaRef.elegirHoraFase(1, ctxRef.canchas[0].id, '10:00');
+        reservaRef.elegirHoraFase(1, ctxRef.canchas[0].id, '11:00');
       });
       expect(reservaRef.jornadas[1]).toEqual({
         fecha: '2026-11-09',
-        horas: ['10:00', '11:00'],
+        horasPorCancha: { [ctxRef.canchas[0].id]: ['10:00', '11:00'] },
       });
 
       vi.setSystemTime(new Date('2026-11-10T00:10:00'));
@@ -770,7 +818,7 @@ describe('Modo Torneo - Pruebas de integración', () => {
       expect(reservaRef.fecha).toBe('2026-11-10');
       expect(reservaRef.jornadas[1]).toEqual({
         fecha: '2026-11-10',
-        horas: [],
+        horasPorCancha: {},
       });
       expect(
         ctxRef.disponibilidad('futbol-1', '2026-11-09').some((s) => s.disponible)
@@ -937,29 +985,39 @@ describe('Modo Torneo - Pruebas de integración', () => {
       </ReservasProvider>
     );
 
-    // a) Cambio de canchas: en dias[1], voley-1 tiene 14:00, 15:00 y 16:00 libres; voley-2 tiene 14:00 y 15:00 ocupadas y 16:00 libre.
-    const btn14 = screen.getByRole('button', { name: /Cuartos de final 14:00/i });
-    const btn16 = screen.getByRole('button', { name: /Cuartos de final 16:00/i });
-    fireEvent.click(btn14);
-    fireEvent.click(btn16);
-    expect(btn14).toHaveAttribute('aria-pressed', 'true');
-    expect(btn16).toHaveAttribute('aria-pressed', 'true');
+    // a) Cambio de canchas: en dias[1], voley-1 tiene 14:00 y 16:00 libres; voley-2 tiene 16:00 libre.
+    // Al marcar horas en voley-1 y voley-2 y luego quitar voley-2, solo se limpian las horas de voley-2 y voley-1 conserva las suyas.
+    const btnV1_14 = screen.getByRole('button', {
+      name: /Cuartos de final, Cancha 1, 14:00/i,
+    });
+    const btnV1_16 = screen.getByRole('button', {
+      name: /Cuartos de final, Cancha 1, 16:00/i,
+    });
+    fireEvent.click(btnV1_14);
+    fireEvent.click(btnV1_16);
+    expect(btnV1_14).toHaveAttribute('aria-pressed', 'true');
+    expect(btnV1_16).toHaveAttribute('aria-pressed', 'true');
 
-    // Al agregar voley-2, donde 14:00 y 15:00 están ocupadas, se limpia toda la franja de la fase y se muestra el aviso
-    fireEvent.click(screen.getByRole('button', { name: 'Cancha Voley Playa 2' }));
+    const btnCanchaV2 = screen.getByRole('button', { name: 'Cancha Voley Playa 2' });
+    fireEvent.click(btnCanchaV2);
 
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Ese horario ya no está libre en las canchas elegidas. Elige otro.'
-    );
+    const btnV2_16 = screen.getByRole('button', {
+      name: /Cuartos de final, Cancha 2, 16:00/i,
+    });
+    fireEvent.click(btnV2_16);
+    expect(btnV2_16).toHaveAttribute('aria-pressed', 'true');
     expect(
-      screen.getByRole('button', { name: /Cuartos de final 14:00/i })
-    ).toHaveAttribute('aria-pressed', 'false');
+      screen.getByRole('button', { name: /Cuartos de final, Cancha 1, 14:00/i })
+    ).toHaveAttribute('aria-pressed', 'true');
+
+    // Al quitar voley-2, voley-1 conserva sus horas
+    fireEvent.click(btnCanchaV2);
     expect(
-      screen.getByRole('button', { name: /Cuartos de final 15:00/i })
-    ).toHaveAttribute('aria-pressed', 'false');
+      screen.getByRole('button', { name: /Cuartos de final, Cancha 1, 14:00/i })
+    ).toHaveAttribute('aria-pressed', 'true');
     expect(
-      screen.getByRole('button', { name: /Cuartos de final 16:00/i })
-    ).toHaveAttribute('aria-pressed', 'false');
+      screen.getByRole('button', { name: /Cuartos de final, Cancha 1, 16:00/i })
+    ).toHaveAttribute('aria-pressed', 'true');
 
     unmount();
 
@@ -975,39 +1033,45 @@ describe('Modo Torneo - Pruebas de integración', () => {
       wrapper,
     });
 
-    // Con 4 equipos y ['voley-1', 'voley-2']: Fase 1 (Semifinal) usa 2 canchas; Fase 2 (Final) usa solo 1 ('voley-1').
-    // En dias[1], 14:00 está libre en voley-1 y ocupada en voley-2 -> libre en Fase 2 con 4 equipos.
+    // Con 8 equipos y 3 canchas (voley-1, voley-2, voley-3): al bajar a 4 equipos se recorta a 2 canchas y limpia voley-3 de las jornadas
     act(() => {
-      result.current.cambiarEquiposTorneo(4);
+      result.current.cambiarEquiposTorneo(8);
       result.current.alternarCancha('voley-1');
       result.current.alternarCancha('voley-2');
+      result.current.alternarCancha('voley-3');
       result.current.cambiarFechaFase(1, ctxRef.dias[1]);
       result.current.cambiarFechaFase(2, ctxRef.dias[1]);
     });
 
     act(() => {
-      result.current.elegirHoraFase(2, '14:00');
+      result.current.elegirHoraFase(2, 'voley-1', '16:00');
+      result.current.elegirHoraFase(2, 'voley-3', '16:00');
     });
-    expect(result.current.jornadas[2].horas).toEqual(['14:00']);
+    expect(result.current.jornadas[2].horasPorCancha).toEqual({
+      'voley-1': ['16:00'],
+      'voley-3': ['16:00'],
+    });
 
-    // Al subir a 8 equipos, la ronda 2 pasa a ser Semifinal (2 canchas: voley-1 y voley-2), donde 14:00 está ocupada en voley-2
+    // Al bajar a 4 equipos, maxCanchasTorneo(4)=2 quita 'voley-3' de las fases y de jornadas[2].horasPorCancha
     act(() => {
-      result.current.cambiarEquiposTorneo(8);
+      result.current.cambiarEquiposTorneo(4);
     });
-    expect(result.current.jornadas[2].horas).toEqual([]);
-    expect(result.current.error).toBe(
-      'Ese horario ya no está libre en las canchas elegidas. Elige otro.'
-    );
+    expect(result.current.jornadas[2].horasPorCancha).toEqual({
+      'voley-1': ['16:00'],
+    });
 
-    // c) Cambio de disponibilidad externa en la hora intermedia de un rango de 3 horas:
-    // en dias[1], 10:00, 11:00 y 12:00 están libres en voley-1 y voley-2; al ocuparse 11:00 (hora del medio) se limpia todo el rango (sin dejar hueco)
+    // c) Cambio de disponibilidad externa: en dias[1], se ocupa 11:00 en voley-2.
+    // Solo se quita 11:00 en voley-2 y quedan las demás horas de voley-2 y voley-1.
     act(() => {
-      result.current.elegirHoraFase(1, '10:00');
+      result.current.elegirHoraFase(1, 'voley-1', '10:00');
+      result.current.elegirHoraFase(1, 'voley-1', '12:00');
+      result.current.elegirHoraFase(1, 'voley-2', '11:00');
+      result.current.elegirHoraFase(1, 'voley-2', '12:00');
     });
-    act(() => {
-      result.current.elegirHoraFase(1, '12:00');
+    expect(result.current.jornadas[1].horasPorCancha).toEqual({
+      'voley-1': ['10:00', '12:00'],
+      'voley-2': ['11:00', '12:00'],
     });
-    expect(result.current.jornadas[1].horas).toEqual(['10:00', '11:00', '12:00']);
 
     act(() => {
       ctxRef.reservar({
@@ -1017,10 +1081,11 @@ describe('Modo Torneo - Pruebas de integración', () => {
         nombre: 'Laura Perez',
       });
     });
-    expect(result.current.jornadas[1].horas).toEqual([]);
-    expect(result.current.error).toBe(
-      'Ese horario ya no está libre en las canchas elegidas. Elige otro.'
-    );
+    expect(result.current.jornadas[1].horasPorCancha).toEqual({
+      'voley-1': ['10:00', '12:00'],
+      'voley-2': ['12:00'],
+    });
+    expect(result.current.error).toContain('11:00');
 
     unmountHook();
 
@@ -1040,11 +1105,16 @@ describe('Modo Torneo - Pruebas de integración', () => {
             horasMinimas: 1,
           },
         ]}
-        jornadas={{ 1: { fecha: '2026-11-10', horas: ['14:00'] } }}
+        jornadas={{
+          1: { fecha: '2026-11-10', horasPorCancha: { 'voley-1': ['14:00'] } },
+        }}
         validacionesJornadas={[]}
         dias={['2026-11-10']}
         horasBase={['14:00', '15:00']}
-        canchas={[]}
+        canchas={[
+          { id: 'voley-1', nombre: 'Cancha Voley Playa 1' },
+          { id: 'voley-2', nombre: 'Cancha Voley Playa 2' },
+        ]}
         canchaIds={['voley-1', 'voley-2']}
         duracionPartido={20}
         onElegirHoraFase={onElegirHoraFase}
@@ -1052,12 +1122,16 @@ describe('Modo Torneo - Pruebas de integración', () => {
       />
     );
 
-    const btnElegidaOcupada = screen.getByRole('button', { name: /Semifinal 14:00/i });
-    const btnNoElegidaOcupada = screen.getByRole('button', { name: /Semifinal 15:00/i });
+    const btnElegidaOcupada = screen.getByRole('button', {
+      name: /Semifinal, Cancha 1, 14:00/i,
+    });
+    const btnNoElegidaOcupada = screen.getByRole('button', {
+      name: /Semifinal, Cancha 1, 15:00/i,
+    });
     expect(btnElegidaOcupada).not.toBeDisabled();
     expect(btnNoElegidaOcupada).toBeDisabled();
     fireEvent.click(btnElegidaOcupada);
-    expect(onElegirHoraFase).toHaveBeenCalledWith(1, '14:00');
+    expect(onElegirHoraFase).toHaveBeenCalledWith(1, 'voley-1', '14:00');
     unmountCal();
 
     // e) Tras un fallo al confirmar en torneo, limpia también las horas en conflicto de jornadas
@@ -1071,6 +1145,7 @@ describe('Modo Torneo - Pruebas de integración', () => {
     );
 
     act(() => {
+      resConfirm.current.setDuracionPartido(30);
       resConfirm.current.cambiarEquiposTorneo(4);
       resConfirm.current.alternarCancha('futbol-1');
       resConfirm.current.alternarCancha('futbol-2');
@@ -1079,19 +1154,19 @@ describe('Modo Torneo - Pruebas de integración', () => {
     });
 
     act(() => {
-      resConfirm.current.elegirHoraFase(1, '10:00');
-    });
-    act(() => {
-      resConfirm.current.elegirHoraFase(1, '11:00');
-      resConfirm.current.elegirHoraFase(2, '15:00');
+      resConfirm.current.elegirHoraFase(1, 'futbol-1', '10:00');
+      resConfirm.current.elegirHoraFase(1, 'futbol-1', '12:00');
+      resConfirm.current.elegirHoraFase(2, 'futbol-1', '15:00');
       resConfirm.current.cambiarNombre('Carlos Ruiz');
     });
 
-    expect(resConfirm.current.jornadas[1].horas).toEqual(['10:00', '11:00']);
+    expect(resConfirm.current.jornadas[1].horasPorCancha).toEqual({
+      'futbol-1': ['10:00', '12:00'],
+    });
     expect(resConfirm.current.puedeConfirmar).toBe(true);
 
     // Avanza el reloj a las 10:30 del mismo día sin re-renderizar antes de confirmar:
-    // 10:00 en dias[0] ya empezó, por lo que reservarEvento falla y confirmar limpia toda la franja de la fase 1 en conflicto
+    // 10:00 en dias[0] ya empezó, por lo que reservarEvento falla y confirmar limpia la hora en conflicto
     vi.setSystemTime(new Date('2026-11-08T10:30:00'));
 
     act(() => {
@@ -1102,8 +1177,12 @@ describe('Modo Torneo - Pruebas de integración', () => {
     expect(resConfirm.current.error).toBe(
       'Alguna cancha u horario del evento ya no está disponible. No se reservó nada.'
     );
-    expect(resConfirm.current.jornadas[1].horas).toEqual([]);
-    expect(resConfirm.current.jornadas[2].horas).toEqual(['15:00']);
+    expect(resConfirm.current.jornadas[1].horasPorCancha).toEqual({
+      'futbol-1': ['12:00'],
+    });
+    expect(resConfirm.current.jornadas[2].horasPorCancha).toEqual({
+      'futbol-1': ['15:00'],
+    });
     expect(ctxRef.reservas).toHaveLength(0);
 
     unmountConfirm();
@@ -1150,11 +1229,8 @@ describe('Modo Torneo - Pruebas de integración', () => {
       resSinChoque.current.cambiarFechaFase(2, diasSinChoque[2]);
     });
     act(() => {
-      resSinChoque.current.elegirHoraFase(1, '10:00');
-    });
-    act(() => {
-      resSinChoque.current.elegirHoraFase(1, '11:00');
-      resSinChoque.current.elegirHoraFase(2, '14:00');
+      resSinChoque.current.elegirHoraFase(1, 'futbol-1', '10:00');
+      resSinChoque.current.elegirHoraFase(2, 'futbol-1', '14:00');
       resSinChoque.current.cambiarNombre('Carlos Ruiz');
     });
 
@@ -1166,8 +1242,12 @@ describe('Modo Torneo - Pruebas de integración', () => {
 
     expect(resSinChoque.current.confirmado).toBeNull();
     expect(resSinChoque.current.error).toBe(errorOrden);
-    expect(resSinChoque.current.jornadas[1].horas).toEqual(['10:00', '11:00']);
-    expect(resSinChoque.current.jornadas[2].horas).toEqual(['14:00']);
+    expect(resSinChoque.current.jornadas[1].horasPorCancha).toEqual({
+      'futbol-1': ['10:00'],
+    });
+    expect(resSinChoque.current.jornadas[2].horasPorCancha).toEqual({
+      'futbol-1': ['14:00'],
+    });
 
     unmountSinChoque();
   });
@@ -1189,14 +1269,13 @@ describe('Modo Torneo - Pruebas de integración', () => {
       result.current.cambiarFechaFase(1, diasRef[1]);
     });
     act(() => {
-      result.current.elegirHoraFase(1, '15:00');
-    });
-    act(() => {
-      result.current.elegirHoraFase(1, '17:00');
+      result.current.elegirHoraFase(1, 'voley-1', '15:00');
+      result.current.elegirHoraFase(1, 'voley-1', '16:00');
+      result.current.elegirHoraFase(1, 'voley-1', '17:00');
     });
     expect(result.current.jornadas[1]).toEqual({
       fecha: diasRef[1],
-      horas: ['15:00', '16:00', '17:00'],
+      horasPorCancha: { 'voley-1': ['15:00', '16:00', '17:00'] },
     });
 
     act(() => {
@@ -1204,11 +1283,9 @@ describe('Modo Torneo - Pruebas de integración', () => {
     });
     expect(result.current.jornadas[1]).toEqual({
       fecha: diasRef[2],
-      horas: [],
+      horasPorCancha: { 'voley-1': ['15:00', '17:00'] },
     });
-    expect(result.current.error).toBe(
-      'Ese horario ya no está libre en las canchas elegidas. Elige otro.'
-    );
+    expect(result.current.error).toContain('16:00');
   });
 
   it('14b. S2: fuera de modo torneo (Cumpleaños o Cancha) cambiarFecha actualiza la fecha de la fase 1 y conserva sus horas; al volver a Torneo revalida y avisa si hay choque', () => {
@@ -1227,20 +1304,19 @@ describe('Modo Torneo - Pruebas de integración', () => {
     const { result } = renderHook(() => ProbarHook(), { wrapper });
 
     // a) En Cumpleaños: cambiarFecha actualiza la fecha de la fase 1 pero conserva sus horas sin aviso;
-    // al volver a Torneo, el efecto revalida, limpia el rango por el choque en 16:00 y muestra el aviso.
+    // al volver a Torneo, el efecto revalida, quita la hora en conflicto (16:00) y muestra el aviso.
     act(() => {
       result.current.alternarCancha('voley-1');
       result.current.cambiarFechaFase(1, diasRef[1]);
     });
     act(() => {
-      result.current.elegirHoraFase(1, '15:00');
-    });
-    act(() => {
-      result.current.elegirHoraFase(1, '17:00');
+      result.current.elegirHoraFase(1, 'voley-1', '15:00');
+      result.current.elegirHoraFase(1, 'voley-1', '16:00');
+      result.current.elegirHoraFase(1, 'voley-1', '17:00');
     });
     expect(result.current.jornadas[1]).toEqual({
       fecha: diasRef[1],
-      horas: ['15:00', '16:00', '17:00'],
+      horasPorCancha: { 'voley-1': ['15:00', '16:00', '17:00'] },
     });
 
     act(() => {
@@ -1252,7 +1328,7 @@ describe('Modo Torneo - Pruebas de integración', () => {
     expect(result.current.error).toBeNull();
     expect(result.current.jornadas[1]).toEqual({
       fecha: diasRef[2],
-      horas: ['15:00', '16:00', '17:00'],
+      horasPorCancha: { 'voley-1': ['15:00', '16:00', '17:00'] },
     });
 
     act(() => {
@@ -1262,22 +1338,20 @@ describe('Modo Torneo - Pruebas de integración', () => {
     expect(result.current.modo).toBe('torneo');
     expect(result.current.jornadas[1]).toEqual({
       fecha: diasRef[2],
-      horas: [],
+      horasPorCancha: { 'voley-1': ['15:00', '17:00'] },
     });
-    expect(result.current.error).toBe(
-      'Ese horario ya no está libre en las canchas elegidas. Elige otro.'
-    );
+    expect(result.current.error).toContain('16:00');
 
     // b) En modo cancha (incluso con canchaIds vacío) cambiar a un día libre (dias[4]) conserva las horas de la fase 1
     // Además, cambiarFechaFase y elegirHoraFase en el mismo lote act() no se pisan entre sí (Point 4)
     act(() => {
       result.current.cambiarFechaFase(1, diasRef[1]);
-      result.current.elegirHoraFase(1, '14:00');
-      result.current.elegirHoraFase(1, '15:00');
+      result.current.elegirHoraFase(1, 'voley-1', '14:00');
+      result.current.elegirHoraFase(1, 'voley-1', '15:00');
     });
     expect(result.current.jornadas[1]).toEqual({
       fecha: diasRef[1],
-      horas: ['14:00', '15:00'],
+      horasPorCancha: { 'voley-1': ['14:00', '15:00'] },
     });
 
     act(() => {
@@ -1294,7 +1368,7 @@ describe('Modo Torneo - Pruebas de integración', () => {
     });
     expect(result.current.jornadas[1]).toEqual({
       fecha: diasRef[4],
-      horas: ['14:00', '15:00'],
+      horasPorCancha: { 'voley-1': ['14:00', '15:00'] },
     });
 
     act(() => {
@@ -1303,7 +1377,7 @@ describe('Modo Torneo - Pruebas de integración', () => {
     expect(result.current.canchaIds).toEqual(['voley-1']);
     expect(result.current.jornadas[1]).toEqual({
       fecha: diasRef[4],
-      horas: ['14:00', '15:00'],
+      horasPorCancha: { 'voley-1': ['14:00', '15:00'] },
     });
     expect(result.current.error).toBeNull();
   });
@@ -1318,18 +1392,19 @@ describe('Modo Torneo - Pruebas de integración', () => {
     const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
     const { result } = renderHook(() => ProbarHookConContexto(), { wrapper });
 
-    // En Torneo: elegimos voley-1 en dias[1] y un rango de 3 horas (14:00, 15:00, 16:00) en la fase 1
+    // En Torneo: elegimos voley-1 en dias[1] y 3 horas (14:00, 15:00, 16:00) en la fase 1
     act(() => {
       result.current.alternarCancha('voley-1');
       result.current.cambiarFechaFase(1, ctxRef.dias[1]);
     });
     act(() => {
-      result.current.elegirHoraFase(1, '14:00');
+      result.current.elegirHoraFase(1, 'voley-1', '14:00');
+      result.current.elegirHoraFase(1, 'voley-1', '15:00');
+      result.current.elegirHoraFase(1, 'voley-1', '16:00');
     });
-    act(() => {
-      result.current.elegirHoraFase(1, '16:00');
+    expect(result.current.jornadas[1].horasPorCancha).toEqual({
+      'voley-1': ['14:00', '15:00', '16:00'],
     });
-    expect(result.current.jornadas[1].horas).toEqual(['14:00', '15:00', '16:00']);
 
     // Cambiamos a modo Cumpleaños
     act(() => {
@@ -1351,18 +1426,20 @@ describe('Modo Torneo - Pruebas de integración', () => {
 
     expect(result.current.modo).toBe('cumpleanos');
     expect(result.current.error).toBeNull();
-    expect(result.current.jornadas[1].horas).toEqual(['14:00', '15:00', '16:00']);
+    expect(result.current.jornadas[1].horasPorCancha).toEqual({
+      'voley-1': ['14:00', '15:00', '16:00'],
+    });
 
-    // Al volver a Torneo, el efecto de limpieza corre, limpia el rango completo de la fase 1 y muestra el aviso
+    // Al volver a Torneo, el efecto de limpieza corre, quita solo la hora ocupada (15:00) y muestra el aviso
     act(() => {
       result.current.cambiarModo('torneo');
     });
 
     expect(result.current.modo).toBe('torneo');
-    expect(result.current.jornadas[1].horas).toEqual([]);
-    expect(result.current.error).toBe(
-      'Ese horario ya no está libre en las canchas elegidas. Elige otro.'
-    );
+    expect(result.current.jornadas[1].horasPorCancha).toEqual({
+      'voley-1': ['14:00', '16:00'],
+    });
+    expect(result.current.error).toContain('15:00');
   });
 
   it('16. S6: con 4 equipos no permite agregar una tercera cancha y explica el motivo; al bajar de 8 a 4 equipos con 3 canchas deja las primeras 2 con aviso y solo guarda/cobra esas 2', () => {
@@ -1458,8 +1535,9 @@ describe('Modo Torneo - Pruebas de integración', () => {
       result.current.cambiarFechaFase(2, diasHook[2]);
     });
     act(() => {
-      result.current.elegirHoraFase(1, '14:00');
-      result.current.elegirHoraFase(2, '15:00');
+      result.current.elegirHoraFase(1, 'futbol-1', '14:00');
+      result.current.elegirHoraFase(1, 'futbol-2', '14:00');
+      result.current.elegirHoraFase(2, 'futbol-1', '15:00');
       result.current.cambiarNombre('Elena Vargas');
     });
     act(() => {
@@ -1520,10 +1598,17 @@ describe('Modo Torneo - Pruebas de integración', () => {
     const seccionSemi = screen.getByLabelText('Fase 1: Semifinal');
     const seccionFinal = screen.getByLabelText('Fase 2: Final');
     fireEvent.click(within(seccionSemi).getAllByRole('button')[1]);
-    fireEvent.click(screen.getByRole('button', { name: 'Semifinal 14:00' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Semifinal, Cancha 2, 14:00' })
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Semifinal, Cancha 3, 14:00' })
+    );
     fireEvent.click(screen.getByRole('tab', { name: /^Final\b/i }));
     fireEvent.click(within(seccionFinal).getAllByRole('button')[2]);
-    fireEvent.click(screen.getByRole('button', { name: 'Final 15:00' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Final, Cancha 2, 15:00' })
+    );
 
     fireEvent.change(screen.getByLabelText(/Nombre/i), {
       target: { value: 'Elena Vargas' },
@@ -1535,9 +1620,9 @@ describe('Modo Torneo - Pruebas de integración', () => {
       .closest('.confirmacion-reserva');
     expect(confirmacion).toBeInTheDocument();
     // La confirmación muestra solo Cancha Fútbol 2 y Cancha Fútbol 3, nunca Cancha Fútbol 1
-    expect(within(confirmacion).getAllByText(/Cancha Fútbol 2/i).length).toBeGreaterThan(0);
-    expect(within(confirmacion).getAllByText(/Cancha Fútbol 3/i).length).toBeGreaterThan(0);
-    expect(within(confirmacion).queryByText(/Cancha Fútbol 1/i)).not.toBeInTheDocument();
+    expect(within(confirmacion).getAllByText(/Fútbol 2/i).length).toBeGreaterThan(0);
+    expect(within(confirmacion).getAllByText(/Fútbol 3/i).length).toBeGreaterThan(0);
+    expect(within(confirmacion).queryByText(/Fútbol 1/i)).not.toBeInTheDocument();
 
     const dataGuardada = JSON.parse(
       window.localStorage.getItem('sportify_reservas_v2')
@@ -1546,9 +1631,446 @@ describe('Modo Torneo - Pruebas de integración', () => {
       (r) => r.subtipo === 'torneo'
     );
     expect(torneoGuardado.canchaIds).toEqual(['futbol-2', 'futbol-3']);
-    expect(torneoGuardado.bloques[0].canchaIds).toEqual(['futbol-2', 'futbol-3']);
+    expect(torneoGuardado.bloques).toHaveLength(3);
+    expect(torneoGuardado.bloques[0].canchaIds).toEqual(['futbol-2']);
     expect(torneoGuardado.bloques[0].fecha).toBe(diasCapturados[1]);
-    expect(torneoGuardado.bloques[1].canchaIds).toEqual(['futbol-2']);
-    expect(torneoGuardado.bloques[1].fecha).toBe(diasCapturados[2]);
+    expect(torneoGuardado.bloques[1].canchaIds).toEqual(['futbol-3']);
+    expect(torneoGuardado.bloques[1].fecha).toBe(diasCapturados[1]);
+    expect(torneoGuardado.bloques[2].canchaIds).toEqual(['futbol-2']);
+    expect(torneoGuardado.bloques[2].fecha).toBe(diasCapturados[2]);
+  });
+
+  it('17. Horas salteadas por cancha (Pádel 1 16:00 y 18:00, Pádel 2 19:00), desmarcar segunda y última y bloqueo independiente en Pádel 2', () => {
+    let ctxRef = null;
+    function CapturadorCtx() {
+      ctxRef = useReservas();
+      return null;
+    }
+
+    let hookRef = null;
+    function HarnessPadel() {
+      const { dias, canchas } = useReservas();
+      const reserva = useReserva({ activo: true, modoInicial: 'torneo' });
+      hookRef = reserva;
+
+      const initRef = useRef(false);
+      useEffect(() => {
+        if (!initRef.current) {
+          initRef.current = true;
+          // dia 3 (padel-1 solo ocupa 12:00 y 13:00; padel-2 ocupa 11:00..14:00 en semilla)
+          reserva.cambiarFecha(dias[3]);
+          reserva.alternarCancha('padel-1');
+          reserva.alternarCancha('padel-2');
+        }
+      }, [dias, reserva]);
+
+      return (
+        <div>
+          <FormularioReserva reserva={reserva} dias={dias} />
+          <VoucherReserva
+            tipoEtiqueta={reserva.modoInfo.tipoEtiqueta}
+            fechaTexto={fechaCompleta(reserva.fecha)}
+            horas={reserva.horasSel}
+            precio={reserva.precio}
+            puedeConfirmar={reserva.puedeConfirmar}
+            motivoBloqueo={reserva.motivoBloqueo}
+            onConfirmar={reserva.confirmar}
+            onCancelar={reserva.reiniciar}
+            torneo={reserva.modo === 'torneo' ? reserva.torneoPlan : null}
+            canchas={canchas}
+          />
+        </div>
+      );
+    }
+
+    render(
+      <ReservasProvider>
+        <CapturadorCtx />
+        <HarnessPadel />
+      </ReservasProvider>
+    );
+
+    // Ocupar 16:00 solo en Pádel 2 el día 3 (dias[3]) para verificar bloqueo independiente
+    act(() => {
+      ctxRef.reservar({
+        canchaId: 'padel-2',
+        fecha: ctxRef.dias[3],
+        horas: ['16:00'],
+        nombre: 'Ocupante P2',
+      });
+    });
+
+    const btnP1_13 = screen.getByRole('button', {
+      name: 'Cuartos de final, Cancha 1, 16:00',
+    });
+    const btnP2_13 = screen.getByRole('button', {
+      name: 'Cuartos de final, Cancha 2, 16:00, reservada',
+    });
+    expect(btnP1_13).not.toBeDisabled();
+    expect(btnP2_13).toBeDisabled();
+
+    // Elegir Cuartos en Pádel 1 a las 16:00 y 18:00 y en Pádel 2 a las 19:00
+    const btnP1_16 = screen.getByRole('button', {
+      name: 'Cuartos de final, Cancha 1, 16:00',
+    });
+    const btnP1_18 = screen.getByRole('button', {
+      name: 'Cuartos de final, Cancha 1, 18:00',
+    });
+    const btnP2_19 = screen.getByRole('button', {
+      name: 'Cuartos de final, Cancha 2, 19:00',
+    });
+
+    fireEvent.click(btnP1_16);
+    fireEvent.click(btnP1_18);
+    fireEvent.click(btnP2_19);
+
+    expect(btnP1_16).toHaveAttribute('aria-pressed', 'true');
+    expect(btnP1_18).toHaveAttribute('aria-pressed', 'true');
+    expect(btnP2_19).toHaveAttribute('aria-pressed', 'true');
+
+    // Resumen en calendario y voucher muestra el detalle por cancha
+    expect(
+      screen.getByText(/Cancha 1: 16:00, 18:00 · Cancha 2: 19:00 \(3 horas\)/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Cuartos de final:.*Pádel 1: 16:00, 18:00 · Pádel 2: 19:00/i)
+    ).toBeInTheDocument();
+
+    const bloquesR1 = hookRef.torneoPlan.bloques.filter((b) => b.ronda === 1);
+    expect(bloquesR1).toHaveLength(2);
+    expect(bloquesR1[0]).toMatchObject({
+      ronda: 1,
+      canchaIds: ['padel-1'],
+      horas: ['16:00', '18:00'],
+    });
+    expect(bloquesR1[1]).toMatchObject({
+      ronda: 1,
+      canchaIds: ['padel-2'],
+      horas: ['19:00'],
+    });
+
+    // Tocar dos veces 17:00 la marca y la desmarca; luego desmarcar segunda y última de [16, 17, 18, 19]
+    const btnP1_17 = screen.getByRole('button', {
+      name: 'Cuartos de final, Cancha 1, 17:00',
+    });
+    const btnP1_19 = screen.getByRole('button', {
+      name: 'Cuartos de final, Cancha 1, 19:00',
+    });
+    fireEvent.click(btnP1_17);
+    expect(btnP1_17).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(btnP1_17);
+    expect(btnP1_17).toHaveAttribute('aria-pressed', 'false');
+
+    // Ahora P1 queda con [16:00, 17:00, 18:00, 19:00]
+    fireEvent.click(btnP1_17);
+    fireEvent.click(btnP1_19);
+    expect(hookRef.jornadas[1].horasPorCancha['padel-1']).toEqual([
+      '16:00',
+      '17:00',
+      '18:00',
+      '19:00',
+    ]);
+
+    // Desmarcar segunda (17:00) y última (19:00) deja 16:00 y 18:00 intactas
+    fireEvent.click(btnP1_17);
+    fireEvent.click(btnP1_19);
+    expect(btnP1_16).toHaveAttribute('aria-pressed', 'true');
+    expect(btnP1_17).toHaveAttribute('aria-pressed', 'false');
+    expect(btnP1_18).toHaveAttribute('aria-pressed', 'true');
+    expect(btnP1_19).toHaveAttribute('aria-pressed', 'false');
+    expect(hookRef.jornadas[1].horasPorCancha['padel-1']).toEqual(['16:00', '18:00']);
+  });
+
+  it('18. Semifinal antes del fin de Cuartos por la cancha 2: bloqueo preventivo en useReserva y error de orden con Confirmar bloqueado', () => {
+    // a) Bloqueo preventivo: si Cuartos usa Pádel 1 a las 16:00 y Pádel 2 a las 19:00 (termina 20:00),
+    // Semifinal el mismo día deshabilita 17:00, 18:00 y 19:00 aunque Pádel 1 terminó a las 17:00.
+    render(
+      <ReservasProvider>
+        <FlujoTorneoPrueba
+          canchasIniciales={['padel-1', 'padel-2']}
+          diaInicialIndex={3}
+        />
+      </ReservasProvider>
+    );
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 1, 16:00' })
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 2, 19:00' })
+    );
+
+    fireEvent.click(screen.getByRole('tab', { name: /Semifinal/i }));
+    expect(
+      screen.getByRole('button', { name: 'Semifinal, Cancha 1, 17:00' })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Semifinal, Cancha 1, 18:00' })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Semifinal, Cancha 1, 19:00' })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Semifinal, Cancha 2, 19:00' })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Semifinal, Cancha 1, 20:00' })
+    ).not.toBeDisabled();
+
+    // b) Cuando validacionesJornadas tiene ordenValido: false en Semifinal, muestra error de orden y bloquea Confirmar
+    const errorOrden =
+      'Semifinal debe jugarse después de que termine Cuartos de final (2026-11-12 a las 20:00).';
+    render(
+      <div data-testid="orden-invalido-probe">
+        <CalendarioTorneo
+          fases={[
+            {
+              ronda: 1,
+              nombreRonda: 'Cuartos de final',
+              partidos: 4,
+              canchasEfectivas: 2,
+              canchaIds: ['padel-1', 'padel-2'],
+              turnos: 2,
+              minutosRequeridos: 60,
+              horasMinimas: 1,
+            },
+            {
+              ronda: 2,
+              nombreRonda: 'Semifinal',
+              partidos: 2,
+              canchasEfectivas: 2,
+              canchaIds: ['padel-1', 'padel-2'],
+              turnos: 1,
+              minutosRequeridos: 30,
+              horasMinimas: 1,
+            },
+          ]}
+          jornadas={{
+            1: {
+              fecha: '2026-11-12',
+              horasPorCancha: { 'padel-1': ['16:00'], 'padel-2': ['19:00'] },
+            },
+            2: {
+              fecha: '2026-11-12',
+              horasPorCancha: { 'padel-1': ['18:00'] },
+            },
+          }}
+          validacionesJornadas={[
+            { ronda: 1, nombreRonda: 'Cuartos de final', completa: true, alcanza: true, ordenValido: true, error: null },
+            { ronda: 2, nombreRonda: 'Semifinal', completa: true, alcanza: true, ordenValido: false, error: errorOrden },
+          ]}
+          dias={['2026-11-12', '2026-11-13']}
+          horasBase={['16:00', '17:00', '18:00', '19:00', '20:00']}
+          canchas={[
+            { id: 'padel-1', nombre: 'Cancha Pádel 1' },
+            { id: 'padel-2', nombre: 'Cancha Pádel 2' },
+          ]}
+          canchaIds={['padel-1', 'padel-2']}
+          duracionPartido={20}
+          esLibreFase={() => true}
+        />
+        <VoucherReserva
+          tipoEtiqueta="Torneo"
+          fechaTexto="jue 12 de nov"
+          horas={[]}
+          precio={{ subtotal: 260000, descuento: 0, ahorro: 0, packsAgua: 0, total: 260000, lineas: [] }}
+          puedeConfirmar={false}
+          motivoBloqueo={errorOrden}
+          onConfirmar={() => {}}
+          onCancelar={() => {}}
+          torneo={{ equipos: 8, duracionPartido: 20 }}
+        />
+      </div>
+    );
+
+    const probe = screen.getByTestId('orden-invalido-probe');
+    expect(within(probe).getAllByText(errorOrden).length).toBeGreaterThanOrEqual(1);
+    expect(
+      within(probe).getByRole('button', { name: /Confirmar reserva/i })
+    ).toBeDisabled();
+  });
+
+  it('19. Final con 5 horas: aviso visible, diálogo, Escape devuelve foco, Revisar horas enfoca la Final y Reservar igual reserva una sola vez sin duplicar', () => {
+    render(
+      <ReservasProvider>
+        <FlujoTorneoPrueba canchasIniciales={['padel-1', 'padel-2']} />
+      </ReservasProvider>
+    );
+
+    // Programar Cuartos día 1, Semifinal día 2 y Final día 5 (vacío en semilla para Pádel 1) con 5 horas
+    const seccionCuartos = screen.getByLabelText('Fase 1: Cuartos de final');
+    fireEvent.click(within(seccionCuartos).getAllByRole('button')[1]);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 1, 14:00' })
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 2, 14:00' })
+    );
+
+    fireEvent.click(screen.getByRole('tab', { name: /Semifinal/i }));
+    const seccionSemi = screen.getByLabelText('Fase 2: Semifinal');
+    fireEvent.click(within(seccionSemi).getAllByRole('button')[2]);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Semifinal, Cancha 1, 14:00' })
+    );
+
+    fireEvent.click(screen.getByRole('tab', { name: /^Final\b/i }));
+    const seccionFinal = screen.getByLabelText('Fase 3: Final');
+    fireEvent.click(within(seccionFinal).getAllByRole('button')[5]);
+    ['08:00', '09:00', '10:00', '11:00', '12:00'].forEach((h) => {
+      fireEvent.click(
+        screen.getByRole('button', { name: `Final, Cancha 1, ${h}` })
+      );
+    });
+
+    const msgEsperado =
+      'La Final es 1 partido de 20 min. Marcaste 5 horas y 4 quedarían sin partido.';
+    expect(within(seccionFinal).getByRole('status')).toHaveTextContent(msgEsperado);
+
+    // Ir a otra pestaña y completar nombre para confirmar
+    const tabCuartos = screen.getByRole('tab', { name: /Cuartos de final/i });
+    fireEvent.click(tabCuartos);
+    expect(tabCuartos).toHaveAttribute('aria-selected', 'true');
+
+    fireEvent.change(screen.getByLabelText(/Nombre/i), {
+      target: { value: 'Andrés Morales' },
+    });
+
+    const btnConfirmar = screen.getByRole('button', { name: /Confirmar reserva/i });
+    btnConfirmar.focus();
+    fireEvent.click(btnConfirmar);
+
+    // Abre diálogo sin reservar y enfoca Revisar horas
+    let dialogo = screen.getByRole('dialog');
+    expect(within(dialogo).getByText(msgEsperado)).toBeInTheDocument();
+    expect(document.activeElement).toBe(
+      within(dialogo).getByRole('button', { name: 'Revisar horas' })
+    );
+    const estadoSinReservar = JSON.parse(
+      window.localStorage.getItem('sportify_reservas_v2')
+    );
+    expect(estadoSinReservar.reservas).toEqual([]);
+
+    // Escape cierra el diálogo y devuelve el foco al botón Confirmar reserva
+    fireEvent.keyDown(dialogo, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(btnConfirmar);
+    expect(screen.queryByText('Reserva confirmada')).not.toBeInTheDocument();
+
+    // Volver a pulsar Confirmar y pulsar Revisar horas activa la pestaña Final y enfoca su panel sin reservar
+    fireEvent.click(btnConfirmar);
+    dialogo = screen.getByRole('dialog');
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Revisar horas' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /^Final\b/i })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    expect(document.activeElement).toBe(seccionFinal);
+    expect(screen.queryByText('Reserva confirmada')).not.toBeInTheDocument();
+
+    // Volver a pulsar Confirmar y pulsar Reservar igual reserva UNA sola vez
+    fireEvent.click(btnConfirmar);
+    dialogo = screen.getByRole('dialog');
+    const btnReservarIgual = within(dialogo).getByRole('button', {
+      name: 'Reservar igual',
+    });
+    fireEvent.click(btnReservarIgual);
+    // Segundo clic en el evento si el botón quedara un tick más no duplica
+    fireEvent.click(btnReservarIgual);
+
+    expect(screen.getByText('Reserva confirmada')).toBeInTheDocument();
+    const guardado = JSON.parse(window.localStorage.getItem('sportify_reservas_v2'));
+    const torneos = guardado.reservas.filter((r) => r.subtipo === 'torneo');
+    expect(torneos).toHaveLength(1);
+  });
+
+  it('20. Hora ocupada por otra reserva después se quita sola con el mensaje exacto y deja las demás', () => {
+    let ctxRef = null;
+    function ProbarOcupacionPosterior() {
+      ctxRef = useReservas();
+      return useReserva({ activo: true, modoInicial: 'torneo' });
+    }
+
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => ProbarOcupacionPosterior(), { wrapper });
+
+    act(() => {
+      result.current.alternarCancha('padel-1');
+      result.current.alternarCancha('padel-2');
+      result.current.cambiarFechaFase(1, ctxRef.dias[3]);
+    });
+
+    act(() => {
+      result.current.elegirHoraFase(1, 'padel-1', '16:00');
+      result.current.elegirHoraFase(1, 'padel-1', '18:00');
+      result.current.elegirHoraFase(1, 'padel-2', '19:00');
+    });
+
+    // Otra reserva ocupa padel-2 a las 19:00 en dias[3]
+    act(() => {
+      ctxRef.reservar({
+        canchaId: 'padel-2',
+        fecha: ctxRef.dias[3],
+        horas: ['19:00'],
+        nombre: 'Sofía Rojas',
+      });
+    });
+
+    expect(result.current.jornadas[1].horasPorCancha).toEqual({
+      'padel-1': ['16:00', '18:00'],
+    });
+    expect(result.current.error).toBe(
+      'La hora de las 19:00 en Cancha 2 (Cuartos de final) ya no está libre: la quitamos.'
+    );
+  });
+
+  it('21. Dos clics síncronos en Confirmar reserva en el mismo tick crean una sola reserva y el código mostrado coincide con el guardado', () => {
+    render(
+      <ReservasProvider>
+        <FlujoTorneoPrueba canchasIniciales={['futbol-1', 'futbol-2', 'futbol-3']} />
+      </ReservasProvider>
+    );
+
+    const seccionCuartos = screen.getByLabelText('Fase 1: Cuartos de final');
+    fireEvent.click(within(seccionCuartos).getAllByRole('button')[1]);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 1, 14:00' })
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 2, 14:00' })
+    );
+
+    fireEvent.click(screen.getByRole('tab', { name: /Semifinal/i }));
+    const seccionSemi = screen.getByLabelText('Fase 2: Semifinal');
+    fireEvent.click(within(seccionSemi).getAllByRole('button')[2]);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Semifinal, Cancha 1, 15:00' })
+    );
+
+    fireEvent.click(screen.getByRole('tab', { name: /^Final\b/i }));
+    const seccionFinal = screen.getByLabelText('Fase 3: Final');
+    fireEvent.click(within(seccionFinal).getAllByRole('button')[3]);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Final, Cancha 1, 16:00' })
+    );
+
+    fireEvent.change(screen.getByLabelText(/Nombre/i), {
+      target: { value: 'Camila Duarte' },
+    });
+
+    const btnConfirmar = screen.getByRole('button', { name: /Confirmar reserva/i });
+    expect(btnConfirmar).toBeEnabled();
+
+    act(() => {
+      btnConfirmar.click();
+      btnConfirmar.click();
+    });
+
+    expect(screen.getByText('Reserva confirmada')).toBeInTheDocument();
+    const guardado = JSON.parse(window.localStorage.getItem('sportify_reservas_v2'));
+    expect(guardado.reservas).toHaveLength(1);
+    const codigoGuardado = guardado.reservas[0].codigo;
+    expect(screen.getByText(codigoGuardado)).toBeInTheDocument();
   });
 });

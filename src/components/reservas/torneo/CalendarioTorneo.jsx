@@ -6,43 +6,44 @@ import AlertaTiempo from './AlertaTiempo';
 import { tituloCancha } from '../../../lib/canchas';
 import { etiquetaDia } from '../../../lib/fechas';
 import { finDeFranja } from '../../../lib/precios';
+import { horasDeJornada } from '../../../lib/torneo';
 import './Bracket.css';
 import './CalendarioTorneo.css';
 
-const FRANJAS_CONFIG = [
-  { id: 'manana', nombre: 'Mañana', min: 0, max: 11 },
-  { id: 'tarde', nombre: 'Tarde', min: 12, max: 17 },
-  { id: 'noche', nombre: 'Noche', min: 18, max: 23 },
-];
-
-function agruparPorFranjas(horas) {
-  return FRANJAS_CONFIG.map((f) => ({
-    ...f,
-    horas: (horas || []).filter((h) => {
-      const num = parseInt(h, 10);
-      return num >= f.min && num <= f.max;
-    }),
-  })).filter((f) => f.horas.length > 0);
+function contarHorasFase(jornada, fase) {
+  const mapa = jornada?.horasPorCancha || {};
+  const cids =
+    Array.isArray(fase?.canchaIds) && fase.canchaIds.length > 0
+      ? fase.canchaIds
+      : Object.keys(mapa);
+  return cids.reduce(
+    (acc, cid) => acc + (Array.isArray(mapa[cid]) ? mapa[cid].length : 0),
+    0
+  );
 }
 
 /**
  * CalendarioTorneo — Programación por fases del torneo multi-día.
  *
- * Permite seleccionar el día y la franja horaria de cada fase de eliminación
+ * Permite seleccionar el día y las horas por cancha de cada fase de eliminación
  * directa (Octavos de final, Cuartos de final, Semifinal, Final), mostrando
- * las canchas efectivas, validaciones de suficiencia de tiempo y alertas
- * de orden cronológico entre fases.
+ * las canchas de la fase, validaciones de suficiencia de tiempo, alertas de
+ * orden cronológico entre fases y aviso de horas sin partido.
  */
 export function CalendarioTorneo({
   fases = [],
   jornadas = {},
   validacionesJornadas = [],
   sugerenciasPorFase = {},
+  horasSinPartidoPorFase = {},
   dias = [],
   horasBase = [],
   canchas = [],
   canchaIds = [],
   duracionPartido,
+  minutosTurno,
+  faseARevisar = null,
+  marcaFaseARevisar = 0,
   onCambiarDuracion,
   onCambiarFechaFase,
   onElegirHoraFase,
@@ -52,10 +53,15 @@ export function CalendarioTorneo({
 }) {
   const rootRef = useRef(null);
   const tabsRef = useRef([]);
+  const panelsRef = useRef({});
+  const ultimaMarcaRevisarRef = useRef(0);
   const [faseActiva, setFaseActiva] = useState(() =>
-    fases[0] ? fases[0].ronda : 1
+    faseARevisar != null && fases.some((f) => f.ronda === faseARevisar)
+      ? faseARevisar
+      : fases[0]
+      ? fases[0].ronda
+      : 1
   );
-  const franjas = agruparPorFranjas(horasBase);
 
   const rondaActiva = fases.some((f) => f.ronda === faseActiva)
     ? faseActiva
@@ -66,6 +72,25 @@ export function CalendarioTorneo({
       setFaseActiva(fases[0].ronda);
     }
   }, [fases, faseActiva]);
+
+  useEffect(() => {
+    if (!marcaFaseARevisar || marcaFaseARevisar === ultimaMarcaRevisarRef.current) {
+      return;
+    }
+    if (faseARevisar == null || !fases.some((f) => f.ronda === faseARevisar)) {
+      return;
+    }
+    if (rondaActiva !== faseARevisar) {
+      setFaseActiva(faseARevisar);
+      return;
+    }
+    ultimaMarcaRevisarRef.current = marcaFaseARevisar;
+    const panel = panelsRef.current[faseARevisar];
+    if (panel && !panel.hasAttribute('hidden')) {
+      panel.focus();
+      panel.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+    }
+  }, [marcaFaseARevisar, faseARevisar, fases, rondaActiva]);
 
   useEffect(() => {
     if (!rootRef.current?.querySelector('.calendario-torneo__fase:not([hidden])')) {
@@ -84,6 +109,15 @@ export function CalendarioTorneo({
 
     return () => mm.revert();
   }, [rondaActiva]);
+
+  const nombreCanchaDe = (id) => {
+    const c = Array.isArray(canchas)
+      ? canchas.find((cancha) => cancha.id === id)
+      : null;
+    if (c) return tituloCancha(c);
+    const match = String(id).match(/(\d+)$/);
+    return match ? `Cancha ${match[1]}` : String(id);
+  };
 
   const activarFase = (ronda, idx, enfocar = false) => {
     setFaseActiva(ronda);
@@ -136,7 +170,7 @@ export function CalendarioTorneo({
       )}
 
       <p className="formulario-reserva__nota">
-        Para elegir 2 o más horas seguidas, toca la hora de inicio y luego la hora final.
+        Toca una hora para marcarla o desmarcarla en cada cancha. Puedes elegir horas salteadas y distintas en cada cancha.
       </p>
 
       {fases.length > 0 && (
@@ -150,30 +184,29 @@ export function CalendarioTorneo({
               const esActiva = fase.ronda === rondaActiva;
               const jornada = jornadas[fase.ronda] || {
                 fecha: dias[0] || '',
-                horas: [],
+                horasPorCancha: {},
               };
               const val = validacionesJornadas.find(
                 (v) => v.ronda === fase.ronda
               );
-              const horasFase = Array.isArray(jornada.horas)
-                ? jornada.horas
-                : [];
+              const totalHoras = contarHorasFase(jornada, fase);
+              const extraFase = horasSinPartidoPorFase[fase.ronda] || {};
+              const tieneHorasDeMas =
+                Array.isArray(extraFase.lista) && extraFase.lista.length > 0;
               const tieneAviso =
-                horasFase.length > 0 &&
-                Boolean(val && (val.ordenValido === false || val.alcanza === false));
+                totalHoras > 0 &&
+                (Boolean(val && (val.ordenValido === false || val.alcanza === false)) ||
+                  tieneHorasDeMas);
 
               const diaEtiqueta = jornada.fecha
                 ? etiquetaDia(jornada.fecha, dias)
                 : '';
-              const rangoHoras =
-                horasFase.length > 0
-                  ? `${horasFase[0]} a ${finDeFranja(horasFase[horasFase.length - 1])}`
-                  : '';
+              const etiquetaHoras = `${totalHoras} ${totalHoras === 1 ? 'hora' : 'horas'}`;
               const subtextoEstado =
-                horasFase.length > 0
+                totalHoras > 0
                   ? diaEtiqueta
-                    ? `${diaEtiqueta} · ${rangoHoras}`
-                    : rangoHoras
+                    ? `${diaEtiqueta} · ${etiquetaHoras}`
+                    : etiquetaHoras
                   : 'Sin horario';
 
               return (
@@ -229,32 +262,39 @@ export function CalendarioTorneo({
             const esActiva = fase.ronda === rondaActiva;
             const jornada = jornadas[fase.ronda] || {
               fecha: dias[0] || '',
-              horas: [],
+              horasPorCancha: {},
             };
             const val = validacionesJornadas.find((v) => v.ronda === fase.ronda);
-            const horasFase = Array.isArray(jornada.horas) ? jornada.horas : [];
-
-            const nombresEfectivas = Array.isArray(fase.canchaIds)
+            const totalHoras = contarHorasFase(jornada, fase);
+            const extraFase = horasSinPartidoPorFase[fase.ronda] || {};
+            const tieneHorasDeMas =
+              Array.isArray(extraFase.lista) && extraFase.lista.length > 0;
+            const canchasDeLaFase = Array.isArray(fase.canchaIds)
               ? fase.canchaIds
-                  .map((id) => {
-                    const c = Array.isArray(canchas)
-                      ? canchas.find((cancha) => cancha.id === id)
-                      : null;
-                    if (c) return tituloCancha(c);
-                    const match = String(id).match(/(\d+)$/);
-                    return match ? `Cancha ${match[1]}` : String(id);
-                  })
-                  .filter(Boolean)
               : [];
 
-            const sufijoNombres =
-              nombresEfectivas.length > 0 ? ` (${nombresEfectivas.join(', ')})` : '';
+            const partesResumen = canchasDeLaFase
+              .map((cid) => {
+                const hrs = Array.isArray(jornada.horasPorCancha?.[cid])
+                  ? jornada.horasPorCancha[cid]
+                  : [];
+                if (hrs.length === 0) return null;
+                return `${nombreCanchaDe(cid)}: ${hrs.join(', ')}`;
+              })
+              .filter(Boolean);
+
+            const minTurnoFase = fase.minutosTurno || minutosTurno;
+            const sufijoTurno = minTurnoFase ? ` · turnos de ${minTurnoFase} min` : '';
 
             return (
               <section
                 key={fase.ronda}
+                ref={(el) => {
+                  panelsRef.current[fase.ronda] = el;
+                }}
                 id={`panel-fase-${fase.ronda}`}
                 role="tabpanel"
+                tabIndex={-1}
                 aria-labelledby={`tab-fase-${fase.ronda}`}
                 className="calendario-torneo__fase"
                 data-ronda={fase.ronda}
@@ -267,17 +307,14 @@ export function CalendarioTorneo({
                   </h4>
                   <div className="calendario-torneo__badges">
                     <span className="calendario-torneo__badge">
-                      {fase.partidos} {fase.partidos === 1 ? 'partido' : 'partidos'}
+                      {`${fase.partidos} ${fase.partidos === 1 ? 'partido' : 'partidos'}${sufijoTurno}`}
                     </span>
                     <span className="calendario-torneo__badge">
-                      {fase.canchasEfectivas}{' '}
-                      {fase.canchasEfectivas === 1
-                        ? 'cancha efectiva'
-                        : 'canchas efectivas'}
-                      {sufijoNombres}
-                    </span>
-                    <span className="calendario-torneo__badge">
-                      Requiere ~{fase.minutosRequeridos} min (mín. {fase.horasMinimas} h)
+                      {`Mínimo: ${fase.horasMinimas} ${
+                        fase.horasMinimas === 1 ? 'hora' : 'horas'
+                      } con ${fase.canchasEfectivas} ${
+                        fase.canchasEfectivas === 1 ? 'cancha' : 'canchas'
+                      }`}
                     </span>
                   </div>
                 </div>
@@ -306,73 +343,103 @@ export function CalendarioTorneo({
                 <div className="calendario-torneo__campo">
                   <span className="calendario-torneo__etiqueta">
                     Horario de {fase.nombreRonda}
-                    {horasFase.length > 0 && (
+                    {totalHoras > 0 && (
                       <span className="formulario-reserva__rango" aria-live="polite">
-                        {` · ${horasFase[0]} a ${finDeFranja(horasFase[horasFase.length - 1])} (${horasFase.length} h)`}
+                        {` · ${partesResumen.join(' · ')} (${totalHoras} ${
+                          totalHoras === 1 ? 'hora' : 'horas'
+                        })`}
                       </span>
                     )}
                   </span>
-                  <div className="formulario-reserva__franjas">
-                    {franjas.map((franja) => (
-                      <div key={franja.id} className="formulario-reserva__franja">
-                        <span className="formulario-reserva__franja-etiqueta">
-                          {franja.nombre}
-                        </span>
-                        <div className="formulario-reserva__horas formulario-reserva__franja-horas">
-                          {franja.horas.map((hora) => {
-                            const libre = esLibreFase ? esLibreFase(fase.ronda, hora) : false;
-                            let bloqueadaPorPrevia = false;
-                            for (let rPrev = 1; rPrev < fase.ronda; rPrev += 1) {
-                              const jPrev = jornadas[rPrev];
-                              if (
-                                jPrev &&
-                                jPrev.fecha === jornada.fecha &&
-                                Array.isArray(jPrev.horas) &&
-                                jPrev.horas.length > 0
-                              ) {
-                                const finPrev = finDeFranja(jPrev.horas[jPrev.horas.length - 1]);
-                                if (hora < finPrev) {
-                                  bloqueadaPorPrevia = true;
-                                  break;
-                                }
-                              }
-                            }
+                  {canchasDeLaFase.length > 0 ? (
+                    <div className="calendario-torneo__canchas-grid">
+                      {canchasDeLaFase.map((cid) => {
+                        const nombreCancha = nombreCanchaDe(cid);
+                        const horasCancha = Array.isArray(jornada.horasPorCancha?.[cid])
+                          ? jornada.horasPorCancha[cid]
+                          : [];
 
-                            const ocupada =
-                              !libre &&
-                              !bloqueadaPorPrevia &&
-                              Array.isArray(canchaIds) &&
-                              canchaIds.length > 0;
-                            const sel = horasFase.includes(hora);
-                            const ariaLabel = ocupada
-                              ? `${fase.nombreRonda} ${hora}, reservada`
-                              : `${fase.nombreRonda} ${hora}`;
+                        return (
+                          <div
+                            key={cid}
+                            className="calendario-torneo__cancha-fila"
+                            data-cancha-fila={cid}
+                          >
+                            <div className="calendario-torneo__cancha-cabecera">
+                              <span className="calendario-torneo__cancha-nombre">
+                                {nombreCancha}
+                              </span>
+                              {horasCancha.length > 0 && (
+                                <span className="calendario-torneo__cancha-resumen">
+                                  {horasCancha.join(', ')}
+                                </span>
+                              )}
+                            </div>
+                            <div className="formulario-reserva__horas calendario-torneo__cancha-horas">
+                              {horasBase.map((hora) => {
+                                const libre = esLibreFase
+                                  ? esLibreFase(fase.ronda, cid, hora)
+                                  : false;
+                                let bloqueadaPorPrevia = false;
+                                for (let rPrev = 1; rPrev < fase.ronda; rPrev += 1) {
+                                  const jPrev = jornadas[rPrev];
+                                  if (jPrev && jPrev.fecha === jornada.fecha) {
+                                    const horasPrev = horasDeJornada(jPrev);
+                                    if (horasPrev.length > 0) {
+                                      const finPrev = finDeFranja(
+                                        horasPrev[horasPrev.length - 1]
+                                      );
+                                      if (hora < finPrev) {
+                                        bloqueadaPorPrevia = true;
+                                        break;
+                                      }
+                                    }
+                                  }
+                                }
 
-                            return (
-                              <button
-                                key={hora}
-                                type="button"
-                                className={
-                                  'button small formulario-reserva__hora' +
-                                  (ocupada ? ' formulario-reserva__hora--ocupado' : '') +
-                                  (sel ? ' formulario-reserva__hora--sel' : ' hollow')
-                                }
-                                disabled={!libre && !sel}
-                                aria-pressed={sel}
-                                aria-label={ariaLabel}
-                                data-hora={hora}
-                                onClick={() =>
-                                  onElegirHoraFase && onElegirHoraFase(fase.ronda, hora)
-                                }
-                              >
-                                {hora}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                                const ocupada =
+                                  !libre &&
+                                  !bloqueadaPorPrevia &&
+                                  Array.isArray(canchaIds) &&
+                                  canchaIds.length > 0;
+                                const sel = horasCancha.includes(hora);
+                                const ariaLabel = ocupada
+                                  ? `${fase.nombreRonda}, ${nombreCancha}, ${hora}, reservada`
+                                  : `${fase.nombreRonda}, ${nombreCancha}, ${hora}`;
+
+                                return (
+                                  <button
+                                    key={hora}
+                                    type="button"
+                                    className={
+                                      'button small formulario-reserva__hora' +
+                                      (ocupada ? ' formulario-reserva__hora--ocupado' : '') +
+                                      (sel ? ' formulario-reserva__hora--sel' : ' hollow')
+                                    }
+                                    disabled={!libre && !sel}
+                                    aria-pressed={sel}
+                                    aria-label={ariaLabel}
+                                    data-hora={hora}
+                                    data-cancha={cid}
+                                    onClick={() =>
+                                      onElegirHoraFase &&
+                                      onElegirHoraFase(fase.ronda, cid, hora)
+                                    }
+                                  >
+                                    {hora}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="formulario-reserva__nota">
+                      Elige al menos una cancha arriba para marcar sus horas.
+                    </p>
+                  )}
                   <p className="formulario-reserva__leyenda" aria-hidden="true">
                     <span className="formulario-reserva__leyenda-item">
                       <span className="formulario-reserva__muestra formulario-reserva__muestra--libre"></span>
@@ -389,7 +456,7 @@ export function CalendarioTorneo({
                   </p>
                 </div>
 
-                {horasFase.length > 0 && (
+                {totalHoras > 0 && (
                   <>
                     {val && !val.ordenValido && (
                       <div
@@ -410,6 +477,23 @@ export function CalendarioTorneo({
                         duracionPartido={duracionPartido}
                         onCambiarDuracion={onCambiarDuracion}
                       />
+                    )}
+                    {tieneHorasDeMas && (
+                      <div
+                        className="callout warning calendario-torneo__alerta-extra"
+                        role="status"
+                      >
+                        <p className="calendario-torneo__alerta-extra-mensaje">
+                          {extraFase.mensaje}
+                        </p>
+                        <ul className="calendario-torneo__alerta-extra-lista">
+                          {extraFase.lista.map((item) => (
+                            <li key={`${item.canchaId}-${item.hora}`}>
+                              {`${nombreCanchaDe(item.canchaId)} · ${item.hora}`}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
                   </>
                 )}

@@ -67,15 +67,21 @@ function TestHarness({
   useEffect(() => {
     if (reserva.canchaIds.length >= canchasIniciales.length && horasIniciales.length > 0) {
       if (modo === 'torneo') {
-        const j1 = reserva.jornadas?.[1]?.horas || [];
-        if (j1.length === 0) {
-          horasIniciales.forEach((h) => reserva.elegirHoraFase(1, h));
+        const j1PorCancha = reserva.jornadas?.[1]?.horasPorCancha || {};
+        const totalHoras = Object.values(j1PorCancha).reduce(
+          (acc, lista) => acc + (Array.isArray(lista) ? lista.length : 0),
+          0
+        );
+        if (totalHoras === 0 && canchasIniciales[0]) {
+          horasIniciales.forEach((h) =>
+            reserva.elegirHoraFase(1, canchasIniciales[0], h)
+          );
         }
       } else if (reserva.horasSel.length === 0) {
         horasIniciales.forEach((h) => reserva.elegirHora(h));
       }
     }
-  }, [canchasIniciales.length, horasIniciales, modo, reserva]);
+  }, [canchasIniciales, horasIniciales, modo, reserva]);
 
   if (!listo) {
     return null;

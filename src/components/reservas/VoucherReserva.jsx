@@ -1,6 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
+import ReservasContext from '../../context/ReservasContext';
 import { finDeFranja, formatoPrecio } from '../../lib/precios';
 import { fechaCorta } from './torneo/Bracket';
+import {
+  formatearHorasDeJornada,
+  tieneHorasPorCancha,
+} from './torneo/formatoJornadas';
 import './VoucherReserva.css';
 
 /**
@@ -25,7 +30,10 @@ function VoucherReserva({
   onCancelar,
   torneo = null,
   invitados = null,
+  canchas = [],
 }) {
+  const reservasCtx = useContext(ReservasContext);
+  const canchasContexto = reservasCtx?.canchas;
   const n = horas.length;
   const lineas = precio?.lineas || [];
   const esModoTorneo = !!torneo;
@@ -44,6 +52,14 @@ function VoucherReserva({
 
   const jornadasConfiguradas = useMemo(() => {
     if (!torneo) return [];
+    const canchasRef =
+      Array.isArray(canchas) && canchas.length > 0
+        ? canchas
+        : Array.isArray(canchasContexto) && canchasContexto.length > 0
+        ? canchasContexto
+        : Array.isArray(precio?.lineas)
+        ? precio.lineas
+        : [];
 
     if (Array.isArray(torneo.fases) && torneo.fases.length > 0) {
       const jMap = torneo.jornadas || {};
@@ -52,16 +68,22 @@ function VoucherReserva({
           const j = Array.isArray(jMap)
             ? jMap.find((x) => x.ronda === fase.ronda)
             : jMap[fase.ronda];
-          const horasFase = Array.isArray(j?.horas) ? j.horas : [];
-          if (horasFase.length === 0) return null;
-          const fechaStr = fechaCorta(j.fecha);
-          const franja = `${horasFase[0]} a ${finDeFranja(horasFase[horasFase.length - 1])}`;
-          const cCount = fase.canchasEfectivas;
-          const cTxt = `${cCount} ${cCount === 1 ? 'cancha' : 'canchas'}`;
+          const combinada = { ...fase, ...j };
+          const tieneHorarios =
+            tieneHorasPorCancha(combinada) ||
+            (Array.isArray(combinada.horas) && combinada.horas.length > 0);
+          if (!tieneHorarios) return null;
+          const fechaStr = fechaCorta(combinada.fecha);
+          const detalle = formatearHorasDeJornada(
+            combinada,
+            canchasRef,
+            'cancha',
+            'canchas'
+          );
           return {
             ronda: fase.ronda,
             nombreRonda: fase.nombreRonda,
-            texto: `${fase.nombreRonda}: ${fechaStr} · ${franja} (${cTxt})`,
+            texto: `${fase.nombreRonda}: ${fechaStr} · ${detalle}`,
           };
         })
         .filter(Boolean);
@@ -70,26 +92,29 @@ function VoucherReserva({
     if (Array.isArray(torneo.jornadas) && torneo.jornadas.length > 0) {
       return torneo.jornadas
         .map((j) => {
-          const horasFase = Array.isArray(j?.horas) ? j.horas : [];
-          if (horasFase.length === 0) return null;
+          const tieneHorarios =
+            tieneHorasPorCancha(j) ||
+            (Array.isArray(j?.horas) && j.horas.length > 0);
+          if (!tieneHorarios) return null;
           const fechaStr = fechaCorta(j.fecha);
-          const franja = `${horasFase[0]} a ${finDeFranja(horasFase[horasFase.length - 1])}`;
-          const cCount =
-            j.canchasEfectivas ||
-            (Array.isArray(j.canchaIds) ? j.canchaIds.length : 1);
-          const cTxt = `${cCount} ${cCount === 1 ? 'cancha' : 'canchas'}`;
+          const detalle = formatearHorasDeJornada(
+            j,
+            canchasRef,
+            'cancha',
+            'canchas'
+          );
           const nom = j.nombreRonda || `Fase ${j.ronda}`;
           return {
             ronda: j.ronda,
             nombreRonda: nom,
-            texto: `${nom}: ${fechaStr} · ${franja} (${cTxt})`,
+            texto: `${nom}: ${fechaStr} · ${detalle}`,
           };
         })
         .filter(Boolean);
     }
 
     return [];
-  }, [torneo]);
+  }, [torneo, canchas, canchasContexto, precio]);
 
   return (
     <aside className="voucher-reserva" aria-label="Resumen de tu reserva">
@@ -237,7 +262,9 @@ function VoucherReserva({
                 {precio.ahorro > 0 && (
                   <div className="voucher-reserva__fila voucher-reserva__fila--ahorro">
                     <span className="voucher-reserva__etiqueta">
-                      Descuento por horas seguidas
+                      {torneo
+                        ? 'Descuento desde 2 h por cancha'
+                        : 'Descuento por horas seguidas'}
                     </span>
                     <span className="voucher-reserva__valor voucher-reserva__valor--ahorro">
                       {`− ${formatoPrecio.format(precio.ahorro)}`}

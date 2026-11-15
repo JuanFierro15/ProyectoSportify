@@ -3,6 +3,7 @@ import IndicadorPasos from './IndicadorPasos';
 import FormularioReserva from '../FormularioReserva';
 import VoucherReserva from '../VoucherReserva';
 import SeccionLlaves from './SeccionLlaves';
+import DialogoHorasSinPartido from './DialogoHorasSinPartido';
 import { fechaCompleta } from '../../../lib/fechas';
 import './AsistenteTorneo.css';
 
@@ -49,6 +50,17 @@ export function AsistenteTorneo({
   }, []);
 
   if (!reserva || reserva.modo !== 'torneo') return null;
+
+  const mensajesHorasDeMas = (reserva.torneoPlan?.fasesConHorasDeMas || [])
+    .map((r) => reserva.torneoPlan?.horasSinPartidoPorFase?.[r]?.mensaje)
+    .filter(Boolean);
+
+  const manejarRevisarHoras = () => {
+    a.irA('fechas', { enfocarContenido: true });
+    if (reserva.revisarHorasDeMas) {
+      reserva.revisarHorasDeMas();
+    }
+  };
 
   return (
     <div className="asistente-torneo" data-testid="asistente-torneo">
@@ -121,11 +133,20 @@ export function AsistenteTorneo({
               onCancelar={reserva.reiniciar}
               torneo={reserva.modo === 'torneo' ? reserva.torneoPlan : null}
               invitados={reserva.modo === 'cumpleanos' ? reserva.invitados : null}
+              canchas={canchas}
             />
             <FormularioReserva reserva={reserva} dias={dias} seccion="guardados" />
           </div>
         )}
       </div>
+
+      <DialogoHorasSinPartido
+        abierto={Boolean(reserva.avisoHorasDeMas)}
+        mensajes={mensajesHorasDeMas}
+        onRevisar={manejarRevisarHoras}
+        onReservarIgual={reserva.reservarIgual}
+        onCerrar={reserva.cerrarAvisoHorasDeMas}
+      />
 
       {/* Barra de navegación fija inferior */}
       <nav

@@ -24,6 +24,10 @@ import {
   horasDeReserva,
   verificarCancelable,
 } from '../../lib/cancelacion';
+import {
+  extraerJornadasDeReserva,
+  formatearHorasDeJornada,
+} from '../reservas/torneo/formatoJornadas';
 import './MisReservas.css';
 
 function obtenerTipoEtiqueta(r) {
@@ -453,11 +457,27 @@ function MisReservas({ abierto, onCerrar, botonDisparadorRef }) {
             ) : (
               <ul className="mis-reservas__lista">
                 {resultados.map((r) => {
+                  const jornadasTorneo =
+                    r.subtipo === 'torneo' ? extraerJornadasDeReserva(r) : [];
+                  const tieneFasesTorneo = jornadasTorneo.length > 0;
                   const horas = horasDeReserva(r);
-                  const horario =
-                    horas.length > 0
-                      ? `${horas[0]} a ${finDeFranja(horas[horas.length - 1])}`
-                      : 'Horario';
+                  const horario = tieneFasesTorneo
+                    ? (() => {
+                        const bloquesR = Array.isArray(r.bloques) ? r.bloques : [];
+                        const fasesUnicas = new Set(bloquesR.map((b) => b.ronda)).size;
+                        const totalJ =
+                          fasesUnicas > 1
+                            ? fasesUnicas
+                            : bloquesR.length > 1
+                            ? bloquesR.length
+                            : jornadasTorneo.length;
+                        return totalJ > 1
+                          ? `${totalJ} jornadas`
+                          : formatearHorasDeJornada(jornadasTorneo[0], canchas);
+                      })()
+                    : horas.length > 0
+                    ? `${horas[0]} a ${finDeFranja(horas[horas.length - 1])}`
+                    : 'Horario';
                   const tipo = obtenerTipoEtiqueta(r);
                   const canchasTexto = obtenerNombresCanchas(r, canchas);
                   const verif = verificarCancelable(r, new Date());
@@ -489,9 +509,26 @@ function MisReservas({ abierto, onCerrar, botonDisparadorRef }) {
 
                       <div className="mis-reservas__tarjeta-detalles">
                         <p className="mis-reservas__tarjeta-canchas">{canchasTexto}</p>
-                        <p className="mis-reservas__tarjeta-fecha">
-                          {fechaCompleta(r.fecha)} · {horario}
-                        </p>
+                        {tieneFasesTorneo ? (
+                          <ul className="mis-reservas__torneo-fases">
+                            {jornadasTorneo.map((j, idx) => (
+                              <li
+                                key={j.ronda || idx}
+                                className="mis-reservas__torneo-fase"
+                              >
+                                <strong>{j.nombreRonda}:</strong>{' '}
+                                {j.fecha
+                                  ? fechaCompleta(j.fecha)
+                                  : fechaCompleta(r.fecha)}{' '}
+                                · {formatearHorasDeJornada(j, canchas)}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="mis-reservas__tarjeta-fecha">
+                            {fechaCompleta(r.fecha)} · {horario}
+                          </p>
+                        )}
                       </div>
 
                       {qrVisible && (

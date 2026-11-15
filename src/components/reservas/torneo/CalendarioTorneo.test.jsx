@@ -159,16 +159,23 @@ describe('CalendarioTorneo - pestañas por fase', () => {
         }));
       };
 
-      const manejarElegirHora = (ronda, hora) => {
+      const manejarElegirHora = (ronda, canchaId, hora) => {
         setJornadas((prev) => {
-          const actual = prev[ronda]?.horas || [];
+          const porCancha = prev[ronda]?.horasPorCancha || {};
+          const actual = porCancha[canchaId] || [];
           const existe = actual.includes(hora);
           const nuevas = existe
             ? actual.filter((h) => h !== hora)
             : [...actual, hora].sort();
+          const siguientePorCancha = { ...porCancha };
+          if (nuevas.length > 0) {
+            siguientePorCancha[canchaId] = nuevas;
+          } else {
+            delete siguientePorCancha[canchaId];
+          }
           return {
             ...prev,
-            [ronda]: { ...prev[ronda], horas: nuevas },
+            [ronda]: { ...prev[ronda], horasPorCancha: siguientePorCancha },
           };
         });
       };
@@ -202,33 +209,35 @@ describe('CalendarioTorneo - pestañas por fase', () => {
     const botonesDia = within(panelCuartos).getAllByRole('button').slice(0, DIAS.length);
     fireEvent.click(botonesDia[1]);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Cuartos de final 11:00' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Cuartos de final 12:00' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 1, 11:00' })
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 1, 12:00' })
+    );
 
-    expect(tabCuartos).toHaveTextContent('Mañana · 11:00 a 13:00');
+    expect(tabCuartos).toHaveTextContent('Mañana · 2 horas');
     expect(tabSemi).toHaveTextContent('Sin horario');
 
     // Cambiar a Semifinal y volver a Cuartos
     fireEvent.click(tabSemi);
     expect(screen.getByLabelText('Fase 2: Semifinal')).not.toHaveAttribute('hidden');
-    expect(tabCuartos).toHaveTextContent('Mañana · 11:00 a 13:00');
+    expect(tabCuartos).toHaveTextContent('Mañana · 2 horas');
 
     fireEvent.click(tabCuartos);
-    expect(screen.getByRole('button', { name: 'Cuartos de final 11:00' })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    );
-    expect(screen.getByRole('button', { name: 'Cuartos de final 12:00' })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    );
+    expect(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 1, 11:00' })
+    ).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 1, 12:00' })
+    ).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('muestra aviso visible en la pestaña cuando una fase tiene ordenValido: false o alcanza: false con horas elegidas', () => {
     const jornadas = {
       ...jornadasVacias(),
-      2: { fecha: DIAS[0], horas: ['10:00'] },
-      3: { fecha: DIAS[0], horas: ['12:00'] },
+      2: { fecha: DIAS[0], horasPorCancha: { 'futbol-1': ['10:00'] } },
+      3: { fecha: DIAS[0], horasPorCancha: { 'futbol-1': ['12:00'] } },
     };
 
     renderCalendario({
@@ -259,7 +268,7 @@ describe('CalendarioTorneo - pestañas por fase', () => {
     expect(tabCuartos).not.toHaveClass('calendario-torneo__pestana--alerta');
 
     expect(tabSemi).toHaveTextContent('Revisa el horario');
-    expect(within(tabSemi).getByText('Revisa el horario')).not.toHaveClass('show-for-sr');
+    expect(within(tabSemi).getByText('Revisa el horario')).toBeVisible();
     expect(tabSemi).toHaveClass('calendario-torneo__pestana--alerta');
 
     expect(tabFinal).toHaveTextContent('Revisa el horario');

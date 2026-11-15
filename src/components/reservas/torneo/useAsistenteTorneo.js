@@ -97,6 +97,8 @@ export function useAsistenteTorneo(opciones = {}) {
   const puedeRetroceder = pasoIndex > 0;
 
   // 3. Funciones de navegación
+  const omitirFocoRef = useRef(false);
+
   const siguiente = useCallback(() => {
     if (!puedeAvanzar) return false;
     setPasoActual(siguienteId);
@@ -111,8 +113,9 @@ export function useAsistenteTorneo(opciones = {}) {
   }, [pasoIndex]);
 
   const irA = useCallback(
-    (id) => {
+    (id, opciones) => {
       if (!alcanzables.includes(id)) return false;
+      omitirFocoRef.current = Boolean(opciones?.enfocarContenido);
       setPasoActual(id);
       return true;
     },
@@ -135,6 +138,9 @@ export function useAsistenteTorneo(opciones = {}) {
     pasoPrevioRef.current = pasoActual;
     if (!activo) return;
 
+    const omitirFoco = omitirFocoRef.current;
+    omitirFocoRef.current = false;
+
     // Scroll al inicio respetando prefers-reduced-motion
     if (typeof window !== 'undefined' && window.scrollTo) {
       const reducido = Boolean(
@@ -146,8 +152,12 @@ export function useAsistenteTorneo(opciones = {}) {
       });
     }
 
-    // Foco en el encabezado del paso
-    if (encabezadoRef.current && typeof encabezadoRef.current.focus === 'function') {
+    // Foco en el encabezado del paso (salvo si el paso siguiente enfoca un elemento propio)
+    if (
+      !omitirFoco &&
+      encabezadoRef.current &&
+      typeof encabezadoRef.current.focus === 'function'
+    ) {
       encabezadoRef.current.focus();
     }
   }, [activo, pasoActual]);
