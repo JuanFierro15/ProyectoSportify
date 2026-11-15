@@ -12,7 +12,7 @@ Para el flujo general de `RESERVAR_EVENTO` y `validarReservaEvento`, ver `docs/a
 - Capacidad: un partido nunca cruza un hueco. Por cancha, cada tramo de horas seguidas da `floor(minutos del tramo / minutosTurno)` turnos (`turnosDeCancha`); la fase alcanza si la suma de turnos de sus canchas cubre sus partidos. `programarTorneo` asigna los partidos a esos turnos ordenados por hora y luego por cancha.
 - Horas sin partido: `horasSinPartido` y `mensajeHorasSinPartido` dan el aviso del panel; al pulsar Reservar con horas de más, `useReserva` abre `DialogoHorasSinPartido` ("Revisar horas" o "Reservar igual") en vez de reservar.
 - Si una hora deja de estar libre (cambian canchas, día o disponibilidad), se quita solo esa hora de esa cancha, con aviso, y solo en modo torneo.
-- Precio: una línea por fase y cancha con lo marcado en ella; descuento desde 2 horas de esa cancha en la fase, aunque no sean seguidas.
+- Precio: una línea por fase y cancha con lo marcado en ella; cada hora cuesta $15.000 menos (`DESCUENTO_HORA_TORNEO`, desde el 15-11-2026, desde 1 hora y aunque no sean seguidas) y el pack de agua llega con 2 horas o más de esa cancha en la fase. El calendario muestra la promoción.
 
 ## Reglas puras (`torneo.js` y `pasosTorneo.js`)
 
