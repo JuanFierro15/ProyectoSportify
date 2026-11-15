@@ -29,6 +29,7 @@ export function textoQr({
   telefono,
   total,
   torneo = null,
+  nombresCanchas = {},
 }) {
   const lineas = [
     'SPORTIFY · RESERVA',
@@ -53,7 +54,33 @@ export function textoQr({
 
   if (torneo && Array.isArray(torneo.jornadas) && torneo.jornadas.length > 0) {
     torneo.jornadas.forEach((j) => {
-      if (j && j.fecha && Array.isArray(j.horas) && j.horas.length > 0) {
+      if (!j || !j.fecha) return;
+      const hpc =
+        j.horasPorCancha && typeof j.horasPorCancha === 'object'
+          ? j.horasPorCancha
+          : null;
+      if (hpc) {
+        const ordenClaves = Array.isArray(j.canchaIds)
+          ? [
+              ...j.canchaIds,
+              ...Object.keys(hpc).filter((id) => !j.canchaIds.includes(id)),
+            ]
+          : Object.keys(hpc);
+        const partesCanchas = ordenClaves
+          .filter((cid) => Array.isArray(hpc[cid]) && hpc[cid].length > 0)
+          .map((cid) => {
+            const horasOrdenadas = Array.from(new Set(hpc[cid])).sort();
+            const etiqueta = (nombresCanchas && nombresCanchas[cid]) || cid;
+            return `${etiqueta}: ${horasOrdenadas.join(', ')}`;
+          });
+        if (partesCanchas.length > 0) {
+          lineas.push(
+            `Fase ${j.nombreRonda}: ${j.fecha} · ${partesCanchas.join(' · ')}`
+          );
+          return;
+        }
+      }
+      if (Array.isArray(j.horas) && j.horas.length > 0) {
         lineas.push(
           `Fase ${j.nombreRonda}: ${j.fecha} (${j.horas[0]} a ${finDeFranja(j.horas[j.horas.length - 1])})`
         );

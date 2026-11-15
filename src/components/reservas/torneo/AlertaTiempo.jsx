@@ -8,15 +8,24 @@ export function AlertaTiempo({
   minutosRequeridos,
   disponibles,
   deficit,
+  partidosSinUbicar,
   sugerencias = [],
   duracionPartido,
   onCambiarDuracion,
 }) {
-  if (!deficit || deficit <= 0) {
+  const tienePartidosSinUbicar = partidosSinUbicar != null;
+  const k = tienePartidosSinUbicar ? Number(partidosSinUbicar) : 0;
+  const mostrar = tienePartidosSinUbicar ? k > 0 : Boolean(deficit && deficit > 0);
+  if (!mostrar) {
     return null;
   }
 
   const textoCanchas = canchasCount === 1 ? 'cancha' : 'canchas';
+  const detalle = tienePartidosSinUbicar
+    ? `Con las horas marcadas faltan turnos para ${k} ${
+        k === 1 ? 'partido' : 'partidos'
+      } (cada turno incluye desempate y transición).`
+    : `Reservaste ${disponibles} min: faltan ${deficit} min para completar todas las rondas (incluyendo desempates y transición).`;
 
   return (
     <div className="callout warning alerta-tiempo" role="alert">
@@ -26,9 +35,7 @@ export function AlertaTiempo({
           {`Con ${equipos} equipos y ${canchasCount} ${textoCanchas}, el torneo tomará ~${minutosRequeridos} min en el peor caso.`}
         </strong>
       </div>
-      <p className="alerta-tiempo__detalle">
-        {`Reservaste ${disponibles} min: faltan ${deficit} min para completar todas las rondas (incluyendo desempates y transición).`}
-      </p>
+      <p className="alerta-tiempo__detalle">{detalle}</p>
       {sugerencias && sugerencias.length > 0 && (
         <ul className="alerta-tiempo__sugerencias">
           {sugerencias.map((sug, idx) => (

@@ -10,11 +10,15 @@ import {
   partidosPorRonda,
   maxCanchasTorneo,
   mensajeTopeCanchas,
+  horasDeJornada,
+  turnosDeCancha,
+  turnosDeFase,
+  capacidadFase,
   limpiarJornadasConChoque,
   turnosPorRonda,
   minutosRequeridos,
-  validarFranja,
-  sugerenciasTiempo,
+  horasSinPartido,
+  mensajeHorasSinPartido,
   validarCanchasTorneo,
   sortearEquipos,
   validarCrucesManuales,
@@ -82,28 +86,57 @@ describe('Estructura de rondas y cálculo de tiempo', () => {
     );
   });
 
-  test('limpiarJornadasConChoque limpia la franja entera de las fases con alguna hora ocupada y conserva el resto', () => {
+  test('limpiarJornadasConChoque quita solo la hora ocupada de la cancha afectada, conserva fecha y el resto, y al repetirla no quita nada más', () => {
     const jornadas = {
-      1: { fecha: '2026-11-10', horas: ['14:00', '15:00'] },
-      2: { fecha: '2026-11-11', horas: ['16:00'] },
+      1: {
+        fecha: '2026-11-10',
+        horasPorCancha: {
+          'futbol-1': ['14:00', '15:00'],
+          'futbol-2': ['15:00', '16:00'],
+        },
+      },
+      2: {
+        fecha: '2026-11-11',
+        horasPorCancha: {
+          'futbol-1': ['16:00'],
+        },
+      },
     };
+    const snapshot = structuredClone(jornadas);
 
     const conChoque = limpiarJornadasConChoque(
       jornadas,
-      (r, h) => !(r === 1 && h === '15:00')
+      (r, canchaId, h) => !(r === 1 && canchaId === 'futbol-2' && h === '15:00')
     );
     expect(conChoque).toEqual({
       huboChoque: true,
+      quitadas: [{ ronda: 1, canchaId: 'futbol-2', hora: '15:00' }],
       jornadas: {
-        1: { fecha: '2026-11-10', horas: [] },
-        2: { fecha: '2026-11-11', horas: ['16:00'] },
+        1: {
+          fecha: '2026-11-10',
+          horasPorCancha: {
+            'futbol-1': ['14:00', '15:00'],
+            'futbol-2': ['16:00'],
+          },
+        },
+        2: {
+          fecha: '2026-11-11',
+          horasPorCancha: {
+            'futbol-1': ['16:00'],
+          },
+        },
       },
     });
+    expect(jornadas).toEqual(snapshot);
 
-    const sinChoque = limpiarJornadasConChoque(jornadas, () => true);
-    expect(sinChoque).toEqual({
+    const segundaPasada = limpiarJornadasConChoque(
+      conChoque.jornadas,
+      (r, canchaId, h) => !(r === 1 && canchaId === 'futbol-2' && h === '15:00')
+    );
+    expect(segundaPasada).toEqual({
       huboChoque: false,
-      jornadas,
+      quitadas: [],
+      jornadas: conChoque.jornadas,
     });
   });
 
@@ -116,137 +149,179 @@ describe('Estructura de rondas y cálculo de tiempo', () => {
     expect(turnosPorRonda(8, 2)).toEqual([2, 1, 1]);
   });
 
-  test('minutosRequeridos devuelve 0 para configuraciones no permitidas', () => {
+  test('minutosRequeridos devuelve 0 para configuraciones no permitidas y calcula el mínimo ideal válido', () => {
     expect(minutosRequeridos({ equipos: 6, canchas: 2, minutosTurno: 30 })).toBe(0);
     expect(minutosRequeridos({ equipos: 8, canchas: 0, minutosTurno: 30 })).toBe(0);
-  });
 
-  // AC-001 a AC-005: Cálculos en peor caso con duracion 20 min en fútbol (minutosTurno = 30)
-  test('AC-001: 8 equipos, 3 canchas, 2 horas -> 120 min requeridos, alcanza', () => {
     const minutosTurno = minutosPorTurno(20, 'futbol'); // 30
-    const req = minutosRequeridos({ equipos: 8, canchas: 3, minutosTurno });
-    expect(req).toBe(120);
-
-    const validacion = validarFranja(req, 2);
-    expect(validacion).toEqual({
-      alcanza: true,
-      disponibles: 120,
-      deficit: 0,
-    });
-  });
-
-  test('AC-002: 8 equipos, 3 canchas, 1 hora -> déficit 60 min', () => {
-    const minutosTurno = minutosPorTurno(20, 'futbol'); // 30
-    const req = minutosRequeridos({ equipos: 8, canchas: 3, minutosTurno }); // 120
-    const validacion = validarFranja(req, 1);
-    expect(validacion).toEqual({
-      alcanza: false,
-      disponibles: 60,
-      deficit: 60,
-    });
-  });
-
-  test('AC-003: 8 equipos, 1 cancha, 3 horas -> 210 min requeridos, déficit 30 min', () => {
-    const minutosTurno = minutosPorTurno(20, 'futbol'); // 30
-    const req = minutosRequeridos({ equipos: 8, canchas: 1, minutosTurno });
-    expect(req).toBe(210);
-
-    const validacion = validarFranja(req, 3);
-    expect(validacion).toEqual({
-      alcanza: false,
-      disponibles: 180,
-      deficit: 30,
-    });
-  });
-
-  test('AC-004: 8 equipos, 2 canchas, 2 horas -> 120 min requeridos, alcanza', () => {
-    const minutosTurno = minutosPorTurno(20, 'futbol'); // 30
-    const req = minutosRequeridos({ equipos: 8, canchas: 2, minutosTurno });
-    expect(req).toBe(120);
-
-    const validacion = validarFranja(req, 2);
-    expect(validacion).toEqual({
-      alcanza: true,
-      disponibles: 120,
-      deficit: 0,
-    });
-  });
-
-  test('AC-005: 16 equipos, 3 canchas, 4 horas -> 210 min requeridos, alcanza', () => {
-    const minutosTurno = minutosPorTurno(20, 'futbol'); // 30
-    // turnos 16 eq, 3 canchas: [ceil(8/3)=3, ceil(4/3)=2, ceil(2/3)=1, ceil(1/3)=1] -> 7 turnos -> 7 * 30 = 210 min
-    const req = minutosRequeridos({ equipos: 16, canchas: 3, minutosTurno });
-    expect(req).toBe(210);
-
-    const validacion = validarFranja(req, 4);
-    expect(validacion).toEqual({
-      alcanza: true,
-      disponibles: 240,
-      deficit: 0,
-    });
-  });
-
-  test('4 equipos en 1 cancha requiere 90 min', () => {
-    const minutosTurno = minutosPorTurno(20, 'futbol'); // 30
-    const req = minutosRequeridos({ equipos: 4, canchas: 1, minutosTurno });
-    expect(req).toBe(90);
+    expect(minutosRequeridos({ equipos: 8, canchas: 3, minutosTurno })).toBe(120);
+    expect(minutosRequeridos({ equipos: 8, canchas: 1, minutosTurno })).toBe(210);
+    expect(minutosRequeridos({ equipos: 8, canchas: 2, minutosTurno })).toBe(120);
+    expect(minutosRequeridos({ equipos: 16, canchas: 3, minutosTurno })).toBe(210);
+    expect(minutosRequeridos({ equipos: 4, canchas: 1, minutosTurno })).toBe(90);
   });
 });
 
-describe('sugerenciasTiempo', () => {
-  test('devuelve arreglo vacío si la franja horaria alcanza', () => {
-    const sugs = sugerenciasTiempo({
-      equipos: 8,
-      canchas: 3,
-      duracionPartido: 20,
-      deporte: 'futbol',
-      horasReservadas: 2,
-    });
-    expect(sugs).toEqual([]);
+describe('Horas por cancha, tramos y capacidad de fase', () => {
+  test('horasDeJornada devuelve lista plana ordenada sin repetidos, ignora listas vacías y tolera nulos', () => {
+    expect(horasDeJornada(null)).toEqual([]);
+    expect(horasDeJornada(undefined)).toEqual([]);
+    expect(horasDeJornada({})).toEqual([]);
+    expect(horasDeJornada({ fecha: '2026-11-21' })).toEqual([]);
+    expect(horasDeJornada({ horasPorCancha: null })).toEqual([]);
+    expect(horasDeJornada({ horasPorCancha: { c1: [], c2: [] } })).toEqual([]);
+    expect(
+      horasDeJornada({
+        fecha: '2026-11-21',
+        horasPorCancha: {
+          'futbol-1': ['18:00', '16:00'],
+          'futbol-2': [],
+          'futbol-3': ['19:00', '16:00'],
+        },
+      })
+    ).toEqual(['16:00', '18:00', '19:00']);
   });
 
-  test('devuelve sugerencias accionables cuando hay déficit de tiempo', () => {
-    // 8 equipos, 1 cancha, duracion 20 min, futbol -> req = 210 min, horas = 1 (60 min)
-    const sugs = sugerenciasTiempo({
-      equipos: 8,
-      canchas: 1,
-      duracionPartido: 20,
-      deporte: 'futbol',
-      horasReservadas: 1,
-    });
-
-    expect(sugs.length).toBe(3);
-    // 1. Ampliar franja a ceil(210 / 60) = 4 horas (240 min)
-    expect(sugs[0]).toBe('Amplía la franja horaria a al menos 4 horas (240 min).');
-    // 2. Agregar más canchas (con 3 canchas tomaría 120 min)
-    expect(sugs[1]).toBe('Agrega más canchas del mismo deporte (con 3 canchas en paralelo tomaría 120 min).');
-    // 3. Reducir duración a 15 min (minutosTurno 25 -> 7 * 25 = 175 min)
-    expect(sugs[2]).toBe('Reduce la duración por partido a 15 min (tomaría 175 min).');
+  test('turnosDeCancha corta por tramos seguidos y cumple los ejemplos exactos', () => {
+    expect(turnosDeCancha(['16:00'], 35)).toEqual(['16:00']);
+    expect(turnosDeCancha(['16:00', '17:00'], 35)).toEqual(['16:00', '16:35', '17:10']);
+    expect(turnosDeCancha(['16:00'], 30)).toEqual(['16:00', '16:30']);
+    expect(turnosDeCancha(['16:00', '18:00'], 25)).toEqual(['16:00', '16:25', '18:00', '18:25']);
+    expect(turnosDeCancha(['18:00', '16:00', '16:00'], 25)).toEqual(['16:00', '16:25', '18:00', '18:25']);
+    expect(turnosDeCancha([], 30)).toEqual([]);
+    // Con hueco entre 16:00 y 18:00 y turno de 35 min caben 2 turnos (no 3)
+    expect(turnosDeCancha(['16:00', '18:00'], 35)).toEqual(['16:00', '18:00']);
   });
 
-  test('omite sugerencias que ya están en el límite', () => {
-    // Con 3 canchas y 15 min por partido, solo sugiere ampliar franja
-    const sugs = sugerenciasTiempo({
-      equipos: 16,
-      canchas: 3,
-      duracionPartido: 15,
-      deporte: 'futbol',
-      horasReservadas: 1,
-    });
+  test('turnosDeFase y capacidadFase ordenan por inicio y desempate por ordenCanchas', () => {
+    const hpcCapacidad = {
+      'futbol-1': ['16:00', '18:00'],
+      'futbol-2': ['19:00'],
+    };
+    expect(capacidadFase(hpcCapacidad, 25)).toBe(6);
+    expect(turnosDeFase(hpcCapacidad, 25, ['futbol-1', 'futbol-2'])).toEqual([
+      { canchaId: 'futbol-1', inicio: '16:00' },
+      { canchaId: 'futbol-1', inicio: '16:25' },
+      { canchaId: 'futbol-1', inicio: '18:00' },
+      { canchaId: 'futbol-1', inicio: '18:25' },
+      { canchaId: 'futbol-2', inicio: '19:00' },
+      { canchaId: 'futbol-2', inicio: '19:25' },
+    ]);
 
-    expect(sugs.length).toBe(1);
-    expect(sugs[0]).toContain('Amplía la franja horaria');
+    // A igual hora respeta ordenCanchas y las no listadas van al final por id
+    const hpcEmpate = {
+      'futbol-3': ['16:00'],
+      'futbol-1': ['16:00'],
+      'futbol-2': ['16:00'],
+      'futbol-4': ['16:00'],
+    };
+    expect(turnosDeFase(hpcEmpate, 60, ['futbol-2', 'futbol-1'])).toEqual([
+      { canchaId: 'futbol-2', inicio: '16:00' },
+      { canchaId: 'futbol-1', inicio: '16:00' },
+      { canchaId: 'futbol-3', inicio: '16:00' },
+      { canchaId: 'futbol-4', inicio: '16:00' },
+    ]);
 
-    // Con 4 equipos, el tope es 2 canchas: con 2 canchas y 15 min no sugiere agregar más canchas
-    const sugs4 = sugerenciasTiempo({
-      equipos: 4,
-      canchas: 2,
-      duracionPartido: 15,
-      deporte: 'futbol',
-      horasReservadas: 0,
-    });
-    expect(sugs4).toHaveLength(1);
-    expect(sugs4[0]).toContain('Amplía la franja horaria');
+    // Si la segunda cancha tiene hora más temprana, va primero
+    expect(
+      turnosDeFase(
+        { 'futbol-1': ['18:00'], 'futbol-2': ['16:00'] },
+        60,
+        ['futbol-1', 'futbol-2']
+      )
+    ).toEqual([
+      { canchaId: 'futbol-2', inicio: '16:00' },
+      { canchaId: 'futbol-1', inicio: '18:00' },
+    ]);
+  });
+
+  test('horasSinPartido detecta horas marcadas sin ningún partido asignado', () => {
+    // Final de 20 min de fútbol (turno 30), 1 partido, 16:00..20:00 -> 4 horas sin partido
+    expect(
+      horasSinPartido(
+        { 'futbol-1': ['16:00', '17:00', '18:00', '19:00', '20:00'] },
+        30,
+        1,
+        ['futbol-1']
+      )
+    ).toEqual([
+      { canchaId: 'futbol-1', hora: '17:00' },
+      { canchaId: 'futbol-1', hora: '18:00' },
+      { canchaId: 'futbol-1', hora: '19:00' },
+      { canchaId: 'futbol-1', hora: '20:00' },
+    ]);
+
+    // Solo 16:00 -> []
+    expect(
+      horasSinPartido({ 'futbol-1': ['16:00'] }, 30, 1, ['futbol-1'])
+    ).toEqual([]);
+
+    // Turno 35 con 16:00 y 17:00 y 2 partidos: el 2.º es 16:35-17:10 y usa 17:00 -> []
+    expect(
+      horasSinPartido({ 'futbol-1': ['16:00', '17:00'] }, 35, 2, ['futbol-1'])
+    ).toEqual([]);
+  });
+
+  test('mensajeHorasSinPartido respeta artículos, verbos, plurales y concordancia', () => {
+    expect(
+      mensajeHorasSinPartido({
+        nombreRonda: 'Final',
+        partidos: 1,
+        duracionPartido: 20,
+        horasElegidas: 5,
+        sinPartido: 4,
+      })
+    ).toBe('La Final es 1 partido de 20 min. Marcaste 5 horas y 4 quedarían sin partido.');
+
+    expect(
+      mensajeHorasSinPartido({
+        nombreRonda: 'Cuartos de final',
+        partidos: 4,
+        duracionPartido: 20,
+        horasElegidas: 5,
+        sinPartido: 1,
+      })
+    ).toBe('Los Cuartos de final son 4 partidos de 20 min. Marcaste 5 horas y 1 quedaría sin partido.');
+
+    expect(
+      mensajeHorasSinPartido({
+        nombreRonda: 'Semifinal',
+        partidos: 2,
+        duracionPartido: 15,
+        horasElegidas: 1,
+        sinPartido: 1,
+      })
+    ).toBe('La Semifinal es 2 partidos de 15 min. Marcaste 1 hora y 1 quedaría sin partido.');
+
+    expect(
+      mensajeHorasSinPartido({
+        nombreRonda: 'Octavos de final',
+        partidos: 8,
+        duracionPartido: 30,
+        horasElegidas: 6,
+        sinPartido: 2,
+      })
+    ).toBe('Los Octavos de final son 8 partidos de 30 min. Marcaste 6 horas y 2 quedarían sin partido.');
+
+    expect(
+      mensajeHorasSinPartido({
+        nombreRonda: 'Ronda de 32',
+        partidos: 16,
+        duracionPartido: 20,
+        horasElegidas: 10,
+        sinPartido: 2,
+      })
+    ).toBe('Ronda de 32 es 16 partidos de 20 min. Marcaste 10 horas y 2 quedarían sin partido.');
+
+    expect(
+      mensajeHorasSinPartido({
+        nombreRonda: 'Final',
+        partidos: 1,
+        duracionPartido: 20,
+        horasElegidas: 1,
+        sinPartido: 0,
+      })
+    ).toBe('');
   });
 });
 
@@ -503,7 +578,7 @@ describe('programarTorneo y armarTorneo (AC-007)', () => {
 });
 
 describe('fasesDelTorneo (AC-009, DD-011, DD-012)', () => {
-  test('8 equipos con 3 canchas genera 3 fases con canchas efectivas 3, 2 y 1', () => {
+  test('8 equipos con 3 canchas incluye todas las canchas y minutosTurno en cada fase, manteniendo el ideal en canchasEfectivas', () => {
     const fases = fasesDelTorneo({
       equipos: 8,
       canchaIds: ['c1', 'c2', 'c3'],
@@ -520,30 +595,33 @@ describe('fasesDelTorneo (AC-009, DD-011, DD-012)', () => {
       canchasEfectivas: 3,
       canchaIds: ['c1', 'c2', 'c3'],
       turnos: 2,
+      minutosTurno: 30,
       minutosRequeridos: 60,
       horasMinimas: 1,
     });
 
-    // Semifinal: 2 partidos, 2 canchas efectivas (min(3, 2)), 1 turno -> 30 min
+    // Semifinal: 2 partidos, 2 canchas efectivas (min(3, 2)), pero canchaIds trae todas
     expect(fases[1]).toEqual({
       ronda: 2,
       nombreRonda: 'Semifinal',
       partidos: 2,
       canchasEfectivas: 2,
-      canchaIds: ['c1', 'c2'],
+      canchaIds: ['c1', 'c2', 'c3'],
       turnos: 1,
+      minutosTurno: 30,
       minutosRequeridos: 30,
       horasMinimas: 1,
     });
 
-    // Final: 1 partido, 1 cancha efectiva (min(3, 1)), 1 turno -> 30 min
+    // Final: 1 partido, 1 cancha efectiva, pero canchaIds trae todas
     expect(fases[2]).toEqual({
       ronda: 3,
       nombreRonda: 'Final',
       partidos: 1,
       canchasEfectivas: 1,
-      canchaIds: ['c1'],
+      canchaIds: ['c1', 'c2', 'c3'],
       turnos: 1,
+      minutosTurno: 30,
       minutosRequeridos: 30,
       horasMinimas: 1,
     });
@@ -559,9 +637,11 @@ describe('fasesDelTorneo (AC-009, DD-011, DD-012)', () => {
     expect(fases).toHaveLength(2);
     expect(fases[0].nombreRonda).toBe('Semifinal');
     expect(fases[0].canchasEfectivas).toBe(2);
+    expect(fases[0].canchaIds).toEqual(['c1', 'c2']);
     expect(fases[0].turnos).toBe(1);
     expect(fases[1].nombreRonda).toBe('Final');
     expect(fases[1].canchasEfectivas).toBe(1);
+    expect(fases[1].canchaIds).toEqual(['c1', 'c2']);
   });
 
   test('16 equipos con 2 canchas calcula horasMinimas según turnos', () => {
@@ -572,11 +652,11 @@ describe('fasesDelTorneo (AC-009, DD-011, DD-012)', () => {
     });
 
     expect(fases).toHaveLength(4);
-    // Octavos: 8 partidos en 2 canchas -> 4 turnos -> 120 min -> 2 horasMinimas
     expect(fases[0].nombreRonda).toBe('Octavos de final');
     expect(fases[0].partidos).toBe(8);
     expect(fases[0].canchasEfectivas).toBe(2);
     expect(fases[0].turnos).toBe(4);
+    expect(fases[0].minutosTurno).toBe(30);
     expect(fases[0].minutosRequeridos).toBe(120);
     expect(fases[0].horasMinimas).toBe(2);
   });
@@ -585,6 +665,7 @@ describe('fasesDelTorneo (AC-009, DD-011, DD-012)', () => {
     const fasesSinCancha = fasesDelTorneo({ equipos: 4, canchaIds: [] });
     expect(fasesSinCancha[0].canchasEfectivas).toBe(1);
     expect(fasesSinCancha[0].canchaIds).toEqual([]);
+    expect(fasesSinCancha[0].minutosTurno).toBe(30);
 
     expect(fasesDelTorneo({ equipos: 6 })).toEqual([]);
     expect(fasesDelTorneo({ equipos: 0 })).toEqual([]);
@@ -593,52 +674,59 @@ describe('fasesDelTorneo (AC-009, DD-011, DD-012)', () => {
 
 describe('validarJornadas (AC-010, AC-011, DD-013)', () => {
   const fases8eq = [
-    { ronda: 1, nombreRonda: 'Cuartos de final', minutosRequeridos: 60, horasMinimas: 1 },
-    { ronda: 2, nombreRonda: 'Semifinal', minutosRequeridos: 30, horasMinimas: 1 },
-    { ronda: 3, nombreRonda: 'Final', minutosRequeridos: 30, horasMinimas: 1 },
+    { ronda: 1, nombreRonda: 'Cuartos de final', partidos: 4, turnos: 2, minutosTurno: 30, minutosRequeridos: 60, horasMinimas: 1 },
+    { ronda: 2, nombreRonda: 'Semifinal', partidos: 2, turnos: 1, minutosTurno: 30, minutosRequeridos: 30, horasMinimas: 1 },
+    { ronda: 3, nombreRonda: 'Final', partidos: 1, turnos: 1, minutosTurno: 30, minutosRequeridos: 30, horasMinimas: 1 },
   ];
 
-  test('AC-010: valida exitosamente jornadas con fecha, horas suficientes y orden correcto', () => {
+  test('AC-010: valida capacidad con horas salteadas por cancha y orden entre fases', () => {
+    const fases25 = [
+      { ronda: 1, nombreRonda: 'Cuartos de final', partidos: 4, turnos: 2, minutosTurno: 25, minutosRequeridos: 50, horasMinimas: 1 },
+      { ronda: 2, nombreRonda: 'Semifinal', partidos: 2, turnos: 1, minutosTurno: 25, minutosRequeridos: 25, horasMinimas: 1 },
+      { ronda: 3, nombreRonda: 'Final', partidos: 1, turnos: 1, minutosTurno: 25, minutosRequeridos: 25, horasMinimas: 1 },
+    ];
     const jornadas = {
-      1: { fecha: '2026-11-01', horas: ['08:00'] }, // 60 min requeridos, 60 disponibles (fin 09:00)
-      2: { fecha: '2026-11-01', horas: ['09:00'] }, // 30 min requeridos, 60 disponibles (fin 10:00)
-      3: { fecha: '2026-11-02', horas: ['10:00'] }, // al día siguiente
+      1: {
+        fecha: '2026-11-21',
+        horasPorCancha: { 'futbol-1': ['16:00', '18:00'], 'futbol-2': ['19:00'] }, // 6 turnos
+      },
+      2: {
+        fecha: '2026-11-21',
+        horasPorCancha: { 'futbol-2': ['20:00'] }, // empieza exactamente cuando termina 19:00 -> 20:00
+      },
+      3: {
+        fecha: '2026-11-22',
+        horasPorCancha: { 'futbol-2': ['10:00'] },
+      },
     };
 
-    const validaciones = validarJornadas(fases8eq, jornadas);
+    const validaciones = validarJornadas(fases25, jornadas);
     expect(validaciones).toHaveLength(3);
-
-    expect(validaciones[0]).toMatchObject({
+    expect(validaciones[0]).toEqual({
       ronda: 1,
       nombreRonda: 'Cuartos de final',
       completa: true,
       alcanza: true,
       ordenValido: true,
+      disponibles: 150,
+      deficit: 0,
+      turnosDisponibles: 6,
+      partidosSinUbicar: 0,
       error: null,
     });
-    expect(validaciones[1]).toMatchObject({
-      ronda: 2,
-      nombreRonda: 'Semifinal',
-      completa: true,
-      alcanza: true,
-      ordenValido: true,
-      error: null,
-    });
-    expect(validaciones[2]).toMatchObject({
-      ronda: 3,
-      nombreRonda: 'Final',
-      completa: true,
-      alcanza: true,
-      ordenValido: true,
-      error: null,
-    });
+    expect(validaciones[1].alcanza).toBe(true);
+    expect(validaciones[1].ordenValido).toBe(true);
+    expect(validaciones[1].error).toBeNull();
+    expect(validaciones[2].alcanza).toBe(true);
+    expect(validaciones[2].ordenValido).toBe(true);
+    expect(validaciones[2].error).toBeNull();
   });
 
-  test('detecta fase incompleta (sin fecha o sin horas)', () => {
+  test('detecta fase incompleta (sin fecha o sin horas en ninguna cancha)', () => {
     const jornadas = {
-      1: { fecha: '2026-11-01', horas: ['08:00'] },
-      2: { fecha: '2026-11-01', horas: [] },
-      3: { fecha: null, horas: ['10:00'] },
+      1: { fecha: '2026-11-01', horasPorCancha: { c1: ['08:00'], c2: ['08:00'] } },
+      2: { fecha: '2026-11-01', horasPorCancha: { c1: [], c2: [] } },
+      3: { fecha: null, horasPorCancha: { c1: ['10:00'] } },
     };
 
     const validaciones = validarJornadas(fases8eq, jornadas);
@@ -650,6 +738,8 @@ describe('validarJornadas (AC-010, AC-011, DD-013)', () => {
       ordenValido: true,
       disponibles: 0,
       deficit: 30,
+      turnosDisponibles: 0,
+      partidosSinUbicar: 2,
       error: 'Elige el día y el horario para Semifinal.',
     });
     expect(validaciones[2]).toEqual({
@@ -660,42 +750,83 @@ describe('validarJornadas (AC-010, AC-011, DD-013)', () => {
       ordenValido: true,
       disponibles: 0,
       deficit: 30,
+      turnosDisponibles: 0,
+      partidosSinUbicar: 1,
       error: 'Elige el día y el horario para Final.',
     });
   });
 
-  test('detecta déficit de tiempo en una fase', () => {
-    const faseOctavos = [
-      { ronda: 1, nombreRonda: 'Octavos de final', minutosRequeridos: 120, horasMinimas: 2 },
+  test('detecta déficit de partidos por ubicar y deduce minutosTurno si no viene explícito', () => {
+    const fasesSinMinTurno = [
+      { ronda: 1, nombreRonda: 'Cuartos de final', partidos: 4, turnos: 2, minutosRequeridos: 60 },
+      { ronda: 2, nombreRonda: 'Semifinal', partidos: 2, turnos: 1, minutosRequeridos: 35 }, // deduce 35 min/turno
     ];
     const jornadas = {
-      1: { fecha: '2026-11-01', horas: ['08:00'] }, // 60 min disponibles vs 120 req
+      // 1 hora en c1 con turno 30 -> 2 turnos, faltan 2 partidos
+      1: { fecha: '2026-11-01', horasPorCancha: { c1: ['08:00'] } },
+      // 1 hora en c1 con turno 35 -> 1 turno, falta 1 partido
+      2: { fecha: '2026-11-02', horasPorCancha: { c1: ['08:00'] } },
     };
 
-    const [v] = validarJornadas(faseOctavos, jornadas);
-    expect(v.completa).toBe(true);
-    expect(v.alcanza).toBe(false);
-    expect(v.deficit).toBe(60);
-    expect(v.error).toBe('La franja de Octavos de final no alcanza (faltan 60 min).');
+    const [v1, v2] = validarJornadas(fasesSinMinTurno, jornadas);
+    expect(v1).toMatchObject({
+      completa: true,
+      alcanza: false,
+      turnosDisponibles: 2,
+      partidosSinUbicar: 2,
+      disponibles: 60,
+      deficit: 60,
+      error: 'Las horas de Cuartos de final no alcanzan: faltan 2 partidos por ubicar.',
+    });
+    expect(v2).toMatchObject({
+      completa: true,
+      alcanza: false,
+      turnosDisponibles: 1,
+      partidosSinUbicar: 1,
+      disponibles: 35,
+      deficit: 35,
+      error: 'Las horas de Semifinal no alcanzan: faltan 1 partido por ubicar.',
+    });
   });
 
-  test('AC-011: detecta violación de orden cronológico el mismo día', () => {
-    const jornadas = {
-      1: { fecha: '2026-11-01', horas: ['08:00', '09:00'] }, // fin 10:00
-      2: { fecha: '2026-11-01', horas: ['09:00'] }, // inicio 09:00 < fin 10:00
-    };
+  test('AC-011: orden exacto válido vs un minuto antes inválido y fase con inicio en segunda cancha', () => {
+    // Hora exacta: cuartos termina a las 17:00 en c1, semifinal empieza a las 17:00 en c2 -> válida
+    const [ok1, ok2] = validarJornadas(fases8eq.slice(0, 2), {
+      1: { fecha: '2026-11-01', horasPorCancha: { c1: ['16:00'], c2: ['16:00'] } },
+      2: { fecha: '2026-11-01', horasPorCancha: { c2: ['17:00'] } },
+    });
+    expect(ok1.ordenValido).toBe(true);
+    expect(ok2.ordenValido).toBe(true);
+    expect(ok2.error).toBeNull();
 
-    const validaciones = validarJornadas(fases8eq.slice(0, 2), jornadas);
-    expect(validaciones[1].ordenValido).toBe(false);
-    expect(validaciones[1].error).toBe(
-      'Semifinal debe jugarse después de que termine Cuartos de final (2026-11-01 a las 10:00).'
+    // Un minuto antes en otra cancha: cuartos termina 17:00, semifinal empieza 16:59 -> inválida
+    const [, invMinuto] = validarJornadas(fases8eq.slice(0, 2), {
+      1: { fecha: '2026-11-01', horasPorCancha: { c1: ['16:00'], c2: ['16:00'] } },
+      2: { fecha: '2026-11-01', horasPorCancha: { c2: ['16:59'] } },
+    });
+    expect(invMinuto.ordenValido).toBe(false);
+    expect(invMinuto.error).toBe(
+      'Semifinal debe jugarse después de que termine Cuartos de final (2026-11-01 a las 17:00).'
     );
+
+    // Inicio de fase está en la segunda cancha (17:00 en c2 < fin 18:00 de cuartos en c1)
+    const [, invSegundaCancha] = validarJornadas(fases8eq.slice(0, 2), {
+      1: { fecha: '2026-11-01', horasPorCancha: { c1: ['16:00', '17:00'] } },
+      2: { fecha: '2026-11-01', horasPorCancha: { c1: ['18:00'], c2: ['17:00'] } },
+    });
+    expect(invSegundaCancha.ordenValido).toBe(false);
+    expect(invSegundaCancha.error).toBe(
+      'Semifinal debe jugarse después de que termine Cuartos de final (2026-11-01 a las 18:00).'
+    );
+
+    // El orden se revisa antes que la capacidad
+    expect(invSegundaCancha.alcanza).toBe(true);
   });
 
   test('AC-011: detecta violación de orden cronológico en días invertidos', () => {
     const jornadas = {
-      1: { fecha: '2026-11-02', horas: ['08:00'] }, // fin 09:00 el 2 de nov
-      2: { fecha: '2026-11-01', horas: ['10:00'] }, // 1 de nov (anterior a R1)
+      1: { fecha: '2026-11-02', horasPorCancha: { c1: ['08:00'], c2: ['08:00'] } },
+      2: { fecha: '2026-11-01', horasPorCancha: { c1: ['10:00'] } },
     };
 
     const validaciones = validarJornadas(fases8eq.slice(0, 2), jornadas);
@@ -707,123 +838,243 @@ describe('validarJornadas (AC-010, AC-011, DD-013)', () => {
 });
 
 describe('sugerenciasTiempoFase', () => {
-  test('devuelve vacío si la franja de la fase alcanza', () => {
-    const fase = { ronda: 1, nombreRonda: 'Semifinal', partidos: 2, canchasEfectivas: 2, minutosRequeridos: 30, horasMinimas: 1 };
+  test('devuelve vacío si capacidadFase alcanza para los partidos de la fase', () => {
+    const fase = {
+      ronda: 1,
+      nombreRonda: 'Semifinal',
+      partidos: 2,
+      canchasEfectivas: 2,
+      minutosTurno: 30,
+      minutosRequeridos: 30,
+      horasMinimas: 1,
+    };
     expect(
       sugerenciasTiempoFase({
         fase,
         canchasTotales: 2,
         duracionPartido: 20,
         deporte: 'futbol',
-        horasReservadas: 1,
+        horasPorCancha: { c1: ['16:00'], c2: [] },
       })
     ).toEqual([]);
   });
 
-  test('devuelve sugerencias accionables para la fase con déficit', () => {
-    const fase = { ronda: 1, nombreRonda: 'Octavos de final', partidos: 8, canchasEfectivas: 1, minutosRequeridos: 240, horasMinimas: 4 };
+  test('devuelve sugerencias accionables cuando faltan partidos por ubicar', () => {
+    const fase = {
+      ronda: 1,
+      nombreRonda: 'Octavos de final',
+      partidos: 8,
+      canchasEfectivas: 1,
+      minutosTurno: 30,
+      minutosRequeridos: 240,
+      horasMinimas: 4,
+    };
     const sugs = sugerenciasTiempoFase({
       fase,
       canchasTotales: 1,
       duracionPartido: 20,
       deporte: 'futbol',
-      horasReservadas: 1,
+      horasPorCancha: { c1: ['08:00'] }, // 2 turnos -> faltan 6 partidos
     });
 
     expect(sugs.length).toBe(3);
-    expect(sugs[0]).toBe('Amplía la franja de Octavos de final a al menos 4 horas (240 min).');
+    expect(sugs[0]).toBe('Marca más horas en Octavos de final: faltan turnos para 6 partidos.');
     expect(sugs[1]).toContain('Agrega más canchas del mismo deporte');
     expect(sugs[2]).toContain('Reduce la duración por partido a 15 min');
+
+    // Caso con 1 partido faltante
+    const sugsUno = sugerenciasTiempoFase({
+      fase: {
+        ronda: 2,
+        nombreRonda: 'Semifinal',
+        partidos: 2,
+        canchasEfectivas: 2,
+        minutosTurno: 35,
+      },
+      canchasTotales: 2,
+      duracionPartido: 25,
+      deporte: 'futbol',
+      horasPorCancha: { c1: ['10:00'] }, // 1 turno -> falta 1 partido
+    });
+    expect(sugsUno[0]).toBe('Marca más horas en Semifinal: faltan turnos para 1 partido.');
   });
 });
 
 describe('programarTorneo y armarTorneo con jornadas (DD-011, DD-012, DD-014)', () => {
-  test('programarTorneo asigna canchas efectivas, turnos dentro de ronda y fechas por fase', () => {
+  test('programarTorneo con horas por cancha asigna el 2.º y 4.º partido correctamente sin cruzar huecos y permite final en cancha 2', () => {
     const orden = [1, 2, 3, 4, 5, 6, 7, 8];
-    const canchaIds = ['cancha-1', 'cancha-2', 'cancha-3'];
+    const canchaIds = ['futbol-1', 'futbol-2'];
     const jornadas = {
-      1: { fecha: '2026-11-01', horas: ['08:00', '09:00'] },
-      2: { fecha: '2026-11-02', horas: ['10:00'] },
-      3: { fecha: '2026-11-03', horas: ['14:00'] },
+      1: {
+        fecha: '2026-11-21',
+        horasPorCancha: {
+          'futbol-1': ['16:00', '18:00'],
+          'futbol-2': ['19:00'],
+        },
+      },
+      2: {
+        fecha: '2026-11-22',
+        horasPorCancha: {
+          'futbol-1': ['16:00'],
+          'futbol-2': ['16:00'],
+        },
+      },
+      3: {
+        fecha: '2026-11-23',
+        horasPorCancha: {
+          'futbol-2': ['20:00'],
+        },
+      },
     };
 
     const partidos = programarTorneo({
       orden,
       canchaIds,
-      minutosTurno: 30,
+      minutosTurno: 25,
       jornadas,
     });
 
     expect(partidos).toHaveLength(7);
 
-    // R1 (Cuartos): 4 partidos, canchas efectivas = min(3, 4) = 3 -> ['cancha-1', 'cancha-2', 'cancha-3']
+    // R1 (Cuartos): 4 partidos en futbol-1 (16:00, 16:25, 18:00, 18:25); ninguno cruza el hueco de las 17:00
     const r1 = partidos.filter((p) => p.ronda === 1);
-    expect(r1).toHaveLength(4);
     expect(r1[0]).toMatchObject({
       id: 'R1-P1',
-      canchaId: 'cancha-1',
+      canchaId: 'futbol-1',
       turno: 1,
-      inicio: '08:00',
-      fecha: '2026-11-01',
+      inicio: '16:00',
+      fecha: '2026-11-21',
     });
     expect(r1[1]).toMatchObject({
       id: 'R1-P2',
-      canchaId: 'cancha-2',
-      turno: 1,
-      inicio: '08:00',
-      fecha: '2026-11-01',
+      canchaId: 'futbol-1',
+      turno: 2,
+      inicio: '16:25',
+      fecha: '2026-11-21',
     });
     expect(r1[2]).toMatchObject({
       id: 'R1-P3',
-      canchaId: 'cancha-3',
-      turno: 1,
-      inicio: '08:00',
-      fecha: '2026-11-01',
+      canchaId: 'futbol-1',
+      turno: 3,
+      inicio: '18:00',
+      fecha: '2026-11-21',
     });
     expect(r1[3]).toMatchObject({
       id: 'R1-P4',
-      canchaId: 'cancha-1',
-      turno: 2,
-      inicio: '08:30',
-      fecha: '2026-11-01',
+      canchaId: 'futbol-1',
+      turno: 4,
+      inicio: '18:25',
+      fecha: '2026-11-21',
     });
 
-    // R2 (Semifinal): 2 partidos, canchas efectivas = min(3, 2) = 2 -> ['cancha-1', 'cancha-2']
+    // R2 (Semifinal): dos partidos a la misma hora comparten turno: 1
     const r2 = partidos.filter((p) => p.ronda === 2);
-    expect(r2).toHaveLength(2);
     expect(r2[0]).toMatchObject({
       id: 'R2-P1',
-      canchaId: 'cancha-1',
+      canchaId: 'futbol-1',
       turno: 1,
-      inicio: '10:00',
-      fecha: '2026-11-02',
+      inicio: '16:00',
+      fecha: '2026-11-22',
     });
     expect(r2[1]).toMatchObject({
       id: 'R2-P2',
-      canchaId: 'cancha-2',
+      canchaId: 'futbol-2',
       turno: 1,
-      inicio: '10:00',
-      fecha: '2026-11-02',
+      inicio: '16:00',
+      fecha: '2026-11-22',
     });
 
-    // R3 (Final): 1 partido, canchas efectivas = min(3, 1) = 1 -> ['cancha-1']
+    // R3 (Final): solo cancha 2 tiene horas -> va en futbol-2
     const r3 = partidos.filter((p) => p.ronda === 3);
-    expect(r3).toHaveLength(1);
     expect(r3[0]).toMatchObject({
       id: 'R3-P1',
-      canchaId: 'cancha-1',
+      canchaId: 'futbol-2',
       turno: 1,
-      inicio: '14:00',
-      fecha: '2026-11-03',
+      inicio: '20:00',
+      fecha: '2026-11-23',
     });
   });
 
-  test('armarTorneo con jornadas genera resumen de jornadas en la propiedad torneo.jornadas', () => {
+  test('programarTorneo ordena por hora entre canchas antes de asignar partidos y deja null si faltan turnos', () => {
+    const partidos = programarTorneo({
+      orden: [1, 2, 3, 4, 5, 6, 7, 8],
+      canchaIds: ['futbol-1', 'futbol-2'],
+      minutosTurno: 25,
+      jornadas: {
+        // futbol-1 tiene 16:00 y 18:00; futbol-2 tiene 17:00 -> el 3.º y 4.º partido deben ir a las 17:00/17:25 en futbol-2
+        1: {
+          fecha: '2026-11-21',
+          horasPorCancha: {
+            'futbol-1': ['16:00', '18:00'],
+            'futbol-2': ['17:00'],
+          },
+        },
+        // Semifinal sin horas -> ambos partidos quedan sin turno
+        2: {
+          fecha: '2026-11-22',
+          horasPorCancha: {},
+        },
+        // Final con 1 solo turno de 60 min (minutosTurno 25 -> 2 disponibles, toma el 1.º)
+        3: {
+          fecha: '2026-11-23',
+          horasPorCancha: {
+            'futbol-1': ['12:00'],
+          },
+        },
+      },
+    });
+
+    const r1 = partidos.filter((p) => p.ronda === 1);
+    expect(r1.map((p) => ({ id: p.id, canchaId: p.canchaId, inicio: p.inicio, turno: p.turno }))).toEqual([
+      { id: 'R1-P1', canchaId: 'futbol-1', inicio: '16:00', turno: 1 },
+      { id: 'R1-P2', canchaId: 'futbol-1', inicio: '16:25', turno: 2 },
+      { id: 'R1-P3', canchaId: 'futbol-2', inicio: '17:00', turno: 3 },
+      { id: 'R1-P4', canchaId: 'futbol-2', inicio: '17:25', turno: 4 },
+    ]);
+
+    const r2 = partidos.filter((p) => p.ronda === 2);
+    expect(r2[0]).toMatchObject({ canchaId: null, inicio: null, turno: null });
+    expect(r2[1]).toMatchObject({ canchaId: null, inicio: null, turno: null });
+
+    // Fase parcialmente cubierta con minutosTurno 35 (solo cabe 1 turno en 1 hora)
+    const parcial = programarTorneo({
+      orden: [1, 2, 3, 4],
+      canchaIds: ['futbol-1', 'futbol-2'],
+      minutosTurno: 35,
+      jornadas: {
+        1: { fecha: '2026-11-22', horasPorCancha: { 'futbol-2': ['10:00'] } },
+        2: { fecha: '2026-11-23', horasPorCancha: { 'futbol-2': ['11:00'] } },
+      },
+    });
+    const semi = parcial.filter((p) => p.ronda === 1);
+    expect(semi[0]).toMatchObject({ canchaId: 'futbol-2', inicio: '10:00', turno: 1 });
+    expect(semi[1]).toMatchObject({ canchaId: null, inicio: null, turno: null });
+  });
+
+  test('armarTorneo con jornadas genera resumen con horasPorCancha sin vacías, horas planas y canchaIds usadas en el orden del torneo', () => {
     const jornadas = {
-      1: { fecha: '2026-11-01', horas: ['08:00'] },
-      2: { fecha: '2026-11-02', horas: ['09:00'] },
-      3: { fecha: '2026-11-03', horas: ['10:00'] },
+      1: {
+        fecha: '2026-11-01',
+        horasPorCancha: {
+          c3: ['09:00'],
+          c1: ['08:00', '10:00'],
+          c2: [],
+        },
+      },
+      2: {
+        fecha: '2026-11-02',
+        horasPorCancha: {
+          c2: ['09:00'],
+        },
+      },
+      3: {
+        fecha: '2026-11-03',
+        horasPorCancha: {
+          c3: ['10:00'],
+        },
+      },
     };
+    const snapshot = structuredClone(jornadas);
 
     const torneo = armarTorneo({
       deporte: 'futbol',
@@ -835,35 +1086,45 @@ describe('programarTorneo y armarTorneo con jornadas (DD-011, DD-012, DD-014)', 
       jornadas,
     });
 
+    expect(jornadas).toEqual(snapshot);
     expect(torneo.jornadas).toBeDefined();
     expect(torneo.jornadas).toHaveLength(3);
-    expect(torneo.jornadas[0]).toMatchObject({
+    expect(torneo.jornadas[0]).toEqual({
       ronda: 1,
       nombreRonda: 'Cuartos de final',
       fecha: '2026-11-01',
-      horas: ['08:00'],
+      horasPorCancha: {
+        c3: ['09:00'],
+        c1: ['08:00', '10:00'],
+      },
+      horas: ['08:00', '09:00', '10:00'],
+      canchaIds: ['c1', 'c3'],
       canchasEfectivas: 3,
-      canchaIds: ['c1', 'c2', 'c3'],
       partidos: 4,
       turnos: 2,
       minutosRequeridos: 60,
     });
-    expect(torneo.jornadas[1]).toMatchObject({
+    expect(torneo.jornadas[0].horasPorCancha).not.toBe(jornadas[1].horasPorCancha);
+    expect(torneo.jornadas[1]).toEqual({
       ronda: 2,
       nombreRonda: 'Semifinal',
       fecha: '2026-11-02',
+      horasPorCancha: { c2: ['09:00'] },
+      horas: ['09:00'],
+      canchaIds: ['c2'],
       canchasEfectivas: 2,
-      canchaIds: ['c1', 'c2'],
       partidos: 2,
       turnos: 1,
       minutosRequeridos: 30,
     });
-    expect(torneo.jornadas[2]).toMatchObject({
+    expect(torneo.jornadas[2]).toEqual({
       ronda: 3,
       nombreRonda: 'Final',
       fecha: '2026-11-03',
+      horasPorCancha: { c3: ['10:00'] },
+      horas: ['10:00'],
+      canchaIds: ['c3'],
       canchasEfectivas: 1,
-      canchaIds: ['c1'],
       partidos: 1,
       turnos: 1,
       minutosRequeridos: 30,

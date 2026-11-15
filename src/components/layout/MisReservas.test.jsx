@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import { ReservasProvider, useReservas } from '../../context/ReservasContext';
+import { armarTorneo } from '../../lib/torneo';
+import { fechaCompleta } from '../../lib/fechas';
 import MisReservas from './MisReservas';
 
 beforeAll(() => {
@@ -360,5 +362,200 @@ describe('MisReservas', () => {
     fireEvent.keyDown(tabDatos, { key: 'End' });
     expect(tabDatos).toHaveAttribute('aria-selected', 'true');
     expect(document.activeElement).toBe(tabDatos);
+  });
+
+  test('muestra las fases y horas por cancha de un torneo nuevo (bloques separados por cancha)', () => {
+    let codigoCreado = null;
+    let diasCap = [];
+
+    function TorneoNuevoHarness() {
+      const { reservarEvento, dias } = useReservas();
+      const [abierto, setAbierto] = useState(true);
+      const yaRef = useRef(false);
+      diasCap = dias;
+
+      useEffect(() => {
+        if (yaRef.current) return;
+        yaRef.current = true;
+        const f1 = dias[3];
+        const f2 = dias[5];
+        const jornadas = {
+          1: {
+            fecha: f1,
+            horasPorCancha: {
+              'padel-1': ['16:00', '18:00'],
+              'padel-2': ['19:00'],
+            },
+          },
+          2: {
+            fecha: f2,
+            horasPorCancha: {
+              'padel-1': ['10:00', '11:00'],
+            },
+          },
+        };
+        const res = reservarEvento({
+          subtipo: 'torneo',
+          fecha: f1,
+          canchaIds: ['padel-1', 'padel-2'],
+          horas: ['16:00', '18:00', '19:00'],
+          bloques: [
+            {
+              ronda: 1,
+              nombreRonda: 'Semifinal',
+              fecha: f1,
+              canchaIds: ['padel-1'],
+              horas: ['16:00', '18:00'],
+            },
+            {
+              ronda: 1,
+              nombreRonda: 'Semifinal',
+              fecha: f1,
+              canchaIds: ['padel-2'],
+              horas: ['19:00'],
+            },
+            {
+              ronda: 2,
+              nombreRonda: 'Final',
+              fecha: f2,
+              canchaIds: ['padel-1'],
+              horas: ['10:00', '11:00'],
+            },
+          ],
+          equipos: 4,
+          canchasNecesarias: 2,
+          torneo: armarTorneo({
+            deporte: 'padel',
+            equipos: 4,
+            duracionPartido: 20,
+            emparejamiento: 'aleatorio',
+            orden: [1, 2, 3, 4],
+            canchaIds: ['padel-1', 'padel-2'],
+            jornadas,
+          }),
+          nombre: 'Mateo Silva',
+          telefono: '3107654321',
+        });
+        codigoCreado = res.codigo;
+      }, [dias, reservarEvento]);
+
+      return <MisReservas abierto={abierto} onCerrar={() => setAbierto(false)} />;
+    }
+
+    render(
+      <ReservasProvider>
+        <TorneoNuevoHarness />
+      </ReservasProvider>
+    );
+
+    expect(codigoCreado).toBeTruthy();
+    fireEvent.change(screen.getByPlaceholderText('SPF-XXXXXX'), {
+      target: { value: codigoCreado },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /buscar/i }));
+
+    expect(screen.getByText(codigoCreado)).toBeInTheDocument();
+    expect(screen.getByText('Torneo')).toBeInTheDocument();
+    expect(screen.getAllByText(/^Semifinal:$/i)).toHaveLength(1);
+    expect(screen.getAllByText(/^Final:$/i)).toHaveLength(1);
+    expect(
+      screen.getByText(
+        new RegExp(
+          `${fechaCompleta(diasCap[3])}.*Pádel 1: 16:00, 18:00 · Pádel 2: 19:00`
+        )
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        new RegExp(`${fechaCompleta(diasCap[5])}.*Pádel 1: 10:00 a 12:00`)
+      )
+    ).toBeInTheDocument();
+  });
+
+  test('muestra las fases de un torneo legado (1 bloque por fase con 2 canchas)', () => {
+    let codigoCreado = null;
+    let diasCap = [];
+
+    function TorneoLegadoHarness() {
+      const { reservarEvento, dias } = useReservas();
+      const [abierto, setAbierto] = useState(true);
+      const yaRef = useRef(false);
+      diasCap = dias;
+
+      useEffect(() => {
+        if (yaRef.current) return;
+        yaRef.current = true;
+        const f1 = dias[4];
+        const f2 = dias[6];
+        const jornadas = {
+          1: { fecha: f1, horas: ['14:00', '15:00'] },
+          2: { fecha: f2, horas: ['10:00', '11:00'] },
+        };
+        const res = reservarEvento({
+          subtipo: 'torneo',
+          fecha: f1,
+          canchaIds: ['padel-2', 'padel-3'],
+          horas: ['14:00', '15:00'],
+          bloques: [
+            {
+              ronda: 1,
+              nombreRonda: 'Semifinal',
+              fecha: f1,
+              canchaIds: ['padel-2', 'padel-3'],
+              horas: ['14:00', '15:00'],
+            },
+            {
+              ronda: 2,
+              nombreRonda: 'Final',
+              fecha: f2,
+              canchaIds: ['padel-2'],
+              horas: ['10:00', '11:00'],
+            },
+          ],
+          equipos: 4,
+          canchasNecesarias: 2,
+          torneo: armarTorneo({
+            deporte: 'padel',
+            equipos: 4,
+            duracionPartido: 20,
+            emparejamiento: 'aleatorio',
+            orden: [1, 2, 3, 4],
+            canchaIds: ['padel-2', 'padel-3'],
+            jornadas,
+          }),
+          nombre: 'Lucía Paredes',
+          telefono: '3112223344',
+        });
+        codigoCreado = res.codigo;
+      }, [dias, reservarEvento]);
+
+      return <MisReservas abierto={abierto} onCerrar={() => setAbierto(false)} />;
+    }
+
+    render(
+      <ReservasProvider>
+        <TorneoLegadoHarness />
+      </ReservasProvider>
+    );
+
+    expect(codigoCreado).toBeTruthy();
+    fireEvent.change(screen.getByPlaceholderText('SPF-XXXXXX'), {
+      target: { value: codigoCreado },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /buscar/i }));
+
+    expect(screen.getByText(codigoCreado)).toBeInTheDocument();
+    expect(screen.getAllByText(/^Semifinal:$/i)).toHaveLength(1);
+    expect(screen.getAllByText(/^Final:$/i)).toHaveLength(1);
+    expect(
+      screen.getByText(
+        new RegExp(`${fechaCompleta(diasCap[4])}.*14:00 a 16:00 \\(2 canchas\\)`)
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        new RegExp(`${fechaCompleta(diasCap[6])}.*10:00 a 12:00 \\(1 cancha\\)`)
+      )
+    ).toBeInTheDocument();
   });
 });

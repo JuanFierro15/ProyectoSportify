@@ -58,7 +58,8 @@ node scripts/probar-chat.mjs [url] [ids...]  # casos de prueba de /api/chat
   cumpleaños), `src/components/reservas/FormularioReserva.test.jsx` (prop
   `seccion`), los del asistente en `src/components/reservas/torneo/`
   (`AsistenteTorneo.test.jsx` y `useAsistenteTorneo.test.jsx`), la limpieza
-  de GSAP en `Bracket.test.jsx` y `CalendarioTorneo.test.jsx`, la pausa del
+  de GSAP en `Bracket.test.jsx` y `CalendarioTorneo.test.jsx`, el diálogo de
+  horas sin partido en `DialogoHorasSinPartido.test.jsx`, la pausa del
   video en `src/components/hero/DeporteHero.test.jsx`,
   `src/components/layout/MisReservas.test.jsx` y
   `src/components/chatbot/Chatbot.test.jsx` (widget: portal, Escape,

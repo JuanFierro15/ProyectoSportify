@@ -50,6 +50,8 @@ export const ERROR_EVENTO_NO_DISPONIBLE =
   'Alguna cancha u horario del evento ya no está disponible. No se reservó nada.';
 export const ERROR_EVENTO_HORAS_NO_SEGUIDAS =
   'Las horas del evento deben ser seguidas. Elige un rango sin saltos.';
+export const ERROR_EVENTO_FECHA_FASE =
+  'Todas las canchas de una fase deben jugarse el mismo día. No se reservó nada.';
 
 const ReservasContext = createContext(null);
 
@@ -225,18 +227,70 @@ function validarReservaEvento(state, datos = {}) {
       };
     }
 
-    const fases = bloques.map((b, idx) => ({
-      ronda: idx + 1,
-      nombreRonda: b.nombreRonda || `Fase ${b.ronda ?? idx + 1}`,
+    for (const b of bloques) {
+      for (const cid of b.canchaIds) {
+        const cancha = state.canchas.find((c) => c.id === cid);
+        if (!cancha || b.horas.some((h) => !cancha.horas.includes(h))) {
+          return { ok: false, error: ERROR_EVENTO_NO_DISPONIBLE };
+        }
+      }
+    }
+
+    const gruposPorRonda = new Map();
+    for (let idx = 0; idx < bloques.length; idx += 1) {
+      const b = bloques[idx];
+      const ronda =
+        b.ronda != null && b.ronda !== '' && Number.isFinite(Number(b.ronda))
+          ? Number(b.ronda)
+          : idx + 1;
+
+      if (!gruposPorRonda.has(ronda)) {
+        gruposPorRonda.set(ronda, {
+          ronda,
+          nombreRonda: b.nombreRonda || null,
+          fecha: b.fecha,
+          horasPorCancha: {},
+        });
+      }
+      const grupo = gruposPorRonda.get(ronda);
+      if (grupo.fecha !== b.fecha) {
+        return {
+          ok: false,
+          error: ERROR_EVENTO_FECHA_FASE,
+        };
+      }
+      if (!grupo.nombreRonda && b.nombreRonda) {
+        grupo.nombreRonda = b.nombreRonda;
+      }
+      b.canchaIds.forEach((cid) => {
+        if (!grupo.horasPorCancha[cid]) {
+          grupo.horasPorCancha[cid] = [];
+        }
+        grupo.horasPorCancha[cid].push(...b.horas);
+      });
+    }
+
+    const rondasOrdenadas = Array.from(gruposPorRonda.values()).sort(
+      (a, b) => a.ronda - b.ronda
+    );
+
+    const fases = rondasOrdenadas.map((g) => ({
+      ronda: g.ronda,
+      nombreRonda: g.nombreRonda || `Fase ${g.ronda}`,
+      partidos: 0,
+      turnos: 1,
+      minutosTurno: 60,
       minutosRequeridos: 0,
     }));
+
     const jornadas = {};
-    bloques.forEach((b, idx) => {
-      jornadas[idx + 1] = {
-        fecha: b.fecha,
-        horas: b.horas,
+    rondasOrdenadas.forEach((g) => {
+      jornadas[g.ronda] = {
+        fecha: g.fecha,
+        horasPorCancha: g.horasPorCancha,
       };
     });
+
     const falloOrden = validarJornadas(fases, jornadas).find(
       (v) => !v.ordenValido
     );
@@ -245,18 +299,6 @@ function validarReservaEvento(state, datos = {}) {
         ok: false,
         error: falloOrden.error,
       };
-    }
-
-    for (const b of bloques) {
-      for (const cid of b.canchaIds) {
-        const cancha = state.canchas.find((c) => c.id === cid);
-        if (!cancha) {
-          return { ok: false, error: ERROR_EVENTO_NO_DISPONIBLE };
-        }
-        if (!horasConsecutivas(cancha.horas, b.horas)) {
-          return { ok: false, error: ERROR_EVENTO_HORAS_NO_SEGUIDAS };
-        }
-      }
     }
 
     const celdasVistas = new Set();
@@ -407,15 +449,24 @@ export function reducer(state, action) {
 
         const precio = calcularPrecioJornadas(bloques, state.canchas);
 
-        const todosCanchaIds =
-          Array.isArray(canchaIds) && canchaIds.length > 0
-            ? canchaIds
-            : Array.from(new Set(bloques.flatMap((b) => b.canchaIds)));
+        const deBloques = bloques.flatMap((b) => b.canchaIds);
+        const enBloques = new Set(deBloques);
+        const todosCanchaIds = Array.from(
+          new Set(
+            Array.isArray(canchaIds) && canchaIds.length > 0
+              ? [...canchaIds.filter((id) => enBloques.has(id)), ...deBloques]
+              : deBloques
+          )
+        );
 
-        const canchaNombres = todosCanchaIds.map((cid) => {
-          const c = state.canchas.find((x) => x.id === cid);
-          return c ? c.nombre : cid;
-        });
+        const canchaNombres = Array.from(
+          new Set(
+            todosCanchaIds.map((cid) => {
+              const c = state.canchas.find((x) => x.id === cid);
+              return c ? c.nombre : cid;
+            })
+          )
+        );
 
         const evento = {
           id: `evento__${bloques[0].fecha}__${Date.now()}`,

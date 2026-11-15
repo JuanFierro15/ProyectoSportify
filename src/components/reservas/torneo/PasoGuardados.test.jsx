@@ -144,4 +144,214 @@ describe('PasoGuardados', () => {
     expect(screen.getByText(/^Semifinal:$/i)).toBeInTheDocument();
     expect(screen.getByText(/^Final:$/i)).toBeInTheDocument();
   });
+
+  it('torneo nuevo con bloques separados por cancha y horasPorCancha agrupa cada fase sin duplicarla (con y sin torneo.jornadas)', () => {
+    function GuardarTorneoNuevo({ conJornadas = true }) {
+      const { dias, canchas, reservarEvento, reservas } = useReservas();
+      const [listo, setListo] = useState(false);
+
+      useEffect(() => {
+        if (listo) return;
+        const f1 = dias[3];
+        const f2 = dias[5];
+        const jornadas = {
+          1: {
+            fecha: f1,
+            horasPorCancha: {
+              'padel-1': ['16:00', '18:00'],
+              'padel-2': ['19:00'],
+            },
+          },
+          2: {
+            fecha: f2,
+            horasPorCancha: {
+              'padel-1': ['10:00', '11:00'],
+            },
+          },
+        };
+        const datosTorneo = armarTorneo({
+          deporte: 'padel',
+          equipos: 4,
+          duracionPartido: 20,
+          emparejamiento: 'aleatorio',
+          orden: [1, 2, 3, 4],
+          canchaIds: ['padel-1', 'padel-2'],
+          jornadas: conJornadas ? jornadas : null,
+        });
+
+        reservarEvento({
+          subtipo: 'torneo',
+          fecha: f1,
+          canchaIds: ['padel-1', 'padel-2'],
+          horas: ['16:00', '18:00', '19:00'],
+          bloques: [
+            {
+              ronda: 1,
+              nombreRonda: 'Semifinal',
+              fecha: f1,
+              canchaIds: ['padel-1'],
+              horas: ['16:00', '18:00'],
+            },
+            {
+              ronda: 1,
+              nombreRonda: 'Semifinal',
+              fecha: f1,
+              canchaIds: ['padel-2'],
+              horas: ['19:00'],
+            },
+            {
+              ronda: 2,
+              nombreRonda: 'Final',
+              fecha: f2,
+              canchaIds: ['padel-1'],
+              horas: ['10:00', '11:00'],
+            },
+          ],
+          equipos: 4,
+          canchasNecesarias: 2,
+          torneo: datosTorneo,
+          nombre: 'Laura Gómez',
+          telefono: '3001234567',
+        });
+        setListo(true);
+      }, [conJornadas, dias, listo, reservarEvento]);
+
+      const torneosGuardados = reservas.filter(
+        (r) => r.tipo === 'evento' && r.subtipo === 'torneo' && r.torneo
+      );
+
+      return <PasoGuardados torneosGuardados={torneosGuardados} canchas={canchas} />;
+    }
+
+    for (const conJornadas of [true, false]) {
+      window.localStorage.clear();
+      let diasCap = [];
+      function Capturar() {
+        diasCap = useReservas().dias;
+        return null;
+      }
+
+      const { container, unmount } = render(
+        <ReservasProvider>
+          <Capturar />
+          <GuardarTorneoNuevo conJornadas={conJornadas} />
+        </ReservasProvider>
+      );
+
+      expect(screen.getAllByText(/^Semifinal:$/i)).toHaveLength(1);
+      expect(screen.getAllByText(/^Final:$/i)).toHaveLength(1);
+      const texto = container.textContent;
+      expect(texto).toContain(fechaCompleta(diasCap[3]));
+      expect(texto).toContain(fechaCompleta(diasCap[5]));
+      expect(texto).toContain('Pádel 1: 16:00, 18:00 · Pádel 2: 19:00');
+      expect(texto).toContain('Pádel 1: 10:00 a 12:00');
+      unmount();
+    }
+  });
+
+  it('sin torneo.jornadas, un bloque único de una cancha reconstruye horasPorCancha y uno de varias canchas conserva el rango con conteo', () => {
+    function GuardarBloqueUnico() {
+      const { dias, canchas, reservarEvento, reservas } = useReservas();
+      const [listo, setListo] = useState(false);
+
+      useEffect(() => {
+        if (listo) return;
+        const f1 = dias[2];
+        const f2 = dias[4];
+        const datosTorneo = armarTorneo({
+          deporte: 'padel',
+          equipos: 4,
+          duracionPartido: 20,
+          emparejamiento: 'aleatorio',
+          orden: [1, 2, 3, 4],
+          canchaIds: ['padel-1', 'padel-2'],
+          jornadas: null,
+        });
+
+        reservarEvento({
+          subtipo: 'torneo',
+          fecha: f1,
+          canchaIds: ['padel-1', 'padel-2'],
+          horas: ['14:00', '15:00'],
+          bloques: [
+            {
+              ronda: 1,
+              nombreRonda: 'Semifinal',
+              fecha: f1,
+              canchaIds: ['padel-1', 'padel-2'],
+              horas: ['14:00', '15:00'],
+            },
+            {
+              ronda: 2,
+              nombreRonda: 'Final',
+              fecha: f2,
+              canchaIds: ['padel-2'],
+              horas: ['19:00'],
+            },
+          ],
+          equipos: 4,
+          canchasNecesarias: 2,
+          torneo: datosTorneo,
+          nombre: 'Diego Torres',
+          telefono: '3001112233',
+        });
+        setListo(true);
+      }, [dias, listo, reservarEvento]);
+
+      const torneosGuardados = reservas.filter(
+        (r) => r.tipo === 'evento' && r.subtipo === 'torneo' && r.torneo
+      );
+
+      return <PasoGuardados torneosGuardados={torneosGuardados} canchas={canchas} />;
+    }
+
+    const { container } = render(
+      <ReservasProvider>
+        <GuardarBloqueUnico />
+      </ReservasProvider>
+    );
+
+    const texto = container.textContent;
+    expect(texto).toContain('14:00 a 16:00 (2 canchas)');
+    expect(texto).toContain('Pádel 2: 19:00');
+    expect(texto).not.toContain('19:00 a 20:00');
+  });
+
+  it('usa la prop canchas para los nombres y respalda con el id si no está en el catálogo', () => {
+    const torneoSintetico = {
+      id: 'evento__2026-11-16__1',
+      codigo: 'SPF-TEST01',
+      tipo: 'evento',
+      subtipo: 'torneo',
+      fecha: '2026-11-16',
+      torneo: {
+        equipos: 4,
+        jornadas: [
+          {
+            ronda: 1,
+            nombreRonda: 'Semifinal',
+            fecha: '2026-11-16',
+            canchaIds: ['cancha-custom-1', 'cancha-sin-catalogo'],
+            horasPorCancha: {
+              'cancha-custom-1': ['14:00'],
+              'cancha-sin-catalogo': ['15:00'],
+            },
+          },
+        ],
+      },
+    };
+
+    const { container } = render(
+      <PasoGuardados
+        torneosGuardados={[torneoSintetico]}
+        canchas={[
+          { id: 'cancha-custom-1', nombre: 'Cancha Arena 7', deporte: 'futbol' },
+        ]}
+      />
+    );
+
+    const texto = container.textContent;
+    expect(texto).toContain('Arena 7: 14:00');
+    expect(texto).toContain('cancha-sin-catalogo: 15:00');
+  });
 });

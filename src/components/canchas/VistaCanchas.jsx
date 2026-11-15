@@ -26,6 +26,7 @@ import TarjetaCanchaCarrusel from '../reservas/TarjetaCanchaCarrusel';
 import IndicadorPasos from '../reservas/torneo/IndicadorPasos';
 import SeccionLlaves from '../reservas/torneo/SeccionLlaves';
 import AsistenteTorneo from '../reservas/torneo/AsistenteTorneo';
+import DialogoHorasSinPartido from '../reservas/torneo/DialogoHorasSinPartido';
 import useAsistenteTorneo from '../reservas/torneo/useAsistenteTorneo';
 import './VistaCanchas.css';
 
@@ -690,11 +691,23 @@ function VistaCanchas() {
                       onCancelar={reserva.reiniciar}
                       torneo={reserva.modo === 'torneo' ? reserva.torneoPlan : null}
                       invitados={reserva.modo === 'cumpleanos' ? reserva.invitados : null}
+                      canchas={canchas}
                     />
                   </div>
 
                   {reserva.modo === 'torneo' && (
-                    <SeccionLlaves reserva={reserva} canchas={canchas} />
+                    <>
+                      <SeccionLlaves reserva={reserva} canchas={canchas} />
+                      <DialogoHorasSinPartido
+                        abierto={Boolean(reserva.avisoHorasDeMas)}
+                        mensajes={(reserva.torneoPlan?.fasesConHorasDeMas || [])
+                          .map((r) => reserva.torneoPlan?.horasSinPartidoPorFase?.[r]?.mensaje)
+                          .filter(Boolean)}
+                        onRevisar={reserva.revisarHorasDeMas}
+                        onReservarIgual={reserva.reservarIgual}
+                        onCerrar={reserva.cerrarAvisoHorasDeMas}
+                      />
+                    </>
                   )}
                 </>
               )}

@@ -64,11 +64,14 @@ describe('pasosTorneo', () => {
       expect(pasoFormatoCompleto.motivo).toBe('');
     });
 
-    it('paso 3 (fechas): incompleto si falta horario o hay errores en fases', () => {
+    it('paso 3 (fechas): incompleto si falta horario o hay errores en fases; completo con horas en la segunda cancha', () => {
       const fasesSinHoras = estadoPasosTorneo({
         torneoPlan: {
-          fases: [{ ronda: 'cuartos' }, { ronda: 'semifinal' }],
-          jornadas: { cuartos: { horas: ['08:00'] }, semifinal: { horas: [] } },
+          fases: [{ ronda: 1 }, { ronda: 2 }],
+          jornadas: {
+            1: { fecha: '2026-11-21', horasPorCancha: { c1: ['08:00'] } },
+            2: { fecha: '2026-11-22', horasPorCancha: { c1: [], c2: [] } },
+          },
           validacionesJornadas: [],
         },
       });
@@ -78,8 +81,8 @@ describe('pasosTorneo', () => {
 
       const conErrorValidacion = estadoPasosTorneo({
         torneoPlan: {
-          fases: [{ ronda: 'cuartos' }],
-          jornadas: { cuartos: { horas: ['08:00'] } },
+          fases: [{ ronda: 1 }],
+          jornadas: { 1: { fecha: '2026-11-21', horasPorCancha: { c1: ['08:00'] } } },
           validacionesJornadas: [{ error: 'La semifinal debe ser posterior a cuartos' }],
         },
       });
@@ -87,14 +90,16 @@ describe('pasosTorneo', () => {
       expect(pasoConError.completo).toBe(false);
       expect(pasoConError.motivo).toBe('La semifinal debe ser posterior a cuartos');
 
-      const completo = estadoPasosTorneo({
+      const completoSegundaCancha = estadoPasosTorneo({
         torneoPlan: {
-          fases: [{ ronda: 'final' }],
-          jornadas: { final: { horas: ['10:00'] } },
+          fases: [{ ronda: 1 }],
+          jornadas: {
+            1: { fecha: '2026-11-21', horasPorCancha: { c1: [], c2: ['10:00'] } },
+          },
           validacionesJornadas: [],
         },
       });
-      const pasoFechasCompleto = completo.find((p) => p.id === 'fechas');
+      const pasoFechasCompleto = completoSegundaCancha.find((p) => p.id === 'fechas');
       expect(pasoFechasCompleto.completo).toBe(true);
       expect(pasoFechasCompleto.motivo).toBe('');
     });

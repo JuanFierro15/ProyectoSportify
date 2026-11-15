@@ -1,14 +1,11 @@
 import React from 'react';
 import { fechaCompleta } from '../../../lib/fechas';
-import { finDeFranja } from '../../../lib/precios';
 import Bracket from './Bracket';
-
-function rangoHoras(horas) {
-  if (!Array.isArray(horas) || horas.length === 0) {
-    return '';
-  }
-  return `${horas[0]} a ${finDeFranja(horas[horas.length - 1])}`;
-}
+import {
+  extraerJornadasDeReserva,
+  formatearHorasDeJornada,
+  rangoHorasSeguidas,
+} from './formatoJornadas';
 
 /**
  * Bloque de historial de torneos reservados confirmados con desglose
@@ -34,49 +31,40 @@ function PasoGuardados({ torneosGuardados = [], canchas = [] }) {
             t.torneo?.desempate?.etiqueta ||
             t.torneo?.desempate?.metodo ||
             '';
-          const jornadasRaw =
-            t.torneo?.jornadas &&
-            (Array.isArray(t.torneo.jornadas)
-              ? t.torneo.jornadas
-              : Object.values(t.torneo.jornadas));
-          const bloquesRaw = Array.isArray(t.bloques) ? t.bloques : [];
-          const nFases = Math.max(
-            Array.isArray(jornadasRaw) ? jornadasRaw.length : 0,
-            bloquesRaw.length
-          );
-          const listaJornadas = Array.from({ length: nFases }, (_, idx) => {
-            const b = bloquesRaw[idx] || {};
-            const j = (Array.isArray(jornadasRaw) && jornadasRaw[idx]) || {};
-            return {
-              ...b,
-              ...j,
-              fecha: j.fecha || b.fecha,
-              horas:
-                Array.isArray(j.horas) && j.horas.length > 0
-                  ? j.horas
-                  : Array.isArray(b.horas)
-                  ? b.horas
-                  : [],
-              canchaIds:
-                Array.isArray(j.canchaIds) && j.canchaIds.length > 0
-                  ? j.canchaIds
-                  : Array.isArray(b.canchaIds)
-                  ? b.canchaIds
-                  : [],
-            };
-          });
+          const listaJornadas = extraerJornadasDeReserva(t);
+          const canchasDeReserva =
+            Array.isArray(t.canchaIds) && Array.isArray(t.canchaNombres)
+              ? t.canchaIds
+                  .map((id, i) => ({ id, nombre: t.canchaNombres[i] }))
+                  .filter((c) => c.id && c.nombre)
+              : [];
+          const canchasRef = [
+            ...canchasDeReserva,
+            ...(Array.isArray(canchas)
+              ? canchas.filter(
+                  (c) => c && c.id && !canchasDeReserva.some((x) => x.id === c.id)
+                )
+              : []),
+          ];
 
           const resumenFechasHoras =
             listaJornadas.length > 0
               ? listaJornadas
-                  .map((j) =>
-                    [j.fecha ? fechaCompleta(j.fecha) : '', rangoHoras(j.horas)]
+                  .map((j) => {
+                    const detalle = formatearHorasDeJornada(j, canchasRef);
+                    return [
+                      j.fecha ? fechaCompleta(j.fecha) : '',
+                      detalle && detalle !== 'Horario por definir' ? detalle : '',
+                    ]
                       .filter(Boolean)
-                      .join(' · ')
-                  )
+                      .join(' · ');
+                  })
                   .filter(Boolean)
                   .join(' · ')
-              : [t.fecha ? fechaCompleta(t.fecha) : '', rangoHoras(t.horas)]
+              : [
+                  t.fecha ? fechaCompleta(t.fecha) : '',
+                  rangoHorasSeguidas(t.horas),
+                ]
                   .filter(Boolean)
                   .join(' · ');
 
@@ -98,10 +86,12 @@ function PasoGuardados({ torneosGuardados = [], canchas = [] }) {
               {listaJornadas.length > 0 && (
                 <div className="formulario-reserva__torneo-guardado-jornadas">
                   {listaJornadas.map((j, idx) => {
-                    const horasTxt = rangoHoras(j.horas);
-                    const numC =
-                      j.canchasEfectivas ||
-                      (Array.isArray(j.canchaIds) ? j.canchaIds.length : null);
+                    const detalleTxt = formatearHorasDeJornada(
+                      j,
+                      canchasRef,
+                      'cancha',
+                      'canchas'
+                    );
                     return (
                       <span
                         key={j.ronda || idx}
@@ -109,8 +99,9 @@ function PasoGuardados({ torneosGuardados = [], canchas = [] }) {
                       >
                         <strong>{j.nombreRonda || `Fase ${j.ronda || idx + 1}`}:</strong>{' '}
                         {j.fecha ? fechaCompleta(j.fecha) : ''}
-                        {horasTxt && ` · ${horasTxt}`}
-                        {numC && ` (${numC} ${numC === 1 ? 'cancha' : 'canchas'})`}
+                        {detalleTxt &&
+                          detalleTxt !== 'Horario por definir' &&
+                          ` · ${detalleTxt}`}
                       </span>
                     );
                   })}

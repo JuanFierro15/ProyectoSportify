@@ -1,0 +1,167 @@
+{
+  "base": "http://localhost:4173",
+  "movil390": {
+    "desbordePasoCanchas390": {
+      "vw": 390,
+      "sw": 390,
+      "sinDesborde": true,
+      "fuera": []
+    },
+    "cal390": {
+      "etiqueta": "390",
+      "desbordeCalendario3Canchas": {
+        "vw": 390,
+        "sw": 390,
+        "sinDesborde": true,
+        "fuera": []
+      },
+      "cuartosResumen": {
+        "filas": 3,
+        "p1_16": "true",
+        "p1_18": "true",
+        "p2_19": "true",
+        "p2_14_disabled": true,
+        "p1_14_disabled": false,
+        "resumenTxt": "· Cancha 1: 16:00, 18:00 · Cancha 2: 19:00 (3 horas)"
+      },
+      "semiBloqueoMismoDia": {
+        "h18Disabled": true,
+        "h19Disabled": true,
+        "h20Disabled": false
+      },
+      "semiCascadaLimpio": true,
+      "avisoFinal": {
+        "callout": "La Final es 1 partido de 20 min. Marcaste 5 horas y 4 quedarían sin partido.Cancha 1 · 09:00Cancha 1 · 10:00Cancha 1 · 11:00Cancha 1 · 12:00",
+        "tabTieneAviso": true
+      }
+    },
+    "desbordeResumen390": {
+      "vw": 390,
+      "sw": 390,
+      "sinDesborde": true,
+      "fuera": []
+    },
+    "flujo390": {
+      "dlgEstado": {
+        "abierto": true,
+        "titulo": "Hay horas sin partido",
+        "texto": "Hay horas sin partidoLos Cuartos de final son 4 partidos de 20 min. Marcaste 3 horas y 1 quedaría sin partido.La Final es 1 partido de 20 min. Marcaste 5 horas y 4 quedarían sin partido.¿Quieres reservar igual? Esas horas se cobran.Revisar horasReservar igual",
+        "focoInicial": "Revisar horas"
+      },
+      "trasEscape": {
+        "dialogoAbierto": false,
+        "focoTrasEscape": "Confirmar reserva",
+        "reservasCount": 0
+      },
+      "trasRevisar": {
+        "enPasoFechas": true,
+        "tabFinalSeleccionada": false,
+        "focoId": "panel-fase-1",
+        "reservasCount": 0
+      },
+      "confirmacion": {
+        "titulo": "Reserva confirmada",
+        "codigo": "SPF-E7GCTG",
+        "jornadasTexto": [
+          "Cuartos de final: mié 18 nov · Pádel 1: 16:00, 18:00 · Pádel 2: 19:00 a 20:00",
+          "Semifinal: jue 19 nov · Pádel 1: 14:00 a 15:00",
+          "Final: vie 20 nov · Pádel 1: 08:00 a 13:00"
+        ],
+        "desbordeConfirmacion": true
+      },
+      "misReservas": {
+        "fasesCount": 3,
+        "phases": [
+          "Cuartos de final: Miércoles 18 de noviembre · Pádel 1: 16:00, 18:00 · Pádel 2: 19:00 a 20:00",
+          "Semifinal: Jueves 19 de noviembre · Pádel 1: 14:00 a 15:00",
+          "Final: Viernes 20 de noviembre · Pádel 1: 08:00 a 13:00"
+        ],
+        "sinDesborde": true
+      }
+    }
+  },
+  "desktop1440": {
+    "desbordeInicial1440": {
+      "vw": 1440,
+      "sw": 1440,
+      "sinDesborde": true,
+      "fuera": []
+    },
+    "cal1440": {
+      "etiqueta": "1440",
+      "desbordeCalendario3Canchas": {
+        "vw": 1440,
+        "sw": 1440,
+        "sinDesborde": true,
+        "fuera": []
+      },
+      "cuartosResumen": {
+        "filas": 3,
+        "p1_16": "true",
+        "p1_18": "true",
+        "p2_19": "true",
+        "p2_14_disabled": true,
+        "p1_14_disabled": false,
+        "resumenTxt": "· Cancha 1: 16:00, 18:00 · Cancha 2: 19:00 (3 horas)"
+      },
+      "semiBloqueoMismoDia": {
+        "h18Disabled": true,
+        "h19Disabled": true,
+        "h20Disabled": false
+      },
+      "semiCascadaLimpio": true,
+      "avisoFinal": {
+        "callout": "La Final es 1 partido de 20 min. Marcaste 5 horas y 4 quedarían sin partido.Cancha 1 · 09:00Cancha 1 · 10:00Cancha 1 · 11:00Cancha 1 · 12:00",
+        "tabTieneAviso": true
+      }
+    },
+    "voucher1440": [
+      "Cuartos de final: mié 18 nov · Pádel 1: 16:00, 18:00 · Pádel 2: 19:00 a 20:00",
+      "Semifinal: jue 19 nov · Pádel 1: 14:00 a 15:00",
+      "Final: vie 20 nov · Pádel 1: 08:00 a 13:00",
+      "−$ 5.000 por hora",
+      "−$ 5.000 por hora",
+      "$ 550.000"
+    ],
+    "flujo1440": {
+      "dlgEstado": {
+        "abierto": true,
+        "titulo": "Hay horas sin partido",
+        "texto": "Hay horas sin partidoLos Cuartos de final son 4 partidos de 20 min. Marcaste 3 horas y 1 quedaría sin partido.La Final es 1 partido de 20 min. Marcaste 5 horas y 4 quedarían sin partido.¿Quieres reservar igual? Esas horas se cobran.Revisar horasReservar igual",
+        "focoInicial": "Revisar horas"
+      },
+      "trasEscape": {
+        "dialogoAbierto": false,
+        "focoTrasEscape": "Confirmar reserva",
+        "reservasCount": 0
+      },
+      "trasRevisar": {
+        "enPasoFechas": true,
+        "tabFinalSeleccionada": false,
+        "focoId": "panel-fase-1",
+        "reservasCount": 0
+      },
+      "confirmacion": {
+        "titulo": "Reserva confirmada",
+        "codigo": "SPF-UFB5GR",
+        "jornadasTexto": [
+          "Cuartos de final: mié 18 nov · Pádel 1: 16:00, 18:00 · Pádel 2: 19:00 a 20:00",
+          "Semifinal: jue 19 nov · Pádel 1: 14:00 a 15:00",
+          "Final: vie 20 nov · Pádel 1: 08:00 a 13:00"
+        ],
+        "desbordeConfirmacion": true
+      },
+      "misReservas": {
+        "fasesCount": 3,
+        "phases": [
+          "Cuartos de final: Miércoles 18 de noviembre · Pádel 1: 16:00, 18:00 · Pádel 2: 19:00 a 20:00",
+          "Semifinal: Jueves 19 de noviembre · Pádel 1: 14:00 a 15:00",
+          "Final: Viernes 20 de noviembre · Pádel 1: 08:00 a 13:00"
+        ],
+        "sinDesborde": true
+      }
+    }
+  },
+  "erroresConsola": [],
+  "excepciones": []
+}

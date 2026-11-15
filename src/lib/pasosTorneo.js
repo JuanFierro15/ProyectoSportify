@@ -5,7 +5,7 @@
  * utilizable tanto en frontend como en pruebas.
  */
 
-import { OPCIONES_EQUIPOS } from './torneo.js';
+import { OPCIONES_EQUIPOS, horasDeJornada } from './torneo.js';
 
 export const PASOS_TORNEO = [
   { id: 'canchas', etiqueta: 'Canchas' },
@@ -57,7 +57,7 @@ export function estadoPasosTorneo(reserva) {
     fases.length > 0 &&
     fases.every((f) => {
       const j = jornadas[f.ronda];
-      return Array.isArray(j?.horas) && j.horas.length > 0;
+      return horasDeJornada(j).length > 0;
     });
   const errorValidacion = validaciones.find((v) => Boolean(v?.error))?.error;
   const fechasCompleto = todasFasesConHoras && !errorValidacion;

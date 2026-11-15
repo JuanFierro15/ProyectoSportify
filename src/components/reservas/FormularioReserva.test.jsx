@@ -67,15 +67,21 @@ function TestHarness({
   useEffect(() => {
     if (reserva.canchaIds.length >= canchasIniciales.length && horasIniciales.length > 0) {
       if (modo === 'torneo') {
-        const j1 = reserva.jornadas?.[1]?.horas || [];
-        if (j1.length === 0) {
-          horasIniciales.forEach((h) => reserva.elegirHoraFase(1, h));
+        const j1PorCancha = reserva.jornadas?.[1]?.horasPorCancha || {};
+        const totalHoras = Object.values(j1PorCancha).reduce(
+          (acc, lista) => acc + (Array.isArray(lista) ? lista.length : 0),
+          0
+        );
+        if (totalHoras === 0 && canchasIniciales[0]) {
+          horasIniciales.forEach((h) =>
+            reserva.elegirHoraFase(1, canchasIniciales[0], h)
+          );
         }
       } else if (reserva.horasSel.length === 0) {
         horasIniciales.forEach((h) => reserva.elegirHora(h));
       }
     }
-  }, [canchasIniciales.length, horasIniciales, modo, reserva]);
+  }, [canchasIniciales, horasIniciales, modo, reserva]);
 
   if (!listo) {
     return null;
@@ -204,7 +210,7 @@ describe('FormularioReserva - Prop seccion y renderizado público', () => {
     expect(screen.getByText(/Programación por fases/i)).toBeInTheDocument();
     expect(screen.getByText(/Capacidad y tiempo estimado/i)).toBeInTheDocument();
     expect(screen.getAllByRole('alert').length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/faltan \d+ min/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Con las horas marcadas faltan turnos para \d+ partidos? \(cada turno incluye desempate y transición\)\./).length).toBeGreaterThan(0);
 
     expect(screen.queryByText(/Cantidad de equipos/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('group', { name: 'Duración por partido' })).not.toBeInTheDocument();

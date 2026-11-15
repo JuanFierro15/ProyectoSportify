@@ -3,7 +3,11 @@ import { Check, CheckCircle2, Copy, Download, Gift } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import ReservasContext from '../../context/ReservasContext';
 import Bracket, { fechaCorta } from './torneo/Bracket';
-import { finDeFranja, formatoPrecio } from '../../lib/precios';
+import {
+  extraerJornadasDeReserva,
+  formatearHorasDeJornada,
+} from './torneo/formatoJornadas';
+import { formatoPrecio } from '../../lib/precios';
 import { formatoTelefono } from '../../lib/negocio';
 import negocio from '../../data/negocio.json';
 import './ConfirmacionReserva.css';
@@ -78,17 +82,17 @@ function ConfirmacionReserva({ codigo, textoQr, resumen = {}, onListo }) {
     .filter(Boolean)
     .join(' · ');
 
-  const tieneJornadas =
-    torneo?.jornadas &&
-    (Array.isArray(torneo.jornadas)
-      ? torneo.jornadas.length > 0
-      : Object.keys(torneo.jornadas).length > 0);
-
-  const listaJornadas = tieneJornadas
-    ? Array.isArray(torneo.jornadas)
-      ? torneo.jornadas
-      : Object.values(torneo.jornadas)
-    : [];
+  const listaJornadas = !torneo
+    ? []
+    : Array.isArray(torneo.fases) && torneo.fases.length > 0
+    ? torneo.fases.map((fase) => {
+        const jMap = torneo.jornadas || {};
+        const j = Array.isArray(jMap)
+          ? jMap.find((x) => x.ronda === fase.ronda)
+          : jMap[fase.ronda];
+        return { ...fase, ...j };
+      })
+    : extraerJornadasDeReserva({ torneo });
 
   const mediosAbono = Array.isArray(negocio.pagos?.abonoMedios)
     ? negocio.pagos.abonoMedios.join(' o ')
@@ -192,18 +196,16 @@ function ConfirmacionReserva({ codigo, textoQr, resumen = {}, onListo }) {
                 </span>
                 <ul className="confirmacion-reserva__torneo-jornadas-lista">
                   {listaJornadas.map((j, idx) => {
-                    const horasTxt =
-                      Array.isArray(j.horas) && j.horas.length > 0
-                        ? `${j.horas[0]} a ${finDeFranja(j.horas[j.horas.length - 1])}`
-                        : 'Horario por definir';
-                    const cCount =
-                      j.canchasEfectivas ||
-                      (Array.isArray(j.canchaIds) ? j.canchaIds.length : 1);
-                    const cTxt = `${cCount} ${cCount === 1 ? 'cancha efectiva' : 'canchas efectivas'}`;
+                    const detalleTxt = formatearHorasDeJornada(
+                      j,
+                      canchas,
+                      'cancha efectiva',
+                      'canchas efectivas'
+                    );
                     const nom = j.nombreRonda || `Fase ${j.ronda || idx + 1}`;
                     return (
                       <li key={j.ronda || idx} className="confirmacion-reserva__torneo-jornada-item">
-                        <strong>{nom}:</strong> {fechaCorta(j.fecha)} · {horasTxt} ({cTxt})
+                        <strong>{nom}:</strong> {fechaCorta(j.fecha)} · {detalleTxt}
                       </li>
                     );
                   })}
