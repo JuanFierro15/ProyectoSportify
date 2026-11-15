@@ -1,6 +1,6 @@
 # Etapa 15: horas del torneo por cancha y aviso de horas de más
 
-Estado: **Por aprobar** (14-11-2026).
+Estado: **Aprobado** por Juan el 15-11-2026.
 Rama: `feat/horas-torneo-por-cancha` (desde `main`, `1ad7242`).
 Responsable: Juan Fierro.
 
@@ -73,6 +73,8 @@ Hoy:
    porque ahora se aceptan huecos.
 9. **Precio:** se mantiene el cobro por fase y cancha con la regla actual de
    descuento (desde 2 horas de esa cancha en esa fase), aunque no sean seguidas.
+   Solo se cobra lo que se marca en cada cancha: hoy, en cambio, la franja de
+   la fase se reserva y se cobra en todas sus canchas.
    Se ajusta el texto "por horas seguidas" en el comprobante del torneo y en las
    instrucciones del chat. La reserva individual de una cancha no cambia (1 a 3
    horas seguidas).
@@ -88,7 +90,7 @@ Es lógica de reglas de negocio con datos guardados (alto riesgo, casos (a) y
 
 | Ola | Bloque | Agente | Objetivo | Rutas permitidas |
 | --- | --- | --- | --- | --- |
-| 1 | `l1-logica-torneo` | agy, Hydrogen `xhigh` | Decisiones 1, 4, 5 y 7 en lógica pura: `capacidadFase`, `validarJornadas` con `horasPorCancha`, `programarTorneo` por turnos reales, `horasSinPartido`, `limpiarJornadasConChoque` por hora | `src/lib/torneo.js`, `src/lib/torneo.test.js`, `src/lib/pasosTorneo.js` y su test |
+| 1 | `l1-logica-torneo` | agy, Hydrogen `xhigh` | Decisiones 1, 4, 5 y 7 en lógica pura: `capacidadFase`, `validarJornadas` con `horasPorCancha`, `programarTorneo` por turnos reales, `horasSinPartido`, `limpiarJornadasConChoque` por hora | `src/lib/torneo.js`, `src/lib/pasosTorneo.js`, `src/lib/codigoReserva.js` (texto del QR) y sus tests |
 | 2 | `c1-validacion-reserva` | agy, Hydrogen `xhigh` | Decisiones 2, 3 y 9: validación de bloques en `ReservasContext`, precio por bloque y cancha | `src/context/ReservasContext.jsx`, `src/lib/precios.js` y sus tests (`src/context/*.test.jsx`, `src/lib/precios.test.js`) |
 | 3 | `u1-interfaz-torneo` | agy, Hydrogen `xhigh` | Decisiones 6, 7, 8 y 10: `useReserva` (`elegirHoraFase` por cancha y bloques), `CalendarioTorneo` (filas por cancha, aviso), diálogo de confirmación, `PasoGuardados`, `VoucherReserva`, textos | `src/components/reservas/` (y sus tests), `src/components/layout/MisReservas.jsx` |
 | 4 | `v1-verificacion` | agy, Argon `high` | Verifica l1+c1+u1 contra este plan: lee el diff, intenta romperlo y prueba en la app headless | solo `planificacion/etapas/15-horas-torneo-por-cancha/revision/` |
