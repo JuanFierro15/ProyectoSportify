@@ -56,6 +56,10 @@ HEAD no cambió durante los bloques (`deccb13`).
   desborde con 3 canchas a 390 px; sin errores de consola; sin abrir el chat.
   `preview` y Chrome headless cerrados.
 
+## Revisión del PR #29
+
+APROBADO sin bloqueantes. Se arreglaron en la misma entrega (bloque `f2-detalles-revision` y coordinador): el aviso de tiempo ahora dice cuántos partidos faltan por ubicar; "Tus torneos" toma los nombres de la prop `canchas`; el comprobante y el QR nombran solo las canchas con horas; el calendario abre la fase a revisar al montarse sin volver a mover el foco; dos líneas sobrantes en pruebas; README y guías sin "horas seguidas" en torneos. Quedan como están, con motivo: los commits intermedios con pruebas en rojo (los bloques iban en serie y el resultado final está en verde) y el prefijo `docs:` del commit de las instrucciones del chat (corregirlo exigiría reescribir historia ya subida). Suite final: 34 archivos, 341 pruebas.
+
 ## Pendientes
 
 - No se probó en producción: se verifica al fusionar el PR.
