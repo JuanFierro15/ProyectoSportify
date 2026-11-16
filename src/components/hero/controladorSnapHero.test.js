@@ -81,7 +81,11 @@ describe('controladorSnapHero', () => {
 
   function crearEventoTouch(tipo, clientY) {
     const evento = new Event(tipo, { cancelable: true, bubbles: true });
-    evento.touches = clientY !== undefined ? [{ clientY }] : [];
+    if (Array.isArray(clientY)) {
+      evento.touches = clientY.map((y) => ({ clientY: y }));
+    } else {
+      evento.touches = clientY !== undefined ? [{ clientY }] : [];
+    }
     return evento;
   }
 
@@ -152,9 +156,6 @@ describe('controladorSnapHero', () => {
     expect(addClick).toHaveLength(1);
     expect(addClick[0][2]).toEqual({ capture: true, passive: true });
     expect(addScrollEnd).toHaveLength(1);
-    expect(document.querySelectorAll('.deporte-hero__transicion')).toHaveLength(
-      0
-    );
 
     d1();
 
@@ -189,9 +190,6 @@ describe('controladorSnapHero', () => {
     expect(removeClick[0][2]).toEqual({ capture: true });
     expect(removeScrollEnd).toHaveLength(1);
     expect(removeScrollEnd[0][1]).toBe(addScrollEnd[0][1]);
-    expect(document.querySelectorAll('.deporte-hero__transicion')).toHaveLength(
-      0
-    );
   });
 
   it('inicia reproducción nativa tras un gesto hacia abajo y parada en progreso 0.5', () => {
@@ -262,7 +260,7 @@ describe('controladorSnapHero', () => {
     expect(video.play).toHaveBeenCalledTimes(1);
   });
 
-  it('al terminar el video (ended) desliza (~0.8 s) al inicio del hero siguiente con su video en pausa y sin overlay en el DOM', () => {
+  it('al terminar el video (ended) desliza (~0.8 s) al inicio del hero siguiente con su video en pausa', () => {
     const start2 = 2000;
     const end2 = 3000;
     const video2 = crearVideoMock({ duration: 10 });
@@ -287,9 +285,6 @@ describe('controladorSnapHero', () => {
 
     video1.dispatchEvent(new Event('ended'));
 
-    expect(document.querySelectorAll('.deporte-hero__transicion')).toHaveLength(
-      0
-    );
     expect(gsap.to).toHaveBeenCalledTimes(1);
     expect(tweens[0].vars.scrollTo.y).toBe(start2 + 0.15 * (end2 - start2));
     expect(tweens[0].vars.duration).toBeCloseTo(0.8, 1);
@@ -970,7 +965,7 @@ describe('controladorSnapHero', () => {
   });
 
   it.each([NaN, 0, Infinity])(
-    'con video.duration = %s, un gesto y scrollEnd a mitad del hero no llaman a play',
+    'con video.duration = %s, un gesto hacia abajo no llama a play y desliza al siguiente punto',
     (duracion) => {
       const seccion = document.createElement('section');
       const video = crearVideoMock({ duration: duracion });
@@ -980,12 +975,20 @@ describe('controladorSnapHero', () => {
         st: { start: 0, end: 1000 },
         progresoObjetivo: () => 0.5,
       });
+      registrar({
+        seccion: document.createElement('section'),
+        video: crearVideoMock({ duration: 10 }),
+        st: { start: 2000, end: 3000 },
+        progresoObjetivo: () => 0,
+      });
 
       simularGestoAbajo(500);
       dispararScrollEnd();
 
       expect(video.play).not.toHaveBeenCalled();
       expect(heroEstaReproduciendo(seccion)).toBe(false);
+      expect(gsap.to).toHaveBeenCalledTimes(1);
+      expect(tweens[0].vars.scrollTo.y).toBe(2150);
     }
   );
 
@@ -1170,8 +1173,8 @@ describe('controladorSnapHero', () => {
 
   it('wheel hacia abajo en reposo inicia play de inmediato sin scrollEnd, llama preventDefault y no hace seek si la diferencia es <= 0.25 s', () => {
     const seccion = document.createElement('section');
-    // Objetivo: 0.15 * 10 = 1.5 s. currentTime en 1.3 s (diferencia 0.20 s <= 0.25 s).
-    const video = crearVideoMock({ duration: 10, currentTime: 1.3 });
+    // Objetivo: 0.15 * 10 = 1.5 s. currentTime en 1.25 s (diferencia exacta 0.25 s <= 0.25 s).
+    const video = crearVideoMock({ duration: 10, currentTime: 1.25 });
     registrar({
       seccion,
       video,
@@ -1186,13 +1189,13 @@ describe('controladorSnapHero', () => {
     expect(ev.defaultPrevented).toBe(true);
     expect(video.play).toHaveBeenCalledTimes(1);
     expect(heroEstaReproduciendo(seccion)).toBe(true);
-    expect(video.currentTime).toBe(1.3);
+    expect(video.currentTime).toBe(1.25);
   });
 
   it('wheel hacia abajo sí hace seek cuando el cuadro difiere en > 0.25 s', () => {
     const seccion = document.createElement('section');
-    // Objetivo: 0.15 * 10 = 1.5 s. currentTime en 1.0 s (diferencia 0.5 s > 0.25 s).
-    const video = crearVideoMock({ duration: 10, currentTime: 1.0 });
+    // Objetivo: 0.15 * 10 = 1.5 s. currentTime en 1.24 s (diferencia 0.26 s > 0.25 s).
+    const video = crearVideoMock({ duration: 10, currentTime: 1.24 });
     registrar({
       seccion,
       video,
@@ -1207,7 +1210,7 @@ describe('controladorSnapHero', () => {
     expect(video.currentTime).toBe(1.5);
   });
 
-  it('un flick fuerte (varios wheel seguidos) dispara exactamente una sola acción', () => {
+  it('un flick fuerte dispara una sola acción y la ventana de wheel agrupa hasta 250 ms y separa desde 251 ms', () => {
     vi.useFakeTimers();
     const video1 = crearVideoMock({ duration: 10, currentTime: 1.5 });
     const video2 = crearVideoMock({ duration: 10, currentTime: 1.5 });
@@ -1227,10 +1230,10 @@ describe('controladorSnapHero', () => {
     // En inicio del hero 2, ráfaga de 6 wheel hacia arriba: solo un deslizamiento al final del hero 1 (1000).
     fijarScrollY(2150);
     for (let i = 0; i < 6; i++) {
+      if (i > 0) vi.advanceTimersByTime(30);
       const ev = crearEventoWheel(-120);
       window.dispatchEvent(ev);
       expect(ev.defaultPrevented).toBe(true);
-      vi.advanceTimersByTime(30);
     }
 
     expect(gsap.to).toHaveBeenCalledTimes(1);
@@ -1238,16 +1241,32 @@ describe('controladorSnapHero', () => {
     fijarScrollY(1000);
     tweens[0].vars.onComplete();
 
-    // Tras 251 ms sin eventos, un nuevo gesto hacia abajo desde final del hero 1 desliza al inicio del hero 2.
+    // Tras 251 ms desde el último wheel, un gesto hacia abajo desde final del hero 1 desliza al inicio del hero 2.
     vi.advanceTimersByTime(251);
     window.dispatchEvent(crearEventoWheel(120));
     expect(gsap.to).toHaveBeenCalledTimes(2);
     expect(tweens[1].vars.scrollTo.y).toBe(2150);
+    fijarScrollY(2150);
+    tweens[1].vars.onComplete();
+
+    // A los 250 ms exactos en la misma dirección sigue siendo el mismo gesto: no reproduce.
+    vi.advanceTimersByTime(250);
+    const ev250 = crearEventoWheel(120);
+    window.dispatchEvent(ev250);
+    expect(ev250.defaultPrevented).toBe(true);
+    expect(video2.play).not.toHaveBeenCalled();
+
+    // A los 251 ms desde el evento previo ya es un gesto nuevo: inicia reproducción.
+    vi.advanceTimersByTime(251);
+    const ev251 = crearEventoWheel(120);
+    window.dispatchEvent(ev251);
+    expect(ev251.defaultPrevented).toBe(true);
+    expect(video2.play).toHaveBeenCalledTimes(1);
 
     vi.useRealTimers();
   });
 
-  it('touchmove > 30 px hacia abajo en la zona inicia play de inmediato y llama preventDefault', () => {
+  it('touchmove > 30 px hacia abajo en la zona inicia play de inmediato (30 px no decide, 31 px sí) y llama preventDefault', () => {
     const seccion = document.createElement('section');
     const video = crearVideoMock({ duration: 10, currentTime: 1.5 });
     registrar({
@@ -1259,12 +1278,12 @@ describe('controladorSnapHero', () => {
 
     fijarScrollY(150);
     window.dispatchEvent(crearEventoTouch('touchstart', 300));
-    const evMoveCorto = crearEventoTouch('touchmove', 280); // 20 px <= 30 px
+    const evMoveCorto = crearEventoTouch('touchmove', 270); // 30 px <= 30 px
     window.dispatchEvent(evMoveCorto);
     expect(evMoveCorto.defaultPrevented).toBe(true);
     expect(video.play).not.toHaveBeenCalled();
 
-    const evMoveLargo = crearEventoTouch('touchmove', 260); // 40 px > 30 px
+    const evMoveLargo = crearEventoTouch('touchmove', 269); // 31 px > 30 px
     window.dispatchEvent(evMoveLargo);
     expect(evMoveLargo.defaultPrevented).toBe(true);
     expect(video.play).toHaveBeenCalledTimes(1);
@@ -1692,6 +1711,475 @@ describe('controladorSnapHero', () => {
       expect(video2.currentTime).toBe(1.5);
     } finally {
       window.matchMedia = matchMediaOriginal;
+    }
+  });
+
+  it('Espacio sobre un button o controles interactivos (a[href], role=tab, etc.) no previene default, no reproduce ni cancela; ArrowDown en body sigue funcionando', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10, currentTime: 1.5 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.15,
+    });
+
+    fijarScrollY(150);
+
+    const boton = document.createElement('button');
+    const icono = document.createElement('span');
+    boton.appendChild(icono);
+    const enlace = document.createElement('a');
+    enlace.href = '#ubicacion';
+    const tab = document.createElement('button');
+    tab.setAttribute('role', 'tab');
+    document.body.append(boton, enlace, tab);
+
+    try {
+      for (const objetivo of [boton, icono, enlace, tab]) {
+        const ev = new KeyboardEvent('keydown', {
+          key: ' ',
+          cancelable: true,
+          bubbles: true,
+        });
+        objetivo.dispatchEvent(ev);
+        expect(ev.defaultPrevented).toBe(false);
+        expect(video.play).not.toHaveBeenCalled();
+      }
+
+      // Con el foco en body, ArrowDown sigue funcionando e inicia la reproducción.
+      const evBody = new KeyboardEvent('keydown', {
+        key: 'ArrowDown',
+        cancelable: true,
+        bubbles: true,
+      });
+      document.body.dispatchEvent(evBody);
+      expect(evBody.defaultPrevented).toBe(true);
+      expect(video.play).toHaveBeenCalledTimes(1);
+      expect(heroEstaReproduciendo(seccion)).toBe(true);
+
+      // Espacio sobre el botón mientras reproduce tampoco previene ni cancela.
+      const evDurantePlay = new KeyboardEvent('keydown', {
+        key: ' ',
+        cancelable: true,
+        bubbles: true,
+      });
+      boton.dispatchEvent(evDurantePlay);
+      expect(evDurantePlay.defaultPrevented).toBe(false);
+      expect(video.pause).not.toHaveBeenCalled();
+      expect(heroEstaReproduciendo(seccion)).toBe(true);
+    } finally {
+      boton.remove();
+      enlace.remove();
+      tab.remove();
+    }
+  });
+
+  it('teclas de scroll dentro de dialog[open], [role="dialog"] o .chatbot no previenen default, no reproducen ni cancelan', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10, currentTime: 1.5 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.15,
+    });
+
+    const dialogoNativo = document.createElement('dialog');
+    dialogoNativo.setAttribute('open', '');
+    const btnDialogo = document.createElement('button');
+    dialogoNativo.appendChild(btnDialogo);
+
+    const dialogoAria = document.createElement('section');
+    dialogoAria.setAttribute('role', 'dialog');
+    const divAria = document.createElement('div');
+    dialogoAria.appendChild(divAria);
+
+    const chatbot = document.createElement('div');
+    chatbot.className = 'chatbot';
+    const btnChat = document.createElement('button');
+    chatbot.appendChild(btnChat);
+
+    document.body.append(dialogoNativo, dialogoAria, chatbot);
+
+    try {
+      fijarScrollY(150);
+      for (const objetivo of [btnDialogo, divAria, btnChat]) {
+        const evAbajo = new KeyboardEvent('keydown', {
+          key: 'ArrowDown',
+          cancelable: true,
+          bubbles: true,
+        });
+        objetivo.dispatchEvent(evAbajo);
+        expect(evAbajo.defaultPrevented).toBe(false);
+        expect(video.play).not.toHaveBeenCalled();
+      }
+
+      // Incluso con el video reproduciendo, teclas (incluida Home) dentro de diálogos o .chatbot no cancelan.
+      document.body.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowDown', cancelable: true, bubbles: true })
+      );
+      expect(heroEstaReproduciendo(seccion)).toBe(true);
+
+      for (const objetivo of [btnDialogo, divAria, btnChat]) {
+        const evArriba = new KeyboardEvent('keydown', {
+          key: 'ArrowUp',
+          cancelable: true,
+          bubbles: true,
+        });
+        objetivo.dispatchEvent(evArriba);
+        expect(evArriba.defaultPrevented).toBe(false);
+
+        const evHome = new KeyboardEvent('keydown', {
+          key: 'Home',
+          cancelable: true,
+          bubbles: true,
+        });
+        objetivo.dispatchEvent(evHome);
+        expect(evHome.defaultPrevented).toBe(false);
+      }
+
+      expect(video.pause).not.toHaveBeenCalled();
+      expect(heroEstaReproduciendo(seccion)).toBe(true);
+    } finally {
+      dialogoNativo.remove();
+      dialogoAria.remove();
+      chatbot.remove();
+    }
+  });
+
+  it('Alt+ArrowDown (y otros modificadores) y eventos con defaultPrevented ya en true no se interceptan ni cancelan', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10, currentTime: 1.5 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.15,
+    });
+
+    fijarScrollY(150);
+
+    const evAlt = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      altKey: true,
+      cancelable: true,
+      bubbles: true,
+    });
+    document.body.dispatchEvent(evAlt);
+    expect(evAlt.defaultPrevented).toBe(false);
+    expect(video.play).not.toHaveBeenCalled();
+
+    const evCtrl = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      ctrlKey: true,
+      cancelable: true,
+      bubbles: true,
+    });
+    document.body.dispatchEvent(evCtrl);
+    expect(evCtrl.defaultPrevented).toBe(false);
+    expect(video.play).not.toHaveBeenCalled();
+
+    const evMeta = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      metaKey: true,
+      cancelable: true,
+      bubbles: true,
+    });
+    document.body.dispatchEvent(evMeta);
+    expect(evMeta.defaultPrevented).toBe(false);
+    expect(video.play).not.toHaveBeenCalled();
+
+    const evYaPrevenido = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      cancelable: true,
+      bubbles: true,
+    });
+    evYaPrevenido.preventDefault();
+    document.body.dispatchEvent(evYaPrevenido);
+    expect(video.play).not.toHaveBeenCalled();
+
+    // Arrancamos reproducción normal y comprobamos que Alt+ArrowUp o defaultPrevented no cancelan.
+    document.body.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'ArrowDown', cancelable: true, bubbles: true })
+    );
+    expect(heroEstaReproduciendo(seccion)).toBe(true);
+
+    const evAltArriba = new KeyboardEvent('keydown', {
+      key: 'ArrowUp',
+      altKey: true,
+      cancelable: true,
+      bubbles: true,
+    });
+    document.body.dispatchEvent(evAltArriba);
+    expect(evAltArriba.defaultPrevented).toBe(false);
+
+    const evHomePrevenido = new KeyboardEvent('keydown', {
+      key: 'Home',
+      cancelable: true,
+      bubbles: true,
+    });
+    evHomePrevenido.preventDefault();
+    document.body.dispatchEvent(evHomePrevenido);
+
+    expect(video.pause).not.toHaveBeenCalled();
+    expect(heroEstaReproduciendo(seccion)).toBe(true);
+  });
+
+  it('si video.play() se rechaza, cancela y desliza al siguiente hero o a #eventos', async () => {
+    const eventos = document.createElement('div');
+    eventos.id = 'eventos';
+    eventos.style.scrollMarginTop = '0px';
+    eventos.getBoundingClientRect = () => ({
+      top: 3200 - window.scrollY,
+    });
+    document.body.appendChild(eventos);
+
+    const seccion1 = document.createElement('section');
+    const video1 = crearVideoMock({ duration: 10, currentTime: 1.5 });
+    video1.play.mockImplementation(() =>
+      Promise.reject(new Error('Autoplay bloqueado'))
+    );
+    const seccion2 = document.createElement('section');
+    const video2 = crearVideoMock({ duration: 10, currentTime: 1.5 });
+    video2.play.mockImplementation(() =>
+      Promise.reject(new Error('Autoplay bloqueado'))
+    );
+
+    registrar({
+      seccion: seccion1,
+      video: video1,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.15,
+    });
+    registrar({
+      seccion: seccion2,
+      video: video2,
+      st: { start: 2000, end: 3000 },
+      progresoObjetivo: () => 0.15,
+    });
+
+    fijarScrollY(150);
+    window.dispatchEvent(crearEventoWheel(120));
+    await Promise.resolve();
+
+    expect(heroEstaReproduciendo(seccion1)).toBe(false);
+    expect(video1.pause).toHaveBeenCalledTimes(1);
+    expect(gsap.to).toHaveBeenCalledTimes(1);
+    expect(tweens[0].vars.scrollTo.y).toBe(2150);
+    fijarScrollY(2150);
+    tweens[0].vars.onComplete();
+
+    // En el último hero, un rechazo de play() desliza a #eventos.
+    vi.useFakeTimers();
+    vi.advanceTimersByTime(251);
+    window.dispatchEvent(crearEventoWheel(120));
+    await Promise.resolve();
+
+    expect(heroEstaReproduciendo(seccion2)).toBe(false);
+    expect(video2.pause).toHaveBeenCalled();
+    expect(gsap.to).toHaveBeenCalledTimes(2);
+    expect(tweens[1].vars.scrollTo.y).toBe(3200);
+    vi.useRealTimers();
+  });
+
+  it('un evento error del video durante la reproducción cancela y desliza al siguiente; el listener se quita al terminar o cancelar', () => {
+    const seccion1 = document.createElement('section');
+    const video1 = crearVideoMock({ duration: 10, currentTime: 1.5 });
+    const seccion2 = document.createElement('section');
+    const video2 = crearVideoMock({ duration: 10, currentTime: 1.5 });
+
+    registrar({
+      seccion: seccion1,
+      video: video1,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.15,
+    });
+    registrar({
+      seccion: seccion2,
+      video: video2,
+      st: { start: 2000, end: 3000 },
+      progresoObjetivo: () => 0.15,
+    });
+
+    // Error mientras reproduce hero 1 -> pausa y desliza a hero 2 inicio (2150).
+    fijarScrollY(150);
+    window.dispatchEvent(crearEventoWheel(120));
+    expect(heroEstaReproduciendo(seccion1)).toBe(true);
+
+    video1.dispatchEvent(new Event('error'));
+    expect(heroEstaReproduciendo(seccion1)).toBe(false);
+    expect(video1.pause).toHaveBeenCalledTimes(1);
+    expect(gsap.to).toHaveBeenCalledTimes(1);
+    expect(tweens[0].vars.scrollTo.y).toBe(2150);
+
+    // Completamos el deslizamiento al hero 2 y verificamos que cancelar (pointerdown) quita el listener de error.
+    fijarScrollY(2150);
+    tweens[0].vars.onComplete();
+
+    vi.useFakeTimers();
+    vi.advanceTimersByTime(251);
+    window.dispatchEvent(crearEventoWheel(120));
+    expect(heroEstaReproduciendo(seccion2)).toBe(true);
+
+    window.dispatchEvent(new Event('pointerdown'));
+    expect(heroEstaReproduciendo(seccion2)).toBe(false);
+
+    // Un error posterior a cancelar no debe provocar ningún deslizamiento ni pause extra.
+    const pausesTrasCancelar = video2.pause.mock.calls.length;
+    video2.dispatchEvent(new Event('error'));
+    expect(gsap.to).toHaveBeenCalledTimes(1);
+    expect(video2.pause).toHaveBeenCalledTimes(pausesTrasCancelar);
+
+    // Arrancamos hero 1 de nuevo y al terminar (ended) también se quita el listener de error.
+    vi.advanceTimersByTime(251);
+    fijarScrollY(150);
+    window.dispatchEvent(crearEventoWheel(120));
+    video1.dispatchEvent(new Event('ended'));
+    expect(gsap.to).toHaveBeenCalledTimes(2);
+    tweens[1].vars.onComplete();
+
+    const pausesTrasEnded = video1.pause.mock.calls.length;
+    video1.dispatchEvent(new Event('error'));
+    expect(gsap.to).toHaveBeenCalledTimes(2);
+    expect(video1.pause).toHaveBeenCalledTimes(pausesTrasEnded);
+    vi.useRealTimers();
+  });
+
+  it('wheel con ctrlKey (Ctrl+rueda o pellizco de trackpad) no se intercepta ni previene default', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10, currentTime: 1.5 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.15,
+    });
+
+    fijarScrollY(150);
+    const evZoom = crearEventoWheel(120, { ctrlKey: true });
+    window.dispatchEvent(evZoom);
+    expect(evZoom.defaultPrevented).toBe(false);
+    expect(video.play).not.toHaveBeenCalled();
+
+    // Tampoco si está reproduciendo cancela ni previene.
+    window.dispatchEvent(crearEventoWheel(120));
+    expect(heroEstaReproduciendo(seccion)).toBe(true);
+
+    const evZoomArriba = crearEventoWheel(-120, { ctrlKey: true });
+    window.dispatchEvent(evZoomArriba);
+    expect(evZoomArriba.defaultPrevented).toBe(false);
+    expect(video.pause).not.toHaveBeenCalled();
+    expect(heroEstaReproduciendo(seccion)).toBe(true);
+  });
+
+  it('gestos táctiles con más de un dedo (pellizco) no previenen default, reinician el toque y no reproducen', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10, currentTime: 1.5 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.15,
+    });
+
+    fijarScrollY(150);
+
+    // 1 dedo seguido de un 2.º dedo (touchstart multi-touch) y touchmove con 2 dedos:
+    window.dispatchEvent(crearEventoTouch('touchstart', [300]));
+    window.dispatchEvent(crearEventoTouch('touchstart', [300, 350]));
+    const evMoveDos = crearEventoTouch('touchmove', [200, 450]);
+    window.dispatchEvent(evMoveDos);
+    expect(evMoveDos.defaultPrevented).toBe(false);
+    expect(video.play).not.toHaveBeenCalled();
+
+    // Un touchmove residual con 1 dedo del mismo pellizco tampoco actúa porque toqueInicioY quedó en null.
+    const evResidual = crearEventoTouch('touchmove', [200]);
+    window.dispatchEvent(evResidual);
+    expect(evResidual.defaultPrevented).toBe(false);
+    expect(video.play).not.toHaveBeenCalled();
+    window.dispatchEvent(crearEventoTouch('touchend'));
+
+    // También si un touchmove multi-touch llega directamente tras touchstart de 1 dedo:
+    window.dispatchEvent(crearEventoTouch('touchstart', [300]));
+    const evMoveMulti = crearEventoTouch('touchmove', [220, 420]);
+    window.dispatchEvent(evMoveMulti);
+    expect(evMoveMulti.defaultPrevented).toBe(false);
+    expect(video.play).not.toHaveBeenCalled();
+
+    const evResidual2 = crearEventoTouch('touchmove', [220]);
+    window.dispatchEvent(evResidual2);
+    expect(evResidual2.defaultPrevented).toBe(false);
+    expect(video.play).not.toHaveBeenCalled();
+  });
+
+  it('fuera de la zona no inspecciona ancestros y dentro solo lee geometría si overflowY es auto o scroll', () => {
+    const eventos = document.createElement('div');
+    eventos.id = 'eventos';
+    eventos.style.scrollMarginTop = '0px';
+    eventos.getBoundingClientRect = () => ({
+      top: 1000 - window.scrollY,
+    });
+    document.body.appendChild(eventos);
+
+    const video = crearVideoMock({ duration: 10, currentTime: 1.5 });
+    registrar({
+      seccion: document.createElement('section'),
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.15,
+    });
+
+    const cajaVisible = document.createElement('div');
+    cajaVisible.style.overflowY = 'visible';
+    const leerScrollTop = vi.fn(() => 0);
+    const leerScrollHeight = vi.fn(() => 400);
+    const leerClientHeight = vi.fn(() => 200);
+    Object.defineProperty(cajaVisible, 'scrollTop', {
+      get: leerScrollTop,
+      configurable: true,
+    });
+    Object.defineProperty(cajaVisible, 'scrollHeight', {
+      get: leerScrollHeight,
+      configurable: true,
+    });
+    Object.defineProperty(cajaVisible, 'clientHeight', {
+      get: leerClientHeight,
+      configurable: true,
+    });
+    const hijo = document.createElement('p');
+    cajaVisible.appendChild(hijo);
+    document.body.appendChild(cajaVisible);
+
+    const spyComputed = vi.spyOn(window, 'getComputedStyle');
+
+    try {
+      // Fuera de la zona (debajo de #eventos y sin entrar): wheel y touchmove no llaman getComputedStyle sobre hijo/cajaVisible.
+      fijarScrollY(1500);
+      spyComputed.mockClear();
+      hijo.dispatchEvent(crearEventoWheel(120));
+      hijo.dispatchEvent(crearEventoTouch('touchstart', 300));
+      hijo.dispatchEvent(crearEventoTouch('touchmove', 240));
+      window.dispatchEvent(crearEventoTouch('touchend'));
+
+      expect(
+        spyComputed.mock.calls.some(
+          ([el]) => el === hijo || el === cajaVisible
+        )
+      ).toBe(false);
+      expect(leerScrollTop).not.toHaveBeenCalled();
+      expect(leerScrollHeight).not.toHaveBeenCalled();
+      expect(leerClientHeight).not.toHaveBeenCalled();
+
+      // Dentro de la zona con overflowY visible: tampoco lee scrollTop/scrollHeight/clientHeight.
+      fijarScrollY(150);
+      hijo.dispatchEvent(crearEventoWheel(120));
+      expect(leerScrollTop).not.toHaveBeenCalled();
+      expect(leerScrollHeight).not.toHaveBeenCalled();
+      expect(leerClientHeight).not.toHaveBeenCalled();
+      expect(video.play).toHaveBeenCalledTimes(1);
+    } finally {
+      cajaVisible.remove();
     }
   });
 });

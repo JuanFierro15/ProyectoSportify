@@ -42,7 +42,7 @@ let listenersActivos = false;
 let reproduciendo = null;
 let tween = null;
 let heroDestino = null;
-let limpiarEnded = null;
+let limpiarListenersVideo = null;
 let ultimaYEscrita = 0;
 let autoActivo = false;
 let dedoAbajo = false;
@@ -63,26 +63,39 @@ function esCampoEditable(target) {
   return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
 }
 
+const SELECTOR_ZONAS_EXCLUIDAS = '.chatbot, dialog[open], [role="dialog"]';
+const SELECTOR_CONTROLES_ESPACIO =
+  'button, a[href], summary, [role="button"], [role="tab"], [role="menuitem"], [role="checkbox"], [role="radio"], [role="switch"]';
+
+function elementoDeObjetivo(target) {
+  if (!target || typeof target !== 'object') return null;
+  if (target.nodeType === 1) return target;
+  return target.parentElement || null;
+}
+
+function coincideConSelector(target, selector) {
+  const el = elementoDeObjetivo(target);
+  return Boolean(el && typeof el.closest === 'function' && el.closest(selector));
+}
+
 function debeIgnorarObjetivo(target, dir) {
-  const el =
-    target && typeof target === 'object'
-      ? target.nodeType === 1
-        ? target
-        : target.parentElement
-      : null;
+  const el = elementoDeObjetivo(target);
   if (!el || typeof el.closest !== 'function') return false;
-  if (el.closest('.chatbot, dialog[open]')) return true;
+  if (el.closest(SELECTOR_ZONAS_EXCLUIDAS)) return true;
 
   const ancestros = [];
   let nodo = el;
   while (nodo && nodo !== document.body && nodo !== document.documentElement) {
     if (nodo.nodeType === 1) {
-      ancestros.push({
-        overflowY: getComputedStyle(nodo).overflowY,
-        scrollTop: nodo.scrollTop,
-        scrollHeight: nodo.scrollHeight,
-        clientHeight: nodo.clientHeight,
-      });
+      const { overflowY } = getComputedStyle(nodo);
+      if (overflowY === 'auto' || overflowY === 'scroll') {
+        ancestros.push({
+          overflowY,
+          scrollTop: nodo.scrollTop,
+          scrollHeight: nodo.scrollHeight,
+          clientHeight: nodo.clientHeight,
+        });
+      }
     }
     nodo = nodo.parentElement;
   }
@@ -129,8 +142,8 @@ function cancelar({ pausar = true } = {}) {
     tween.kill();
     tween = null;
   }
-  if (limpiarEnded) {
-    limpiarEnded();
+  if (limpiarListenersVideo) {
+    limpiarListenersVideo();
   }
   if (pausar && reproduciendo) {
     reproduciendo.video?.pause();
@@ -243,7 +256,10 @@ function alTerminar(hero) {
 function reproducir(hero) {
   const { video } = hero;
   const dur = video?.duration;
-  if (!Number.isFinite(dur) || dur <= 0) return;
+  if (!Number.isFinite(dur) || dur <= 0) {
+    irAlSiguiente(hero);
+    return;
+  }
 
   const t = hero.progresoObjetivo() * dur;
   if (t >= dur - MARGEN_FIN_VIDEO) {
@@ -255,8 +271,8 @@ function reproducir(hero) {
     video.currentTime = t;
   }
 
-  if (limpiarEnded) {
-    limpiarEnded();
+  if (limpiarListenersVideo) {
+    limpiarListenersVideo();
   }
 
   autoActivo = true;
@@ -264,13 +280,20 @@ function reproducir(hero) {
   ultimaYEscrita = window.scrollY;
 
   const alAcabar = () => {
-    limpiarEnded = null;
+    limpiarListenersVideo?.();
     alTerminar(hero);
   };
+  const alError = () => {
+    if (reproduciendo !== hero) return;
+    cancelar();
+    irAlSiguiente(hero);
+  };
   video.addEventListener('ended', alAcabar, { once: true });
-  limpiarEnded = () => {
+  video.addEventListener('error', alError, { once: true });
+  limpiarListenersVideo = () => {
     video.removeEventListener('ended', alAcabar);
-    limpiarEnded = null;
+    video.removeEventListener('error', alError);
+    limpiarListenersVideo = null;
   };
 
   const promesa = video.play();
@@ -279,6 +302,7 @@ function reproducir(hero) {
     promesa.catch(() => {
       if (reproduciendo === hero) {
         cancelar();
+        irAlSiguiente(hero);
       }
     });
   }
@@ -393,11 +417,11 @@ function entrarDesdeEventos(ordenados) {
 }
 
 function alWheel(e) {
+  if (e.ctrlKey) return;
   if (esCampoEditable(e.target)) return;
 
   const dir = e.deltaY > 0 ? 1 : e.deltaY < 0 ? -1 : 0;
   if (dir === 0) return;
-  if (debeIgnorarObjetivo(e.target, dir)) return;
 
   const { ordenados, tramos, eventosY, zonaFin } = contextoZona();
   if (ordenados.length === 0) return;
@@ -408,6 +432,7 @@ function alWheel(e) {
   if (indiceHero >= 0) {
     const accion = accionParaHeroEnY(dir, ordenados, indiceHero, y);
     if (accion === null) return;
+    if (debeIgnorarObjetivo(e.target, dir)) return;
 
     e.preventDefault();
     if (esMismoGestoWheel(dir)) return;
@@ -424,6 +449,7 @@ function alWheel(e) {
           : e.deltaY;
 
     if (y === zonaFin || y + deltaPx < zonaFin) {
+      if (debeIgnorarObjetivo(e.target, dir)) return;
       e.preventDefault();
       if (esMismoGestoWheel(dir)) return;
       entrarDesdeEventos(ordenados);
@@ -434,6 +460,11 @@ function alWheel(e) {
 function alTouchStart(e) {
   dedoAbajo = true;
   limpiarTimeoutTouchEnd();
+  if (e.touches && e.touches.length > 1) {
+    toqueInicioY = null;
+    toqueDecidido = false;
+    return;
+  }
   toqueInicioY = e.touches?.[0]?.clientY ?? null;
   toqueDecidido = false;
   if (reproduciendo || tween) {
@@ -442,6 +473,11 @@ function alTouchStart(e) {
 }
 
 function alTouchMove(e) {
+  if (e.touches && e.touches.length > 1) {
+    toqueInicioY = null;
+    toqueDecidido = false;
+    return;
+  }
   if (esCampoEditable(e.target)) return;
 
   const clientY = e.touches?.[0]?.clientY;
@@ -449,7 +485,6 @@ function alTouchMove(e) {
 
   const deltaY = toqueInicioY - clientY;
   const dir = deltaY > 0 ? 1 : deltaY < 0 ? -1 : 0;
-  if (debeIgnorarObjetivo(e.target, dir)) return;
 
   const { ordenados, tramos, eventosY, zonaFin } = contextoZona();
   if (ordenados.length === 0) return;
@@ -461,6 +496,7 @@ function alTouchMove(e) {
     const accion =
       dir !== 0 ? accionParaHeroEnY(dir, ordenados, indiceHero, y) : 'ignorar';
     if (accion === null) return;
+    if (debeIgnorarObjetivo(e.target, dir)) return;
 
     e.preventDefault();
     if (!toqueDecidido && dir !== 0 && Math.abs(deltaY) > UMBRAL_TOQUE_PX) {
@@ -476,6 +512,7 @@ function alTouchMove(e) {
     y >= zonaFin &&
     (y === zonaFin || y - Math.abs(deltaY) < zonaFin)
   ) {
+    if (debeIgnorarObjetivo(e.target, dir)) return;
     e.preventDefault();
     if (!toqueDecidido && Math.abs(deltaY) > UMBRAL_TOQUE_PX) {
       toqueDecidido = true;
@@ -506,8 +543,14 @@ function direccionDeTecla(e) {
 }
 
 function alPresionarTecla(e) {
+  if (e.defaultPrevented) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
   if (esCampoEditable(e.target)) return;
+  if (coincideConSelector(e.target, SELECTOR_ZONAS_EXCLUIDAS)) return;
   if (!TECLAS_SCROLL.has(e.key)) return;
+  if (e.key === ' ' && coincideConSelector(e.target, SELECTOR_CONTROLES_ESPACIO)) {
+    return;
+  }
 
   const dir = direccionDeTecla(e);
   if (dir === 0) {
@@ -516,6 +559,8 @@ function alPresionarTecla(e) {
     }
     return;
   }
+
+  if (debeIgnorarObjetivo(e.target, dir)) return;
 
   const { ordenados, tramos, eventosY, zonaFin } = contextoZona();
   if (ordenados.length === 0) return;
