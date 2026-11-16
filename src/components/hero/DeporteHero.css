@@ -6,7 +6,7 @@
   height: 100vh;
   overflow: hidden;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   color: #fefefe;
 }
 
@@ -24,16 +24,15 @@
   display: block;
 }
 
-/* Overlay oscuro para que el texto resalte sobre el video. */
+/* Overlay ligero con degradado direccional del lado del texto.
+   Por debajo de `large` el bloque siempre queda abajo a la izquierda. */
 .deporte-hero__overlay {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.35) 0%,
-    rgba(0, 0, 0, 0.6) 100%
-  );
+  background:
+    linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.24) 45%, transparent 72%),
+    rgba(0, 0, 0, 0.16);
 }
 
 /* Solo en el último hero: degradado de salida hacia el color exacto con el
@@ -52,6 +51,65 @@
   position: relative;
   z-index: 2;
   width: 100%;
+  max-width: none;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding-top: 5rem;
+  padding-bottom: 6.5rem;
+  padding-inline: clamp(1.25rem, 5vw, 6rem);
+}
+
+.deporte-hero__bloque {
+  width: 100%;
+  max-width: 32rem;
+  text-align: left;
+}
+
+@media screen and (min-width: 64em) {
+  .deporte-hero__bloque {
+    max-width: min(32rem, 36vw);
+  }
+
+  .deporte-hero--texto-izquierda .deporte-hero__contenido {
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 4.5rem;
+    padding-bottom: 3rem;
+  }
+
+  .deporte-hero--texto-izquierda .deporte-hero__overlay {
+    background:
+      linear-gradient(90deg, rgba(0, 0, 0, 0.56) 0%, rgba(0, 0, 0, 0.24) 42%, transparent 72%),
+      rgba(0, 0, 0, 0.18);
+  }
+
+  .deporte-hero--texto-abajo-izquierda .deporte-hero__contenido {
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding-bottom: clamp(5.25rem, 9vh, 7rem);
+  }
+
+  .deporte-hero--texto-abajo-izquierda .deporte-hero__overlay {
+    background:
+      linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.24) 42%, transparent 70%),
+      rgba(0, 0, 0, 0.16);
+  }
+
+  .deporte-hero--texto-abajo-derecha .deporte-hero__contenido {
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding-bottom: clamp(5.25rem, 9vh, 7rem);
+    padding-inline-end: max(5.5rem, clamp(1.25rem, 5vw, 6rem));
+  }
+
+  .deporte-hero--texto-abajo-derecha .deporte-hero__overlay {
+    background:
+      linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.22) 40%, transparent 68%),
+      linear-gradient(270deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.15) 45%, transparent 75%),
+      rgba(0, 0, 0, 0.16);
+  }
 }
 
 .deporte-hero__eyebrow {
@@ -61,19 +119,20 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--acento, #f6a94b);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
 }
 
 .deporte-hero__titulo {
   margin: 0 0 1rem;
-  font-size: clamp(2.5rem, 7vw, 5rem);
+  font-size: clamp(2rem, 4.5vw, 3.75rem);
   line-height: 1.05;
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
 }
 
 .deporte-hero__texto {
   margin: 0 0 1.75rem;
-  max-width: 38rem;
-  font-size: clamp(1rem, 2.2vw, 1.4rem);
+  max-width: 30rem;
+  font-size: clamp(0.95rem, 1.3vw, 1.15rem);
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.4);
 }
 
