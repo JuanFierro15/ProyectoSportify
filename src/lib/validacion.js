@@ -27,16 +27,18 @@ export const MENSAJE_TELEFONO = 'Debe empezar por 3 y tener 10 dígitos.';
 // Limpia mientras se escribe: el nombre solo conserva letras y espacios; el
 // teléfono, solo dígitos (máx. 10). Así ni siquiera se pueden teclear
 // caracteres inválidos, y pegar "300 123 4567" queda como "3001234567".
-export function descartaCaracteresNombre(valor) {
-  return /[^\p{L} ]/u.test(String(valor ?? ''));
-}
-
 export function limpiarNombre(valor) {
   return valor.replace(/[^\p{L} ]/gu, '').replace(/ {2,}/g, ' ').replace(/^ /, '');
 }
 
 export function limpiarTelefono(valor) {
   return valor.replace(/\D/g, '').slice(0, 10);
+}
+
+// Indica si el valor trae caracteres que `limpiarNombre` descartaría (no letras
+// ni espacios); con eso se muestra `AVISO_NOMBRE`.
+export function descartaCaracteresNombre(valor) {
+  return /[^\p{L} ]/u.test(String(valor ?? ''));
 }
 
 // Devuelve el mensaje de error, o '' si es válido (o está vacío).
