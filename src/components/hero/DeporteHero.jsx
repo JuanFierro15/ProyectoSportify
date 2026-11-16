@@ -45,11 +45,11 @@ const MARGEN_PRECARGA_VISIBLE = '0px';
  *
  * Comportamiento:
  *  - Ocupa 100vh con el video cubriendo la sección (object-fit: cover) + overlay.
- *  - La sección se ancla (`pin: true`) y, mientras dura el pin, el `currentTime`
- *    del <video> sigue al scroll: al scrollear avanza; al soltar el scroll el
- *    video se queda quieto (no se reproduce solo). El tramo de pin dura lo que
- *    dura el video (duración * PX_POR_SEGUNDO), y al llegar al final se suelta
- *    y pasa a la siguiente sección.
+ *  - La sección se ancla (`pin: true`) durante un tramo proporcional a la
+ *    duración del video (`duración * PX_POR_SEGUNDO`): tras un gesto hacia abajo
+ *    el video se reproduce solo mientras el scroll avanza con él, y hacia arriba
+ *    el `currentTime` del `<video>` sigue al scroll con scrub; al terminar el
+ *    tramo pasa a la siguiente sección.
  *  - Fluidez: el video NO se mueve directamente desde la timeline de GSAP.
  *    El ScrollTrigger sólo guarda el progreso objetivo y un bucle en
  *    `gsap.ticker` acerca `currentTime` a ese objetivo con easing (SUAVIZADO),
