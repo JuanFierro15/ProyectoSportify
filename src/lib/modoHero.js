@@ -23,6 +23,23 @@ export function enReposoDeTramo(y, tramo) {
   return Math.abs(progreso - REPOSO_HERO) <= TOLERANCIA_REPOSO + 1e-9;
 }
 
+/** Devuelve la posición `scrollY` final para un tramo `{ start, end }`. */
+export function finalDeTramo(tramo) {
+  if (!tramo || !Number.isFinite(tramo.start) || !Number.isFinite(tramo.end)) {
+    return null;
+  }
+  return tramo.end;
+}
+
+/** Indica si `y` está dentro de la ventana del punto final (`1 ± TOLERANCIA_REPOSO`). */
+export function enFinalDeTramo(y, tramo) {
+  if (!Number.isFinite(y) || !tramo) return false;
+  const largo = tramo.end - tramo.start;
+  if (!Number.isFinite(largo) || largo <= 0) return false;
+  const progreso = (y - tramo.start) / largo;
+  return Math.abs(progreso - 1) <= TOLERANCIA_REPOSO + 1e-9;
+}
+
 /**
  * Devuelve el índice del hero que contiene `y` dentro de la zona `[tramos[0].start, limiteZona)`,
  * o `-1` si `y` está fuera de la zona.
@@ -48,50 +65,53 @@ export function indiceHeroEnZona(y, tramos, limiteZona) {
 }
 
 /**
- * Encuentra el punto de reposo más cercano a `y` entre `tramos` (ordenados por `start`).
- * El hueco posterior a `tramo.end` y anterior al `start` del siguiente pertenece al siguiente hero.
- * En empate exacto de distancia, elige el tramo siguiente.
+ * Encuentra el punto estable más cercano a `y` entre los puntos `inicio` y `final`
+ * de cada tramo en `tramos` (ordenados por `start`).
+ * En empate exacto de distancia, elige el siguiente punto estable hacia adelante.
  */
-export function reposoMasCercano(y, tramos) {
+export function puntoEstableMasCercano(y, tramos) {
   if (!Number.isFinite(y) || !Array.isArray(tramos) || tramos.length === 0) {
     return null;
   }
 
-  for (let i = 0; i < tramos.length - 1; i++) {
-    if (y > tramos[i].end && y < tramos[i + 1].start) {
-      const reposoSiguiente = reposoDeTramo(tramos[i + 1]);
-      return reposoSiguiente !== null
-        ? { indice: i + 1, y: reposoSiguiente }
-        : null;
-    }
-  }
-
-  let mejorIndice = -1;
-  let mejorReposo = null;
+  let mejor = null;
   let mejorDist = Infinity;
 
   for (let i = 0; i < tramos.length; i++) {
-    const r = reposoDeTramo(tramos[i]);
-    if (r === null) continue;
-    const dist = Math.abs(y - r);
-    if (dist <= mejorDist) {
-      mejorDist = dist;
-      mejorIndice = i;
-      mejorReposo = r;
+    const puntos = [
+      { punto: 'inicio', y: reposoDeTramo(tramos[i]) },
+      { punto: 'final', y: finalDeTramo(tramos[i]) },
+    ];
+    for (const candidato of puntos) {
+      if (candidato.y === null) continue;
+      const dist = Math.abs(y - candidato.y);
+      if (dist <= mejorDist) {
+        mejorDist = dist;
+        mejor = { indice: i, punto: candidato.punto, y: candidato.y };
+      }
     }
   }
 
-  return mejorIndice >= 0 ? { indice: mejorIndice, y: mejorReposo } : null;
+  return mejor;
 }
 
 /**
  * Decide qué acción tomar ante un gesto direccional dentro de la zona de heros.
- * Devuelve 'reproducir' | 'ignorar' | 'cancelar_y_reposar' | 'reposar' | 'anterior' | null.
+ * Devuelve:
+ * - 'reproducir'
+ * - 'siguiente_inicio'
+ * - 'anterior_final'
+ * - 'rebobinar'
+ * - 'cancelar_y_reposar'
+ * - 'reposar'
+ * - 'ignorar'
+ * - null
  */
 export function accionPorGesto({
   direccion,
-  enReposo,
+  punto,
   reproduciendo,
+  animando = false,
   indiceHero,
   totalHeros,
   pasadoReposo = false,
@@ -106,19 +126,28 @@ export function accionPorGesto({
     return null;
   }
 
+  if (animando) {
+    return 'ignorar';
+  }
+
   if (direccion === 1) {
-    return reproduciendo ? 'ignorar' : 'reproducir';
+    if (reproduciendo) return 'ignorar';
+    return punto === 'final' ? 'siguiente_inicio' : 'reproducir';
   }
 
   if (reproduciendo) {
     return 'cancelar_y_reposar';
   }
 
-  if (!enReposo && pasadoReposo) {
+  if (punto === 'final') {
+    return 'rebobinar';
+  }
+
+  if (punto === 'otro' && pasadoReposo) {
     return 'reposar';
   }
 
-  return indiceHero > 0 ? 'anterior' : null;
+  return indiceHero > 0 ? 'anterior_final' : null;
 }
 
 /**

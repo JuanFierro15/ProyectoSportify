@@ -5,11 +5,13 @@ import {
   REPOSO_HERO,
   TOLERANCIA_REPOSO,
   accionPorGesto,
+  enFinalDeTramo,
   enReposoDeTramo,
+  finalDeTramo,
   indiceHeroEnZona,
   puedeDesplazarAncestro,
+  puntoEstableMasCercano,
   reposoDeTramo,
-  reposoMasCercano,
 } from '../../lib/modoHero';
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
@@ -21,7 +23,8 @@ const DEMORA_FIN_TOQUE_MS = 200;
 const UMBRAL_TOQUE_PX = 30;
 const VENTANA_GESTO_WHEEL_MS = 250;
 const DURACION_REPOSAR = 0.4;
-const DURACION_TRANSICION_MITAD = 0.15;
+const DURACION_DESLIZAMIENTO = 0.8;
+const DURACION_REBOBINADO = 1.1;
 
 const TECLAS_SCROLL = new Set([
   'ArrowDown',
@@ -36,10 +39,8 @@ const TECLAS_SCROLL = new Set([
 const registros = [];
 let listenersActivos = false;
 
-let overlayTransicion = null;
 let reproduciendo = null;
 let tween = null;
-let transicionTl = null;
 let heroDestino = null;
 let limpiarEnded = null;
 let ultimaYEscrita = 0;
@@ -111,28 +112,12 @@ function contextoZona() {
   const tramos = ordenados.map((h) => h.st);
   const eventosY = destinoEventos();
   const zonaFin =
-    eventosY !== null ? eventosY : tramos[tramos.length - 1].end;
+    eventosY !== null ? eventosY : tramos[tramos.length - 1].end + 1;
   return { ordenados, tramos, eventosY, zonaFin };
-}
-
-function crearOverlayTransicion() {
-  if (overlayTransicion || typeof document === 'undefined') return;
-  const el = document.createElement('div');
-  el.className = 'deporte-hero__transicion';
-  el.setAttribute('aria-hidden', 'true');
-  document.body.appendChild(el);
-  overlayTransicion = el;
-}
-
-function quitarOverlayTransicion() {
-  if (!overlayTransicion) return;
-  overlayTransicion.remove();
-  overlayTransicion = null;
 }
 
 function finAuto() {
   tween = null;
-  transicionTl = null;
   heroDestino = null;
   autoActivo = false;
   ultimaYEscrita = 0;
@@ -143,13 +128,6 @@ function cancelar({ pausar = true } = {}) {
   if (tween) {
     tween.kill();
     tween = null;
-  }
-  if (transicionTl) {
-    transicionTl.kill();
-    transicionTl = null;
-  }
-  if (overlayTransicion) {
-    overlayTransicion.style.opacity = '0';
   }
   if (limpiarEnded) {
     limpiarEnded();
@@ -170,28 +148,6 @@ function reiniciarEstado() {
   ultimaDireccionWheel = 0;
 }
 
-function deslizarA(y, duracion, destino = null) {
-  if (tween) {
-    tween.kill();
-    tween = null;
-  }
-  if (transicionTl) {
-    transicionTl.kill();
-    transicionTl = null;
-    if (overlayTransicion) {
-      overlayTransicion.style.opacity = '0';
-    }
-  }
-  autoActivo = true;
-  heroDestino = destino;
-  tween = gsap.to(window, {
-    scrollTo: { y, autoKill: true, onAutoKill: cancelar },
-    duration: duracion,
-    ease: 'power2.inOut',
-    onComplete: finAuto,
-  });
-}
-
 function pausarEnReposo(hero) {
   const video = hero?.video;
   if (!video) return;
@@ -205,16 +161,25 @@ function pausarEnReposo(hero) {
   }
 }
 
-function transicionarA(y, destino = null) {
+function asentarEnDestino(destino, puntoDestino) {
+  if (!destino) return;
+  if (puntoDestino === 'final') {
+    destino.video?.pause();
+    return;
+  }
+  pausarEnReposo(destino);
+}
+
+function deslizarA(
+  y,
+  duracion,
+  destino = null,
+  { puntoDestino = 'inicio' } = {}
+) {
   if (tween) {
     tween.kill();
     tween = null;
   }
-  if (transicionTl) {
-    transicionTl.kill();
-    transicionTl = null;
-  }
-
   autoActivo = true;
   heroDestino = destino;
 
@@ -222,46 +187,24 @@ function transicionarA(y, destino = null) {
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  if (reducir || !overlayTransicion) {
+  if (reducir) {
     ultimaYEscrita = y;
     window.scrollTo(0, y);
     ScrollTrigger.update();
-    pausarEnReposo(destino);
+    asentarEnDestino(destino, puntoDestino);
     finAuto();
     return;
   }
 
-  const tl = gsap.timeline({
+  tween = gsap.to(window, {
+    scrollTo: { y, autoKill: true, onAutoKill: cancelar },
+    duration: duracion,
+    ease: 'power2.inOut',
     onComplete: () => {
-      if (transicionTl === tl) {
-        transicionTl = null;
-        finAuto();
-      }
+      asentarEnDestino(destino, puntoDestino);
+      finAuto();
     },
   });
-  transicionTl = tl;
-
-  tl.to(overlayTransicion, {
-    opacity: 1,
-    duration: DURACION_TRANSICION_MITAD,
-    ease: 'power2.in',
-  })
-    .call(() => {
-      if (transicionTl !== tl) return;
-      ultimaYEscrita = y;
-      window.scrollTo(0, y);
-      ScrollTrigger.update();
-      pausarEnReposo(destino);
-    })
-    .to(
-      overlayTransicion,
-      {
-        opacity: 0,
-        duration: DURACION_TRANSICION_MITAD,
-        ease: 'power2.out',
-      },
-      '+=0.05'
-    );
 }
 
 function heroSiguiente(hero) {
@@ -286,7 +229,9 @@ function irAlSiguiente(hero) {
     return;
   }
 
-  transicionarA(destino, siguiente);
+  deslizarA(destino, DURACION_DESLIZAMIENTO, siguiente, {
+    puntoDestino: 'inicio',
+  });
 }
 
 function alTerminar(hero) {
@@ -341,7 +286,11 @@ function reproducir(hero) {
 
 function accionParaHeroEnY(dir, ordenados, indiceHero, y) {
   const hero = ordenados[indiceHero];
-  const enReposo = enReposoDeTramo(y, hero.st);
+  const punto = enReposoDeTramo(y, hero.st)
+    ? 'inicio'
+    : enFinalDeTramo(y, hero.st)
+      ? 'final'
+      : 'otro';
   const reposoY = reposoDeTramo(hero.st);
   const largo = hero.st.end - hero.st.start;
   const pasadoReposo =
@@ -349,9 +298,10 @@ function accionParaHeroEnY(dir, ordenados, indiceHero, y) {
 
   return accionPorGesto({
     direccion: dir,
-    enReposo,
+    punto,
     pasadoReposo,
-    reproduciendo: Boolean(reproduciendo || transicionTl),
+    reproduciendo: Boolean(reproduciendo),
+    animando: Boolean(tween),
     indiceHero,
     totalHeros: ordenados.length,
   });
@@ -361,22 +311,37 @@ function ejecutarAccion(accion, ordenados, indiceHero) {
   const hero = ordenados[indiceHero];
   if (accion === 'reproducir') {
     reproducir(hero);
+  } else if (accion === 'siguiente_inicio') {
+    irAlSiguiente(hero);
+  } else if (accion === 'anterior_final') {
+    const anterior = ordenados[indiceHero - 1];
+    const finalPrev = anterior ? finalDeTramo(anterior.st) : null;
+    if (finalPrev !== null) {
+      deslizarA(finalPrev, DURACION_DESLIZAMIENTO, anterior, {
+        puntoDestino: 'final',
+      });
+    }
+  } else if (accion === 'rebobinar') {
+    const reposoY = reposoDeTramo(hero.st);
+    if (reposoY !== null) {
+      deslizarA(reposoY, DURACION_REBOBINADO, hero, {
+        puntoDestino: 'inicio',
+      });
+    }
   } else if (accion === 'cancelar_y_reposar') {
     cancelar();
     const reposoY = reposoDeTramo(hero.st);
     if (reposoY !== null) {
-      deslizarA(reposoY, DURACION_REPOSAR, hero);
+      deslizarA(reposoY, DURACION_REPOSAR, hero, {
+        puntoDestino: 'inicio',
+      });
     }
   } else if (accion === 'reposar') {
     const reposoY = reposoDeTramo(hero.st);
     if (reposoY !== null) {
-      deslizarA(reposoY, DURACION_REPOSAR, hero);
-    }
-  } else if (accion === 'anterior') {
-    const anterior = ordenados[indiceHero - 1];
-    const reposoPrev = anterior ? reposoDeTramo(anterior.st) : null;
-    if (reposoPrev !== null) {
-      transicionarA(reposoPrev, anterior);
+      deslizarA(reposoY, DURACION_REPOSAR, hero, {
+        puntoDestino: 'inicio',
+      });
     }
   }
 }
@@ -411,8 +376,19 @@ function alTick() {
 }
 
 function cancelarSiActivo() {
-  if (reproduciendo || tween || transicionTl) {
+  if (reproduciendo || tween) {
     cancelar();
+  }
+}
+
+function entrarDesdeEventos(ordenados) {
+  if (tween) return;
+  const ultimo = ordenados[ordenados.length - 1];
+  const finalUltimo = ultimo ? finalDeTramo(ultimo.st) : null;
+  if (finalUltimo !== null) {
+    deslizarA(finalUltimo, DURACION_DESLIZAMIENTO, ultimo, {
+      puntoDestino: 'final',
+    });
   }
 }
 
@@ -450,8 +426,7 @@ function alWheel(e) {
     if (y === zonaFin || y + deltaPx < zonaFin) {
       e.preventDefault();
       if (esMismoGestoWheel(dir)) return;
-      const ultimo = ordenados[ordenados.length - 1];
-      transicionarA(reposoDeTramo(ultimo.st), ultimo);
+      entrarDesdeEventos(ordenados);
     }
   }
 }
@@ -461,7 +436,7 @@ function alTouchStart(e) {
   limpiarTimeoutTouchEnd();
   toqueInicioY = e.touches?.[0]?.clientY ?? null;
   toqueDecidido = false;
-  if (reproduciendo || tween || transicionTl) {
+  if (reproduciendo || tween) {
     cancelar();
   }
 }
@@ -504,8 +479,7 @@ function alTouchMove(e) {
     e.preventDefault();
     if (!toqueDecidido && Math.abs(deltaY) > UMBRAL_TOQUE_PX) {
       toqueDecidido = true;
-      const ultimo = ordenados[ordenados.length - 1];
-      transicionarA(reposoDeTramo(ultimo.st), ultimo);
+      entrarDesdeEventos(ordenados);
     }
   }
 }
@@ -513,7 +487,7 @@ function alTouchMove(e) {
 function alTouchEnd() {
   dedoAbajo = false;
   toqueInicioY = null;
-  if (reproduciendo || tween || transicionTl) return;
+  if (reproduciendo || tween) return;
   limpiarTimeoutTouchEnd();
   const y = window.scrollY;
   timeoutTouchEnd = setTimeout(() => {
@@ -537,7 +511,7 @@ function alPresionarTecla(e) {
 
   const dir = direccionDeTecla(e);
   if (dir === 0) {
-    if (reproduciendo || tween || transicionTl) {
+    if (reproduciendo || tween) {
       cancelar();
     }
     return;
@@ -566,12 +540,11 @@ function alPresionarTecla(e) {
       (e.key === 'PageUp' && y - (window.innerHeight || 0) < zonaFin))
   ) {
     e.preventDefault();
-    const ultimo = ordenados[ordenados.length - 1];
-    transicionarA(reposoDeTramo(ultimo.st), ultimo);
+    entrarDesdeEventos(ordenados);
     return;
   }
 
-  if (reproduciendo || tween || transicionTl) {
+  if (reproduciendo || tween) {
     cancelar();
   }
 }
@@ -585,20 +558,26 @@ function alDetenerse() {
   const y = window.scrollY;
   if (y < tramos[0].start || y >= zonaFin) return;
 
-  const cercano = reposoMasCercano(y, tramos);
+  const cercano = puntoEstableMasCercano(y, tramos);
   if (!cercano) return;
 
   const heroCercano = ordenados[cercano.indice];
-  if (enReposoDeTramo(y, heroCercano.st)) return;
+  if (
+    (cercano.punto === 'inicio' && enReposoDeTramo(y, heroCercano.st)) ||
+    (cercano.punto === 'final' && enFinalDeTramo(y, heroCercano.st))
+  ) {
+    return;
+  }
 
-  deslizarA(cercano.y, DURACION_REPOSAR, heroCercano);
+  deslizarA(cercano.y, DURACION_REPOSAR, heroCercano, {
+    puntoDestino: cercano.punto,
+  });
 }
 
 function instalarListeners() {
   if (listenersActivos) return;
   listenersActivos = true;
   reiniciarEstado();
-  crearOverlayTransicion();
   window.addEventListener('wheel', alWheel, { passive: false });
   window.addEventListener('pointerdown', cancelarSiActivo, { passive: true });
   window.addEventListener('click', cancelarSiActivo, {
@@ -627,7 +606,6 @@ function quitarListeners() {
   window.removeEventListener('keydown', alPresionarTecla);
   ScrollTrigger.removeEventListener('scrollEnd', alDetenerse);
   gsap.ticker.remove(alTick);
-  quitarOverlayTransicion();
 }
 
 /**

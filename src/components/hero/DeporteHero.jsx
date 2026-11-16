@@ -58,13 +58,15 @@ const MARGEN_PRECARGA_VISIBLE = '0px';
  *    decoder.
  *  - El texto/CTA hacen fade + scale (scrubbed) al principio y al final del pin.
  *  - Navegación por secciones (snap): coordinada por un controlador único compartido
- *    (`controladorSnapHero.js`) con estado y listeners globales. Cada hero se
- *    asienta en reposo en 0.15 (texto y CTA visibles); dentro de la zona de
- *    heros intercepta el gesto al empezar (`wheel`, `touchmove` > 30 px o teclas)
- *    para reproducir de inmediato hacia abajo o volver al hero anterior hacia
- *    arriba con transición breve a oscuro; al terminar el video salta al reposo
- *    del siguiente hero en pausa (o a `#eventos` en el último), y si el scroll
- *    se detiene entre heros tras una entrada real, acomoda al reposo más cercano.
+ *    (`controladorSnapHero.js`) con estado y listeners globales. Cada hero tiene
+ *    dos puntos estables: inicio (reposo 0.15, texto y CTA visibles) y final
+ *    (`st.end`, último cuadro). Dentro de la zona de heros intercepta el gesto al
+ *    empezar (`wheel`, `touchmove` > 30 px o teclas) para reproducir de inmediato
+ *    hacia abajo desde inicio, deslizar al inicio del siguiente (o `#eventos`) desde
+ *    final, rebobinar al inicio hacia arriba desde final o deslizar al final del
+ *    hero anterior hacia arriba desde inicio; al terminar el video desliza al
+ *    inicio del siguiente hero en pausa (o a `#eventos`), y si el scroll se
+ *    detiene entre puntos estables acomoda al más cercano.
  *  - Todo dentro de `gsap.matchMedia()` con `mm.revert()` en el cleanup.
  *  - `ScrollTrigger.refresh()` cuando el video reporta su duración, para que el
  *    largo del pin (que depende de esa duración) quede bien medido.

@@ -100,13 +100,3 @@
   filter: brightness(0.92);
   color: #1e1e1e;
 }
-
-/* Cortina de transición breve a oscuro al saltar entre secciones hero. */
-.deporte-hero__transicion {
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-transicion-hero);
-  background: var(--eventos-fondo, #0d0d0d);
-  opacity: 0;
-  pointer-events: none;
-}
