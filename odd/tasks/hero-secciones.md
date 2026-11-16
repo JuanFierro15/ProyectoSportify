@@ -20,8 +20,8 @@ Las citas entre comillas son de la issue #36 o de Miguel (Log). La issue pedía 
 |---|---|---|---|---|
 | T1 | S1 (medición) | agy hydrogen-high (navegador, solo lectura) | hecho | (sin código) |
 | T2 | S2-S7 + arreglo de S1 | agy hydrogen-medium (código) | hecho | f8ca141 + e0b025f |
-| T4 | S4-S5 (corrección L7-L8) + S2 con dos puntos por hero | agy hydrogen-medium (código) | en curso | |
-| T3 | S1-S6 | agy hydrogen-high (verificación en Chromium) | hecho (falta la revisión de Miguel en localhost) | |
+| T4 | S4-S5 (corrección L7-L8) + S2 con dos puntos por hero | agy hydrogen-medium (código) | hecho | 2fa020a |
+| T3 | S1-S6 | agy hydrogen-high (verificación en Chromium) | hecho sobre T2; falta verificar T4 y los ajustes del PR #39 en navegador | |
 
 Riesgo: medio (controlador de scroll compartido por los tres heros; orden de eventos asíncronos).
 
@@ -44,3 +44,4 @@ Riesgo: medio (controlador de scroll compartido por los tres heros; orden de eve
   Nueva verificación limitada: los 3 PASS (0 cuadros con dos heros en 480 muestreados), el arranque en 37 ms y sin regresiones; 0 errores en consola.
 - **L7** (16-11-2026, Miguel, tras probar en localhost): "no me gusta la transición que usaste, quiero que se note más como el movimiento, ya que al oscurecer parace como si simplemente se cerrara y se pone otra, quiero que se note que cambio, además siento que la navegabilidad se ve afectada con el nuevo comportamiento del scroll al subir ya que se reinicia el punto del video y no comienza desde el final sino que al subir a otra section arranca desde el inicio del video lo que hace que tengas que bajar todo el video para regresar al hero de abajo". Se reabre T2 para S4 y S5.
 - **L8** (16-11-2026, Miguel): aprobó el deslizamiento de ~0,8 s, los dos puntos por hero (inicio y final), y "Me gusta la opción que recomiendas" para subir desde el final: rebobinado animado hasta el inicio.
+- **L9** (16-11-2026) Revisión del PR #39: ronda de correcciones tras probar en navegador. Bloqueantes resueltos: (1) `alPresionarTecla` no intercepta ni cancela con `defaultPrevented`, `Ctrl`/`Meta`/`Alt`, objetivos dentro de `.chatbot`, `dialog[open]`, `[role="dialog"]` o ancestros desplazables, ni `Espacio` sobre controles interactivos (`button`, `a[href]`, `summary`, roles ARIA); (2) en `reproducir`, si `duration` no es finita > 0, `play()` se rechaza o el video emite `error` (listener limpiado al terminar o cancelar), cancela si reproducía y desliza directo al siguiente punto estable; (3) `wheel` con `ctrlKey` y toques con `touches.length > 1` salen sin `preventDefault` (reiniciando el gesto táctil) para no bloquear zoom/pellizco. Detalles: chequeo de `debeIgnorarObjetivo` solo dentro de la zona o entrando desde `#eventos` y lectura de geometría solo con `overflowY` `auto`/`scroll`; límites exactos en pruebas (30/31 px, 250/251 ms, 0,25/0,26 s) sin aserciones obsoletas de `.deporte-hero__transicion`; actualización de `docs/agentes/pagina-reserva.md` y estado de T4/T3.
