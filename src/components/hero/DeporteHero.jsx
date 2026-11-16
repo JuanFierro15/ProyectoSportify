@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { esClicNormal, rutaReserva } from '../../lib/rutas';
 import { DURACION_FADE_CONTENIDO } from '../../lib/modoHero';
+import { POSICIONES_TEXTO_HERO } from '../../data/deportes';
 import {
   heroEstaReproduciendo,
   registrarHeroSnap,
@@ -39,6 +40,8 @@ const MARGEN_PRECARGA_VISIBLE = '0px';
  *  - posterSrc     {string}  ruta de la imagen de respaldo (poster) del video
  *  - tituloCTA     {string}  texto del botón
  *  - colorAcento   {string}  color de acento (hex) para el CTA y el "eyebrow"
+ *  - posicionTexto {string}  ubicación del bloque de texto desde `large`
+ *    ('izquierda' | 'abajo-izquierda' | 'abajo-derecha')
  *  - ultimoDeporte {bool}    true solo en el último hero del listado: agrega
  *    un degradado de salida (transparente -> --eventos-fondo) para que no
  *    quede un corte abrupto contra la sección de eventos que sigue.
@@ -79,6 +82,7 @@ function DeporteHero({
   colorAcento,
   eyebrow = 'Nuestras canchas',
   descripcion,
+  posicionTexto = 'izquierda',
   preload = 'metadata',
   onVerCanchas,
   ultimoDeporte = false,
@@ -86,6 +90,9 @@ function DeporteHero({
   const rootRef = useRef(null);
   const contenidoRef = useRef(null);
   const videoRef = useRef(null);
+  const posicionValida = POSICIONES_TEXTO_HERO.includes(posicionTexto)
+    ? posicionTexto
+    : 'izquierda';
 
   useEffect(() => {
     const seccion = rootRef.current;
@@ -207,7 +214,7 @@ function DeporteHero({
 
   return (
     <section
-      className={`deporte-hero${ultimoDeporte ? ' deporte-hero--ultimo' : ''}`}
+      className={`deporte-hero deporte-hero--texto-${posicionValida}${ultimoDeporte ? ' deporte-hero--ultimo' : ''}`}
       ref={rootRef}
       data-sport={slug}
       style={{ '--acento': colorAcento }}
@@ -229,34 +236,32 @@ function DeporteHero({
       <div className="deporte-hero__overlay" aria-hidden="true" />
 
       <div className="grid-container deporte-hero__contenido" ref={contenidoRef}>
-        <div className="grid-x grid-padding-x align-center">
-          <div className="cell small-12 medium-10 large-8">
-            <p className="deporte-hero__eyebrow">{eyebrow}</p>
-            <h2 className="deporte-hero__titulo">{nombre}</h2>
-            {/* En móvil (menos de 640px) solo título y botón: show-for-medium
-                de Foundation oculta la descripción por debajo de `medium`. */}
-            <p className="deporte-hero__texto show-for-medium">
-              {descripcion ||
-                `Vive la experiencia del ${nombre.toLowerCase()} en un espacio pensado para disfrutar al máximo cada partido.`}
-            </p>
-            {/* En móvil el texto se acorta a "Ver canchas" (el deporte ya está
-                en el título); el aria-label conserva el texto completo para
-                lectores de pantalla en cualquier tamaño. */}
-            <a
-              className="button large deporte-hero__cta"
-              href={rutaReserva(slug)}
-              aria-label={tituloCTA}
-              onClick={(e) => {
-                if (onVerCanchas && esClicNormal(e)) {
-                  e.preventDefault();
-                  onVerCanchas();
-                }
-              }}
-            >
-              <span className="show-for-medium">{tituloCTA}</span>
-              <span className="hide-for-medium">Ver canchas</span>
-            </a>
-          </div>
+        <div className="deporte-hero__bloque">
+          <p className="deporte-hero__eyebrow">{eyebrow}</p>
+          <h2 className="deporte-hero__titulo">{nombre}</h2>
+          {/* En móvil (menos de 640px) solo título y botón: show-for-medium
+              de Foundation oculta la descripción por debajo de `medium`. */}
+          <p className="deporte-hero__texto show-for-medium">
+            {descripcion ||
+              `Vive la experiencia del ${nombre.toLowerCase()} en un espacio pensado para disfrutar al máximo cada partido.`}
+          </p>
+          {/* En móvil el texto se acorta a "Ver canchas" (el deporte ya está
+              en el título); el aria-label conserva el texto completo para
+              lectores de pantalla en cualquier tamaño. */}
+          <a
+            className="button large deporte-hero__cta"
+            href={rutaReserva(slug)}
+            aria-label={tituloCTA}
+            onClick={(e) => {
+              if (onVerCanchas && esClicNormal(e)) {
+                e.preventDefault();
+                onVerCanchas();
+              }
+            }}
+          >
+            <span className="show-for-medium">{tituloCTA}</span>
+            <span className="hide-for-medium">Ver canchas</span>
+          </a>
         </div>
       </div>
     </section>

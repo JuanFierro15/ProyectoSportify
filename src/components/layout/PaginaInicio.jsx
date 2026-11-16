@@ -111,6 +111,7 @@ function PaginaInicio() {
             colorAcento={d.colorAcento}
             eyebrow={d.eyebrow}
             descripcion={d.descripcion}
+            posicionTexto={d.posicionTexto}
             onVerCanchas={() => abrirVista(d.slug)}
             ultimoDeporte={i === DEPORTES.length - 1}
           />

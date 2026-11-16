@@ -251,3 +251,39 @@ describe('DeporteHero - controlador snap', () => {
     expect(instanciaObserver.disconnect).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('DeporteHero - posicionTexto', () => {
+  it('agrega la clase deporte-hero--texto-abajo-derecha cuando posicionTexto es "abajo-derecha"', () => {
+    const { container } = render(
+      <DeporteHero {...PROPS_VALIDAS} posicionTexto="abajo-derecha" />
+    );
+
+    const seccion = container.querySelector('section');
+    expect(seccion).toHaveClass('deporte-hero--texto-abajo-derecha');
+  });
+
+  it('agrega la clase deporte-hero--texto-abajo-izquierda cuando posicionTexto es "abajo-izquierda"', () => {
+    const { container } = render(
+      <DeporteHero {...PROPS_VALIDAS} posicionTexto="abajo-izquierda" />
+    );
+
+    const seccion = container.querySelector('section');
+    expect(seccion).toHaveClass('deporte-hero--texto-abajo-izquierda');
+  });
+
+  it('usa deporte-hero--texto-izquierda por defecto cuando falta posicionTexto', () => {
+    const { container } = render(<DeporteHero {...PROPS_VALIDAS} />);
+
+    const seccion = container.querySelector('section');
+    expect(seccion).toHaveClass('deporte-hero--texto-izquierda');
+  });
+
+  it('usa deporte-hero--texto-izquierda cuando posicionTexto es inválido', () => {
+    const { container } = render(
+      <DeporteHero {...PROPS_VALIDAS} posicionTexto="arriba-centro" />
+    );
+
+    const seccion = container.querySelector('section');
+    expect(seccion).toHaveClass('deporte-hero--texto-izquierda');
+  });
+});

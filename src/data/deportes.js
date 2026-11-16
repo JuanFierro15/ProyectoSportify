@@ -3,6 +3,12 @@
  * continuidad visual: mismo nombre y mismo `colorAcento` en los DeporteHero,
  * en la página de reserva y en el asistente.
  */
+export const POSICIONES_TEXTO_HERO = [
+  'izquierda',
+  'abajo-izquierda',
+  'abajo-derecha',
+];
+
 export const DEPORTES = [
   {
     slug: 'voley-playa',
@@ -13,6 +19,7 @@ export const DEPORTES = [
       'Siente la arena fina bajo tus pies en canchas con drenaje de alto rendimiento, red reglamentaria e iluminación nocturna para disfrutar cada punto al aire libre.',
     superficie: 'Arena de cuarzo profesional',
     detalleEnTarjeta: true,
+    posicionTexto: 'abajo-izquierda',
   },
   {
     slug: 'padel',
@@ -23,6 +30,7 @@ export const DEPORTES = [
       'Juega con máxima precisión en pistas con césped monofilamento, cerramientos de cristal templado y rebote uniforme en cada rincón.',
     superficie: 'Cristal templado y césped',
     detalleEnTarjeta: true,
+    posicionTexto: 'izquierda',
   },
   {
     slug: 'futbol',
@@ -35,6 +43,7 @@ export const DEPORTES = [
     // Muestra características y descripción sobre la foto del carrusel de
     // reserva en la tarjeta activa (para todos los deportes).
     detalleEnTarjeta: true,
+    posicionTexto: 'abajo-derecha',
   },
 ];
 
