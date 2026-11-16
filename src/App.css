@@ -14,6 +14,8 @@
   --z-skip-link: 1200;
   /* Encima del navbar (1000) */
   --z-chatbot: 1100;
+  /* Transición entre heros (encima de la barra del asistente 900 y debajo del navbar 1000) */
+  --z-transicion-hero: 950;
   /* Barra inferior del asistente de torneo en móvil (debajo del navbar y del chat) */
   --z-barra-asistente: 900;
 
