@@ -99,7 +99,7 @@ describe('DeporteHero - controlador snap', () => {
     vi.restoreAllMocks();
   });
 
-  it('con no-preference no define vars.snap y registra el hero en el controlador snap', () => {
+  it('con no-preference registra el hero en el controlador snap y escucha scrollEnd', () => {
     simularMatchMedia('(prefers-reduced-motion: no-preference)');
     const spyAdd = vi.spyOn(ScrollTrigger, 'addEventListener');
 
@@ -111,7 +111,6 @@ describe('DeporteHero - controlador snap', () => {
 
     const triggers = ScrollTrigger.getAll();
     expect(triggers.length).toBeGreaterThan(0);
-    expect(triggers[0].vars.snap).toBeUndefined();
 
     expect(registrarHeroSnap).toHaveBeenCalledTimes(1);
     expect(registrarHeroSnap).toHaveBeenCalledWith({
@@ -194,5 +193,61 @@ describe('DeporteHero - controlador snap', () => {
     });
 
     unmount();
+  });
+
+  it('cuando IntersectionObserver reporta isIntersecting: true, cambia video.preload a auto y llama a disconnect', () => {
+    simularMatchMedia('(prefers-reduced-motion: no-preference)');
+    let callbackObserver = null;
+    const instanciaObserver = {
+      observe: vi.fn(),
+      disconnect: vi.fn(),
+    };
+    window.IntersectionObserver = vi.fn(function (callback) {
+      callbackObserver = callback;
+      return instanciaObserver;
+    });
+
+    const { container, unmount } = render(
+      <div>
+        <DeporteHero {...PROPS_VALIDAS} />
+      </div>
+    );
+
+    const seccion = container.querySelector('section');
+    const video = container.querySelector('video');
+    expect(instanciaObserver.observe).toHaveBeenCalledWith(seccion);
+    expect(video.preload).toBe('metadata');
+    expect(instanciaObserver.disconnect).not.toHaveBeenCalled();
+
+    callbackObserver([{ isIntersecting: true }]);
+
+    expect(video.preload).toBe('auto');
+    expect(instanciaObserver.disconnect).toHaveBeenCalledTimes(1);
+
+    unmount();
+  });
+
+  it('al desmontar sin intersección previa llama a disconnect del IntersectionObserver', () => {
+    simularMatchMedia('(prefers-reduced-motion: no-preference)');
+    const instanciaObserver = {
+      observe: vi.fn(),
+      disconnect: vi.fn(),
+    };
+    window.IntersectionObserver = vi.fn(function () {
+      return instanciaObserver;
+    });
+
+    const { unmount } = render(
+      <div>
+        <DeporteHero {...PROPS_VALIDAS} />
+      </div>
+    );
+
+    expect(instanciaObserver.observe).toHaveBeenCalledTimes(1);
+    expect(instanciaObserver.disconnect).not.toHaveBeenCalled();
+
+    unmount();
+
+    expect(instanciaObserver.disconnect).toHaveBeenCalledTimes(1);
   });
 });

@@ -914,4 +914,203 @@ describe('controladorSnapHero', () => {
     expect(video2.preload).toBe('metadata');
     expect(video3.preload).toBe('metadata');
   });
+
+  it.each([NaN, 0, Infinity])(
+    'con video.duration = %s, un gesto y scrollEnd a mitad del hero no llaman a play',
+    (duracion) => {
+      const seccion = document.createElement('section');
+      const video = crearVideoMock({ duration: duracion });
+      registrar({
+        seccion,
+        video,
+        st: { start: 0, end: 1000 },
+        progresoObjetivo: () => 0.5,
+      });
+
+      simularGestoAbajo(500);
+      dispararScrollEnd();
+
+      expect(video.play).not.toHaveBeenCalled();
+      expect(heroEstaReproduciendo(seccion)).toBe(false);
+    }
+  );
+
+  it('en el último hero sin #eventos en el DOM, ended no llama a gsap.to y scrollEnd sin entrada nueva no hace nada', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.5,
+    });
+
+    simularGestoAbajo(500);
+    dispararScrollEnd();
+    expect(video.play).toHaveBeenCalledTimes(1);
+
+    video.dispatchEvent(new Event('ended'));
+
+    expect(gsap.to).not.toHaveBeenCalled();
+    expect(heroEstaReproduciendo(seccion)).toBe(false);
+
+    dispararScrollEnd();
+
+    expect(gsap.to).not.toHaveBeenCalled();
+    expect(video.play).toHaveBeenCalledTimes(1);
+  });
+
+  it('al desregistrar el último hero llama a gsap.ticker.remove con la función pasada a gsap.ticker.add', () => {
+    const spyTickerAdd = vi.spyOn(gsap.ticker, 'add');
+    const spyTickerRemove = vi.spyOn(gsap.ticker, 'remove');
+
+    const d1 = registrar({
+      seccion: document.createElement('section'),
+      video: crearVideoMock(),
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0,
+    });
+    const d2 = registrar({
+      seccion: document.createElement('section'),
+      video: crearVideoMock(),
+      st: { start: 2000, end: 3000 },
+      progresoObjetivo: () => 0,
+    });
+
+    expect(spyTickerAdd).toHaveBeenCalledTimes(1);
+    const fnTicker = spyTickerAdd.mock.calls[0][0];
+    // gsap.ticker.add llama internamente a remove() para evitar duplicados.
+    spyTickerRemove.mockClear();
+
+    d1();
+    expect(spyTickerRemove).not.toHaveBeenCalled();
+
+    d2();
+    expect(spyTickerRemove).toHaveBeenCalledTimes(1);
+    expect(spyTickerRemove).toHaveBeenCalledWith(fnTicker);
+  });
+
+  it('al desregistrar el último hero a mitad del deslizamiento llama a kill en el tween', () => {
+    const desregistrar = registrar({
+      seccion: document.createElement('section'),
+      video: crearVideoMock({ duration: 10 }),
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.05,
+    });
+
+    simularGestoAbajo(50);
+    dispararScrollEnd();
+    expect(gsap.to).toHaveBeenCalledTimes(1);
+    expect(tweens[0].kill).not.toHaveBeenCalled();
+
+    desregistrar();
+
+    expect(tweens[0].kill).toHaveBeenCalledTimes(1);
+  });
+
+  it('al desregistrar el último hero, un timeout de touchend pendiente ya no actúa', () => {
+    vi.useFakeTimers();
+    const video = crearVideoMock({ duration: 10 });
+    const desregistrar = registrar({
+      seccion: document.createElement('section'),
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.5,
+    });
+
+    window.dispatchEvent(new Event('touchstart'));
+    window.dispatchEvent(new Event('touchmove'));
+    fijarScrollY(500);
+    window.dispatchEvent(new Event('scroll'));
+    window.dispatchEvent(new Event('touchend'));
+
+    desregistrar();
+    vi.advanceTimersByTime(200);
+
+    expect(video.play).not.toHaveBeenCalled();
+
+    vi.useRealTimers();
+  });
+
+  it('un ended despachado después de desregistrar el hero que reproducía no llama a gsap.to', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10 });
+    const desregistrar = registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.5,
+    });
+    registrar({
+      seccion: document.createElement('section'),
+      video: crearVideoMock({ duration: 10 }),
+      st: { start: 2000, end: 3000 },
+      progresoObjetivo: () => 0,
+    });
+
+    simularGestoAbajo(500);
+    dispararScrollEnd();
+    expect(heroEstaReproduciendo(seccion)).toBe(true);
+
+    desregistrar();
+    video.dispatchEvent(new Event('ended'));
+
+    expect(gsap.to).not.toHaveBeenCalled();
+  });
+
+  it('con progreso apenas menor que 1 - 0.05 / dur (0.994 con dur = 10) sí llama a play', () => {
+    const dur = 10;
+    const progreso = 0.994;
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: dur });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => progreso,
+    });
+    registrar({
+      seccion: document.createElement('section'),
+      video: crearVideoMock({ duration: dur }),
+      st: { start: 2000, end: 3000 },
+      progresoObjetivo: () => 0,
+    });
+
+    simularGestoAbajo(progreso * 1000);
+    dispararScrollEnd();
+
+    expect(video.play).toHaveBeenCalledTimes(1);
+    expect(heroEstaReproduciendo(seccion)).toBe(true);
+    expect(gsap.to).not.toHaveBeenCalled();
+  });
+
+  it('touchcancel sin inercia reevalúa la parada a los 200 ms (no a los 199 ms)', () => {
+    vi.useFakeTimers();
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.5,
+    });
+
+    window.dispatchEvent(new Event('touchstart'));
+    window.dispatchEvent(new Event('touchmove'));
+    fijarScrollY(500);
+    window.dispatchEvent(new Event('scroll'));
+
+    dispararScrollEnd();
+    expect(video.play).not.toHaveBeenCalled();
+
+    window.dispatchEvent(new Event('touchcancel'));
+    vi.advanceTimersByTime(199);
+    expect(video.play).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(1);
+    expect(video.play).toHaveBeenCalledTimes(1);
+    expect(heroEstaReproduciendo(seccion)).toBe(true);
+
+    vi.useRealTimers();
+  });
 });
