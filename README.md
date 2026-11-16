@@ -542,7 +542,7 @@ El sitio está en Vercel y **cada push a `main` despliega a producción**.
 - El asistente, el visor de fotos y el modal de **Mis reservas** se cierran con
   `Escape` y devuelven el foco al botón que los abrió. Los mensajes y avisos se
   anuncian con `aria-live`.
-- Los videos de los heros son *all-intra* (un keyframe por cuadro), 1080p30,
+- Los videos de los heros son *all-intra* (un keyframe por cuadro), 720p30,
   sin audio y cuentan con imagen `poster` de respaldo, para que avanzar y
   retroceder con el scroll sea inmediato y fluido.
 - Las fotos de las canchas son WebP en dos tamaños (720 y 1440 px) con
