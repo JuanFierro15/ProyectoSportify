@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { esClicNormal, rutaReserva } from '../../lib/rutas';
+import { DURACION_FADE_CONTENIDO } from '../../lib/modoHero';
 import {
   heroEstaReproduciendo,
   registrarHeroSnap,
@@ -21,15 +22,12 @@ const PX_POR_SEGUNDO = 150;
 // interpola y "asienta" en pocos frames al soltar el scroll.
 const SUAVIZADO = 0.3;
 
-// Fracción del tramo para el fade de entrada y salida del texto/CTA.
-// El punto de reposo (`REPOSO_HERO` en `modoHero.js`) debe ser >= la duración
-// del fade de entrada para que el CTA quede completamente visible.
-const DURACION_FADE_CONTENIDO = 0.15;
-
-// Margen de precarga para el video: pasa a `preload = 'auto'` cuando el hero
-// está a menos de 25% de la altura del viewport de entrar en pantalla, evitando
-// descargar el segundo hero al cargar la página antes de hacer scroll.
-const MARGEN_PRECARGA = '25% 0px';
+// Sin margen extra: la primera medición ocurre antes de `loadedmetadata`,
+// cuando el pin usa la duración de respaldo (1 s = 150 px), por lo que un
+// margen de precarga alcanzaba al hero siguiente y lo descargaba al cargar.
+// Así solo se precarga el hero ya visible; el siguiente lo precarga
+// `controladorSnapHero.js` al iniciar la reproducción.
+const MARGEN_PRECARGA_VISIBLE = '0px';
 
 /**
  * DeporteHero (Bloque 2.5) — sección narrativa por deporte, reutilizable.
@@ -187,7 +185,7 @@ function DeporteHero({
               observer.disconnect();
             }
           },
-          { rootMargin: MARGEN_PRECARGA }
+          { rootMargin: MARGEN_PRECARGA_VISIBLE }
         );
         observer.observe(seccion);
       }

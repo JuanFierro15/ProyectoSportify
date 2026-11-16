@@ -1,5 +1,8 @@
 // Reglas del avance por gestos del hero.
 
+// Fracción del tramo para el fade de entrada y salida del texto/CTA.
+// `REPOSO_HERO` debe ser >= `DURACION_FADE_CONTENIDO` para que el CTA quede visible.
+export const DURACION_FADE_CONTENIDO = 0.15;
 export const REPOSO_HERO = 0.15;
 export const TOLERANCIA_REPOSO = 0.01;
 

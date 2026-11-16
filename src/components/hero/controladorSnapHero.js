@@ -119,6 +119,15 @@ function deslizarA(y, duracion, destino = null) {
   });
 }
 
+function precargarSiguiente(hero) {
+  const ordenados = herosOrdenados();
+  const indice = ordenados.indexOf(hero);
+  const siguiente = indice >= 0 ? ordenados[indice + 1] : null;
+  if (siguiente?.video && siguiente.video.preload !== 'auto') {
+    siguiente.video.preload = 'auto';
+  }
+}
+
 function irAlSiguiente(hero) {
   const ordenados = herosOrdenados();
   const indice = ordenados.indexOf(hero);
@@ -176,6 +185,7 @@ function reproducir(hero) {
   };
 
   const promesa = video.play();
+  precargarSiguiente(hero);
   if (promesa && typeof promesa.catch === 'function') {
     promesa.catch(() => {
       if (reproduciendo === hero) {
