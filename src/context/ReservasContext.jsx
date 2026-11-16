@@ -44,7 +44,7 @@ import { validarJornadas } from '../lib/torneo';
  * Consumir con el hook `useReservas()`.
  */
 
-const STORAGE_KEY = 'sportify_reservas_v2';
+export const STORAGE_KEY = 'sportify_reservas_v2';
 const DIAS_VENTANA = 7;
 
 export const ERROR_EVENTO_NO_DISPONIBLE =
@@ -612,12 +612,18 @@ export function reducer(state, action) {
 
 export function ReservasProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, undefined, crearEstadoInicial);
-  const omitirProximoEspejoRef = useRef(false);
+  const syncDesdeStorageRef = useRef(null);
 
-  // Espejo al almacenamiento local en cada cambio (salvo sync originada por evento storage).
+  // Espejo al almacenamiento local en cada cambio (salvo si el estado coincide
+  // exactamente con el payload despachado por el evento storage).
   useEffect(() => {
-    if (omitirProximoEspejoRef.current) {
-      omitirProximoEspejoRef.current = false;
+    const syncPayload = syncDesdeStorageRef.current;
+    syncDesdeStorageRef.current = null;
+    if (
+      syncPayload &&
+      state.ocupados === syncPayload.ocupados &&
+      state.reservas === syncPayload.reservas
+    ) {
       return;
     }
     try {
@@ -654,17 +660,18 @@ export function ReservasProvider({ children }) {
       const raw = typeof e.newValue === 'string' ? e.newValue : undefined;
       const guardado = leerGuardado(state.canchas, state.dias, semillaOcup, raw);
       if (guardado) {
-        omitirProximoEspejoRef.current = true;
+        syncDesdeStorageRef.current = guardado;
         dispatch({ type: 'SINCRONIZAR', payload: guardado });
         return;
       }
       if (e.key === null || e.newValue === null) {
         try {
           if (window.localStorage.getItem(STORAGE_KEY) === null) {
-            omitirProximoEspejoRef.current = true;
+            const payload = { ocupados: semillaOcup, reservas: [] };
+            syncDesdeStorageRef.current = payload;
             dispatch({
               type: 'SINCRONIZAR',
-              payload: { ocupados: semillaOcup, reservas: [] },
+              payload,
             });
           }
         } catch (err) {

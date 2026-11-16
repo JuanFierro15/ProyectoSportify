@@ -6,12 +6,12 @@ import {
   useReservas,
   reducer,
   crearEstadoInicial,
+  STORAGE_KEY,
   ERROR_EVENTO_NO_DISPONIBLE,
   ERROR_EVENTO_HORAS_NO_SEGUIDAS,
   ERROR_EVENTO_FECHA_FASE,
 } from './ReservasContext';
-
-const STORAGE_KEY = 'sportify_reservas_v2';
+import { MENSAJES_CANCELACION } from '../lib/cancelacion';
 
 describe('ReservasContext y reducer — doble validación de eventos (S3, S4)', () => {
   beforeEach(() => {
@@ -901,7 +901,10 @@ describe('ReservasContext — sincronización entre pestañas (S2, S3, S4, S5)',
     act(() => {
       resCancelar = result.current.cancelar(reservaTab1.id);
     });
-    expect(resCancelar.ok).toBe(false);
+    expect(resCancelar).toEqual({
+      ok: false,
+      error: MENSAJES_CANCELACION.noEncontrada,
+    });
     expect(result.current.reservas).toEqual([]);
   });
 
@@ -1175,5 +1178,158 @@ describe('ReservasContext — sincronización entre pestañas (S2, S3, S4, S5)',
 
     expect(resReal.ok).toBe(true);
     expect(setItemSpy).toHaveBeenCalledWith(STORAGE_KEY, expect.any(String));
+  });
+
+  it('S6: si un evento storage y un reservar() local ocurren en el mismo render, la reserva local sí se escribe en localStorage', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+
+    const dia3 = result.current.dias[3];
+    const estadoInicial = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    const ocupadosOtraPestana = structuredClone(estadoInicial.ocupados);
+    ocupadosOtraPestana['padel-1'][dia3].push('16:00');
+    const reservaOtraPestana = {
+      id: `padel-1__${dia3}__16:00__302`,
+      codigo: 'SPF-BATCH1',
+      tipo: 'individual',
+      canchaId: 'padel-1',
+      fecha: dia3,
+      hora: '16:00',
+      horas: ['16:00'],
+      nombre: 'Clara Batch',
+    };
+    const jsonOtraPestana = JSON.stringify({
+      ocupados: ocupadosOtraPestana,
+      reservas: [reservaOtraPestana],
+    });
+    window.localStorage.setItem(STORAGE_KEY, jsonOtraPestana);
+
+    let resLocal;
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: STORAGE_KEY,
+          newValue: jsonOtraPestana,
+        })
+      );
+      resLocal = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['18:00'],
+        nombre: 'Mateo Local',
+      });
+    });
+
+    expect(resLocal.ok).toBe(true);
+    expect(result.current.reservas).toHaveLength(2);
+
+    const persistido = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    expect(persistido.reservas).toHaveLength(2);
+    expect(persistido.reservas.map((r) => r.codigo)).toEqual(
+      expect.arrayContaining(['SPF-BATCH1', resLocal.codigo])
+    );
+    expect(persistido.ocupados['padel-1'][dia3]).toEqual(
+      expect.arrayContaining(['16:00', '18:00'])
+    );
+  });
+
+  it('S3: rechaza reservar un bloque si solo la última hora ya fue ocupada en localStorage sin evento storage', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+
+    const dia3 = result.current.dias[3];
+    const estadoInicial = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    const ocupadosOtraPestana = structuredClone(estadoInicial.ocupados);
+    ocupadosOtraPestana['padel-1'][dia3].push('17:00');
+    const reservaTab1 = {
+      id: `padel-1__${dia3}__17:00__401`,
+      codigo: 'SPF-ULTIMA',
+      tipo: 'individual',
+      canchaId: 'padel-1',
+      fecha: dia3,
+      hora: '17:00',
+      horas: ['17:00'],
+      nombre: 'Daniela Tab1',
+    };
+    const jsonTab1 = JSON.stringify({
+      ocupados: ocupadosOtraPestana,
+      reservas: [reservaTab1],
+    });
+    window.localStorage.setItem(STORAGE_KEY, jsonTab1);
+
+    let resBloque;
+    act(() => {
+      resBloque = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00', '17:00'],
+        nombre: 'Sofía Bloque',
+      });
+    });
+
+    expect(resBloque).toEqual({
+      ok: false,
+      error: 'Ese horario ya está reservado. Elige otro.',
+    });
+    expect(result.current.reservas).toHaveLength(1);
+    expect(result.current.reservas[0].codigo).toBe('SPF-ULTIMA');
+    expect(
+      result.current
+        .disponibilidad('padel-1', dia3)
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(true);
+    expect(
+      result.current
+        .disponibilidad('padel-1', dia3)
+        .find((h) => h.hora === '17:00').disponible
+    ).toBe(false);
+    expect(JSON.parse(window.localStorage.getItem(STORAGE_KEY))).toEqual(
+      JSON.parse(jsonTab1)
+    );
+  });
+
+  it('S2/S6: ante evento storage con key STORAGE_KEY y newValue null (removeItem en otra pestaña), vuelve a semilla y no escribe en localStorage', () => {
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+
+    const dia3 = result.current.dias[3];
+    let resLocal;
+    act(() => {
+      resLocal = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Valeria Local',
+      });
+    });
+    expect(resLocal.ok).toBe(true);
+    expect(result.current.reservas).toHaveLength(1);
+    expect(
+      result.current
+        .disponibilidad('padel-1', dia3)
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(false);
+
+    setItemSpy.mockClear();
+
+    act(() => {
+      window.localStorage.removeItem(STORAGE_KEY);
+      window.dispatchEvent(
+        new StorageEvent('storage', { key: STORAGE_KEY, newValue: null })
+      );
+    });
+
+    expect(result.current.reservas).toEqual([]);
+    expect(
+      result.current
+        .disponibilidad('padel-1', dia3)
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(true);
+    expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
+    expect(setItemSpy).not.toHaveBeenCalledWith(
+      STORAGE_KEY,
+      expect.any(String)
+    );
   });
 });
