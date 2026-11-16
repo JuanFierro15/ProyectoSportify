@@ -84,14 +84,17 @@ describe('DeporteHero - pausa del video en el cleanup', () => {
 
 describe('DeporteHero - controlador snap', () => {
   let matchMediaOriginal;
+  let intersectionObserverOriginal;
 
   beforeEach(() => {
     matchMediaOriginal = window.matchMedia;
+    intersectionObserverOriginal = window.IntersectionObserver;
     vi.clearAllMocks();
   });
 
   afterEach(() => {
     window.matchMedia = matchMediaOriginal;
+    window.IntersectionObserver = intersectionObserverOriginal;
     ScrollTrigger.getAll().forEach((t) => t.kill());
     vi.restoreAllMocks();
   });
@@ -170,5 +173,26 @@ describe('DeporteHero - controlador snap', () => {
 
     expect(desregistrar).toHaveBeenCalledTimes(1);
     expect(spyRemove).toHaveBeenCalledWith('scrollEnd', handler);
+  });
+
+  it("crea IntersectionObserver con rootMargin '25% 0px' para la precarga del video", () => {
+    simularMatchMedia('(prefers-reduced-motion: no-preference)');
+    const spyObserver = vi.fn(function (callback, options) {
+      return new intersectionObserverOriginal(callback, options);
+    });
+    window.IntersectionObserver = spyObserver;
+
+    const { unmount } = render(
+      <div>
+        <DeporteHero {...PROPS_VALIDAS} />
+      </div>
+    );
+
+    expect(spyObserver).toHaveBeenCalledTimes(1);
+    expect(spyObserver).toHaveBeenCalledWith(expect.any(Function), {
+      rootMargin: '25% 0px',
+    });
+
+    unmount();
   });
 });

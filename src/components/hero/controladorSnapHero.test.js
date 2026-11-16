@@ -91,6 +91,7 @@ describe('controladorSnapHero', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     desregistradores.splice(0).forEach((d) => d());
     document.getElementById('eventos')?.remove();
     if (scrollYOriginal) {
@@ -116,8 +117,11 @@ describe('controladorSnapHero', () => {
     });
 
     const addWheel = spyWinAdd.mock.calls.filter(([ev]) => ev === 'wheel');
+    const addClick = spyWinAdd.mock.calls.filter(([ev]) => ev === 'click');
     const addScrollEnd = spySTAdd.mock.calls.filter(([ev]) => ev === 'scrollEnd');
     expect(addWheel).toHaveLength(1);
+    expect(addClick).toHaveLength(1);
+    expect(addClick[0][2]).toEqual({ capture: true, passive: true });
     expect(addScrollEnd).toHaveLength(1);
 
     d1();
@@ -126,17 +130,24 @@ describe('controladorSnapHero', () => {
       spyWinRemove.mock.calls.filter(([ev]) => ev === 'wheel')
     ).toHaveLength(0);
     expect(
+      spyWinRemove.mock.calls.filter(([ev]) => ev === 'click')
+    ).toHaveLength(0);
+    expect(
       spySTRemove.mock.calls.filter(([ev]) => ev === 'scrollEnd')
     ).toHaveLength(0);
 
     d2();
 
     const removeWheel = spyWinRemove.mock.calls.filter(([ev]) => ev === 'wheel');
+    const removeClick = spyWinRemove.mock.calls.filter(([ev]) => ev === 'click');
     const removeScrollEnd = spySTRemove.mock.calls.filter(
       ([ev]) => ev === 'scrollEnd'
     );
     expect(removeWheel).toHaveLength(1);
     expect(removeWheel[0][1]).toBe(addWheel[0][1]);
+    expect(removeClick).toHaveLength(1);
+    expect(removeClick[0][1]).toBe(addClick[0][1]);
+    expect(removeClick[0][2]).toEqual({ capture: true });
     expect(removeScrollEnd).toHaveLength(1);
     expect(removeScrollEnd[0][1]).toBe(addScrollEnd[0][1]);
   });
@@ -237,7 +248,8 @@ describe('controladorSnapHero', () => {
     expect(gsap.to).toHaveBeenCalledTimes(1);
     expect(tweens[0].vars.scrollTo).toEqual({
       y: start2 + 0.15 * (end2 - start2),
-      autoKill: false,
+      autoKill: true,
+      onAutoKill: expect.any(Function),
     });
     expect(tweens[0].vars.duration).toBe(0.9);
   });
@@ -268,7 +280,8 @@ describe('controladorSnapHero', () => {
     expect(gsap.to).toHaveBeenCalledTimes(1);
     expect(tweens[0].vars.scrollTo).toEqual({
       y: destinoEsperado,
-      autoKill: false,
+      autoKill: true,
+      onAutoKill: expect.any(Function),
     });
 
     fijarScrollY(destinoEsperado);
@@ -334,7 +347,8 @@ describe('controladorSnapHero', () => {
     expect(gsap.to).toHaveBeenCalledTimes(1);
     expect(tweens[0].vars.scrollTo).toEqual({
       y: 2000 + 0.15 * 1000,
-      autoKill: false,
+      autoKill: true,
+      onAutoKill: expect.any(Function),
     });
   });
 
@@ -379,5 +393,383 @@ describe('controladorSnapHero', () => {
 
     expect(heroEstaReproduciendo(seccion)).toBe(false);
     expect(video.pause).toHaveBeenCalledTimes(1);
+  });
+
+  it('cancela con wheel durante la reproducción y el scrollEnd siguiente no vuelve a llamar a play', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.5,
+    });
+
+    simularGestoAbajo(500);
+    dispararScrollEnd();
+    expect(video.play).toHaveBeenCalledTimes(1);
+
+    window.dispatchEvent(new Event('wheel'));
+
+    expect(video.pause).toHaveBeenCalledTimes(1);
+    expect(heroEstaReproduciendo(seccion)).toBe(false);
+
+    dispararScrollEnd();
+
+    expect(video.play).toHaveBeenCalledTimes(1);
+  });
+
+  it('cancela con tecla ArrowDown durante la reproducción y el scrollEnd siguiente no vuelve a llamar a play', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.5,
+    });
+
+    simularGestoAbajo(500);
+    dispararScrollEnd();
+    expect(video.play).toHaveBeenCalledTimes(1);
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+
+    expect(video.pause).toHaveBeenCalledTimes(1);
+    expect(heroEstaReproduciendo(seccion)).toBe(false);
+
+    dispararScrollEnd();
+
+    expect(video.play).toHaveBeenCalledTimes(1);
+  });
+
+  it('un keydown de espacio cuyo target es un <input>, <textarea>, <select> o contentEditable NO cancela', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.5,
+    });
+
+    simularGestoAbajo(500);
+    dispararScrollEnd();
+    expect(video.play).toHaveBeenCalledTimes(1);
+
+    const editable = document.createElement('div');
+    Object.defineProperty(editable, 'isContentEditable', { value: true });
+    const campos = [
+      document.createElement('input'),
+      document.createElement('textarea'),
+      document.createElement('select'),
+      editable,
+    ];
+
+    for (const campo of campos) {
+      document.body.appendChild(campo);
+      campo.dispatchEvent(
+        new KeyboardEvent('keydown', { key: ' ', bubbles: true })
+      );
+      campo.remove();
+    }
+
+    expect(video.pause).not.toHaveBeenCalled();
+    expect(heroEstaReproduciendo(seccion)).toBe(true);
+  });
+
+  it('scroll externo durante la reproducción (> 4 px) cancela y no vuelve a llamar a scrollTo', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.5,
+    });
+
+    simularGestoAbajo(500);
+    dispararScrollEnd();
+    expect(heroEstaReproduciendo(seccion)).toBe(true);
+
+    video.currentTime = 5.5;
+    gsap.ticker.tick();
+    expect(window.scrollTo).toHaveBeenLastCalledWith(0, 550);
+
+    window.scrollTo.mockClear();
+    video.currentTime = 6;
+    fijarScrollY(555);
+    gsap.ticker.tick();
+
+    expect(video.pause).toHaveBeenCalledTimes(1);
+    expect(heroEstaReproduciendo(seccion)).toBe(false);
+    expect(window.scrollTo).not.toHaveBeenCalled();
+  });
+
+  it('con exactamente 4 px de diferencia respecto a lo escrito NO cancela', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.5,
+    });
+
+    simularGestoAbajo(500);
+    dispararScrollEnd();
+
+    video.currentTime = 5.5;
+    gsap.ticker.tick();
+    expect(window.scrollTo).toHaveBeenLastCalledWith(0, 550);
+
+    window.scrollTo.mockClear();
+    video.currentTime = 6;
+    fijarScrollY(554);
+    gsap.ticker.tick();
+
+    expect(video.pause).not.toHaveBeenCalled();
+    expect(heroEstaReproduciendo(seccion)).toBe(true);
+    expect(window.scrollTo).toHaveBeenCalledWith(0, 600);
+  });
+
+  it('pointerdown durante la reproducción cancela y sin avance no marca entrada', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.5,
+    });
+
+    // pointerdown en reposo no habilita scrollEnd posterior.
+    fijarScrollY(500);
+    window.dispatchEvent(new Event('pointerdown'));
+    dispararScrollEnd();
+    expect(video.play).not.toHaveBeenCalled();
+
+    simularGestoAbajo(500);
+    dispararScrollEnd();
+    expect(heroEstaReproduciendo(seccion)).toBe(true);
+
+    window.dispatchEvent(new Event('pointerdown'));
+    expect(video.pause).toHaveBeenCalledTimes(1);
+    expect(heroEstaReproduciendo(seccion)).toBe(false);
+
+    dispararScrollEnd();
+    expect(video.play).toHaveBeenCalledTimes(1);
+  });
+
+  it('pointerdown durante el deslizamiento (deslizarA) mata el tween y limpia el estado', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.05,
+    });
+
+    simularGestoAbajo(50);
+    dispararScrollEnd();
+    expect(gsap.to).toHaveBeenCalledTimes(1);
+
+    window.dispatchEvent(new Event('pointerdown'));
+    expect(tweens[0].kill).toHaveBeenCalledTimes(1);
+
+    dispararScrollEnd();
+    expect(gsap.to).toHaveBeenCalledTimes(1);
+    expect(video.pause).not.toHaveBeenCalled();
+  });
+
+  it('click sobre un enlace durante la reproducción cancela (pause) y un scrollEnd siguiente no llama a play', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.5,
+    });
+
+    const enlace = document.createElement('a');
+    enlace.href = '#ubicacion';
+    document.body.appendChild(enlace);
+
+    simularGestoAbajo(500);
+    dispararScrollEnd();
+    expect(video.play).toHaveBeenCalledTimes(1);
+    expect(heroEstaReproduciendo(seccion)).toBe(true);
+
+    enlace.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(video.pause).toHaveBeenCalledTimes(1);
+    expect(heroEstaReproduciendo(seccion)).toBe(false);
+
+    dispararScrollEnd();
+    expect(video.play).toHaveBeenCalledTimes(1);
+
+    enlace.remove();
+  });
+
+  it('click sobre un enlace durante un deslizamiento (deslizarA) mata el tween una vez', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.05,
+    });
+
+    const enlace = document.createElement('a');
+    enlace.href = '#ubicacion';
+    document.body.appendChild(enlace);
+
+    simularGestoAbajo(50);
+    dispararScrollEnd();
+    expect(gsap.to).toHaveBeenCalledTimes(1);
+
+    enlace.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(tweens[0].kill).toHaveBeenCalledTimes(1);
+    dispararScrollEnd();
+    expect(gsap.to).toHaveBeenCalledTimes(1);
+    expect(video.pause).not.toHaveBeenCalled();
+
+    enlace.remove();
+  });
+
+  it('click sobre un enlace en reposo, sin avance, seguido de scrollEnd NO llama a play', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.5,
+    });
+
+    const enlace = document.createElement('a');
+    enlace.href = '#ubicacion';
+    document.body.appendChild(enlace);
+
+    fijarScrollY(500);
+    enlace.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    dispararScrollEnd();
+
+    expect(video.play).not.toHaveBeenCalled();
+    expect(gsap.to).not.toHaveBeenCalled();
+    expect(heroEstaReproduciendo(seccion)).toBe(false);
+
+    enlace.remove();
+  });
+
+  it('deslizarA pasa autoKill: true y al invocar onAutoKill deja el estado limpio', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10 });
+    let progreso = 0.05;
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => progreso,
+    });
+
+    simularGestoAbajo(50);
+    dispararScrollEnd();
+    expect(gsap.to).toHaveBeenCalledTimes(1);
+    expect(tweens[0].vars.scrollTo.autoKill).toBe(true);
+    expect(typeof tweens[0].vars.scrollTo.onAutoKill).toBe('function');
+
+    fijarScrollY(500);
+    progreso = 0.5;
+    tweens[0].vars.scrollTo.onAutoKill();
+
+    expect(video.pause).not.toHaveBeenCalled();
+    dispararScrollEnd();
+    expect(gsap.to).toHaveBeenCalledTimes(1);
+    expect(video.play).not.toHaveBeenCalled();
+  });
+
+  it('estado inicial: un scrollEnd sin entrada previa del usuario a mitad de un hero NO llama a play', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.5,
+    });
+
+    fijarScrollY(500);
+    window.dispatchEvent(new Event('scroll'));
+    dispararScrollEnd();
+
+    expect(video.play).not.toHaveBeenCalled();
+    expect(gsap.to).not.toHaveBeenCalled();
+    expect(heroEstaReproduciendo(seccion)).toBe(false);
+  });
+
+  it('con dedoAbajo (touchstart sin touchend), scrollEnd no actúa; tras touchend y 200 ms sin inercia sí actúa', () => {
+    vi.useFakeTimers();
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.5,
+    });
+
+    window.dispatchEvent(new Event('touchstart'));
+    window.dispatchEvent(new Event('touchmove'));
+    fijarScrollY(500);
+    window.dispatchEvent(new Event('scroll'));
+
+    dispararScrollEnd();
+    expect(video.play).not.toHaveBeenCalled();
+
+    window.dispatchEvent(new Event('touchend'));
+    vi.advanceTimersByTime(199);
+    expect(video.play).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(1);
+    expect(video.play).toHaveBeenCalledTimes(1);
+    expect(heroEstaReproduciendo(seccion)).toBe(true);
+
+    vi.useRealTimers();
+  });
+
+  it('tras touchend, si scrollY cambia por inercia antes de 200 ms, el timeout no actúa', () => {
+    vi.useFakeTimers();
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.5,
+    });
+
+    window.dispatchEvent(new Event('touchstart'));
+    window.dispatchEvent(new Event('touchmove'));
+    fijarScrollY(500);
+    window.dispatchEvent(new Event('scroll'));
+    window.dispatchEvent(new Event('touchend'));
+
+    // La inercia mueve scrollY antes de que venzan los 200 ms.
+    fijarScrollY(560);
+    vi.advanceTimersByTime(200);
+    expect(video.play).not.toHaveBeenCalled();
+
+    // El nuevo touchstart también limpia cualquier timeout previo y touchcancel libera dedoAbajo.
+    window.dispatchEvent(new Event('touchstart'));
+    window.dispatchEvent(new Event('touchcancel'));
+    dispararScrollEnd();
+    expect(video.play).toHaveBeenCalledTimes(1);
+
+    vi.useRealTimers();
   });
 });
