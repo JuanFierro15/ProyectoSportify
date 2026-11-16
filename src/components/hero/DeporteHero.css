@@ -68,6 +68,10 @@
 }
 
 @media screen and (min-width: 64em) {
+  .deporte-hero__bloque {
+    max-width: min(32rem, 36vw);
+  }
+
   .deporte-hero--texto-izquierda .deporte-hero__contenido {
     align-items: center;
     justify-content: flex-start;
@@ -115,6 +119,7 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--acento, #f6a94b);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
 }
 
 .deporte-hero__titulo {

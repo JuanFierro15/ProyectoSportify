@@ -88,7 +88,7 @@ function DeporteHero({
   ultimoDeporte = false,
 }) {
   const rootRef = useRef(null);
-  const contenidoRef = useRef(null);
+  const bloqueRef = useRef(null);
   const videoRef = useRef(null);
   const posicionValida = POSICIONES_TEXTO_HERO.includes(posicionTexto)
     ? posicionTexto
@@ -96,7 +96,7 @@ function DeporteHero({
 
   useEffect(() => {
     const seccion = rootRef.current;
-    const contenido = contenidoRef.current;
+    const bloque = bloqueRef.current;
     const video = videoRef.current;
 
     const mm = gsap.matchMedia(rootRef);
@@ -133,9 +133,9 @@ function DeporteHero({
       });
       const st = tl.scrollTrigger;
 
-      // Contenido: entra en el primer tramo del pin y se va en el último.
+      // Bloque de texto: entra en el primer tramo del pin y se va en el último.
       tl.fromTo(
-        contenido,
+        bloque,
         { autoAlpha: 0, scale: 0.92, y: 20 },
         {
           autoAlpha: 1,
@@ -146,7 +146,7 @@ function DeporteHero({
         },
         0
       ).to(
-        contenido,
+        bloque,
         {
           autoAlpha: 0,
           scale: 1.06,
@@ -235,8 +235,8 @@ function DeporteHero({
 
       <div className="deporte-hero__overlay" aria-hidden="true" />
 
-      <div className="grid-container deporte-hero__contenido" ref={contenidoRef}>
-        <div className="deporte-hero__bloque">
+      <div className="grid-container deporte-hero__contenido">
+        <div className="deporte-hero__bloque" ref={bloqueRef}>
           <p className="deporte-hero__eyebrow">{eyebrow}</p>
           <h2 className="deporte-hero__titulo">{nombre}</h2>
           {/* En móvil (menos de 640px) solo título y botón: show-for-medium

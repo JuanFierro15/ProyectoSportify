@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
+import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import DeporteHero from './DeporteHero';
 import { registrarHeroSnap } from './controladorSnapHero';
@@ -285,5 +286,46 @@ describe('DeporteHero - posicionTexto', () => {
 
     const seccion = container.querySelector('section');
     expect(seccion).toHaveClass('deporte-hero--texto-izquierda');
+  });
+});
+
+describe('DeporteHero - animación del bloque de texto', () => {
+  let matchMediaOriginal;
+
+  beforeEach(() => {
+    matchMediaOriginal = window.matchMedia;
+  });
+
+  afterEach(() => {
+    window.matchMedia = matchMediaOriginal;
+    ScrollTrigger.getAll().forEach((t) => t.kill());
+    vi.restoreAllMocks();
+  });
+
+  it('anima fade y escala sobre .deporte-hero__bloque y los limpia al desmontar', () => {
+    simularMatchMedia('(prefers-reduced-motion: no-preference)');
+
+    const { container, unmount } = render(
+      <div>
+        <DeporteHero {...PROPS_VALIDAS} />
+      </div>
+    );
+
+    const contenido = container.querySelector('.deporte-hero__contenido');
+    const bloque = container.querySelector('.deporte-hero__bloque');
+
+    expect(gsap.getTweensOf(contenido)).toHaveLength(0);
+
+    const tweensBloque = gsap.getTweensOf(bloque);
+    expect(tweensBloque).toHaveLength(2);
+    expect(tweensBloque[0].vars.scale).toBe(1);
+    expect(tweensBloque[0].vars.autoAlpha).toBe(1);
+    expect(tweensBloque[1].vars.scale).toBe(1.06);
+    expect(tweensBloque[1].vars.autoAlpha).toBe(0);
+
+    unmount();
+
+    expect(gsap.getTweensOf(bloque)).toHaveLength(0);
+    expect(ScrollTrigger.getAll()).toHaveLength(0);
   });
 });
