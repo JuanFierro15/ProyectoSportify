@@ -6,11 +6,17 @@ import {
   registrarHeroSnap,
 } from './controladorSnapHero';
 
-function crearVideoMock({ duration = 10, currentTime = 0, ended = false } = {}) {
+function crearVideoMock({
+  duration = 10,
+  currentTime = 0,
+  ended = false,
+  preload = 'metadata',
+} = {}) {
   const video = new EventTarget();
   video.duration = duration;
   video.currentTime = currentTime;
   video.ended = ended;
+  video.preload = preload;
   video.play = vi.fn(() => Promise.resolve());
   video.pause = vi.fn();
   return video;
@@ -771,5 +777,141 @@ describe('controladorSnapHero', () => {
     expect(video.play).toHaveBeenCalledTimes(1);
 
     vi.useRealTimers();
+  });
+
+  it('al reproducir el hero 1 con 3 heros registrados pone preload = "auto" en el hero 2 y deja el 3 en "metadata"', () => {
+    const video1 = crearVideoMock({ duration: 10, preload: 'metadata' });
+    const video2 = crearVideoMock({ duration: 10, preload: 'metadata' });
+    const video3 = crearVideoMock({ duration: 10, preload: 'metadata' });
+
+    registrar({
+      seccion: document.createElement('section'),
+      video: video1,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.5,
+    });
+    registrar({
+      seccion: document.createElement('section'),
+      video: video2,
+      st: { start: 2000, end: 3000 },
+      progresoObjetivo: () => 0,
+    });
+    registrar({
+      seccion: document.createElement('section'),
+      video: video3,
+      st: { start: 4000, end: 5000 },
+      progresoObjetivo: () => 0,
+    });
+
+    simularGestoAbajo(500);
+    dispararScrollEnd();
+
+    expect(video1.play).toHaveBeenCalledTimes(1);
+    expect(video2.preload).toBe('auto');
+    expect(video3.preload).toBe('metadata');
+    expect(video1.preload).toBe('metadata');
+  });
+
+  it('al reproducir el último hero no cambia el preload de ningún otro hero', () => {
+    const video1 = crearVideoMock({ duration: 10, preload: 'metadata' });
+    const video2 = crearVideoMock({ duration: 10, preload: 'metadata' });
+    const video3 = crearVideoMock({ duration: 10, preload: 'metadata' });
+
+    registrar({
+      seccion: document.createElement('section'),
+      video: video1,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0,
+    });
+    registrar({
+      seccion: document.createElement('section'),
+      video: video2,
+      st: { start: 2000, end: 3000 },
+      progresoObjetivo: () => 0,
+    });
+    registrar({
+      seccion: document.createElement('section'),
+      video: video3,
+      st: { start: 4000, end: 5000 },
+      progresoObjetivo: () => 0.5,
+    });
+
+    simularGestoAbajo(4500);
+    dispararScrollEnd();
+
+    expect(video3.play).toHaveBeenCalledTimes(1);
+    expect(video1.preload).toBe('metadata');
+    expect(video2.preload).toBe('metadata');
+    expect(video3.preload).toBe('metadata');
+  });
+
+  it('antes de reproducir (solo registrar y scrollEnd sin entrada) ningún preload cambia', () => {
+    const video1 = crearVideoMock({ duration: 10, preload: 'metadata' });
+    const video2 = crearVideoMock({ duration: 10, preload: 'metadata' });
+    const video3 = crearVideoMock({ duration: 10, preload: 'metadata' });
+
+    registrar({
+      seccion: document.createElement('section'),
+      video: video1,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.5,
+    });
+    registrar({
+      seccion: document.createElement('section'),
+      video: video2,
+      st: { start: 2000, end: 3000 },
+      progresoObjetivo: () => 0,
+    });
+    registrar({
+      seccion: document.createElement('section'),
+      video: video3,
+      st: { start: 4000, end: 5000 },
+      progresoObjetivo: () => 0,
+    });
+
+    fijarScrollY(500);
+    window.dispatchEvent(new Event('scroll'));
+    dispararScrollEnd();
+
+    expect(video1.play).not.toHaveBeenCalled();
+    expect(video1.preload).toBe('metadata');
+    expect(video2.preload).toBe('metadata');
+    expect(video3.preload).toBe('metadata');
+  });
+
+  it('si reproducir sale antes por progreso al final (irAlSiguiente sin play) no precarga ningún hero extra', () => {
+    const dur = 10;
+    const progresoLimite = 1 - 0.05 / dur;
+    const video1 = crearVideoMock({ duration: dur, preload: 'metadata' });
+    const video2 = crearVideoMock({ duration: dur, preload: 'metadata' });
+    const video3 = crearVideoMock({ duration: dur, preload: 'metadata' });
+
+    registrar({
+      seccion: document.createElement('section'),
+      video: video1,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => progresoLimite,
+    });
+    registrar({
+      seccion: document.createElement('section'),
+      video: video2,
+      st: { start: 2000, end: 3000 },
+      progresoObjetivo: () => 0,
+    });
+    registrar({
+      seccion: document.createElement('section'),
+      video: video3,
+      st: { start: 4000, end: 5000 },
+      progresoObjetivo: () => 0,
+    });
+
+    simularGestoAbajo(progresoLimite * 1000);
+    dispararScrollEnd();
+
+    expect(video1.play).not.toHaveBeenCalled();
+    expect(gsap.to).toHaveBeenCalledTimes(1);
+    expect(video1.preload).toBe('metadata');
+    expect(video2.preload).toBe('metadata');
+    expect(video3.preload).toBe('metadata');
   });
 });

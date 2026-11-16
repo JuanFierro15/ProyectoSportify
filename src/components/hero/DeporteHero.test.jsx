@@ -175,7 +175,7 @@ describe('DeporteHero - controlador snap', () => {
     expect(spyRemove).toHaveBeenCalledWith('scrollEnd', handler);
   });
 
-  it("crea IntersectionObserver con rootMargin '25% 0px' para la precarga del video", () => {
+  it("crea IntersectionObserver con rootMargin '0px' para la precarga del video", () => {
     simularMatchMedia('(prefers-reduced-motion: no-preference)');
     const spyObserver = vi.fn(function (callback, options) {
       return new intersectionObserverOriginal(callback, options);
@@ -190,7 +190,7 @@ describe('DeporteHero - controlador snap', () => {
 
     expect(spyObserver).toHaveBeenCalledTimes(1);
     expect(spyObserver).toHaveBeenCalledWith(expect.any(Function), {
-      rootMargin: '25% 0px',
+      rootMargin: '0px',
     });
 
     unmount();

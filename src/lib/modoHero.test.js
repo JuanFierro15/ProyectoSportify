@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  DURACION_FADE_CONTENIDO,
   REPOSO_HERO,
   TOLERANCIA_REPOSO,
   decidirAccionHero,
@@ -7,8 +8,13 @@ import {
 
 describe('modoHero', () => {
   it('expone las constantes esperadas', () => {
+    expect(DURACION_FADE_CONTENIDO).toBe(0.15);
     expect(REPOSO_HERO).toBe(0.15);
     expect(TOLERANCIA_REPOSO).toBe(0.01);
+  });
+
+  it('mantiene REPOSO_HERO >= DURACION_FADE_CONTENIDO para que el CTA quede visible', () => {
+    expect(REPOSO_HERO).toBeGreaterThanOrEqual(DURACION_FADE_CONTENIDO);
   });
 });
 
