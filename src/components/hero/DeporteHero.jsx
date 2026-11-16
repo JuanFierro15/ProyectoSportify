@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { REPOSO_HERO } from '../../lib/modoHero';
 import { esClicNormal, rutaReserva } from '../../lib/rutas';
 import {
   heroEstaReproduciendo,
@@ -21,6 +20,16 @@ const PX_POR_SEGUNDO = 150;
 // esta fracción (0-1). 1 = 1:1 duro con el scroll (más brusco). ~0.2-0.4 =
 // interpola y "asienta" en pocos frames al soltar el scroll.
 const SUAVIZADO = 0.3;
+
+// Fracción del tramo para el fade de entrada y salida del texto/CTA.
+// El punto de reposo (`REPOSO_HERO` en `modoHero.js`) debe ser >= la duración
+// del fade de entrada para que el CTA quede completamente visible.
+const DURACION_FADE_CONTENIDO = 0.15;
+
+// Margen de precarga para el video: pasa a `preload = 'auto'` cuando el hero
+// está a menos de 25% de la altura del viewport de entrar en pantalla, evitando
+// descargar el segundo hero al cargar la página antes de hacer scroll.
+const MARGEN_PRECARGA = '25% 0px';
 
 /**
  * DeporteHero (Bloque 2.5) — sección narrativa por deporte, reutilizable.
@@ -128,7 +137,7 @@ function DeporteHero({
           scale: 1,
           y: 0,
           ease: 'power2.out',
-          duration: REPOSO_HERO,
+          duration: DURACION_FADE_CONTENIDO,
         },
         0
       ).to(
@@ -138,9 +147,9 @@ function DeporteHero({
           scale: 1.06,
           y: -14,
           ease: 'power2.in',
-          duration: REPOSO_HERO,
+          duration: DURACION_FADE_CONTENIDO,
         },
-        1 - REPOSO_HERO
+        1 - DURACION_FADE_CONTENIDO
       );
 
       // Bucle que acerca el frame del video al objetivo sin encolar seeks.
@@ -178,7 +187,7 @@ function DeporteHero({
               observer.disconnect();
             }
           },
-          { rootMargin: '100% 0px' }
+          { rootMargin: MARGEN_PRECARGA }
         );
         observer.observe(seccion);
       }
