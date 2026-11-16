@@ -10,7 +10,7 @@ import Ubicacion from '../ubicacion/Ubicacion';
 gsap.registerPlugin(ScrollTrigger);
 
 // Videos de fondo de los heros por deporte (en public/media/).
-// Son versiones web ligeras: 1080p, keyframe por frame (para que el scrubbing
+// Son versiones web ligeras: 720p, keyframe por frame (para que el scrubbing
 // por scroll sea fluido) y +faststart. Los originales en alta calidad están
 // en public/media/fuente/ (fuera del repo).
 // BASE_URL de Vite ya termina en '/': con otra barra quedaría `//media/...`,
