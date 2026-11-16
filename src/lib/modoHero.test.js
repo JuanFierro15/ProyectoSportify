@@ -6,6 +6,7 @@ import {
   accionPorGesto,
   enReposoDeTramo,
   indiceHeroEnZona,
+  puedeDesplazarAncestro,
   reposoDeTramo,
   reposoMasCercano,
 } from './modoHero';
@@ -200,5 +201,64 @@ describe('accionPorGesto', () => {
         totalHeros: 3,
       })
     ).toBeNull();
+  });
+});
+
+describe('puedeDesplazarAncestro', () => {
+  it('devuelve true si algún ancestro con overflow-y auto/scroll puede desplazarse en la dirección dada', () => {
+    expect(
+      puedeDesplazarAncestro(
+        [
+          { overflowY: 'visible', scrollTop: 0, scrollHeight: 500, clientHeight: 200 },
+          { overflowY: 'auto', scrollTop: 0, scrollHeight: 400, clientHeight: 200 },
+        ],
+        1
+      )
+    ).toBe(true);
+
+    expect(
+      puedeDesplazarAncestro(
+        [{ overflowY: 'scroll', scrollTop: 50, scrollHeight: 400, clientHeight: 200 }],
+        -1
+      )
+    ).toBe(true);
+  });
+
+  it('devuelve false si el ancestro ya llegó al tope en esa dirección o no tiene desbordamiento', () => {
+    expect(
+      puedeDesplazarAncestro(
+        [{ overflowY: 'auto', scrollTop: 200, scrollHeight: 400, clientHeight: 200 }],
+        1
+      )
+    ).toBe(false);
+
+    expect(
+      puedeDesplazarAncestro(
+        [{ overflowY: 'auto', scrollTop: 0, scrollHeight: 400, clientHeight: 200 }],
+        -1
+      )
+    ).toBe(false);
+
+    expect(
+      puedeDesplazarAncestro(
+        [{ overflowY: 'auto', scrollTop: 0, scrollHeight: 200, clientHeight: 200 }],
+        1
+      )
+    ).toBe(false);
+
+    expect(
+      puedeDesplazarAncestro(
+        [{ overflowY: 'hidden', scrollTop: 50, scrollHeight: 400, clientHeight: 200 }],
+        1
+      )
+    ).toBe(false);
+
+    expect(puedeDesplazarAncestro([], 1)).toBe(false);
+    expect(
+      puedeDesplazarAncestro(
+        [{ overflowY: 'auto', scrollTop: 50, scrollHeight: 400, clientHeight: 200 }],
+        0
+      )
+    ).toBe(false);
   });
 });

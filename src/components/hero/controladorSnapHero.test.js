@@ -215,7 +215,7 @@ describe('controladorSnapHero', () => {
     expect(heroEstaReproduciendo(seccion)).toBe(true);
   });
 
-  it('después de finAuto, un scrollEnd sin entrada nueva del usuario no hace nada', () => {
+  it('después de finAuto en reposo, un scrollEnd no vuelve a deslizar ni reproduce', () => {
     const seccion = document.createElement('section');
     const video = crearVideoMock({ duration: 10 });
     let progreso = 0.05;
@@ -231,10 +231,9 @@ describe('controladorSnapHero', () => {
     dispararScrollEnd();
     expect(gsap.to).toHaveBeenCalledTimes(1);
 
-    // Simula el final del deslizamiento automático; aunque y esté fuera de
-    // reposo, sin una entrada nueva del usuario scrollEnd no debe actuar.
-    fijarScrollY(500);
-    progreso = 0.5;
+    // Al terminar el deslizamiento en el punto de reposo (150), scrollEnd no dispara otro tween.
+    fijarScrollY(150);
+    progreso = 0.15;
     tweens[0].vars.onComplete();
 
     dispararScrollEnd();
@@ -633,8 +632,11 @@ describe('controladorSnapHero', () => {
     window.dispatchEvent(new Event('pointerdown'));
     expect(tweens[0].kill).toHaveBeenCalledTimes(1);
 
+    // Si quedó fuera de reposo, scrollEnd acomoda al reposo y nunca reproduce.
     dispararScrollEnd();
-    expect(gsap.to).toHaveBeenCalledTimes(1);
+    expect(gsap.to).toHaveBeenCalledTimes(2);
+    expect(tweens[1].vars.scrollTo.y).toBe(150);
+    expect(video.play).not.toHaveBeenCalled();
     expect(video.pause).not.toHaveBeenCalled();
   });
 
@@ -690,6 +692,7 @@ describe('controladorSnapHero', () => {
     enlace.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
     expect(tweens[0].kill).toHaveBeenCalledTimes(1);
+    fijarScrollY(150);
     dispararScrollEnd();
     expect(gsap.to).toHaveBeenCalledTimes(1);
     expect(video.pause).not.toHaveBeenCalled();
@@ -704,14 +707,14 @@ describe('controladorSnapHero', () => {
       seccion,
       video,
       st: { start: 0, end: 1000 },
-      progresoObjetivo: () => 0.5,
+      progresoObjetivo: () => 0.15,
     });
 
     const enlace = document.createElement('a');
     enlace.href = '#ubicacion';
     document.body.appendChild(enlace);
 
-    fijarScrollY(500);
+    fijarScrollY(150);
     enlace.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     dispararScrollEnd();
 
@@ -745,12 +748,14 @@ describe('controladorSnapHero', () => {
     tweens[0].vars.scrollTo.onAutoKill();
 
     expect(video.pause).not.toHaveBeenCalled();
+    // Con el estado limpio (autoActivo = false), scrollEnd acomoda al reposo sin reproducir.
     dispararScrollEnd();
-    expect(gsap.to).toHaveBeenCalledTimes(1);
+    expect(gsap.to).toHaveBeenCalledTimes(2);
+    expect(tweens[1].vars.scrollTo.y).toBe(150);
     expect(video.play).not.toHaveBeenCalled();
   });
 
-  it('estado inicial: un scrollEnd sin entrada previa del usuario a mitad de un hero NO llama a play', () => {
+  it('estado inicial: un scrollEnd sin entrada previa del usuario a mitad de un hero acomoda al reposo y NO llama a play', () => {
     const seccion = document.createElement('section');
     const video = crearVideoMock({ duration: 10 });
     registrar({
@@ -765,7 +770,8 @@ describe('controladorSnapHero', () => {
     dispararScrollEnd();
 
     expect(video.play).not.toHaveBeenCalled();
-    expect(gsap.to).not.toHaveBeenCalled();
+    expect(gsap.to).toHaveBeenCalledTimes(1);
+    expect(tweens[0].vars.scrollTo.y).toBe(150);
     expect(heroEstaReproduciendo(seccion)).toBe(false);
   });
 
@@ -988,18 +994,17 @@ describe('controladorSnapHero', () => {
     }
   );
 
-  it('en el último hero sin #eventos en el DOM, ended no llama a gsap.to y scrollEnd sin entrada nueva no hace nada', () => {
+  it('en el último hero sin #eventos en el DOM, ended no llama a gsap.to y scrollEnd en reposo no hace nada', () => {
     const seccion = document.createElement('section');
     const video = crearVideoMock({ duration: 10 });
     registrar({
       seccion,
       video,
       st: { start: 0, end: 1000 },
-      progresoObjetivo: () => 0.5,
+      progresoObjetivo: () => 0.15,
     });
 
-    simularGestoAbajo(500);
-    dispararScrollEnd();
+    simularGestoAbajo(150);
     expect(video.play).toHaveBeenCalledTimes(1);
 
     video.dispatchEvent(new Event('ended'));
@@ -1397,5 +1402,162 @@ describe('controladorSnapHero', () => {
     const evFuera = crearEventoWheel(-120);
     window.dispatchEvent(evFuera);
     expect(evFuera.defaultPrevented).toBe(false);
+  });
+
+  it('wheel y touchmove dentro de un elemento desplazable que puede desplazarse en esa dirección no se previenen ni reproducen; al llegar al extremo sí se interceptan', () => {
+    const video = crearVideoMock({ duration: 10, currentTime: 1.5 });
+    registrar({
+      seccion: document.createElement('section'),
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.15,
+    });
+
+    const caja = document.createElement('div');
+    caja.style.overflowY = 'auto';
+    Object.defineProperty(caja, 'scrollHeight', { value: 400, configurable: true });
+    Object.defineProperty(caja, 'clientHeight', { value: 200, configurable: true });
+    caja.scrollTop = 50;
+    const hijo = document.createElement('p');
+    caja.appendChild(hijo);
+    document.body.appendChild(caja);
+
+    fijarScrollY(150);
+
+    // Puede bajar (50 + 200 < 400): no intercepta wheel.
+    const evWheelAbajo = crearEventoWheel(120);
+    hijo.dispatchEvent(evWheelAbajo);
+    expect(evWheelAbajo.defaultPrevented).toBe(false);
+    expect(video.play).not.toHaveBeenCalled();
+
+    // Puede bajar: no intercepta touchmove.
+    hijo.dispatchEvent(crearEventoTouch('touchstart', 300));
+    const evTouchAbajo = crearEventoTouch('touchmove', 250);
+    hijo.dispatchEvent(evTouchAbajo);
+    expect(evTouchAbajo.defaultPrevented).toBe(false);
+    expect(video.play).not.toHaveBeenCalled();
+    window.dispatchEvent(new Event('touchend'));
+
+    // Al llegar al fondo (scrollTop = 200), wheel hacia abajo sí intercepta.
+    caja.scrollTop = 200;
+    const evWheelFondo = crearEventoWheel(120);
+    hijo.dispatchEvent(evWheelFondo);
+    expect(evWheelFondo.defaultPrevented).toBe(true);
+    expect(video.play).toHaveBeenCalledTimes(1);
+
+    caja.remove();
+  });
+
+  it('wheel y touchmove dentro de .chatbot o dialog[open] nunca se interceptan aunque estén en el extremo de scroll', () => {
+    const video = crearVideoMock({ duration: 10, currentTime: 1.5 });
+    registrar({
+      seccion: document.createElement('section'),
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.15,
+    });
+
+    const chatbot = document.createElement('div');
+    chatbot.className = 'chatbot';
+    const mensajes = document.createElement('div');
+    mensajes.style.overflowY = 'auto';
+    Object.defineProperty(mensajes, 'scrollHeight', { value: 400, configurable: true });
+    Object.defineProperty(mensajes, 'clientHeight', { value: 200, configurable: true });
+    mensajes.scrollTop = 200; // Ya al final.
+    chatbot.appendChild(mensajes);
+    document.body.appendChild(chatbot);
+
+    fijarScrollY(150);
+
+    const evWheelChat = crearEventoWheel(120);
+    mensajes.dispatchEvent(evWheelChat);
+    expect(evWheelChat.defaultPrevented).toBe(false);
+    expect(video.play).not.toHaveBeenCalled();
+
+    mensajes.dispatchEvent(crearEventoTouch('touchstart', 300));
+    const evTouchChat = crearEventoTouch('touchmove', 250);
+    mensajes.dispatchEvent(evTouchChat);
+    expect(evTouchChat.defaultPrevented).toBe(false);
+    expect(video.play).not.toHaveBeenCalled();
+    window.dispatchEvent(new Event('touchend'));
+    chatbot.remove();
+
+    const dialogo = document.createElement('dialog');
+    dialogo.setAttribute('open', '');
+    document.body.appendChild(dialogo);
+    const evWheelDialog = crearEventoWheel(120);
+    dialogo.dispatchEvent(evWheelDialog);
+    expect(evWheelDialog.defaultPrevented).toBe(false);
+    expect(video.play).not.toHaveBeenCalled();
+    dialogo.remove();
+  });
+
+  it('scrollEnd detenido en el hueco entre dos heros sin entrada previa de wheel/touch/tecla acomoda al reposo más cercano y no reproduce', () => {
+    const video1 = crearVideoMock({ duration: 10 });
+    const video2 = crearVideoMock({ duration: 10 });
+    registrar({
+      seccion: document.createElement('section'),
+      video: video1,
+      st: { start: 0, end: 600 },
+      progresoObjetivo: () => 0.15,
+    });
+    registrar({
+      seccion: document.createElement('section'),
+      video: video2,
+      st: { start: 1500, end: 2100 },
+      progresoObjetivo: () => 0.15,
+    });
+
+    fijarScrollY(790);
+    dispararScrollEnd();
+
+    expect(gsap.to).toHaveBeenCalledTimes(1);
+    expect(tweens[0].vars.scrollTo.y).toBe(1500 + 0.15 * 600);
+    expect(video1.play).not.toHaveBeenCalled();
+    expect(video2.play).not.toHaveBeenCalled();
+  });
+
+  it('transicionarA llama ScrollTrigger.update() después del salto y el fade-out no empieza en el mismo tick', () => {
+    const spyTimeline = vi.spyOn(gsap, 'timeline');
+    const spySTUpdate = vi.spyOn(ScrollTrigger, 'update').mockImplementation(() => {});
+    const video1 = crearVideoMock({ duration: 10, currentTime: 1.5 });
+    const video2 = crearVideoMock({ duration: 10 });
+    registrar({
+      seccion: document.createElement('section'),
+      video: video1,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.15,
+    });
+    registrar({
+      seccion: document.createElement('section'),
+      video: video2,
+      st: { start: 2000, end: 3000 },
+      progresoObjetivo: () => 0,
+    });
+
+    fijarScrollY(150);
+    window.dispatchEvent(crearEventoWheel(120));
+    video1.dispatchEvent(new Event('ended'));
+
+    expect(spyTimeline).toHaveBeenCalledTimes(1);
+    const tl = spyTimeline.mock.results[0].value;
+    const overlay = document.querySelector('.deporte-hero__transicion');
+
+    // Al llegar al salto (0.15 s): ejecuta scrollTo y luego ScrollTrigger.update(), con cortina opaca.
+    tl.time(0.15);
+    expect(window.scrollTo).toHaveBeenCalledWith(0, 2150);
+    expect(spySTUpdate).toHaveBeenCalledTimes(1);
+    expect(spySTUpdate.mock.invocationCallOrder[0]).toBeGreaterThan(
+      window.scrollTo.mock.invocationCallOrder.at(-1)
+    );
+    expect(overlay.style.opacity).toBe('1');
+
+    // Un instante después del salto (0.17 s), la cortina sigue completamente opaca antes del fade-out.
+    tl.time(0.17);
+    expect(overlay.style.opacity).toBe('1');
+
+    // Al completar la transición, la cortina queda en 0.
+    tl.progress(1);
+    expect(overlay.style.opacity).toBe('0');
   });
 });

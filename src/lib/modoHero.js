@@ -120,3 +120,32 @@ export function accionPorGesto({
 
   return indiceHero > 0 ? 'anterior' : null;
 }
+
+/**
+ * Indica si algún ancestro (de abajo hacia arriba, sin incluir al documento)
+ * tiene desplazamiento vertical habilitado y aún puede desplazarse en `direccion` (`1` o `-1`).
+ */
+export function puedeDesplazarAncestro(ancestros, direccion) {
+  if ((direccion !== 1 && direccion !== -1) || !Array.isArray(ancestros)) {
+    return false;
+  }
+
+  for (const el of ancestros) {
+    if (!el) continue;
+    const { overflowY, scrollTop, scrollHeight, clientHeight } = el;
+    if (overflowY !== 'auto' && overflowY !== 'scroll') continue;
+    if (!Number.isFinite(scrollHeight) || !Number.isFinite(clientHeight)) {
+      continue;
+    }
+    if (scrollHeight <= clientHeight) continue;
+
+    if (direccion === 1 && scrollTop + clientHeight < scrollHeight) {
+      return true;
+    }
+    if (direccion === -1 && scrollTop > 0) {
+      return true;
+    }
+  }
+
+  return false;
+}

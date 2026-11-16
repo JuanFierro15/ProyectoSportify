@@ -7,6 +7,7 @@ import {
   accionPorGesto,
   enReposoDeTramo,
   indiceHeroEnZona,
+  puedeDesplazarAncestro,
   reposoDeTramo,
   reposoMasCercano,
 } from '../../lib/modoHero';
@@ -43,7 +44,6 @@ let heroDestino = null;
 let limpiarEnded = null;
 let ultimaYEscrita = 0;
 let autoActivo = false;
-let entradaDesdeFinAuto = false;
 let dedoAbajo = false;
 let toqueInicioY = null;
 let toqueDecidido = false;
@@ -60,6 +60,32 @@ function esCampoEditable(target) {
   if (target.isContentEditable) return true;
   const tag = target.tagName?.toUpperCase();
   return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+}
+
+function debeIgnorarObjetivo(target, dir) {
+  const el =
+    target && typeof target === 'object'
+      ? target.nodeType === 1
+        ? target
+        : target.parentElement
+      : null;
+  if (!el || typeof el.closest !== 'function') return false;
+  if (el.closest('.chatbot, dialog[open]')) return true;
+
+  const ancestros = [];
+  let nodo = el;
+  while (nodo && nodo !== document.body && nodo !== document.documentElement) {
+    if (nodo.nodeType === 1) {
+      ancestros.push({
+        overflowY: getComputedStyle(nodo).overflowY,
+        scrollTop: nodo.scrollTop,
+        scrollHeight: nodo.scrollHeight,
+        clientHeight: nodo.clientHeight,
+      });
+    }
+    nodo = nodo.parentElement;
+  }
+  return puedeDesplazarAncestro(ancestros, dir);
 }
 
 function limpiarTimeoutTouchEnd() {
@@ -109,7 +135,6 @@ function finAuto() {
   transicionTl = null;
   heroDestino = null;
   autoActivo = false;
-  entradaDesdeFinAuto = false;
   ultimaYEscrita = 0;
 }
 
@@ -200,6 +225,7 @@ function transicionarA(y, destino = null) {
   if (reducir || !overlayTransicion) {
     ultimaYEscrita = y;
     window.scrollTo(0, y);
+    ScrollTrigger.update();
     pausarEnReposo(destino);
     finAuto();
     return;
@@ -224,13 +250,18 @@ function transicionarA(y, destino = null) {
       if (transicionTl !== tl) return;
       ultimaYEscrita = y;
       window.scrollTo(0, y);
+      ScrollTrigger.update();
       pausarEnReposo(destino);
     })
-    .to(overlayTransicion, {
-      opacity: 0,
-      duration: DURACION_TRANSICION_MITAD,
-      ease: 'power2.out',
-    });
+    .to(
+      overlayTransicion,
+      {
+        opacity: 0,
+        duration: DURACION_TRANSICION_MITAD,
+        ease: 'power2.out',
+      },
+      '+=0.05'
+    );
 }
 
 function heroSiguiente(hero) {
@@ -390,6 +421,7 @@ function alWheel(e) {
 
   const dir = e.deltaY > 0 ? 1 : e.deltaY < 0 ? -1 : 0;
   if (dir === 0) return;
+  if (debeIgnorarObjetivo(e.target, dir)) return;
 
   const { ordenados, tramos, eventosY, zonaFin } = contextoZona();
   if (ordenados.length === 0) return;
@@ -435,17 +467,19 @@ function alTouchStart(e) {
 }
 
 function alTouchMove(e) {
-  entradaDesdeFinAuto = true;
-
-  const { ordenados, tramos, eventosY, zonaFin } = contextoZona();
-  if (ordenados.length === 0) return;
+  if (esCampoEditable(e.target)) return;
 
   const clientY = e.touches?.[0]?.clientY;
   if (typeof clientY !== 'number' || toqueInicioY === null) return;
 
-  const y = window.scrollY;
   const deltaY = toqueInicioY - clientY;
   const dir = deltaY > 0 ? 1 : deltaY < 0 ? -1 : 0;
+  if (debeIgnorarObjetivo(e.target, dir)) return;
+
+  const { ordenados, tramos, eventosY, zonaFin } = contextoZona();
+  if (ordenados.length === 0) return;
+
+  const y = window.scrollY;
   const indiceHero = indiceHeroEnZona(y, tramos, zonaFin);
 
   if (indiceHero >= 0) {
@@ -505,8 +539,6 @@ function alPresionarTecla(e) {
   if (dir === 0) {
     if (reproduciendo || tween || transicionTl) {
       cancelar();
-    } else {
-      entradaDesdeFinAuto = true;
     }
     return;
   }
@@ -541,13 +573,11 @@ function alPresionarTecla(e) {
 
   if (reproduciendo || tween || transicionTl) {
     cancelar();
-  } else {
-    entradaDesdeFinAuto = true;
   }
 }
 
 function alDetenerse() {
-  if (autoActivo || !entradaDesdeFinAuto || dedoAbajo) return;
+  if (autoActivo || dedoAbajo) return;
 
   const { ordenados, tramos, zonaFin } = contextoZona();
   if (ordenados.length === 0) return;
