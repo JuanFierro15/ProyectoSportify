@@ -18,9 +18,9 @@ Las citas entre comillas son de la issue #36 o de Miguel (Log). La issue pedía 
 
 | ID | Specs | Ruta | Estado | Commit |
 |---|---|---|---|---|
-| T1 | S1 (medición) | agy hydrogen-high (navegador, solo lectura) | pendiente | |
-| T2 | S2-S7 + arreglo de S1 | agy hydrogen-medium (código) | pendiente | |
-| T3 | S1-S6 | agy hydrogen-high (verificación en Chromium) | pendiente | |
+| T1 | S1 (medición) | agy hydrogen-high (navegador, solo lectura) | hecho | (sin código) |
+| T2 | S2-S7 + arreglo de S1 | agy hydrogen-medium (código) | hecho | f8ca141 + corrección |
+| T3 | S1-S6 | agy hydrogen-high (verificación en Chromium) | hecho (falta la revisión de Miguel en localhost) | |
 
 Riesgo: medio (controlador de scroll compartido por los tres heros; orden de eventos asíncronos).
 
@@ -34,3 +34,10 @@ Riesgo: medio (controlador de scroll compartido por los tres heros; orden de eve
   - Con caché vacía y Fast 4G hay 0,7-0,9 s más de descarga (videos de ~10 Mbps): eso es un límite de la red.
   - Un gesto fuerte de 1440 px pasa el pin de 600 px y cae dentro del hero siguiente.
   - Decisión: el controlador toma el gesto en cuanto empieza dentro de la zona de los heros (`wheel`/`touchmove`/teclas con `preventDefault`) en lugar de esperar a que el scroll se detenga. Reproduce desde el cuadro actual sin re-seek. La barra de scroll no se puede interceptar: para ella queda el acomodo al detenerse (S2). Matiz para revisar en localhost: bajar durante la reproducción no la cancela (es la misma intención); subir, clic, enlace o barra sí la cancelan.
+- **L5** (16-11-2026) T2: RED de 29 tests; 417/417, lint y build OK. Revisión gentle-ai del commit: Miguel eligió "Omitir esta vez".
+- **L6** (16-11-2026) Verificación T3 (Chromium; se relanzó una vez por falta de RAM). Pasaron el arranque inmediato, el gesto fuerte de una sola acción, la subida al hero anterior, la entrada desde `#eventos`, las cancelaciones y el resto de la página. Tres bloqueantes:
+  1. La rueda o el toque sobre el chat abierto se interceptaban y arrancaban el hero.
+  2. Una parada entre heros por barra o autoscroll no se acomodaba, porque `alDetenerse` exigía `entradaDesdeFinAuto`.
+  3. Durante el fundido había un cuadro con dos heros visibles.
+  Una tanda de correcciones: no interceptar sobre `.chatbot`, un `dialog` abierto o contenedores desplazables (`puedeDesplazarAncestro`); acomodar ante cualquier parada dentro de la zona (se quitó `entradaDesdeFinAuto`); `ScrollTrigger.update()` tras el salto y aclarado 0,05 s después. RED de 6 tests; 423/423.
+  Nueva verificación limitada: los 3 PASS (0 cuadros con dos heros en 480 muestreados), el arranque en 37 ms y sin regresiones; 0 errores en consola.
