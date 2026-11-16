@@ -21,6 +21,7 @@ export const REGEX_TELEFONO = /^3\d{9}$/;
 
 export const MENSAJE_NOMBRE_VACIO = 'Escribe tu nombre.';
 export const MENSAJE_NOMBRE = 'Usa solo letras y espacios, sin números ni símbolos.';
+export const AVISO_NOMBRE = 'Solo letras y espacios';
 export const MENSAJE_TELEFONO = 'Debe empezar por 3 y tener 10 dígitos.';
 
 // Limpia mientras se escribe: el nombre solo conserva letras y espacios; el
@@ -32,6 +33,12 @@ export function limpiarNombre(valor) {
 
 export function limpiarTelefono(valor) {
   return valor.replace(/\D/g, '').slice(0, 10);
+}
+
+// Indica si el valor trae caracteres que `limpiarNombre` descartaría (no letras
+// ni espacios); con eso se muestra `AVISO_NOMBRE`.
+export function descartaCaracteresNombre(valor) {
+  return /[^\p{L} ]/u.test(String(valor ?? ''));
 }
 
 // Devuelve el mensaje de error, o '' si es válido (o está vacío).

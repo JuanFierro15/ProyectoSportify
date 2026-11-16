@@ -9,6 +9,8 @@ import {
 } from '../../lib/precios';
 import { textoQr } from '../../lib/codigoReserva';
 import {
+  AVISO_NOMBRE,
+  descartaCaracteresNombre,
   empiezaMalTelefono,
   errorNombreObligatorio,
   errorTelefono,
@@ -284,6 +286,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
   const [jornadas, setJornadas] = useState(() => inicializarJornadas(8, dias[0]));
   const [invitados, setInvitados] = useState('');
   const [nombre, setNombre] = useState('');
+  const [avisoNombre, setAvisoNombre] = useState('');
   const [telefono, setTelefono] = useState('');
   const [tocado, setTocado] = useState({ nombre: false, telefono: false });
   const [error, setError] = useState(null);
@@ -309,6 +312,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     setJornadas(inicializarJornadas(8, dias[0]));
     setInvitados('');
     setNombre('');
+    setAvisoNombre('');
     setTelefono('');
     setTocado({ nombre: false, telefono: false });
     setError(null);
@@ -1121,6 +1125,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
 
   const cambiarNombre = useCallback((valor) => {
     setNombre(limpiarNombre(valor));
+    setAvisoNombre(descartaCaracteresNombre(valor) ? AVISO_NOMBRE : '');
   }, []);
 
   const cambiarTelefono = useCallback((valor) => {
@@ -1369,6 +1374,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     invitados,
     setInvitados,
     nombre,
+    avisoNombre,
     telefono,
     errNombre,
     errTelefono,

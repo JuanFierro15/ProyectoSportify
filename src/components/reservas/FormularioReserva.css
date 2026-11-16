@@ -359,6 +359,19 @@
   display: block;
 }
 
+/* Aviso "Solo letras y espacios": el color de Foundation no se ve en fondo oscuro. */
+.formulario-reserva .help-text {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.82rem;
+  font-style: normal;
+  color: var(--reserva-texto-tenue, #a8a8a8);
+}
+
+.formulario-reserva .help-text:empty {
+  margin-top: 0;
+}
+
 .formulario-reserva__nota-contacto {
   margin: 12px 0 0;
   font-size: 13px;

@@ -316,4 +316,57 @@ describe('FormularioReserva - Prop seccion y renderizado público', () => {
     expect(container.querySelector('fieldset')).toBeNull();
     expect(container.querySelector('details')).toBeNull();
   });
+
+  it('muestra y oculta el aviso de nombre en el formulario', () => {
+    render(
+      <ReservasProvider>
+        <TestHarness
+          modo="torneo"
+          seccion="datos"
+          canchasIniciales={['futbol-1']}
+        />
+      </ReservasProvider>
+    );
+
+    const inputNombre = screen.getByLabelText(/Nombre/i);
+    const liveAviso = document.getElementById('reserva-nombre-aviso');
+    expect(liveAviso).toBeInTheDocument();
+    expect(liveAviso).toHaveAttribute('aria-live', 'polite');
+    expect(liveAviso).toHaveClass('help-text');
+    expect(liveAviso.textContent).toBe('');
+    expect(inputNombre).toHaveAttribute(
+      'aria-describedby',
+      'reserva-nombre-error reserva-nombre-aviso'
+    );
+    expect(screen.queryByText('Solo letras y espacios')).not.toBeInTheDocument();
+
+    fireEvent.change(inputNombre, { target: { value: 'Ana 123' } });
+    expect(inputNombre).toHaveValue('Ana ');
+    const aviso = screen.getByText('Solo letras y espacios');
+    expect(aviso).toBe(liveAviso);
+    expect(aviso).toHaveAttribute('aria-live', 'polite');
+
+    fireEvent.change(inputNombre, { target: { value: 'Ana  Gómez' } });
+    expect(inputNombre).toHaveValue('Ana Gómez');
+    expect(screen.queryByText('Solo letras y espacios')).not.toBeInTheDocument();
+    expect(liveAviso).toBeInTheDocument();
+    expect(liveAviso.textContent).toBe('');
+  });
+
+  it('permite pegar teléfono con espacios en torneo sin atributo maxlength', () => {
+    render(
+      <ReservasProvider>
+        <TestHarness
+          modo="torneo"
+          seccion="datos"
+          canchasIniciales={['futbol-1']}
+        />
+      </ReservasProvider>
+    );
+
+    const inputTelefono = screen.getByLabelText(/Teléfono/i);
+    expect(inputTelefono).not.toHaveAttribute('maxlength');
+    fireEvent.change(inputTelefono, { target: { value: '300 123 4567' } });
+    expect(inputTelefono).toHaveValue('3001234567');
+  });
 });

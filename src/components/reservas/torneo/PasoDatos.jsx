@@ -52,8 +52,15 @@ function PasoDatos({ reserva }) {
             onBlur={() => reserva.marcarTocado('nombre')}
             autoComplete="name"
             aria-invalid={reserva.verErrNombre}
-            aria-describedby="reserva-nombre-error"
+            aria-describedby="reserva-nombre-error reserva-nombre-aviso"
           />
+          <span
+            id="reserva-nombre-aviso"
+            className="help-text"
+            aria-live="polite"
+          >
+            {reserva.avisoNombre}
+          </span>
           <span
             id="reserva-nombre-error"
             className={
@@ -80,7 +87,6 @@ function PasoDatos({ reserva }) {
             onChange={(e) => reserva.cambiarTelefono(e.target.value)}
             onBlur={() => reserva.marcarTocado('telefono')}
             inputMode="numeric"
-            maxLength={10}
             autoComplete="tel-national"
             aria-invalid={reserva.verErrTelefono}
             aria-describedby="reserva-telefono-error"
