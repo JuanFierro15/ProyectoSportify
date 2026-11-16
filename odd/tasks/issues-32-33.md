@@ -24,11 +24,14 @@ Las citas entre comillas son textuales de las issues. Las decisiones marcadas "(
 
 | ID | Specs | Ruta | Estado | Commit |
 |---|---|---|---|---|
-| T1 | S1-S6 | agy hydrogen-medium (código) + hydrogen-high (pruebas) | pendiente | |
-| T2 | S7-S8 | agy hydrogen-medium (código) + hydrogen-high (pruebas) | pendiente | |
+| T1 | S1-S6 | agy hydrogen-medium (código) + hydrogen-high (pruebas) | hecho | a203289 |
+| T2 | S7-S8 | agy hydrogen-medium (código) + hydrogen-high (pruebas) | hecho | 30df65e |
 
 Riesgo: T1 toca estado persistido y concurrencia entre pestañas (alto: verificación independiente en navegador con dos pestañas reales). T2 bajo.
 
 ## Log
 
 - **L1** (16-11-2026, Miguel): "Vale primero quiero que trabajemos las 2 issues que la #32, establece un plan para trabajar en ellas con el fin de completar esa issue. Luego trabajaremos en pro de las issues asignadas a mí". Interpretado como #32 y #33; plan aprobado ("Apruebo").
+- **L2** (16-11-2026) T1: RED de 6 tests antes del arreglo. En la revisión del diff apareció un bloqueante: con pestañas en ventanas de días distintas, el `SINCRONIZAR` del evento se volvía a escribir y las pestañas entraban en ping-pong. Se corrigió con `omitirProximoEspejoRef` (RED de 2 tests). 409/409. Revisión gentle-ai del commit: Miguel eligió "Omitir esta vez".
+- **L3** (16-11-2026) T2: RED de 3 tests; 412/412 y lint limpio.
+- **L4** (16-11-2026) Verificación independiente (agy hydrogen-high, Chromium con dos pestañas reales en un mismo contexto): A-I PASS y S1-S8 PASS. La segunda pestaña ve la hora ocupada sin recargar y no puede confirmarla. Las reservas en horas distintas conviven. Una cancelación hecha en otra pestaña libera la hora. 0 escrituras en 5 s de inactividad. Aviso del nombre en los dos formularios; pegar el teléfono da "3001234567". 0 errores en consola. Vitest reescribe `api/_lib/__snapshots__/instrucciones.test.js.snap` solo por finales de línea; se restaura antes de cada commit.
