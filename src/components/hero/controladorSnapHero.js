@@ -9,6 +9,8 @@ const TOLERANCIA_SCROLL_EXTERNO = 4;
 const MARGEN_FIN_VIDEO = 0.05;
 const UMBRAL_SEEK = 0.05;
 const DEMORA_FIN_TOQUE_MS = 200;
+const DURACION_REPOSAR = 0.6;
+const DURACION_SIGUIENTE = 0.9;
 
 const TECLAS_SCROLL = new Set([
   'ArrowDown',
@@ -119,19 +121,21 @@ function deslizarA(y, duracion, destino = null) {
   });
 }
 
-function precargarSiguiente(hero) {
+function heroSiguiente(hero) {
   const ordenados = herosOrdenados();
   const indice = ordenados.indexOf(hero);
-  const siguiente = indice >= 0 ? ordenados[indice + 1] : null;
+  return indice >= 0 ? (ordenados[indice + 1] ?? null) : null;
+}
+
+function precargarSiguiente(hero) {
+  const siguiente = heroSiguiente(hero);
   if (siguiente?.video && siguiente.video.preload !== 'auto') {
     siguiente.video.preload = 'auto';
   }
 }
 
 function irAlSiguiente(hero) {
-  const ordenados = herosOrdenados();
-  const indice = ordenados.indexOf(hero);
-  const siguiente = indice >= 0 ? ordenados[indice + 1] : null;
+  const siguiente = heroSiguiente(hero);
   const destino = siguiente ? reposo(siguiente) : destinoEventos();
 
   if (destino === null) {
@@ -139,7 +143,7 @@ function irAlSiguiente(hero) {
     return;
   }
 
-  deslizarA(destino, 0.9, siguiente || null);
+  deslizarA(destino, DURACION_SIGUIENTE, siguiente);
 }
 
 function alTerminar(hero) {
@@ -229,14 +233,6 @@ function cancelarSiActivo() {
   }
 }
 
-function alPointerDown() {
-  cancelarSiActivo();
-}
-
-function alClic() {
-  cancelarSiActivo();
-}
-
 function alTouchStart() {
   dedoAbajo = true;
   limpiarTimeoutTouchEnd();
@@ -256,10 +252,6 @@ function alTouchEnd() {
       alDetenerse();
     }
   }, DEMORA_FIN_TOQUE_MS);
-}
-
-function alTouchCancel() {
-  dedoAbajo = false;
 }
 
 function alPresionarTecla(e) {
@@ -297,7 +289,7 @@ function alDetenerse() {
   const accion = decidirAccionHero({ progreso, direccion });
 
   if (accion === 'reposar') {
-    deslizarA(reposo(hero), 0.6, hero);
+    deslizarA(reposo(hero), DURACION_REPOSAR, hero);
   } else if (accion === 'reproducir') {
     reproducir(hero);
   } else if (accion === 'siguiente') {
@@ -311,12 +303,15 @@ function instalarListeners() {
   reiniciarEstado({ y: window.scrollY });
   window.addEventListener('scroll', alHacerScroll, { passive: true });
   window.addEventListener('wheel', alEntrarUsuario, { passive: true });
-  window.addEventListener('pointerdown', alPointerDown, { passive: true });
-  window.addEventListener('click', alClic, { capture: true, passive: true });
+  window.addEventListener('pointerdown', cancelarSiActivo, { passive: true });
+  window.addEventListener('click', cancelarSiActivo, {
+    capture: true,
+    passive: true,
+  });
   window.addEventListener('touchstart', alTouchStart, { passive: true });
   window.addEventListener('touchmove', alEntrarUsuario, { passive: true });
   window.addEventListener('touchend', alTouchEnd, { passive: true });
-  window.addEventListener('touchcancel', alTouchCancel, { passive: true });
+  window.addEventListener('touchcancel', alTouchEnd, { passive: true });
   window.addEventListener('keydown', alPresionarTecla);
   ScrollTrigger.addEventListener('scrollEnd', alDetenerse);
   gsap.ticker.add(alTick);
@@ -327,12 +322,12 @@ function quitarListeners() {
   listenersActivos = false;
   window.removeEventListener('scroll', alHacerScroll);
   window.removeEventListener('wheel', alEntrarUsuario);
-  window.removeEventListener('pointerdown', alPointerDown);
-  window.removeEventListener('click', alClic, { capture: true });
+  window.removeEventListener('pointerdown', cancelarSiActivo);
+  window.removeEventListener('click', cancelarSiActivo, { capture: true });
   window.removeEventListener('touchstart', alTouchStart);
   window.removeEventListener('touchmove', alEntrarUsuario);
   window.removeEventListener('touchend', alTouchEnd);
-  window.removeEventListener('touchcancel', alTouchCancel);
+  window.removeEventListener('touchcancel', alTouchEnd);
   window.removeEventListener('keydown', alPresionarTecla);
   ScrollTrigger.removeEventListener('scrollEnd', alDetenerse);
   gsap.ticker.remove(alTick);
