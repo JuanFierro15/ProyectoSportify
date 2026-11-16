@@ -2,6 +2,11 @@ import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { esClicNormal, rutaReserva } from '../../lib/rutas';
+import { DURACION_FADE_CONTENIDO } from '../../lib/modoHero';
+import {
+  heroEstaReproduciendo,
+  registrarHeroSnap,
+} from './controladorSnapHero';
 import './DeporteHero.css';
 
 // Registro idempotente del plugin.
@@ -16,6 +21,13 @@ const PX_POR_SEGUNDO = 150;
 // esta fracción (0-1). 1 = 1:1 duro con el scroll (más brusco). ~0.2-0.4 =
 // interpola y "asienta" en pocos frames al soltar el scroll.
 const SUAVIZADO = 0.3;
+
+// Sin margen extra: la primera medición ocurre antes de `loadedmetadata`,
+// cuando el pin usa la duración de respaldo (1 s = 150 px), por lo que un
+// margen de precarga alcanzaba al hero siguiente y lo descargaba al cargar.
+// Así solo se precarga el hero ya visible; el siguiente lo precarga
+// `controladorSnapHero.js` al iniciar la reproducción.
+const MARGEN_PRECARGA_VISIBLE = '0px';
 
 /**
  * DeporteHero (Bloque 2.5) — sección narrativa por deporte, reutilizable.
@@ -33,11 +45,11 @@ const SUAVIZADO = 0.3;
  *
  * Comportamiento:
  *  - Ocupa 100vh con el video cubriendo la sección (object-fit: cover) + overlay.
- *  - La sección se ancla (`pin: true`) y, mientras dura el pin, el `currentTime`
- *    del <video> sigue al scroll: al scrollear avanza; al soltar el scroll el
- *    video se queda quieto (no se reproduce solo). El tramo de pin dura lo que
- *    dura el video (duración * PX_POR_SEGUNDO), y al llegar al final se suelta
- *    y pasa a la siguiente sección.
+ *  - La sección se ancla (`pin: true`) durante un tramo proporcional a la
+ *    duración del video (`duración * PX_POR_SEGUNDO`): tras un gesto hacia abajo
+ *    el video se reproduce solo mientras el scroll avanza con él, y hacia arriba
+ *    el `currentTime` del `<video>` sigue al scroll con scrub; al terminar el
+ *    tramo pasa a la siguiente sección.
  *  - Fluidez: el video NO se mueve directamente desde la timeline de GSAP.
  *    El ScrollTrigger sólo guarda el progreso objetivo y un bucle en
  *    `gsap.ticker` acerca `currentTime` a ese objetivo con easing (SUAVIZADO),
@@ -45,7 +57,16 @@ const SUAVIZADO = 0.3;
  *    Así, en scroll rápido no se encolan decenas de seeks que traban al
  *    decoder.
  *  - El texto/CTA hacen fade + scale (scrubbed) al principio y al final del pin.
- *  - Todo dentro de `gsap.context()` con `ctx.revert()` en el cleanup.
+ *  - Avance por gestos (snap): coordinado por un controlador único compartido
+ *    (`controladorSnapHero.js`) con estado y listeners globales. Cada hero se
+ *    asienta en reposo en 0.15 (texto y CTA visibles); un gesto hacia abajo
+ *    inicia la reproducción nativa del video con el scroll siguiendo al video
+ *    y, al terminar, desliza al siguiente hero en su punto de reposo o a
+ *    `#eventos` en el último. Hacia arriba o mientras el usuario arrastra, el
+ *    scroll avanza con scrub; cualquier intervención del usuario cancela el
+ *    avance automático, y `scrollEnd` solo actúa si hubo una entrada del
+ *    usuario tras la última acción automática.
+ *  - Todo dentro de `gsap.matchMedia()` con `mm.revert()` en el cleanup.
  *  - `ScrollTrigger.refresh()` cuando el video reporta su duración, para que el
  *    largo del pin (que depende de esa duración) quede bien medido.
  */
@@ -103,21 +124,36 @@ function DeporteHero({
           },
         },
       });
+      const st = tl.scrollTrigger;
 
       // Contenido: entra en el primer tramo del pin y se va en el último.
       tl.fromTo(
         contenido,
         { autoAlpha: 0, scale: 0.92, y: 20 },
-        { autoAlpha: 1, scale: 1, y: 0, ease: 'power2.out', duration: 0.15 },
+        {
+          autoAlpha: 1,
+          scale: 1,
+          y: 0,
+          ease: 'power2.out',
+          duration: DURACION_FADE_CONTENIDO,
+        },
         0
       ).to(
         contenido,
-        { autoAlpha: 0, scale: 1.06, y: -14, ease: 'power2.in', duration: 0.15 },
-        0.85
+        {
+          autoAlpha: 0,
+          scale: 1.06,
+          y: -14,
+          ease: 'power2.in',
+          duration: DURACION_FADE_CONTENIDO,
+        },
+        1 - DURACION_FADE_CONTENIDO
       );
 
       // Bucle que acerca el frame del video al objetivo sin encolar seeks.
+      // Mientras reproduce de forma nativa, el controlador mueve el scroll.
       const seguirVideo = () => {
+        if (heroEstaReproduciendo(seccion)) return;
         const dur = video?.duration;
         if (!dur || video?.seeking) return; // aún buscando -> no pedir otro seek
         const objetivo = progresoObjetivo * dur;
@@ -133,7 +169,30 @@ function DeporteHero({
       const onLoadedMetadata = () => ScrollTrigger.refresh();
       video?.addEventListener('loadedmetadata', onLoadedMetadata);
 
+      const desregistrarSnap = registrarHeroSnap({
+        seccion,
+        video,
+        st,
+        progresoObjetivo: () => progresoObjetivo,
+      });
+
+      let observer = null;
+      if (typeof IntersectionObserver !== 'undefined' && seccion && video) {
+        observer = new IntersectionObserver(
+          (entradas) => {
+            if (entradas.some((e) => e.isIntersecting)) {
+              video.preload = 'auto';
+              observer.disconnect();
+            }
+          },
+          { rootMargin: MARGEN_PRECARGA_VISIBLE }
+        );
+        observer.observe(seccion);
+      }
+
       return () => {
+        desregistrarSnap();
+        observer?.disconnect();
         gsap.ticker.remove(seguirVideo);
         video?.removeEventListener('loadedmetadata', onLoadedMetadata);
         video?.pause();

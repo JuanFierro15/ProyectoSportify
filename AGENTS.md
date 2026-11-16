@@ -53,14 +53,15 @@ node scripts/probar-chat.mjs [url] [ids...]  # casos de prueba de /api/chat
 - Tests: Vitest (jsdom, `globals: true`) + Testing Library. Los de lógica pura
   viven junto a su módulo en `src/lib/*.test.js` (precios, validación, fechas,
   horarios, código de reserva, datos del negocio, chat, cancelación, torneos,
-  pasos del torneo en `pasosTorneo.test.js`, rutas, canchas y respaldo de
-  modelo). De interfaz: `src/components/reservas/Torneo.test.jsx` (torneo y
-  cumpleaños), `src/components/reservas/FormularioReserva.test.jsx` (prop
-  `seccion`), los del asistente en `src/components/reservas/torneo/`
+  pasos del torneo en `pasosTorneo.test.js`, rutas, canchas, `modoHero` y
+  respaldo de modelo). De interfaz: `src/components/reservas/Torneo.test.jsx`
+  (torneo y cumpleaños), `src/components/reservas/FormularioReserva.test.jsx`
+  (prop `seccion`), los del asistente en `src/components/reservas/torneo/`
   (`AsistenteTorneo.test.jsx` y `useAsistenteTorneo.test.jsx`), la limpieza
   de GSAP en `Bracket.test.jsx` y `CalendarioTorneo.test.jsx`, el diálogo de
   horas sin partido en `DialogoHorasSinPartido.test.jsx`, la pausa del
-  video en `src/components/hero/DeporteHero.test.jsx`,
+  video en `src/components/hero/DeporteHero.test.jsx`, el avance por gestos del
+  hero en `src/components/hero/controladorSnapHero.test.js`,
   `src/components/layout/MisReservas.test.jsx` y
   `src/components/chatbot/Chatbot.test.jsx` (widget: portal, Escape,
   comprobante, nueva conversación). `api/_lib/funciones.test.js` cubre las
@@ -88,7 +89,7 @@ node scripts/probar-chat.mjs [url] [ids...]  # casos de prueba de /api/chat
 |---|---|
 | `docs/agentes/reservas.md` | `ReservasContext.jsx`, `canchas.json` y los módulos compartidos de `src/lib/` (`precios.js`, `horarios.js`, `codigoReserva.js`, `validacion.js`, `fechas.js`, `canchas.js`, `cancelacion.js`, `negocio.js`) |
 | `docs/agentes/torneo.md` | Torneos por fases, `src/lib/torneo.js`, `src/lib/pasosTorneo.js`, `src/components/reservas/torneo/` y el asistente móvil |
-| `docs/agentes/pagina-reserva.md` | `App.jsx`, `PaginaInicio.jsx`, `VistaCanchas`, `VistaCanchasContext`, `DeporteHero`, `EventoCTA`, `Ubicacion`, `MisReservas`, `negocio.json`, `deportes.js`, `rutas.js` y `App.css` |
+| `docs/agentes/pagina-reserva.md` | `App.jsx`, `PaginaInicio.jsx`, `VistaCanchas`, `VistaCanchasContext`, `DeporteHero`, `controladorSnapHero.js`, `modoHero.js`, `EventoCTA`, `Ubicacion`, `MisReservas`, `negocio.json`, `deportes.js`, `rutas.js` y `App.css` |
 | `docs/agentes/chatbot.md` | `api/chat.js`, `api/_lib/`, `src/components/chatbot/`, `src/lib/chat.js`, `src/lib/modelosChat.js` y `scripts/probar-chat.mjs` |
 | `docs/agentes/despliegue.md` | `vercel.json`, `.vercelignore`, variables de entorno en Vercel y pruebas sobre producción o preview |
 | `docs/agentes/capturas.md` | `README.md`, `docs/capturas/` y `planificacion/herramientas/capturas/capturas.mjs` |

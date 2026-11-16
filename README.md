@@ -56,10 +56,10 @@ Surcolombiana, sexto semestre). El enunciado fija estas restricciones:
 
 ### Un hero por deporte
 
-Cada deporte tiene su sección a pantalla completa con un video de fondo que
-avanza con el scroll: la sección queda fija (*pinning* de ScrollTrigger) y el
-`currentTime` del video sigue a la rueda del mouse. Cada una tiene su color de
-acento, que después usan la página de reserva y el asistente.
+Cada deporte tiene su sección a pantalla completa con un video de fondo: el
+hero se asienta con el título visible, un gesto hacia abajo reproduce el video
+y pasa solo al siguiente, y hacia arriba el video sigue al scroll. Cada una
+tiene su color de acento, que después usan la página de reserva y el asistente.
 
 | Voley playa | Pádel | Fútbol |
 |:---:|:---:|:---:|
