@@ -18,8 +18,8 @@ Las citas son textuales de la issue #35. Las decisiones marcadas "(plan)" salen 
 
 | ID | Specs | Ruta | Estado | Commit |
 |---|---|---|---|---|
-| T1 | S1-S6 | agy hydrogen-medium (código) | pendiente | |
-| T2 | S7 | agy hydrogen-high (capturas y verificación) | pendiente | |
+| T1 | S1-S6 | agy hydrogen-medium (código) | hecho | 2e14f20 + corrección del contenedor |
+| T2 | S7 | agy hydrogen-high (capturas y verificación) | hecho (falta la revisión de Miguel en localhost) | |
 
 Riesgo: bajo (presentación; sin estado ni datos persistidos).
 
@@ -27,3 +27,5 @@ Riesgo: bajo (presentación; sin estado ni datos persistidos).
 
 - **L1** (16-11-2026, Miguel): "Sobre la número 35, que es el texto de los giros, pues quiero que tomes fotos, más que todo. Toma fotos y verifica bien qué espacios hay, porque en la mayoría pues se pueden elegir como un lado como a la izquierda, si no estoy mal. Pero pues sí quiero que te asegures de eso y que pues primero pues hacemos la implementación como tú recomiendas y pues ya luego yo verifico en localhost cómo se ve y pues ya te daré las correcciones pertinentes."
 - **L2** (16-11-2026) Capturas reales (agy, Playwright con un script en una carpeta temporal; revisadas una por una). Vóley: la acción ocupa el centro y la derecha; la arena de abajo a la izquierda queda libre en los 5 cuadros. Pádel: el jugador siempre está al centro; la izquierda queda libre. Fútbol: la acción se mueve (a la mitad hay un jugador a la izquierda, al final el arco a la derecha); el césped de abajo a la derecha queda libre en todos los cuadros. En 390 px el video se recorta al centro, donde está la acción.
+- **L3** (16-11-2026) T1: RED de 5 tests; 406/406, lint y build OK.
+- **L4** (16-11-2026) Primera ronda de capturas (1920, 1366, 390 y 360): el `grid-container` de Foundation centraba el bloque, así que a 1920 el texto de vóley empezaba en x=375 y pisaba a la jugadora, y a 1366 la descripción de pádel rozaba la raqueta. Corrección: el contenedor pasa a ancho completo con `padding-inline: clamp(1.25rem, 5vw, 6rem)`, el bloque mide como máximo 32rem y la descripción 30rem; abajo a la derecha deja al menos 5.5rem a la derecha por el botón del chat. Segunda ronda: el texto no pisa a los jugadores en ningún hero, no choca con el navbar ni con el chat en los cuatro anchos, y no hay errores en consola. Revisión gentle-ai del commit: Miguel eligió "Omitir esta vez".
