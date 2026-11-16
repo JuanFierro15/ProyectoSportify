@@ -411,11 +411,9 @@ function MisReservas({ abierto, onCerrar, botonDisparadorRef }) {
                     if (errNombre) setErrNombre('');
                   }}
                 />
-                {avisoNombre && (
-                  <span className="help-text" aria-live="polite">
-                    {avisoNombre}
-                  </span>
-                )}
+                <span className="help-text" aria-live="polite">
+                  {avisoNombre}
+                </span>
                 {errNombre && <span className="form-error is-visible">{errNombre}</span>}
               </div>
 

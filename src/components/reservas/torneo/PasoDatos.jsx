@@ -52,21 +52,15 @@ function PasoDatos({ reserva }) {
             onBlur={() => reserva.marcarTocado('nombre')}
             autoComplete="name"
             aria-invalid={reserva.verErrNombre}
-            aria-describedby={
-              reserva.avisoNombre
-                ? 'reserva-nombre-error reserva-nombre-aviso'
-                : 'reserva-nombre-error'
-            }
+            aria-describedby="reserva-nombre-error reserva-nombre-aviso"
           />
-          {reserva.avisoNombre && (
-            <span
-              id="reserva-nombre-aviso"
-              className="help-text"
-              aria-live="polite"
-            >
-              {reserva.avisoNombre}
-            </span>
-          )}
+          <span
+            id="reserva-nombre-aviso"
+            className="help-text"
+            aria-live="polite"
+          >
+            {reserva.avisoNombre}
+          </span>
           <span
             id="reserva-nombre-error"
             className={

@@ -368,6 +368,10 @@
   color: var(--reserva-texto-tenue, #a8a8a8);
 }
 
+.formulario-reserva .help-text:empty {
+  margin-top: 0;
+}
+
 .formulario-reserva__nota-contacto {
   margin: 12px 0 0;
   font-size: 13px;
