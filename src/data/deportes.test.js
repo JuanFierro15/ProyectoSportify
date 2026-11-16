@@ -9,4 +9,16 @@ describe('DEPORTES', () => {
       expect(POSICIONES_TEXTO_HERO).toContain(deporte.posicionTexto);
     }
   });
+
+  it('asigna la posicionTexto exacta para cada deporte', () => {
+    const posiciones = Object.fromEntries(
+      DEPORTES.map((d) => [d.slug, d.posicionTexto])
+    );
+
+    expect(posiciones).toEqual({
+      'voley-playa': 'abajo-izquierda',
+      padel: 'izquierda',
+      futbol: 'abajo-derecha',
+    });
+  });
 });
