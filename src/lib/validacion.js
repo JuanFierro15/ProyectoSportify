@@ -21,11 +21,16 @@ export const REGEX_TELEFONO = /^3\d{9}$/;
 
 export const MENSAJE_NOMBRE_VACIO = 'Escribe tu nombre.';
 export const MENSAJE_NOMBRE = 'Usa solo letras y espacios, sin números ni símbolos.';
+export const AVISO_NOMBRE = 'Solo letras y espacios';
 export const MENSAJE_TELEFONO = 'Debe empezar por 3 y tener 10 dígitos.';
 
 // Limpia mientras se escribe: el nombre solo conserva letras y espacios; el
 // teléfono, solo dígitos (máx. 10). Así ni siquiera se pueden teclear
 // caracteres inválidos, y pegar "300 123 4567" queda como "3001234567".
+export function descartaCaracteresNombre(valor) {
+  return /[^\p{L} ]/u.test(String(valor ?? ''));
+}
+
 export function limpiarNombre(valor) {
   return valor.replace(/[^\p{L} ]/gu, '').replace(/ {2,}/g, ' ').replace(/^ /, '');
 }

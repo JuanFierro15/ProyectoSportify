@@ -558,4 +558,27 @@ describe('MisReservas', () => {
       )
     ).toBeInTheDocument();
   });
+
+  test('muestra el aviso de solo letras y espacios en el nombre y lo oculta en la siguiente edición válida', () => {
+    render(
+      <ReservasProvider>
+        <ComponentePrueba />
+      </ReservasProvider>
+    );
+
+    fireEvent.click(screen.getByRole('tab', { name: /por nombre y teléfono/i }));
+
+    const inputNombre = screen.getByLabelText(/Nombre completo/i);
+    expect(screen.queryByText('Solo letras y espacios')).not.toBeInTheDocument();
+
+    fireEvent.change(inputNombre, { target: { value: 'Ana 123' } });
+    expect(inputNombre).toHaveValue('Ana ');
+    const aviso = screen.getByText('Solo letras y espacios');
+    expect(aviso).toBeInTheDocument();
+    expect(aviso).toHaveAttribute('aria-live', 'polite');
+
+    fireEvent.change(inputNombre, { target: { value: 'Ana  Gómez' } });
+    expect(inputNombre).toHaveValue('Ana Gómez');
+    expect(screen.queryByText('Solo letras y espacios')).not.toBeInTheDocument();
+  });
 });

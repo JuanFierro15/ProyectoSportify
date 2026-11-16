@@ -27,7 +27,7 @@ Detalle del estado en `ReservasContext`, la ventana de 7 días, la semilla `canc
 - `torneo.js` y `pasosTorneo.js`: ver `docs/agentes/torneo.md`.
 - `horarios.js`: selección de horas de la reserva, pura y con tests — `alternarHoraIndividual` (modo cancha) y `seleccionarRango` (eventos).
 - `codigoReserva.js`: `generarCodigo` y `textoQr` (texto que lleva el QR).
-- `validacion.js`: regex y limpieza de nombre (solo letras y espacios) y teléfono (3 + 9 dígitos). En la reserva el nombre es obligatorio (`errorNombreObligatorio`) y el teléfono opcional.
+- `validacion.js`: regex y limpieza de nombre (solo letras y espacios; `descartaCaracteresNombre` y `AVISO_NOMBRE` avisan cuando se descartan caracteres) y teléfono (3 + 9 dígitos). En la reserva el nombre es obligatorio (`errorNombreObligatorio`) y el teléfono opcional.
 - `fechas.js`: etiquetas y meses, `fechaCompleta` (fecha absoluta, la que usan voucher, confirmación y QR: nunca "mañana") y `esHoraPasada(fecha, hora)`. Las horas de hoy que ya empezaron cuentan como no disponibles (`calcularDisponibilidad` y `horaLibre` en `ReservasContext`), así que no se pueden reservar ni se cuentan como libres.
 - `canchas.js`: agrupación por deporte, `tituloCancha`, `estiloAcento`, `imagenGrandeCancha`, `imagenPlaceholderCancha`.
 - `cancelacion.js`: plazo de cancelación, estado tras cancelar y búsqueda de las reservas de una persona (teléfono normalizado igual y nombre sin tildes ni mayúsculas; las reservas sin teléfono nunca coinciden). También `buscarReservaPorCodigo`, `buscarReservasDePersona` y `horasDeReserva`, que usa `MisReservas`.

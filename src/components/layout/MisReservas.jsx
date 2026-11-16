@@ -14,6 +14,8 @@ import { fechaCompleta } from '../../lib/fechas';
 import { finDeFranja, formatoPrecio } from '../../lib/precios';
 import { textoQr } from '../../lib/codigoReserva';
 import {
+  AVISO_NOMBRE,
+  descartaCaracteresNombre,
   errorTelefono,
   limpiarNombre,
   limpiarTelefono,
@@ -92,6 +94,7 @@ function MisReservas({ abierto, onCerrar, botonDisparadorRef }) {
   const [errCodigo, setErrCodigo] = useState('');
 
   const [nombreInput, setNombreInput] = useState('');
+  const [avisoNombre, setAvisoNombre] = useState('');
   const [telefonoInput, setTelefonoInput] = useState('');
   const [errNombre, setErrNombre] = useState('');
   const [errTelefono, setErrTelefono] = useState('');
@@ -105,6 +108,7 @@ function MisReservas({ abierto, onCerrar, botonDisparadorRef }) {
   const limpiarResultadosYErrores = useCallback(() => {
     setErrCodigo('');
     setErrNombre('');
+    setAvisoNombre('');
     setErrTelefono('');
     setResultados(null);
     setQrVisibleId(null);
@@ -401,10 +405,17 @@ function MisReservas({ abierto, onCerrar, botonDisparadorRef }) {
                   placeholder="Como registraste la reserva"
                   value={nombreInput}
                   onChange={(e) => {
-                    setNombreInput(limpiarNombre(e.target.value));
+                    const valor = e.target.value;
+                    setNombreInput(limpiarNombre(valor));
+                    setAvisoNombre(descartaCaracteresNombre(valor) ? AVISO_NOMBRE : '');
                     if (errNombre) setErrNombre('');
                   }}
                 />
+                {avisoNombre && (
+                  <span className="help-text" aria-live="polite">
+                    {avisoNombre}
+                  </span>
+                )}
                 {errNombre && <span className="form-error is-visible">{errNombre}</span>}
               </div>
 

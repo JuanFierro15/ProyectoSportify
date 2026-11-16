@@ -1,7 +1,9 @@
 import {
+  AVISO_NOMBRE,
   MENSAJE_NOMBRE,
   MENSAJE_NOMBRE_VACIO,
   MENSAJE_TELEFONO,
+  descartaCaracteresNombre,
   limpiarNombre,
   limpiarTelefono,
   errorNombre,
@@ -38,6 +40,13 @@ describe('teléfono', () => {
 describe('nombre', () => {
   test('limpia números y símbolos', () => {
     expect(limpiarNombre('Ana 123 Ñu!')).toBe('Ana Ñu');
+  });
+
+  test('descartaCaracteresNombre detecta solo caracteres distintos de letras y espacios', () => {
+    expect(AVISO_NOMBRE).toBe('Solo letras y espacios');
+    expect(descartaCaracteresNombre('Ana 123')).toBe(true);
+    expect(descartaCaracteresNombre('Ana  Gómez')).toBe(false);
+    expect(descartaCaracteresNombre('José Ñu')).toBe(false);
   });
 
   test('válido e inválido', () => {

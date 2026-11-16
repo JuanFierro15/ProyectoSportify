@@ -316,4 +316,37 @@ describe('FormularioReserva - Prop seccion y renderizado público', () => {
     expect(container.querySelector('fieldset')).toBeNull();
     expect(container.querySelector('details')).toBeNull();
   });
+
+  it('muestra y oculta el aviso de nombre en el formulario y permite pegar teléfono con espacios en torneo', () => {
+    render(
+      <ReservasProvider>
+        <TestHarness
+          modo="torneo"
+          seccion="datos"
+          canchasIniciales={['futbol-1']}
+        />
+      </ReservasProvider>
+    );
+
+    const inputNombre = screen.getByLabelText(/Nombre/i);
+    expect(screen.queryByText('Solo letras y espacios')).not.toBeInTheDocument();
+
+    fireEvent.change(inputNombre, { target: { value: 'Ana 123' } });
+    expect(inputNombre).toHaveValue('Ana ');
+    const aviso = screen.getByText('Solo letras y espacios');
+    expect(aviso).toBeInTheDocument();
+    expect(aviso).toHaveAttribute('aria-live', 'polite');
+
+    fireEvent.change(inputNombre, { target: { value: 'Ana  Gómez' } });
+    expect(inputNombre).toHaveValue('Ana Gómez');
+    expect(screen.queryByText('Solo letras y espacios')).not.toBeInTheDocument();
+
+    const inputTelefono = screen.getByLabelText(/Teléfono/i);
+    expect(inputTelefono).not.toHaveAttribute('maxlength');
+    const pegado = '300 123 4567';
+    const maxLen = inputTelefono.getAttribute('maxlength');
+    const valorCortado = maxLen ? pegado.slice(0, Number(maxLen)) : pegado;
+    fireEvent.change(inputTelefono, { target: { value: valorCortado } });
+    expect(inputTelefono).toHaveValue('3001234567');
+  });
 });
