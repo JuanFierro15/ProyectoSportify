@@ -51,17 +51,19 @@
   position: relative;
   z-index: 2;
   width: 100%;
+  max-width: none;
   height: 100%;
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
   padding-top: 5rem;
   padding-bottom: 6.5rem;
+  padding-inline: clamp(1.25rem, 5vw, 6rem);
 }
 
 .deporte-hero__bloque {
   width: 100%;
-  max-width: 34rem;
+  max-width: 32rem;
   text-align: left;
 }
 
@@ -95,6 +97,7 @@
     align-items: flex-end;
     justify-content: flex-end;
     padding-bottom: clamp(5.25rem, 9vh, 7rem);
+    padding-inline-end: max(5.5rem, clamp(1.25rem, 5vw, 6rem));
   }
 
   .deporte-hero--texto-abajo-derecha .deporte-hero__overlay {
@@ -123,6 +126,7 @@
 
 .deporte-hero__texto {
   margin: 0 0 1.75rem;
+  max-width: 30rem;
   font-size: clamp(0.95rem, 1.3vw, 1.15rem);
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.4);
 }
