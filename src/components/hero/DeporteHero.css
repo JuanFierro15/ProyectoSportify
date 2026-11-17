@@ -129,8 +129,11 @@
 }
 
 /* En ventanas 3:2 o más angostas el video se recorta a los lados, la jugadora se
-   desplaza a la izquierda y el CTA cubriría su cabeza; quedan solo título y botón. */
-@media screen and (min-width: 64em) and (max-aspect-ratio: 3/2) {
+   desplaza a la izquierda y el CTA cubriría su cabeza; en ventanas de 720 px de
+   alto o menos el texto, que mide en rem, alcanza su cabeza. Quedan solo título
+   y botón. */
+@media screen and (min-width: 64em) and (max-aspect-ratio: 3/2),
+  screen and (min-width: 64em) and (max-height: 720px) {
   .deporte-hero--texto-arriba-izquierda .deporte-hero__texto {
     display: none;
   }
