@@ -1334,7 +1334,7 @@ describe('ReservasContext — sincronización entre pestañas (S2, S3, S4, S5)',
   });
 });
 
-describe('ReservasContext — sincronización sin pérdida de reservas en memoria (#40)', () => {
+describe('ReservasContext — sincronización sin pérdida de estado ni ventana (#40, #41)', () => {
   beforeEach(() => {
     window.localStorage.clear();
   });
@@ -1577,5 +1577,197 @@ describe('ReservasContext — sincronización sin pérdida de reservas en memori
     const disp = result.current.disponibilidad('padel-1', dia3);
     expect(disp.find((h) => h.hora === '16:00').disponible).toBe(false);
     expect(disp.find((h) => h.hora === '17:00').disponible).toBe(false);
+  });
+
+  it('#41 Caso A: tabVieja reserva en un día compartido sin enfocarla antes y conserva en localStorage el día +6 reservado por tabNueva', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 16, 10, 0, 0));
+
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const tabVieja = renderHook(() => useReservas(), { wrapper });
+    expect(tabVieja.result.current.dias).not.toContain('2026-11-23');
+
+    vi.setSystemTime(new Date(2026, 10, 17, 10, 0, 0));
+    const tabNueva = renderHook(() => useReservas(), { wrapper });
+    expect(tabNueva.result.current.dias[6]).toBe('2026-11-23');
+
+    let resNueva;
+    act(() => {
+      resNueva = tabNueva.result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: '2026-11-23',
+        horas: ['16:00'],
+        nombre: 'Laura Día 6',
+      });
+    });
+    expect(resNueva.ok).toBe(true);
+
+    // tabVieja aún está en ventana 16..22 y reserva un día compartido sin haberse enfocado antes
+    let resVieja;
+    act(() => {
+      resVieja = tabVieja.result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: '2026-11-18',
+        horas: ['14:00'],
+        nombre: 'Carlos Día Compartido',
+      });
+    });
+    expect(resVieja.ok).toBe(true);
+
+    const persistido = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    expect(persistido.ocupados['padel-1']['2026-11-23']).toContain('16:00');
+    expect(persistido.ocupados['padel-1']['2026-11-18']).toContain('14:00');
+    expect(persistido.reservas.map((r) => r.codigo)).toEqual(
+      expect.arrayContaining([resNueva.codigo, resVieja.codigo])
+    );
+
+    // Al enfocar después tabVieja, renueva ventana y conserva 2026-11-23 ocupado en ambas pestañas
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+    });
+
+    expect(tabVieja.result.current.dias[6]).toBe('2026-11-23');
+    expect(
+      tabVieja.result.current
+        .disponibilidad('padel-1', '2026-11-23')
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(false);
+    expect(
+      tabNueva.result.current
+        .disponibilidad('padel-1', '2026-11-23')
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(false);
+
+    const persistidoTrasRenovar = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    expect(persistidoTrasRenovar.ocupados['padel-1']['2026-11-16']).toBeUndefined();
+    expect(persistidoTrasRenovar.ocupados['padel-1']['2026-11-23']).toContain('16:00');
+  });
+
+  it('#41 Caso B: RENOVAR_VENTANA en tabVieja (sin evento storage previo, con evento storage previo y directo en reducer) no pierde el día +6', () => {
+    vi.useFakeTimers();
+
+    // Subcaso 1: sin haber recibido evento storage de tabNueva antes de focus
+    vi.setSystemTime(new Date(2026, 10, 16, 10, 0, 0));
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const tabViejaSinSync = renderHook(() => useReservas(), { wrapper });
+
+    vi.setSystemTime(new Date(2026, 10, 17, 10, 0, 0));
+    const tabNueva1 = renderHook(() => useReservas(), { wrapper });
+
+    let resNueva1;
+    act(() => {
+      resNueva1 = tabNueva1.result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: '2026-11-23',
+        horas: ['16:00'],
+        nombre: 'Sofía Sin Sync',
+      });
+    });
+    expect(resNueva1.ok).toBe(true);
+
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+    });
+
+    expect(tabViejaSinSync.result.current.dias[6]).toBe('2026-11-23');
+    expect(
+      tabViejaSinSync.result.current
+        .disponibilidad('padel-1', '2026-11-23')
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(false);
+    expect(tabViejaSinSync.result.current.reservas.map((r) => r.codigo)).toContain(
+      resNueva1.codigo
+    );
+    expect(
+      JSON.parse(window.localStorage.getItem(STORAGE_KEY)).ocupados['padel-1'][
+        '2026-11-23'
+      ]
+    ).toContain('16:00');
+
+    tabViejaSinSync.unmount();
+    tabNueva1.unmount();
+    window.localStorage.clear();
+
+    // Subcaso 2: habiendo recibido el evento storage de tabNueva antes de focus
+    vi.setSystemTime(new Date(2026, 10, 16, 10, 0, 0));
+    const tabViejaConSync = renderHook(() => useReservas(), { wrapper });
+
+    vi.setSystemTime(new Date(2026, 10, 17, 10, 0, 0));
+    const tabNueva2 = renderHook(() => useReservas(), { wrapper });
+
+    let resNueva2;
+    act(() => {
+      resNueva2 = tabNueva2.result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: '2026-11-23',
+        horas: ['16:00'],
+        nombre: 'Mateo Con Sync',
+      });
+    });
+    expect(resNueva2.ok).toBe(true);
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: STORAGE_KEY,
+          newValue: window.localStorage.getItem(STORAGE_KEY),
+        })
+      );
+    });
+    expect(tabViejaConSync.result.current.dias[0]).toBe('2026-11-16');
+
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+    });
+
+    expect(tabViejaConSync.result.current.dias[6]).toBe('2026-11-23');
+    expect(
+      tabViejaConSync.result.current
+        .disponibilidad('padel-1', '2026-11-23')
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(false);
+    expect(
+      JSON.parse(window.localStorage.getItem(STORAGE_KEY)).ocupados['padel-1'][
+        '2026-11-23'
+      ]
+    ).toContain('16:00');
+
+    tabViejaConSync.unmount();
+    tabNueva2.unmount();
+    window.localStorage.clear();
+
+    // Subcaso 3: reducer directo con RENOVAR_VENTANA leyendo de localStorage el día 2026-11-23
+    vi.setSystemTime(new Date(2026, 10, 16, 10, 0, 0));
+    const estadoDia1 = crearEstadoInicial();
+
+    vi.setSystemTime(new Date(2026, 10, 17, 10, 0, 0));
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ocupados: {
+          'padel-1': {
+            '2026-11-23': ['08:00', '16:00', '20:00'],
+          },
+        },
+        reservas: [
+          {
+            id: 'padel-1__2026-11-23__16:00__999',
+            codigo: 'SPF-RED006',
+            tipo: 'individual',
+            canchaId: 'padel-1',
+            fecha: '2026-11-23',
+            hora: '16:00',
+            horas: ['16:00'],
+            nombre: 'Elena Reducer',
+          },
+        ],
+      })
+    );
+
+    const estadoRenovado = reducer(estadoDia1, { type: 'RENOVAR_VENTANA' });
+    expect(estadoRenovado.dias[6]).toBe('2026-11-23');
+    expect(estadoRenovado.ocupados['padel-1']['2026-11-23']).toContain('16:00');
+    expect(estadoRenovado.reservas).toHaveLength(1);
+    expect(estadoRenovado.reservas[0].codigo).toBe('SPF-RED006');
   });
 });

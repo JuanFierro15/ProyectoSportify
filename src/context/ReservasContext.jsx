@@ -185,6 +185,57 @@ function leerGuardado(canchas, dias, semillaOcup, raw) {
   };
 }
 
+function combinarOcupadosPorCancha(a, b) {
+  if (!a && !b) return null;
+  const resultado = {};
+  const ids = new Set([
+    ...(a ? Object.keys(a) : []),
+    ...(b ? Object.keys(b) : []),
+  ]);
+  ids.forEach((cid) => {
+    resultado[cid] = {
+      ...(a && a[cid] ? a[cid] : {}),
+      ...(b && b[cid] ? b[cid] : {}),
+    };
+  });
+  return resultado;
+}
+
+// Conserva fechas futuras posteriores a la ventana actual de ocupados previos
+// (p. ej. otra pestaña en un día más reciente ya reservó su nuevo día +6) y
+// descarta las fechas pasadas.
+function armarOcupadosParaGuardar(ocupadosActuales, diasActuales, ocupadosPrevios) {
+  if (!ocupadosPrevios || typeof ocupadosPrevios !== 'object') {
+    return ocupadosActuales;
+  }
+  const conjuntoDias = new Set(diasActuales);
+  const ultimaFecha =
+    Array.isArray(diasActuales) && diasActuales.length > 0
+      ? diasActuales[diasActuales.length - 1]
+      : '';
+  const resultado = {};
+  Object.keys(ocupadosActuales).forEach((canchaId) => {
+    const previosCancha = ocupadosPrevios[canchaId];
+    const extras = {};
+    if (previosCancha && typeof previosCancha === 'object') {
+      Object.keys(previosCancha).forEach((fecha) => {
+        if (
+          !conjuntoDias.has(fecha) &&
+          (!ultimaFecha || fecha > ultimaFecha) &&
+          Array.isArray(previosCancha[fecha])
+        ) {
+          extras[fecha] = [...previosCancha[fecha]];
+        }
+      });
+    }
+    resultado[canchaId] = {
+      ...extras,
+      ...ocupadosActuales[canchaId],
+    };
+  });
+  return resultado;
+}
+
 // Estado inicial: si hay datos guardados válidos se reconcilian con la ventana
 // de 7 días actual (se descartan fechas pasadas, las nuevas toman la semilla);
 // si no, se usa la semilla completa.
@@ -610,16 +661,54 @@ export function reducer(state, action) {
         return state;
       }
       const semillaOcup = ocupadosSemilla(dias);
+      const datosStorage =
+        action.payload && 'datosStorage' in action.payload
+          ? action.payload.datosStorage
+          : parsearDatosGuardados();
+      const conservarMemoriaEnVentanaPrevia = Boolean(
+        action.payload && action.payload.conservarMemoriaEnVentanaPrevia
+      );
+      const conjuntoDiasPrevios = new Set(state.dias);
+      const ocupadosCombinados = {};
+      state.canchas.forEach((c) => {
+        const enMemoria = (state.ocupados && state.ocupados[c.id]) || {};
+        const enStorage =
+          (datosStorage &&
+            datosStorage.ocupadosCrudos &&
+            datosStorage.ocupadosCrudos[c.id]) ||
+          {};
+        if (conservarMemoriaEnVentanaPrevia) {
+          const porCancha = { ...enStorage };
+          Object.keys(enMemoria).forEach((fecha) => {
+            if (conjuntoDiasPrevios.has(fecha)) {
+              porCancha[fecha] = enMemoria[fecha];
+            }
+          });
+          ocupadosCombinados[c.id] = porCancha;
+        } else {
+          ocupadosCombinados[c.id] = {
+            ...enMemoria,
+            ...enStorage,
+          };
+        }
+      });
       const ocupados = fusionarConSemilla(
         state.canchas,
         dias,
-        state.ocupados,
+        ocupadosCombinados,
         semillaOcup
       );
+      const reservas =
+        !conservarMemoriaEnVentanaPrevia &&
+        datosStorage &&
+        Array.isArray(datosStorage.reservas)
+          ? datosStorage.reservas
+          : state.reservas;
       return {
         ...state,
         dias,
         ocupados,
+        reservas,
       };
     }
 
@@ -650,6 +739,11 @@ export function ReservasProvider({ children }) {
   if (ultimoRawStorageRef.current === undefined) {
     ultimoRawStorageRef.current = leerRawStorage();
   }
+  const ocupadosCrudosRef = useRef(undefined);
+  if (ocupadosCrudosRef.current === undefined) {
+    ocupadosCrudosRef.current =
+      parsearDatosGuardados(ultimoRawStorageRef.current)?.ocupadosCrudos || null;
+  }
 
   // Aplica el reducer en memoria de forma síncrona además de encolarlo en React,
   // para que llamadas seguidas en el mismo tick no se pisen entre sí.
@@ -671,23 +765,63 @@ export function ReservasProvider({ children }) {
       return;
     }
     try {
+      const desdeStorage = parsearDatosGuardados()?.ocupadosCrudos || null;
+      const ocupadosPrevios = combinarOcupadosPorCancha(
+        ocupadosCrudosRef.current,
+        desdeStorage
+      );
+      const ocupadosParaGuardar = armarOcupadosParaGuardar(
+        state.ocupados,
+        state.dias,
+        ocupadosPrevios
+      );
       const serializado = JSON.stringify({
-        ocupados: state.ocupados,
+        ocupados: ocupadosParaGuardar,
         reservas: state.reservas,
       });
       window.localStorage.setItem(STORAGE_KEY, serializado);
       ultimoRawStorageRef.current = serializado;
+      ocupadosCrudosRef.current = ocupadosParaGuardar;
     } catch (e) {
       // Sin persistencia (modo privado, cuota llena...): sigue en memoria.
     }
-  }, [state.ocupados, state.reservas]);
+  }, [state.ocupados, state.reservas, state.dias]);
 
   useEffect(() => {
     const renovarSiCambioElDia = () => {
       if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
         return;
       }
-      despachar({ type: 'RENOVAR_VENTANA' });
+      if (estadoRef.current.dias[0] === ventanaDias()[0]) {
+        return;
+      }
+      const rawActual = leerRawStorage();
+      const cambioExterno =
+        rawActual !== null && rawActual !== ultimoRawStorageRef.current;
+      if (cambioExterno) {
+        ultimoRawStorageRef.current = rawActual;
+      }
+      const desdeStorage = parsearDatosGuardados(
+        rawActual !== null ? rawActual : undefined
+      );
+      if (desdeStorage) {
+        ocupadosCrudosRef.current = desdeStorage.ocupadosCrudos;
+      }
+      const datosStorage =
+        desdeStorage ||
+        (ocupadosCrudosRef.current
+          ? {
+              ocupadosCrudos: ocupadosCrudosRef.current,
+              reservas: estadoRef.current.reservas,
+            }
+          : null);
+      despachar({
+        type: 'RENOVAR_VENTANA',
+        payload: {
+          datosStorage,
+          conservarMemoriaEnVentanaPrevia: !cambioExterno,
+        },
+      });
     };
     window.addEventListener('focus', renovarSiCambioElDia);
     document.addEventListener('visibilitychange', renovarSiCambioElDia);
@@ -705,9 +839,19 @@ export function ReservasProvider({ children }) {
       const actual = estadoRef.current;
       const semillaOcup = ocupadosSemilla(actual.dias);
       const raw = typeof e.newValue === 'string' ? e.newValue : undefined;
-      const guardado = leerGuardado(actual.canchas, actual.dias, semillaOcup, raw);
-      if (guardado) {
+      const datos = parsearDatosGuardados(raw);
+      if (datos) {
         ultimoRawStorageRef.current = leerRawStorage();
+        ocupadosCrudosRef.current = datos.ocupadosCrudos;
+        const guardado = {
+          ocupados: fusionarConSemilla(
+            actual.canchas,
+            actual.dias,
+            datos.ocupadosCrudos,
+            semillaOcup
+          ),
+          reservas: datos.reservas,
+        };
         syncDesdeStorageRef.current = guardado;
         despachar({ type: 'SINCRONIZAR', payload: guardado });
         return;
@@ -716,6 +860,7 @@ export function ReservasProvider({ children }) {
         try {
           if (window.localStorage.getItem(STORAGE_KEY) === null) {
             ultimoRawStorageRef.current = null;
+            ocupadosCrudosRef.current = null;
             const payload = { ocupados: semillaOcup, reservas: [] };
             syncDesdeStorageRef.current = payload;
             despachar({
@@ -736,14 +881,19 @@ export function ReservasProvider({ children }) {
     const actual = estadoRef.current;
     const rawActual = leerRawStorage();
     if (rawActual !== null && rawActual !== ultimoRawStorageRef.current) {
-      const guardado = leerGuardado(
-        actual.canchas,
-        actual.dias,
-        ocupadosSemilla(actual.dias),
-        rawActual
-      );
-      if (guardado) {
+      const datos = parsearDatosGuardados(rawActual);
+      if (datos) {
         ultimoRawStorageRef.current = rawActual;
+        ocupadosCrudosRef.current = datos.ocupadosCrudos;
+        const guardado = {
+          ocupados: fusionarConSemilla(
+            actual.canchas,
+            actual.dias,
+            datos.ocupadosCrudos,
+            ocupadosSemilla(actual.dias)
+          ),
+          reservas: datos.reservas,
+        };
         return {
           guardado,
           estado: { ...actual, ...guardado },
