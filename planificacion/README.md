@@ -49,6 +49,7 @@ odd/
 | `14-pendientes-pr27` | Pendientes del PR #27 y prueba de producción a 390 px: sugerencias del chat a 44 px, pastilla del carrusel, pruebas de GSAP del torneo, video del hero, 429+503 y enlaces de Navbar y Footer (rama `fix/pendientes-pr27`, implementada el 14-11, PR #28 fusionado en `1ad7242`) | Juan Fierro | sí | no | sí | p1, t1 |
 | `15-horas-torneo-por-cancha` | Horas por cancha y salteadas en las fases del torneo, y aviso con confirmación cuando sobran horas sin partido (rama `feat/horas-torneo-por-cancha`, implementada el 15-11, PR #29 fusionado) | Juan Fierro | sí | no | sí | l1, c1, u1, v1, f1 |
 | `16-descuento-torneo` | Descuento de $15.000 por hora en todas las canchas del torneo, desde 1 hora y aunque no sean seguidas (rama `feat/descuento-torneo`, PR #30 fusionado) | Juan Fierro | sí | no | sí | d1 |
+| `17-sincronizacion-pestanas` | Cierre de issues #40, #41 y #42: refs de estado y último `localStorage` para no pisar reservas en memoria, conservación de días futuros (`+6`) y relectura en `RENOVAR_VENTANA`, y `disponibilidad` fresca tras rechazo en el chat (rama `fix/issues-40-41-42`, 17-11) | Juan Fierro (revisa Miguel Medina) | sí | no | sí | r1, c1, v1 |
 
 Antes del flujo por etapas (sin plan ni reporte, solo commits):
 
@@ -116,6 +117,9 @@ inicio).
 | Asistente torneo secciones | `v3-recheck-960` | Recomprobación acotada de S8 en `960×800` y `390×844` tras incluir `.bracket-torneo__canvas-scroll` (`revision/v2/verificacion.md`) | `b055327` | `v3.log` |
 | Pendientes PR #27 | `p1-chips-y-carrusel` | Sugerencias del chat a 44 px y pastilla del carrusel bajo la tarjeta, con mediciones a 390 y 1440 px | (ver REPORTE de la etapa 14) | `p1.log` |
 | Pendientes PR #27 | `t1-pruebas` | Pruebas de limpieza GSAP (Bracket, CalendarioTorneo), pausa del video del hero, errores mixtos en `/api/chat` y enlaces de Navbar y Footer (retoma por el caso 504) | (ver REPORTE de la etapa 14) | `t1.log` (`-intento1`) |
+| Sincronización entre pestañas | `r1-contexto-pestanas` | Refs `estadoRef`/`ultimoRawStorageRef`/`ocupadosCrudosRef`, conservación de días futuros (`+6`), relectura en `RENOVAR_VENTANA`, `disponibilidad` inmediata y 7 pruebas en `ReservasContext.test.jsx` (#40, #41, #42) | `8b69e5a`, `88c53cc`, `f97fd00` | `r1.log` |
+| Sincronización entre pestañas | `c1-prueba-chat-choque` | Prueba de regresión de la issue #42 en `useChatbot.test.jsx` | `f97fd00` | `c1.log` |
+| Sincronización entre pestañas | `v1-verificacion` | Verificación independiente de solo lectura sobre el diff, casos límite y calidad de pruebas (`APROBADO`) | (ver REPORTE de la etapa 17) | `v1.log` |
 
 ## Cómo trabajar en equipo
 
