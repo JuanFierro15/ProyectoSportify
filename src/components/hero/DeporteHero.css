@@ -110,6 +110,30 @@
       linear-gradient(270deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.15) 45%, transparent 75%),
       rgba(0, 0, 0, 0.16);
   }
+
+  .deporte-hero--texto-arriba-izquierda .deporte-hero__bloque {
+    max-width: min(28rem, 34vw);
+  }
+
+  .deporte-hero--texto-arriba-izquierda .deporte-hero__contenido {
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding-top: clamp(5.5rem, 12vh, 7.5rem);
+  }
+
+  .deporte-hero--texto-arriba-izquierda .deporte-hero__overlay {
+    background:
+      linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.22) 40%, transparent 65%),
+      rgba(0, 0, 0, 0.16);
+  }
+}
+
+/* En ventanas 3:2 o más angostas el video se recorta a los lados, la jugadora se
+   desplaza a la izquierda y el CTA cubriría su cabeza; quedan solo título y botón. */
+@media screen and (min-width: 64em) and (max-aspect-ratio: 3/2) {
+  .deporte-hero--texto-arriba-izquierda .deporte-hero__texto {
+    display: none;
+  }
 }
 
 .deporte-hero__eyebrow {

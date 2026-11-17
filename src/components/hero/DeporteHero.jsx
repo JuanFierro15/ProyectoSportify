@@ -41,7 +41,7 @@ const MARGEN_PRECARGA_VISIBLE = '0px';
  *  - tituloCTA     {string}  texto del botón
  *  - colorAcento   {string}  color de acento (hex) para el CTA y el "eyebrow"
  *  - posicionTexto {string}  ubicación del bloque de texto desde `large`
- *    ('izquierda' | 'abajo-izquierda' | 'abajo-derecha')
+ *    ('izquierda' | 'abajo-izquierda' | 'abajo-derecha' | 'arriba-izquierda')
  *  - ultimoDeporte {bool}    true solo en el último hero del listado: agrega
  *    un degradado de salida (transparente -> --eventos-fondo) para que no
  *    quede un corte abrupto contra la sección de eventos que sigue.

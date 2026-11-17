@@ -16,7 +16,7 @@ describe('DEPORTES', () => {
     );
 
     expect(posiciones).toEqual({
-      'voley-playa': 'abajo-izquierda',
+      'voley-playa': 'arriba-izquierda',
       padel: 'izquierda',
       futbol: 'abajo-derecha',
     });

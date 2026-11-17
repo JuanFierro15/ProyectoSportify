@@ -6,7 +6,7 @@ import { VistaCanchasProvider } from '../../context/VistaCanchasContext';
 import PaginaInicio from './PaginaInicio';
 
 const POSICIONES_ESPERADAS = [
-  ['voley-playa', 'abajo-izquierda'],
+  ['voley-playa', 'arriba-izquierda'],
   ['padel', 'izquierda'],
   ['futbol', 'abajo-derecha'],
 ];
