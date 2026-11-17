@@ -1804,6 +1804,40 @@ describe('controladorSnapHero', () => {
     }
   });
 
+  it('Espacio desde un hijo de un enlace (span dentro de a[href]) también avanza el hero', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10, currentTime: 1.5 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.15,
+    });
+
+    fijarScrollY(150);
+
+    const enlace = document.createElement('a');
+    enlace.href = '#ubicacion';
+    const texto = document.createElement('span');
+    enlace.appendChild(texto);
+    document.body.appendChild(enlace);
+
+    try {
+      const ev = new KeyboardEvent('keydown', {
+        key: ' ',
+        cancelable: true,
+        bubbles: true,
+      });
+      texto.dispatchEvent(ev);
+
+      expect(ev.defaultPrevented).toBe(true);
+      expect(video.play).toHaveBeenCalledTimes(1);
+      expect(heroEstaReproduciendo(seccion)).toBe(true);
+    } finally {
+      enlace.remove();
+    }
+  });
+
   it('Espacio sobre un enlace con role="button" sigue exento: no previene default ni reproduce', () => {
     const seccion = document.createElement('section');
     const video = crearVideoMock({ duration: 10, currentTime: 1.5 });
