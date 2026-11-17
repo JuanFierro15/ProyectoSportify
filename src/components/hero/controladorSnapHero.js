@@ -65,7 +65,7 @@ function esCampoEditable(target) {
 
 const SELECTOR_ZONAS_EXCLUIDAS = '.chatbot, dialog[open], [role="dialog"]';
 const SELECTOR_CONTROLES_ESPACIO =
-  'button, a[href], summary, [role="button"], [role="tab"], [role="menuitem"], [role="checkbox"], [role="radio"], [role="switch"]';
+  'button, summary, [role="button"], [role="tab"], [role="menuitem"], [role="checkbox"], [role="radio"], [role="switch"]';
 
 function elementoDeObjetivo(target) {
   if (!target || typeof target !== 'object') return null;

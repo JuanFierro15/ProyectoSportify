@@ -1714,7 +1714,7 @@ describe('controladorSnapHero', () => {
     }
   });
 
-  it('Espacio sobre un button o controles interactivos (a[href], role=tab, etc.) no previene default, no reproduce ni cancela; ArrowDown en body sigue funcionando', () => {
+  it('Espacio sobre un button o controles interactivos (role=tab, etc.) no previene default, no reproduce ni cancela; ArrowDown en body sigue funcionando', () => {
     const seccion = document.createElement('section');
     const video = crearVideoMock({ duration: 10, currentTime: 1.5 });
     registrar({
@@ -1729,14 +1729,12 @@ describe('controladorSnapHero', () => {
     const boton = document.createElement('button');
     const icono = document.createElement('span');
     boton.appendChild(icono);
-    const enlace = document.createElement('a');
-    enlace.href = '#ubicacion';
     const tab = document.createElement('button');
     tab.setAttribute('role', 'tab');
-    document.body.append(boton, enlace, tab);
+    document.body.append(boton, tab);
 
     try {
-      for (const objetivo of [boton, icono, enlace, tab]) {
+      for (const objetivo of [boton, icono, tab]) {
         const ev = new KeyboardEvent('keydown', {
           key: ' ',
           cancelable: true,
@@ -1770,8 +1768,71 @@ describe('controladorSnapHero', () => {
       expect(heroEstaReproduciendo(seccion)).toBe(true);
     } finally {
       boton.remove();
-      enlace.remove();
       tab.remove();
+    }
+  });
+
+  it('Espacio sobre un enlace (a[href]) en reposo previene default y avanza el hero', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10, currentTime: 1.5 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.15,
+    });
+
+    fijarScrollY(150);
+
+    const enlace = document.createElement('a');
+    enlace.href = '#ubicacion';
+    document.body.appendChild(enlace);
+
+    try {
+      const ev = new KeyboardEvent('keydown', {
+        key: ' ',
+        cancelable: true,
+        bubbles: true,
+      });
+      enlace.dispatchEvent(ev);
+
+      expect(ev.defaultPrevented).toBe(true);
+      expect(video.play).toHaveBeenCalledTimes(1);
+      expect(heroEstaReproduciendo(seccion)).toBe(true);
+    } finally {
+      enlace.remove();
+    }
+  });
+
+  it('Espacio sobre un enlace con role="button" sigue exento: no previene default ni reproduce', () => {
+    const seccion = document.createElement('section');
+    const video = crearVideoMock({ duration: 10, currentTime: 1.5 });
+    registrar({
+      seccion,
+      video,
+      st: { start: 0, end: 1000 },
+      progresoObjetivo: () => 0.15,
+    });
+
+    fijarScrollY(150);
+
+    const enlace = document.createElement('a');
+    enlace.href = '#x';
+    enlace.setAttribute('role', 'button');
+    document.body.appendChild(enlace);
+
+    try {
+      const ev = new KeyboardEvent('keydown', {
+        key: ' ',
+        cancelable: true,
+        bubbles: true,
+      });
+      enlace.dispatchEvent(ev);
+
+      expect(ev.defaultPrevented).toBe(false);
+      expect(video.play).not.toHaveBeenCalled();
+    } finally {
+      enlace.remove();
     }
   });
 
