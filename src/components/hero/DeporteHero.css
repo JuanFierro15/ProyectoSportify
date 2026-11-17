@@ -123,7 +123,7 @@
 
   .deporte-hero--texto-arriba-izquierda .deporte-hero__overlay {
     background:
-      linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.22) 40%, transparent 65%),
+      linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.42) 50%, transparent 80%),
       rgba(0, 0, 0, 0.16);
   }
 }
