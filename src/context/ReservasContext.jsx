@@ -134,28 +134,55 @@ export function fusionarConSemilla(canchas, dias, ocupadosGuardados, semillaOcup
   return ocupados;
 }
 
-// Lee y reconcilia lo guardado en localStorage (o un JSON crudo recibido por evento).
-// Devuelve { ocupados, reservas } o null si no hay datos válidos o falla la lectura.
-function leerGuardado(canchas, dias, semillaOcup, raw) {
+function leerRawStorage() {
   try {
-    const guardado =
-      raw !== undefined ? raw : window.localStorage.getItem(STORAGE_KEY);
+    return window.localStorage.getItem(STORAGE_KEY);
+  } catch (e) {
+    return null;
+  }
+}
+
+function parsearDatosGuardados(raw) {
+  try {
+    const guardado = raw !== undefined ? raw : leerRawStorage();
     if (guardado) {
       const data = JSON.parse(guardado);
-      if (data && data.ocupados && Array.isArray(data.reservas)) {
-        const ocupados = fusionarConSemilla(canchas, dias, data.ocupados, semillaOcup);
+      if (
+        data &&
+        data.ocupados &&
+        typeof data.ocupados === 'object' &&
+        Array.isArray(data.reservas)
+      ) {
         // Registros viejos sin `tipo` -> se infieren.
         const reservas = data.reservas.map((r) => ({
           tipo: r.tipo || (Array.isArray(r.canchaIds) ? 'evento' : 'individual'),
           ...r,
         }));
-        return { ocupados, reservas };
+        return { ocupadosCrudos: data.ocupados, reservas };
       }
     }
   } catch (e) {
     // Sin almacenamiento local o dato corrupto -> sin datos guardados.
   }
   return null;
+}
+
+// Lee y reconcilia lo guardado en localStorage (o un JSON crudo recibido por evento).
+// Devuelve { ocupados, reservas } o null si no hay datos válidos o falla la lectura.
+function leerGuardado(canchas, dias, semillaOcup, raw) {
+  const datos = parsearDatosGuardados(raw);
+  if (!datos) {
+    return null;
+  }
+  return {
+    ocupados: fusionarConSemilla(
+      canchas,
+      dias,
+      datos.ocupadosCrudos,
+      semillaOcup
+    ),
+    reservas: datos.reservas,
+  };
 }
 
 // Estado inicial: si hay datos guardados válidos se reconcilian con la ventana
@@ -399,10 +426,11 @@ export function reducer(state, action) {
         },
       };
 
+      const marcaTiempo = action.payload.ahora ?? Date.now();
       const cancha = state.canchas.find((c) => c.id === canchaId);
       const precio = calcularPrecio(cancha ? cancha.precioHora : 0, horas.length);
       const reserva = {
-        id: `${canchaId}__${fecha}__${horas[0]}__${Date.now()}`,
+        id: `${canchaId}__${fecha}__${horas[0]}__${marcaTiempo}`,
         codigo: action.payload.codigo || null,
         tipo: 'individual',
         canchaId,
@@ -417,7 +445,7 @@ export function reducer(state, action) {
         aguaGratis: precio.aguaGratis,
         nombre: nombre || null,
         telefono: telefono || null,
-        creadaEn: new Date().toISOString(),
+        creadaEn: new Date(marcaTiempo).toISOString(),
       };
 
       return {
@@ -446,6 +474,8 @@ export function reducer(state, action) {
       if (!validacion.ok) {
         return state;
       }
+
+      const marcaTiempo = action.payload.ahora ?? Date.now();
 
       if (Array.isArray(bloques) && bloques.length > 0) {
         const ocupados = { ...state.ocupados };
@@ -481,7 +511,7 @@ export function reducer(state, action) {
         );
 
         const evento = {
-          id: `evento__${bloques[0].fecha}__${Date.now()}`,
+          id: `evento__${bloques[0].fecha}__${marcaTiempo}`,
           codigo: action.payload.codigo || null,
           tipo: 'evento',
           subtipo, // 'torneo' | 'cumpleanos'
@@ -503,7 +533,7 @@ export function reducer(state, action) {
           torneo: torneo || null,
           nombre: nombre || null,
           telefono: telefono || null,
-          creadaEn: new Date().toISOString(),
+          creadaEn: new Date(marcaTiempo).toISOString(),
         };
 
         return {
@@ -533,7 +563,7 @@ export function reducer(state, action) {
       const precio = calcularPrecioEvento(canchasEvento, horas.length);
 
       const evento = {
-        id: `evento__${fecha}__${Date.now()}`,
+        id: `evento__${fecha}__${marcaTiempo}`,
         codigo: action.payload.codigo || null,
         tipo: 'evento',
         subtipo, // 'torneo' | 'cumpleanos'
@@ -550,7 +580,7 @@ export function reducer(state, action) {
         torneo: torneo || null,
         nombre: nombre || null,
         telefono: telefono || null,
-        creadaEn: new Date().toISOString(),
+        creadaEn: new Date(marcaTiempo).toISOString(),
       };
 
       return {
@@ -613,6 +643,20 @@ export function reducer(state, action) {
 export function ReservasProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, undefined, crearEstadoInicial);
   const syncDesdeStorageRef = useRef(null);
+  const estadoRef = useRef(state);
+  estadoRef.current = state;
+
+  const ultimoRawStorageRef = useRef(undefined);
+  if (ultimoRawStorageRef.current === undefined) {
+    ultimoRawStorageRef.current = leerRawStorage();
+  }
+
+  // Aplica el reducer en memoria de forma síncrona además de encolarlo en React,
+  // para que llamadas seguidas en el mismo tick no se pisen entre sí.
+  const despachar = useCallback((action) => {
+    estadoRef.current = reducer(estadoRef.current, action);
+    dispatch(action);
+  }, []);
 
   // Espejo al almacenamiento local en cada cambio (salvo si el estado coincide
   // exactamente con el payload despachado por el evento storage).
@@ -627,10 +671,12 @@ export function ReservasProvider({ children }) {
       return;
     }
     try {
-      window.localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ ocupados: state.ocupados, reservas: state.reservas })
-      );
+      const serializado = JSON.stringify({
+        ocupados: state.ocupados,
+        reservas: state.reservas,
+      });
+      window.localStorage.setItem(STORAGE_KEY, serializado);
+      ultimoRawStorageRef.current = serializado;
     } catch (e) {
       // Sin persistencia (modo privado, cuota llena...): sigue en memoria.
     }
@@ -641,7 +687,7 @@ export function ReservasProvider({ children }) {
       if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
         return;
       }
-      dispatch({ type: 'RENOVAR_VENTANA' });
+      despachar({ type: 'RENOVAR_VENTANA' });
     };
     window.addEventListener('focus', renovarSiCambioElDia);
     document.addEventListener('visibilitychange', renovarSiCambioElDia);
@@ -649,27 +695,30 @@ export function ReservasProvider({ children }) {
       window.removeEventListener('focus', renovarSiCambioElDia);
       document.removeEventListener('visibilitychange', renovarSiCambioElDia);
     };
-  }, []);
+  }, [despachar]);
 
   useEffect(() => {
     const alCambiarStorage = (e) => {
       if (e.key !== STORAGE_KEY && e.key !== null) {
         return;
       }
-      const semillaOcup = ocupadosSemilla(state.dias);
+      const actual = estadoRef.current;
+      const semillaOcup = ocupadosSemilla(actual.dias);
       const raw = typeof e.newValue === 'string' ? e.newValue : undefined;
-      const guardado = leerGuardado(state.canchas, state.dias, semillaOcup, raw);
+      const guardado = leerGuardado(actual.canchas, actual.dias, semillaOcup, raw);
       if (guardado) {
+        ultimoRawStorageRef.current = leerRawStorage();
         syncDesdeStorageRef.current = guardado;
-        dispatch({ type: 'SINCRONIZAR', payload: guardado });
+        despachar({ type: 'SINCRONIZAR', payload: guardado });
         return;
       }
       if (e.key === null || e.newValue === null) {
         try {
           if (window.localStorage.getItem(STORAGE_KEY) === null) {
+            ultimoRawStorageRef.current = null;
             const payload = { ocupados: semillaOcup, reservas: [] };
             syncDesdeStorageRef.current = payload;
-            dispatch({
+            despachar({
               type: 'SINCRONIZAR',
               payload,
             });
@@ -681,19 +730,31 @@ export function ReservasProvider({ children }) {
     };
     window.addEventListener('storage', alCambiarStorage);
     return () => window.removeEventListener('storage', alCambiarStorage);
-  }, [state.dias, state.canchas]);
+  }, [despachar]);
 
   const leerEstadoFresco = useCallback(() => {
-    const guardado = leerGuardado(
-      state.canchas,
-      state.dias,
-      ocupadosSemilla(state.dias)
-    );
+    const actual = estadoRef.current;
+    const rawActual = leerRawStorage();
+    if (rawActual !== null && rawActual !== ultimoRawStorageRef.current) {
+      const guardado = leerGuardado(
+        actual.canchas,
+        actual.dias,
+        ocupadosSemilla(actual.dias),
+        rawActual
+      );
+      if (guardado) {
+        ultimoRawStorageRef.current = rawActual;
+        return {
+          guardado,
+          estado: { ...actual, ...guardado },
+        };
+      }
+    }
     return {
-      guardado,
-      estado: guardado ? { ...state, ...guardado } : state,
+      guardado: null,
+      estado: actual,
     };
-  }, [state]);
+  }, []);
 
   const disponibilidad = useCallback(
     (canchaId, fecha) => calcularDisponibilidad(state, canchaId, fecha),
@@ -707,18 +768,21 @@ export function ReservasProvider({ children }) {
       const { guardado, estado } = leerEstadoFresco();
       if (!bloqueLibre(estado, datos.canchaId, datos.fecha, horasDe(datos))) {
         if (guardado) {
-          dispatch({ type: 'SINCRONIZAR', payload: guardado });
+          despachar({ type: 'SINCRONIZAR', payload: guardado });
         }
         return { ok: false, error: 'Ese horario ya está reservado. Elige otro.' };
       }
       if (guardado) {
-        dispatch({ type: 'SINCRONIZAR', payload: guardado });
+        despachar({ type: 'SINCRONIZAR', payload: guardado });
       }
       const codigo = generarCodigo();
-      dispatch({ type: 'RESERVAR', payload: { ...datos, codigo } });
+      despachar({
+        type: 'RESERVAR',
+        payload: { ...datos, codigo, ahora: Date.now() },
+      });
       return { ok: true, codigo };
     },
-    [leerEstadoFresco]
+    [leerEstadoFresco, despachar]
   );
 
   // Evento (torneo / cumpleaños): re-lee localStorage y valida TODAS las celdas antes de despachar.
@@ -729,18 +793,21 @@ export function ReservasProvider({ children }) {
       const validacion = validarReservaEvento(estado, datos);
       if (!validacion.ok) {
         if (guardado) {
-          dispatch({ type: 'SINCRONIZAR', payload: guardado });
+          despachar({ type: 'SINCRONIZAR', payload: guardado });
         }
         return validacion;
       }
       if (guardado) {
-        dispatch({ type: 'SINCRONIZAR', payload: guardado });
+        despachar({ type: 'SINCRONIZAR', payload: guardado });
       }
       const codigo = generarCodigo();
-      dispatch({ type: 'RESERVAR_EVENTO', payload: { ...datos, codigo } });
+      despachar({
+        type: 'RESERVAR_EVENTO',
+        payload: { ...datos, codigo, ahora: Date.now() },
+      });
       return { ok: true, codigo };
     },
-    [leerEstadoFresco]
+    [leerEstadoFresco, despachar]
   );
 
   // Cancelación individual: re-lee localStorage, valida el plazo y, si se puede, sincroniza y despacha.
@@ -757,17 +824,17 @@ export function ReservasProvider({ children }) {
       );
       if (!v.ok) {
         if (guardado) {
-          dispatch({ type: 'SINCRONIZAR', payload: guardado });
+          despachar({ type: 'SINCRONIZAR', payload: guardado });
         }
         return { ok: false, error: v.error };
       }
       if (guardado) {
-        dispatch({ type: 'SINCRONIZAR', payload: guardado });
+        despachar({ type: 'SINCRONIZAR', payload: guardado });
       }
-      dispatch({ type: 'CANCELAR', payload: { reservaId, ahora } });
+      despachar({ type: 'CANCELAR', payload: { reservaId, ahora } });
       return { ok: true };
     },
-    [leerEstadoFresco]
+    [leerEstadoFresco, despachar]
   );
 
   const value = useMemo(
