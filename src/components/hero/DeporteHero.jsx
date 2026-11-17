@@ -36,7 +36,8 @@ const MARGEN_PRECARGA_VISIBLE = '0px';
  * Props:
  *  - nombre        {string}  nombre del deporte (ej. "Voley Playa")
  *  - slug          {string}  slug del deporte; va en data-sport para que el chat sepa qué deporte se está viendo
- *  - videoSrc      {string}  ruta del video de fondo
+ *  - videoSrc      {string}  ruta del video de fondo (720p para móvil y respaldo)
+ *  - videoSrcLg    {string}  [opcional] ruta del video en 1080p para pantallas grandes (min-width: 64em)
  *  - posterSrc     {string}  ruta de la imagen de respaldo (poster) del video
  *  - tituloCTA     {string}  texto del botón
  *  - colorAcento   {string}  color de acento (hex) para el CTA y el "eyebrow"
@@ -78,6 +79,7 @@ function DeporteHero({
   nombre,
   slug,
   videoSrc,
+  videoSrcLg,
   posterSrc,
   tituloCTA,
   colorAcento,
@@ -224,14 +226,25 @@ function DeporteHero({
         <video
           ref={videoRef}
           className="deporte-hero__video"
-          src={videoSrc}
+          src={videoSrcLg ? undefined : videoSrc}
           poster={posterSrc}
           muted
           playsInline
           preload={preload}
           tabIndex="-1"
           aria-hidden="true"
-        />
+        >
+          {videoSrcLg ? (
+            <>
+              <source
+                src={videoSrcLg}
+                media="(min-width: 64em)"
+                type="video/mp4"
+              />
+              <source src={videoSrc} type="video/mp4" />
+            </>
+          ) : null}
+        </video>
       </div>
 
       <div className="deporte-hero__overlay" aria-hidden="true" />
