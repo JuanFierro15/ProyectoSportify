@@ -254,6 +254,15 @@ describe('DeporteHero - controlador snap', () => {
 });
 
 describe('DeporteHero - posicionTexto', () => {
+  it('agrega la clase deporte-hero--texto-arriba-izquierda cuando posicionTexto es "arriba-izquierda"', () => {
+    const { container } = render(
+      <DeporteHero {...PROPS_VALIDAS} posicionTexto="arriba-izquierda" />
+    );
+
+    const seccion = container.querySelector('section');
+    expect(seccion).toHaveClass('deporte-hero--texto-arriba-izquierda');
+  });
+
   it('agrega la clase deporte-hero--texto-abajo-derecha cuando posicionTexto es "abajo-derecha"', () => {
     const { container } = render(
       <DeporteHero {...PROPS_VALIDAS} posicionTexto="abajo-derecha" />

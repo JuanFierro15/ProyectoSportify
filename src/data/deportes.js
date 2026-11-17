@@ -7,6 +7,7 @@ export const POSICIONES_TEXTO_HERO = [
   'izquierda',
   'abajo-izquierda',
   'abajo-derecha',
+  'arriba-izquierda',
 ];
 
 export const DEPORTES = [
@@ -19,7 +20,7 @@ export const DEPORTES = [
       'Siente la arena fina bajo tus pies en canchas con drenaje de alto rendimiento, red reglamentaria e iluminación nocturna para disfrutar cada punto al aire libre.',
     superficie: 'Arena de cuarzo profesional',
     detalleEnTarjeta: true,
-    posicionTexto: 'abajo-izquierda',
+    posicionTexto: 'arriba-izquierda',
   },
   {
     slug: 'padel',
