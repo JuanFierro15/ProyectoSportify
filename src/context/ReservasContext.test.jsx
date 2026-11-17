@@ -1334,7 +1334,7 @@ describe('ReservasContext — sincronización entre pestañas (S2, S3, S4, S5)',
   });
 });
 
-describe('ReservasContext — sincronización sin pérdida de estado ni ventana (#40, #41)', () => {
+describe('ReservasContext — sincronización sin pérdida de estado ni ventana (#40, #41, #42)', () => {
   beforeEach(() => {
     window.localStorage.clear();
   });
@@ -1769,5 +1769,59 @@ describe('ReservasContext — sincronización sin pérdida de estado ni ventana 
     expect(estadoRenovado.ocupados['padel-1']['2026-11-23']).toContain('16:00');
     expect(estadoRenovado.reservas).toHaveLength(1);
     expect(estadoRenovado.reservas[0].codigo).toBe('SPF-RED006');
+  });
+
+  it('#42: tras rechazo de reservar por choque con otra pestaña sin evento storage, disponibilidad() refleja la hora ocupada en el mismo tick antes del re-render', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+
+    const dia3 = result.current.dias[3];
+    expect(
+      result.current
+        .disponibilidad('padel-1', dia3)
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(true);
+
+    const guardadoInicial = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    const ocupadosOtraPestana = structuredClone(guardadoInicial.ocupados);
+    ocupadosOtraPestana['padel-1'][dia3].push('16:00');
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ocupados: ocupadosOtraPestana,
+        reservas: [
+          {
+            id: `padel-1__${dia3}__16:00__501`,
+            codigo: 'SPF-CHOQ42',
+            tipo: 'individual',
+            canchaId: 'padel-1',
+            fecha: dia3,
+            hora: '16:00',
+            horas: ['16:00'],
+            nombre: 'Otro Usuario',
+          },
+        ],
+      })
+    );
+
+    let resRechazo;
+    let dispInmediata;
+    act(() => {
+      resRechazo = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Andrés Choque',
+      });
+      dispInmediata = result.current.disponibilidad('padel-1', dia3);
+    });
+
+    expect(resRechazo).toEqual({
+      ok: false,
+      error: 'Ese horario ya está reservado. Elige otro.',
+    });
+    expect(dispInmediata.find((h) => h.hora === '16:00').disponible).toBe(false);
+    expect(result.current.reservas).toHaveLength(1);
+    expect(result.current.reservas[0].codigo).toBe('SPF-CHOQ42');
   });
 });

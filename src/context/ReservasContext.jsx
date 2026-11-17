@@ -907,7 +907,8 @@ export function ReservasProvider({ children }) {
   }, []);
 
   const disponibilidad = useCallback(
-    (canchaId, fecha) => calcularDisponibilidad(state, canchaId, fecha),
+    (canchaId, fecha) =>
+      calcularDisponibilidad(estadoRef.current ?? state, canchaId, fecha),
     [state]
   );
 
