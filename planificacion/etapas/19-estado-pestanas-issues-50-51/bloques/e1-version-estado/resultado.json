@@ -1,0 +1,70 @@
+{
+  "bloque": "e1-version-estado",
+  "estado": "APROBADO",
+  "codigo": "OK",
+  "motivo": "",
+  "correcciones": 0,
+  "criterios": [
+    {
+      "id": "C1",
+      "cumple": true,
+      "evidencia": "Se creó y ejecutó `src/verificacion/e1/e1.test.jsx` (prueba \"C1: comprueba que flushSync produce un render intermedio del provider sin la transición y que la segunda reserva de la misma hora se rechaza\") junto con la prueba del implementador en `src/context/ReservasContext.test.jsx` (líneas 2049-2093) mediante `npm test -- src/context src/components/reservas src/verificacion/e1`. El observador dentro de `ReservasProvider` verificó que `flushSync` incrementó el contador de renders (`rendersTrasFlushSync > rendersAntes`) y que en ese render intermedio `ctx.reservas.length` seguía siendo `0` (sin la transición), pero `disponibilidad` marcó `16:00` ocupada (`false`), la segunda llamada devolvió `{ ok: false, error: 'Ese horario ya está reservado. Elige otro.' }` y `result.current.reservas` quedó con 1 sola reserva. Además se verificó el mismo escenario con `reservarEvento` y `cancelar`."
+    },
+    {
+      "id": "C2",
+      "cumple": true,
+      "evidencia": "Se ejecutaron la prueba \"C2: con tres llamadas (horas H, H+1 y H) y renders intermedios con flushSync, la tercera se rechaza y quedan exactamente dos reservas\" en `src/verificacion/e1/e1.test.jsx` y la del implementador en `src/context/ReservasContext.test.jsx` (líneas 2095-2149) con `npm test -- src/context src/components/reservas src/verificacion/e1`. Ambas pasaron: las reservas en `H` y `H+1` devolvieron `ok: true`, la tercera llamada sobre `H` devolvió `{ ok: false, error: 'Ese horario ya está reservado. Elige otro.' }` y `result.current.reservas` quedó exactamente con 2 reservas."
+    },
+    {
+      "id": "C3",
+      "cumple": true,
+      "evidencia": "Se ejecutó la prueba \"C3: sin transiciones, dos reservar de la misma hora (o solapadas en la segunda y última hora de un bloque de 3 h) en el mismo act rechazan la segunda\" en `src/verificacion/e1/e1.test.jsx` con `npm test -- src/context src/components/reservas src/verificacion/e1`. La primera reserva (`['10:00', '11:00', '12:00']`) devolvió `ok: true` y las siguientes llamadas en el mismo `act` sobre la primera (`10:00`), segunda (`11:00`) y última hora (`12:00`) devolvieron `{ ok: false, error: 'Ese horario ya está reservado. Elige otro.' }`, quedando 1 sola reserva."
+    },
+    {
+      "id": "C4",
+      "cumple": true,
+      "evidencia": "Se ejecutaron la prueba \"C4: tras un evento storage de otra pestaña que ocupa H, reservar(H) devuelve ok: false y disponibilidad marca H ocupada en el mismo tick\" en `src/verificacion/e1/e1.test.jsx` y la del implementador en `src/context/ReservasContext.test.jsx` (líneas 2151-2201) con `npm test -- src/context src/components/reservas src/verificacion/e1`. Tras despachar `StorageEvent('storage', { key: STORAGE_KEY, newValue })`, en el mismo bloque `act` tanto `disponibilidad` (antes y después de `reservar`) marcó la hora con `disponible: false` como `reservar(H)` devolvió `{ ok: false, error: 'Ese horario ya está reservado. Elige otro.' }`."
+    },
+    {
+      "id": "C5",
+      "cumple": true,
+      "evidencia": "Se ejecutaron la prueba \"C5 y C6: acciones sin efecto en reducerVersionado mantienen referencia y version...\" en `src/verificacion/e1/e1.test.jsx` y la prueba del implementador en `src/context/ReservasContext.test.jsx` (líneas 2203-2245) con `npm test -- src/context src/components/reservas src/verificacion/e1`. Se comprobó con `expect(...).toBe(estado)` que `CANCELAR` de un id inexistente, `RESERVAR` sobre una hora ya ocupada, `RESERVAR_EVENTO` inválido, `RENOVAR_VENTANA` en el mismo día, `SINCRONIZAR` con payload vacío y una acción desconocida devuelven exactamente la misma referencia de objeto y conservan la misma `version`."
+    },
+    {
+      "id": "C6",
+      "cumple": true,
+      "evidencia": "Se ejecutó `npm test -- src/context src/components/reservas src/verificacion/e1` (10 archivos, 122 pruebas en verde). Todas las pruebas existentes que invocan `reducer` directamente en `src/context/ReservasContext.test.jsx` pasaron sin modificar sus aserciones, y en `src/verificacion/e1/e1.test.jsx` se comprobó que al llamar `reducer(estadoSinVersion, { type: 'RESERVAR', ... })` directamente sobre un estado sin propiedad `version`, el objeto devuelto tampoco incluye `'version'` (`'version' in directo === false`), ni se guarda `version` en `localStorage`."
+    },
+    {
+      "id": "C7",
+      "cumple": true,
+      "evidencia": "Se revisó `git diff src/context/ReservasContext.test.jsx src/components/reservas` y se comprobó que `src/components/reservas/` no tuvo cambios y en `src/context/ReservasContext.test.jsx` únicamente se importaron `startTransition`, `useState`, `flushSync` y `reducerVersionado` y se añadieron 4 pruebas nuevas al final del archivo sin tocar ninguna aserción previa. Al correr `npm test -- src/context src/components/reservas src/verificacion/e1` pasaron los 10 archivos (122 tests) y `npm run lint` (`eslint .`) terminó con código 0, sin errores ni avisos."
+    },
+    {
+      "id": "C8",
+      "cumple": true,
+      "evidencia": "Se revisó `git diff docs/agentes/reservas.md` y se leyó `docs/agentes/reservas.md` (línea 9): explica que `useReducer` y `despachar` pasan por `reducerVersionado`, que incrementa `version` (solo en memoria, sin guardarlo en `localStorage`) únicamente cuando el estado cambia, y que en cada render `estadoRef` solo se reemplaza si el estado recibido trae una `version` igual o mayor para no pisar lo que `despachar` adelantó. El texto de la limitación conocida de la issue #50 permanece intacto."
+    }
+  ],
+  "detalles": [],
+  "hallazgosPendientes": [],
+  "resumenVerificador": "El bloque e1-version-estado cumple todos los criterios de aceptación (C1 a C8): `reducerVersionado` y la guarda de versión en `ReservasProvider` impiden que un render intermedio sin una transición confirmada pise el avance síncrono de `estadoRef.current`. Las 122 pruebas de `src/context`, `src/components/reservas` y `src/verificacion/e1` pasan y `npm run lint` finaliza sin errores ni advertencias.",
+  "archivosImplementador": [
+    "docs/agentes/reservas.md",
+    "src/context/ReservasContext.jsx",
+    "src/context/ReservasContext.test.jsx"
+  ],
+  "archivosVerificador": [
+    "src/verificacion/e1/e1.test.jsx"
+  ],
+  "pruebaFinal": {
+    "comando": "npm test -- src/context src/components/reservas src/verificacion/e1",
+    "codigo": 0,
+    "log": "logs/r0-prueba.log"
+  },
+  "conversaciones": {
+    "implementador": "b14efe6e-070f-472d-8ab1-a404dad32aa0",
+    "verificador": "ae59215e-6349-4930-8ad3-df183f018d0f"
+  },
+  "duracionSegundos": 642
+}

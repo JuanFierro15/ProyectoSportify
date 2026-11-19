@@ -1,0 +1,15 @@
+{
+  "repo": "C:/Users/MIGUEL ANGEL/Documents/UNIVERSIDAD/VI SEMESTRE/Lenguajes para la Web/ProyectoSportify/.claude/worktrees/plan-pestanas-fases-torneo",
+  "implementador": "gemini-4-hydrogen-high",
+  "verificador": "gemini-4-argon-high",
+  "permitidos": [
+    "src/context/ReservasContext.jsx",
+    "src/context/ReservasContext.test.jsx",
+    "docs/agentes/reservas.md"
+  ],
+  "pruebasVerificador": "src/verificacion/e2",
+  "comandoPrueba": "npm test -- src/context src/components/reservas src/verificacion/e2",
+  "ignorar": ["planificacion/**", "coverage/**", "src/verificacion/e1/**"],
+  "maxCorrecciones": 2,
+  "timeoutMinutos": 60
+}
