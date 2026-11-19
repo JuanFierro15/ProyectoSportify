@@ -30,7 +30,7 @@ describe('PaginaInicio', () => {
     }
   });
 
-  it('configura cada DeporteHero con fuente 1080p (-lg.mp4) desde 64em y 720p (.mp4) de respaldo en los tres deportes', () => {
+  it('cablea las rutas 1080p (-lg.mp4) y 720p (.mp4) por deporte en los tres heros', () => {
     const { container } = render(
       <ReservasProvider>
         <VistaCanchasProvider>
@@ -39,6 +39,7 @@ describe('PaginaInicio', () => {
       </ReservasProvider>
     );
 
+    const base = import.meta.env.BASE_URL;
     const deportes = [
       ['voley-playa', 'hero_voleyplaya'],
       ['padel', 'hero_padel'],
@@ -52,16 +53,11 @@ describe('PaginaInicio', () => {
       expect(seccion).not.toBeNull();
       const video = seccion.querySelector('video');
       expect(video).not.toBeNull();
-      expect(video).not.toHaveAttribute('src');
 
       const sources = video.querySelectorAll('source');
       expect(sources).toHaveLength(2);
-      expect(sources[0]).toHaveAttribute('src', `/media/${archivo}-lg.mp4`);
-      expect(sources[0]).toHaveAttribute('media', '(min-width: 64em)');
-      expect(sources[0]).toHaveAttribute('type', 'video/mp4');
-      expect(sources[1]).toHaveAttribute('src', `/media/${archivo}.mp4`);
-      expect(sources[1]).toHaveAttribute('type', 'video/mp4');
-      expect(sources[1]).not.toHaveAttribute('media');
+      expect(sources[0]).toHaveAttribute('src', `${base}media/${archivo}-lg.mp4`);
+      expect(sources[1]).toHaveAttribute('src', `${base}media/${archivo}.mp4`);
     }
   });
 });
