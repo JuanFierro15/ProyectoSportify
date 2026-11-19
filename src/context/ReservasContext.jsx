@@ -664,20 +664,19 @@ export function reducer(state, action) {
       const datosStorage =
         action.payload && 'datosStorage' in action.payload
           ? action.payload.datosStorage
-          : parsearDatosGuardados();
+          : null;
       const conservarMemoriaEnVentanaPrevia = Boolean(
         action.payload && action.payload.conservarMemoriaEnVentanaPrevia
       );
-      const conjuntoDiasPrevios = new Set(state.dias);
+      const ocupadosDeStorage =
+        (datosStorage && datosStorage.ocupadosCrudos) || null;
       const ocupadosCombinados = {};
-      state.canchas.forEach((c) => {
-        const enMemoria = (state.ocupados && state.ocupados[c.id]) || {};
-        const enStorage =
-          (datosStorage &&
-            datosStorage.ocupadosCrudos &&
-            datosStorage.ocupadosCrudos[c.id]) ||
-          {};
-        if (conservarMemoriaEnVentanaPrevia) {
+      if (conservarMemoriaEnVentanaPrevia) {
+        const conjuntoDiasPrevios = new Set(state.dias);
+        state.canchas.forEach((c) => {
+          const enMemoria = (state.ocupados && state.ocupados[c.id]) || {};
+          const enStorage =
+            (ocupadosDeStorage && ocupadosDeStorage[c.id]) || {};
           const porCancha = { ...enStorage };
           Object.keys(enMemoria).forEach((fecha) => {
             if (conjuntoDiasPrevios.has(fecha)) {
@@ -685,13 +684,16 @@ export function reducer(state, action) {
             }
           });
           ocupadosCombinados[c.id] = porCancha;
-        } else {
-          ocupadosCombinados[c.id] = {
-            ...enMemoria,
-            ...enStorage,
-          };
-        }
-      });
+        });
+      } else {
+        const mezclados = combinarOcupadosPorCancha(
+          state.ocupados,
+          ocupadosDeStorage
+        );
+        state.canchas.forEach((c) => {
+          ocupadosCombinados[c.id] = (mezclados && mezclados[c.id]) || {};
+        });
+      }
       const ocupados = fusionarConSemilla(
         state.canchas,
         dias,

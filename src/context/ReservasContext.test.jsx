@@ -1736,35 +1736,35 @@ describe('ReservasContext — sincronización sin pérdida de estado ni ventana 
     tabNueva2.unmount();
     window.localStorage.clear();
 
-    // Subcaso 3: reducer directo con RENOVAR_VENTANA leyendo de localStorage el día 2026-11-23
+    // Subcaso 3: reducer directo con RENOVAR_VENTANA recibiendo datosStorage con el día 2026-11-23
     vi.setSystemTime(new Date(2026, 10, 16, 10, 0, 0));
     const estadoDia1 = crearEstadoInicial();
 
     vi.setSystemTime(new Date(2026, 10, 17, 10, 0, 0));
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        ocupados: {
-          'padel-1': {
-            '2026-11-23': ['08:00', '16:00', '20:00'],
+    const estadoRenovado = reducer(estadoDia1, {
+      type: 'RENOVAR_VENTANA',
+      payload: {
+        datosStorage: {
+          ocupadosCrudos: {
+            'padel-1': {
+              '2026-11-23': ['08:00', '16:00', '20:00'],
+            },
           },
+          reservas: [
+            {
+              id: 'padel-1__2026-11-23__16:00__999',
+              codigo: 'SPF-RED006',
+              tipo: 'individual',
+              canchaId: 'padel-1',
+              fecha: '2026-11-23',
+              hora: '16:00',
+              horas: ['16:00'],
+              nombre: 'Elena Reducer',
+            },
+          ],
         },
-        reservas: [
-          {
-            id: 'padel-1__2026-11-23__16:00__999',
-            codigo: 'SPF-RED006',
-            tipo: 'individual',
-            canchaId: 'padel-1',
-            fecha: '2026-11-23',
-            hora: '16:00',
-            horas: ['16:00'],
-            nombre: 'Elena Reducer',
-          },
-        ],
-      })
-    );
-
-    const estadoRenovado = reducer(estadoDia1, { type: 'RENOVAR_VENTANA' });
+      },
+    });
     expect(estadoRenovado.dias[6]).toBe('2026-11-23');
     expect(estadoRenovado.ocupados['padel-1']['2026-11-23']).toContain('16:00');
     expect(estadoRenovado.reservas).toHaveLength(1);
@@ -1943,6 +1943,65 @@ describe('ReservasContext — sincronización sin pérdida de estado ni ventana 
     });
 
     expect(res).toEqual({ ok: false, error: 'Ese horario ya está reservado. Elige otro.' });
+  });
+
+  it('RENOVAR_VENTANA en el reducer no lee localStorage cuando el payload omite datosStorage', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 16, 10, 0, 0));
+
+    const estadoInicial = crearEstadoInicial();
+    const estadoConMemoria = reducer(estadoInicial, {
+      type: 'RESERVAR',
+      payload: {
+        canchaId: 'padel-1',
+        fecha: '2026-11-18',
+        horas: ['14:00'],
+        nombre: 'Reserva Memoria',
+        codigo: 'SPF-MEM001',
+        ahora: Date.now(),
+      },
+    });
+
+    vi.setSystemTime(new Date(2026, 10, 17, 10, 0, 0));
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ocupados: {
+          'padel-1': {
+            '2026-11-23': ['16:00'],
+          },
+        },
+        reservas: [
+          {
+            id: 'padel-1__2026-11-23__16:00__888',
+            codigo: 'SPF-STG999',
+            tipo: 'individual',
+            canchaId: 'padel-1',
+            fecha: '2026-11-23',
+            hora: '16:00',
+            horas: ['16:00'],
+            nombre: 'Reserva Storage',
+          },
+        ],
+      })
+    );
+
+    const getItemSpy = vi.spyOn(Storage.prototype, 'getItem');
+
+    const sinPayload = reducer(estadoConMemoria, { type: 'RENOVAR_VENTANA' });
+    expect(getItemSpy).not.toHaveBeenCalled();
+    expect(sinPayload.dias[0]).toBe('2026-11-17');
+    expect(sinPayload.reservas).toHaveLength(1);
+    expect(sinPayload.reservas[0].codigo).toBe('SPF-MEM001');
+
+    const sinDatosStorage = reducer(estadoConMemoria, {
+      type: 'RENOVAR_VENTANA',
+      payload: {},
+    });
+    expect(getItemSpy).not.toHaveBeenCalled();
+    expect(sinDatosStorage.dias[0]).toBe('2026-11-17');
+    expect(sinDatosStorage.reservas).toHaveLength(1);
+    expect(sinDatosStorage.reservas[0].codigo).toBe('SPF-MEM001');
   });
 
   it('conserva las reservas en memoria si getItem lanza durante un evento storage de borrado', () => {
