@@ -1333,3 +1333,703 @@ describe('ReservasContext — sincronización entre pestañas (S2, S3, S4, S5)',
     );
   });
 });
+
+describe('ReservasContext — sincronización sin pérdida de estado ni ventana (#40, #41, #42)', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it('#40: dos reservar() seguidos en horas distintas dentro del mismo act() se conservan ambos en memoria y en localStorage', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3];
+
+    let res1;
+    let res2;
+    act(() => {
+      res1 = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Sofía Uno',
+      });
+      res2 = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['17:00'],
+        nombre: 'Martín Dos',
+      });
+    });
+
+    expect(res1.ok).toBe(true);
+    expect(res1.codigo).toMatch(/^SPF-[A-Z0-9]{6}$/);
+    expect(res2.ok).toBe(true);
+    expect(res2.codigo).toMatch(/^SPF-[A-Z0-9]{6}$/);
+
+    expect(result.current.reservas).toHaveLength(2);
+    expect(result.current.reservas.map((r) => r.codigo)).toEqual([
+      res1.codigo,
+      res2.codigo,
+    ]);
+
+    const disp = result.current.disponibilidad('padel-1', dia3);
+    expect(disp.find((h) => h.hora === '16:00').disponible).toBe(false);
+    expect(disp.find((h) => h.hora === '17:00').disponible).toBe(false);
+
+    const persistido = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    expect(persistido.reservas).toHaveLength(2);
+    expect(persistido.reservas.map((r) => r.codigo)).toEqual([
+      res1.codigo,
+      res2.codigo,
+    ]);
+    expect(persistido.ocupados['padel-1'][dia3]).toEqual(
+      expect.arrayContaining(['16:00', '17:00'])
+    );
+  });
+
+  it('#40: dos reservar() seguidos en la misma cancha, fecha y hora dentro del mismo act() rechazan el segundo sin duplicar', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3];
+
+    let res1;
+    let res2;
+    act(() => {
+      res1 = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Lucía Primera',
+      });
+      res2 = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Diego Duplicado',
+      });
+    });
+
+    expect(res1.ok).toBe(true);
+    expect(res1.codigo).toMatch(/^SPF-[A-Z0-9]{6}$/);
+    expect(res2).toEqual({
+      ok: false,
+      error: 'Ese horario ya está reservado. Elige otro.',
+    });
+
+    expect(result.current.reservas).toHaveLength(1);
+    expect(result.current.reservas[0].codigo).toBe(res1.codigo);
+
+    const persistido = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    expect(persistido.reservas).toHaveLength(1);
+    expect(persistido.reservas[0].codigo).toBe(res1.codigo);
+  });
+
+  it('#40: combinaciones en el mismo act() (reservar + reservarEvento y reservar + cancelar otra o la misma) acumulan el estado sin pisarse', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 17, 10, 0, 0));
+
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3]; // 2026-11-20
+
+    // Reserva previa que luego se cancelará en el mismo act() que una nueva reserva
+    let resPrevia;
+    act(() => {
+      resPrevia = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['14:00'],
+        nombre: 'Reserva Previa',
+      });
+    });
+    expect(resPrevia.ok).toBe(true);
+    const idPrevia = result.current.reservas[0].id;
+
+    // 1) reservar() + reservarEvento() rechazado por choque + reservarEvento() libre + cancelar(idPrevia) en el mismo act()
+    let resInd;
+    let resEvChoque;
+    let resEvOk;
+    let resCancPrevia;
+    act(() => {
+      resInd = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Ana Individual',
+      });
+      resEvChoque = result.current.reservarEvento({
+        subtipo: 'cumpleanos',
+        fecha: dia3,
+        canchaIds: ['padel-1'],
+        horas: ['16:00', '17:00'],
+        invitados: 10,
+        nombre: 'Choque Inmediato',
+      });
+      resEvOk = result.current.reservarEvento({
+        subtipo: 'cumpleanos',
+        fecha: dia3,
+        canchaIds: ['padel-1'],
+        horas: ['17:00', '18:00'],
+        invitados: 12,
+        nombre: 'Evento Libre',
+      });
+      resCancPrevia = result.current.cancelar(idPrevia);
+    });
+
+    expect(resInd.ok).toBe(true);
+    expect(resEvChoque).toEqual({
+      ok: false,
+      error: ERROR_EVENTO_NO_DISPONIBLE,
+    });
+    expect(resEvOk.ok).toBe(true);
+    expect(resCancPrevia).toEqual({ ok: true });
+
+    expect(result.current.reservas).toHaveLength(2);
+    expect(result.current.reservas.map((r) => r.codigo)).toEqual([
+      resInd.codigo,
+      resEvOk.codigo,
+    ]);
+
+    const dispDia3 = result.current.disponibilidad('padel-1', dia3);
+    expect(dispDia3.find((h) => h.hora === '14:00').disponible).toBe(true);
+    expect(dispDia3.find((h) => h.hora === '16:00').disponible).toBe(false);
+    expect(dispDia3.find((h) => h.hora === '17:00').disponible).toBe(false);
+    expect(dispDia3.find((h) => h.hora === '18:00').disponible).toBe(false);
+
+    // 2) reservar() seguido de cancelar() de ese mismo id en el mismo act()
+    const tsMismo = Date.now();
+    const idEsperado = `padel-1__${dia3}__19:00__${tsMismo}`;
+    let resMismo;
+    let resCancMismo;
+    act(() => {
+      resMismo = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['19:00'],
+        nombre: 'Cancelación Mismo Act',
+      });
+      resCancMismo = result.current.cancelar(idEsperado);
+    });
+
+    expect(resMismo.ok).toBe(true);
+    expect(resCancMismo).toEqual({ ok: true });
+    expect(result.current.reservas).toHaveLength(2);
+    expect(
+      result.current
+        .disponibilidad('padel-1', dia3)
+        .find((h) => h.hora === '19:00').disponible
+    ).toBe(true);
+
+    const persistido = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    expect(persistido.reservas).toHaveLength(2);
+    expect(persistido.ocupados['padel-1'][dia3]).not.toContain('14:00');
+    expect(persistido.ocupados['padel-1'][dia3]).not.toContain('19:00');
+    expect(persistido.ocupados['padel-1'][dia3]).toEqual(
+      expect.arrayContaining(['16:00', '17:00', '18:00'])
+    );
+  });
+
+  it('#40: si setItem falla por cuota mientras getItem devuelve el JSON inicial viejo, la segunda reserva no borra la primera de memoria', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3];
+
+    const jsonInicialViejo = window.localStorage.getItem(STORAGE_KEY);
+    expect(jsonInicialViejo).not.toBeNull();
+
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+    });
+
+    let res1;
+    act(() => {
+      res1 = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Primera En Cuota',
+      });
+    });
+    expect(res1.ok).toBe(true);
+    expect(window.localStorage.getItem(STORAGE_KEY)).toBe(jsonInicialViejo);
+
+    let res2;
+    act(() => {
+      res2 = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['17:00'],
+        nombre: 'Segunda En Cuota',
+      });
+    });
+    expect(res2.ok).toBe(true);
+
+    expect(result.current.reservas).toHaveLength(2);
+    expect(result.current.reservas.map((r) => r.codigo)).toEqual([
+      res1.codigo,
+      res2.codigo,
+    ]);
+    const disp = result.current.disponibilidad('padel-1', dia3);
+    expect(disp.find((h) => h.hora === '16:00').disponible).toBe(false);
+    expect(disp.find((h) => h.hora === '17:00').disponible).toBe(false);
+  });
+
+  it('#41 Caso A: tabVieja reserva en un día compartido sin enfocarla antes y conserva en localStorage el día +6 reservado por tabNueva', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 16, 10, 0, 0));
+
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const tabVieja = renderHook(() => useReservas(), { wrapper });
+    expect(tabVieja.result.current.dias).not.toContain('2026-11-23');
+
+    vi.setSystemTime(new Date(2026, 10, 17, 10, 0, 0));
+    const tabNueva = renderHook(() => useReservas(), { wrapper });
+    expect(tabNueva.result.current.dias[6]).toBe('2026-11-23');
+
+    let resNueva;
+    act(() => {
+      resNueva = tabNueva.result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: '2026-11-23',
+        horas: ['16:00'],
+        nombre: 'Laura Día 6',
+      });
+    });
+    expect(resNueva.ok).toBe(true);
+
+    // tabVieja aún está en ventana 16..22 y reserva un día compartido sin haberse enfocado antes
+    let resVieja;
+    act(() => {
+      resVieja = tabVieja.result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: '2026-11-18',
+        horas: ['14:00'],
+        nombre: 'Carlos Día Compartido',
+      });
+    });
+    expect(resVieja.ok).toBe(true);
+
+    const persistido = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    expect(persistido.ocupados['padel-1']['2026-11-23']).toContain('16:00');
+    expect(persistido.ocupados['padel-1']['2026-11-18']).toContain('14:00');
+    expect(persistido.reservas.map((r) => r.codigo)).toEqual(
+      expect.arrayContaining([resNueva.codigo, resVieja.codigo])
+    );
+
+    // Al enfocar después tabVieja, renueva ventana y conserva 2026-11-23 ocupado en ambas pestañas
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+    });
+
+    expect(tabVieja.result.current.dias[6]).toBe('2026-11-23');
+    expect(
+      tabVieja.result.current
+        .disponibilidad('padel-1', '2026-11-23')
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(false);
+    expect(
+      tabNueva.result.current
+        .disponibilidad('padel-1', '2026-11-23')
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(false);
+
+    const persistidoTrasRenovar = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    expect(persistidoTrasRenovar.ocupados['padel-1']['2026-11-16']).toBeUndefined();
+    expect(persistidoTrasRenovar.ocupados['padel-1']['2026-11-23']).toContain('16:00');
+  });
+
+  it('#41 Caso B: RENOVAR_VENTANA en tabVieja (sin evento storage previo, con evento storage previo y directo en reducer) no pierde el día +6', () => {
+    vi.useFakeTimers();
+
+    // Subcaso 1: sin haber recibido evento storage de tabNueva antes de focus
+    vi.setSystemTime(new Date(2026, 10, 16, 10, 0, 0));
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const tabViejaSinSync = renderHook(() => useReservas(), { wrapper });
+
+    vi.setSystemTime(new Date(2026, 10, 17, 10, 0, 0));
+    const tabNueva1 = renderHook(() => useReservas(), { wrapper });
+
+    let resNueva1;
+    act(() => {
+      resNueva1 = tabNueva1.result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: '2026-11-23',
+        horas: ['16:00'],
+        nombre: 'Sofía Sin Sync',
+      });
+    });
+    expect(resNueva1.ok).toBe(true);
+
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+    });
+
+    expect(tabViejaSinSync.result.current.dias[6]).toBe('2026-11-23');
+    expect(
+      tabViejaSinSync.result.current
+        .disponibilidad('padel-1', '2026-11-23')
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(false);
+    expect(tabViejaSinSync.result.current.reservas.map((r) => r.codigo)).toContain(
+      resNueva1.codigo
+    );
+    expect(
+      JSON.parse(window.localStorage.getItem(STORAGE_KEY)).ocupados['padel-1'][
+        '2026-11-23'
+      ]
+    ).toContain('16:00');
+
+    tabViejaSinSync.unmount();
+    tabNueva1.unmount();
+    window.localStorage.clear();
+
+    // Subcaso 2: habiendo recibido el evento storage de tabNueva antes de focus
+    vi.setSystemTime(new Date(2026, 10, 16, 10, 0, 0));
+    const tabViejaConSync = renderHook(() => useReservas(), { wrapper });
+
+    vi.setSystemTime(new Date(2026, 10, 17, 10, 0, 0));
+    const tabNueva2 = renderHook(() => useReservas(), { wrapper });
+
+    let resNueva2;
+    act(() => {
+      resNueva2 = tabNueva2.result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: '2026-11-23',
+        horas: ['16:00'],
+        nombre: 'Mateo Con Sync',
+      });
+    });
+    expect(resNueva2.ok).toBe(true);
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: STORAGE_KEY,
+          newValue: window.localStorage.getItem(STORAGE_KEY),
+        })
+      );
+    });
+    expect(tabViejaConSync.result.current.dias[0]).toBe('2026-11-16');
+
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+    });
+
+    expect(tabViejaConSync.result.current.dias[6]).toBe('2026-11-23');
+    expect(
+      tabViejaConSync.result.current
+        .disponibilidad('padel-1', '2026-11-23')
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(false);
+    expect(
+      JSON.parse(window.localStorage.getItem(STORAGE_KEY)).ocupados['padel-1'][
+        '2026-11-23'
+      ]
+    ).toContain('16:00');
+
+    tabViejaConSync.unmount();
+    tabNueva2.unmount();
+    window.localStorage.clear();
+
+    // Subcaso 3: reducer directo con RENOVAR_VENTANA recibiendo datosStorage con el día 2026-11-23
+    vi.setSystemTime(new Date(2026, 10, 16, 10, 0, 0));
+    const estadoDia1 = crearEstadoInicial();
+
+    vi.setSystemTime(new Date(2026, 10, 17, 10, 0, 0));
+    const estadoRenovado = reducer(estadoDia1, {
+      type: 'RENOVAR_VENTANA',
+      payload: {
+        datosStorage: {
+          ocupadosCrudos: {
+            'padel-1': {
+              '2026-11-23': ['08:00', '16:00', '20:00'],
+            },
+          },
+          reservas: [
+            {
+              id: 'padel-1__2026-11-23__16:00__999',
+              codigo: 'SPF-RED006',
+              tipo: 'individual',
+              canchaId: 'padel-1',
+              fecha: '2026-11-23',
+              hora: '16:00',
+              horas: ['16:00'],
+              nombre: 'Elena Reducer',
+            },
+          ],
+        },
+      },
+    });
+    expect(estadoRenovado.dias[6]).toBe('2026-11-23');
+    expect(estadoRenovado.ocupados['padel-1']['2026-11-23']).toContain('16:00');
+    expect(estadoRenovado.reservas).toHaveLength(1);
+    expect(estadoRenovado.reservas[0].codigo).toBe('SPF-RED006');
+  });
+
+  it('#42: tras rechazo de reservar por choque con otra pestaña sin evento storage, disponibilidad() refleja la hora ocupada en el mismo tick antes del re-render', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+
+    const dia3 = result.current.dias[3];
+    expect(
+      result.current
+        .disponibilidad('padel-1', dia3)
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(true);
+
+    const guardadoInicial = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    const ocupadosOtraPestana = structuredClone(guardadoInicial.ocupados);
+    ocupadosOtraPestana['padel-1'][dia3].push('16:00');
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ocupados: ocupadosOtraPestana,
+        reservas: [
+          {
+            id: `padel-1__${dia3}__16:00__501`,
+            codigo: 'SPF-CHOQ42',
+            tipo: 'individual',
+            canchaId: 'padel-1',
+            fecha: dia3,
+            hora: '16:00',
+            horas: ['16:00'],
+            nombre: 'Otro Usuario',
+          },
+        ],
+      })
+    );
+
+    let resRechazo;
+    let dispInmediata;
+    act(() => {
+      resRechazo = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Andrés Choque',
+      });
+      dispInmediata = result.current.disponibilidad('padel-1', dia3);
+    });
+
+    expect(resRechazo).toEqual({
+      ok: false,
+      error: 'Ese horario ya está reservado. Elige otro.',
+    });
+    expect(dispInmediata.find((h) => h.hora === '16:00').disponible).toBe(false);
+    expect(result.current.reservas).toHaveLength(1);
+    expect(result.current.reservas[0].codigo).toBe('SPF-CHOQ42');
+  });
+
+  it('rechaza reservar una hora que otra pestaña ya guardó en una segunda escritura', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia = result.current.dias[3];
+
+    const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    const conHoras = (horas, nombres) => {
+      const d = JSON.parse(JSON.stringify(base));
+      d.ocupados['padel-1'][dia] = [...(d.ocupados['padel-1'][dia] || []), ...horas];
+      d.reservas = nombres.map((n, i) => ({
+        id: `padel-1__${dia}__${horas[i]}__${i}`,
+        tipo: 'individual', canchaId: 'padel-1', fecha: dia, horas: [horas[i]], nombre: n,
+      }));
+      return JSON.stringify(d);
+    };
+    const v1 = conHoras(['10:00'], ['Otra Uno']);
+    const v2 = conHoras(['10:00', '11:00'], ['Otra Uno', 'Otra Dos']);
+
+    // La otra pestaña escribe v1 y enseguida v2; aquí solo se procesó el evento de v1.
+    window.localStorage.setItem(STORAGE_KEY, v2);
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY, newValue: v1 }));
+    });
+
+    let res;
+    act(() => {
+      res = result.current.reservar({ canchaId: 'padel-1', fecha: dia, horas: ['11:00'], nombre: 'Esta Pestana' });
+    });
+
+    const guardado = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    expect(res).toEqual({ ok: false, error: 'Ese horario ya está reservado. Elige otro.' });
+    expect(guardado.reservas.map((r) => r.nombre)).toEqual(
+      expect.arrayContaining(['Otra Uno', 'Otra Dos'])
+    );
+  });
+
+  it('conserva las dos escrituras previas de otra pestaña al reservar una hora libre en ambas versiones', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia = result.current.dias[3];
+
+    const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    const conHoras = (horas, nombres) => {
+      const d = JSON.parse(JSON.stringify(base));
+      d.ocupados['padel-1'][dia] = [...(d.ocupados['padel-1'][dia] || []), ...horas];
+      d.reservas = nombres.map((n, i) => ({
+        id: `padel-1__${dia}__${horas[i]}__${i}`,
+        tipo: 'individual', canchaId: 'padel-1', fecha: dia, horas: [horas[i]], nombre: n,
+      }));
+      return JSON.stringify(d);
+    };
+    const v1 = conHoras(['10:00'], ['Otra Uno']);
+    const v2 = conHoras(['10:00', '11:00'], ['Otra Uno', 'Otra Dos']);
+
+    window.localStorage.setItem(STORAGE_KEY, v2);
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY, newValue: v1 }));
+    });
+
+    let res;
+    act(() => {
+      res = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia,
+        horas: ['14:00'],
+        nombre: 'Esta Pestana',
+      });
+    });
+
+    expect(res.ok).toBe(true);
+    expect(res.codigo).toMatch(/^SPF-[A-Z0-9]{6}$/);
+    const guardado = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    expect(guardado.reservas).toHaveLength(3);
+    expect(guardado.reservas.map((r) => r.nombre)).toEqual(
+      expect.arrayContaining(['Otra Uno', 'Otra Dos', 'Esta Pestana'])
+    );
+    expect(guardado.ocupados['padel-1'][dia]).toEqual(
+      expect.arrayContaining(['10:00', '11:00', '14:00'])
+    );
+  });
+
+  it('sincroniza desde localStorage si llega un evento storage con newValue null pero la clave sigue existiendo', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia = result.current.dias[3];
+
+    const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    const conHoras = (horas, nombres) => {
+      const d = JSON.parse(JSON.stringify(base));
+      d.ocupados['padel-1'][dia] = [...(d.ocupados['padel-1'][dia] || []), ...horas];
+      d.reservas = nombres.map((n, i) => ({
+        id: `padel-1__${dia}__${horas[i]}__${i}`,
+        tipo: 'individual', canchaId: 'padel-1', fecha: dia, horas: [horas[i]], nombre: n,
+      }));
+      return JSON.stringify(d);
+    };
+    const v2 = conHoras(['10:00', '11:00'], ['Otra Uno', 'Otra Dos']);
+
+    window.localStorage.setItem(STORAGE_KEY, v2);
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY, newValue: null }));
+    });
+
+    expect(result.current.reservas.map((r) => r.nombre)).toEqual(
+      expect.arrayContaining(['Otra Uno', 'Otra Dos'])
+    );
+
+    let res;
+    act(() => {
+      res = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia,
+        horas: ['11:00'],
+        nombre: 'Esta Pestana',
+      });
+    });
+
+    expect(res).toEqual({ ok: false, error: 'Ese horario ya está reservado. Elige otro.' });
+  });
+
+  it('RENOVAR_VENTANA en el reducer no lee localStorage cuando el payload omite datosStorage', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 16, 10, 0, 0));
+
+    const estadoInicial = crearEstadoInicial();
+    const estadoConMemoria = reducer(estadoInicial, {
+      type: 'RESERVAR',
+      payload: {
+        canchaId: 'padel-1',
+        fecha: '2026-11-18',
+        horas: ['14:00'],
+        nombre: 'Reserva Memoria',
+        codigo: 'SPF-MEM001',
+        ahora: Date.now(),
+      },
+    });
+
+    vi.setSystemTime(new Date(2026, 10, 17, 10, 0, 0));
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ocupados: {
+          'padel-1': {
+            '2026-11-23': ['16:00'],
+          },
+        },
+        reservas: [
+          {
+            id: 'padel-1__2026-11-23__16:00__888',
+            codigo: 'SPF-STG999',
+            tipo: 'individual',
+            canchaId: 'padel-1',
+            fecha: '2026-11-23',
+            hora: '16:00',
+            horas: ['16:00'],
+            nombre: 'Reserva Storage',
+          },
+        ],
+      })
+    );
+
+    const getItemSpy = vi.spyOn(Storage.prototype, 'getItem');
+
+    const sinPayload = reducer(estadoConMemoria, { type: 'RENOVAR_VENTANA' });
+    expect(getItemSpy).not.toHaveBeenCalled();
+    expect(sinPayload.dias[0]).toBe('2026-11-17');
+    expect(sinPayload.reservas).toHaveLength(1);
+    expect(sinPayload.reservas[0].codigo).toBe('SPF-MEM001');
+
+    const sinDatosStorage = reducer(estadoConMemoria, {
+      type: 'RENOVAR_VENTANA',
+      payload: {},
+    });
+    expect(getItemSpy).not.toHaveBeenCalled();
+    expect(sinDatosStorage.dias[0]).toBe('2026-11-17');
+    expect(sinDatosStorage.reservas).toHaveLength(1);
+    expect(sinDatosStorage.reservas[0].codigo).toBe('SPF-MEM001');
+  });
+
+  it('conserva las reservas en memoria si getItem lanza durante un evento storage de borrado', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia = result.current.dias[3];
+
+    let res;
+    act(() => {
+      res = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia,
+        horas: ['14:00'],
+        nombre: 'Reserva En Memoria',
+      });
+    });
+    expect(res.ok).toBe(true);
+    expect(result.current.reservas).toHaveLength(1);
+
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('Storage bloqueado');
+    });
+
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: null, newValue: null }));
+    });
+
+    expect(result.current.reservas).toHaveLength(1);
+    expect(result.current.reservas[0].codigo).toBe(res.codigo);
+  });
+});

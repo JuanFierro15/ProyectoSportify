@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { ReservasProvider, useReservas } from '../../context/ReservasContext';
+import { ReservasProvider, useReservas, STORAGE_KEY } from '../../context/ReservasContext';
 import useChatbot from './useChatbot';
 
 function wrapper({ children }) {
@@ -307,6 +307,77 @@ describe('useChatbot - S1 y S2', () => {
       const textosEnHistorial = segundoLlamado.historial.map((h) => h.texto);
       expect(textosEnHistorial).toContain('¡Hola! Todo bien.');
       expect(textosEnHistorial).toContain('Hola');
+    });
+  });
+
+  describe('Issue #42: choque cuando otra pestaña toma la hora antes de confirmar', () => {
+    it('al confirmar una reserva cuya franja tomó otra pestaña en localStorage, falla y no lista esa hora como libre', async () => {
+      const { result } = renderHook(() => useTestChatbot(), { wrapper });
+      const dia = result.current.reservasContext.dias[1];
+
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          respuesta: 'Revisa los datos para confirmar la reserva.',
+          sugerencias: [],
+          accion: {
+            tipo: 'CONFIRMAR_RESERVA',
+            canchaId: 'voley-1',
+            fecha: dia,
+            horas: ['16:00'],
+            nombre: 'Carlos Gomez',
+            telefono: '3101234567',
+          },
+        }),
+      });
+
+      await act(async () => {
+        await result.current.enviar('Reserva voley mañana a las 4 pm');
+      });
+
+      const msgPendiente = result.current.mensajes.find(
+        (m) => m.accion?.tipo === 'CONFIRMAR_RESERVA'
+      );
+      expect(msgPendiente).toBeDefined();
+      expect(msgPendiente.estado).toBe('pendiente');
+
+      // Simular que otra pestaña toma las 16:00 directamente en localStorage sin evento storage
+      const guardado = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+      expect(guardado).toBeTruthy();
+      const ocupadosDia = guardado.ocupados['voley-1'][dia] || [];
+      guardado.ocupados['voley-1'][dia] = [...ocupadosDia, '16:00'];
+      guardado.reservas = [
+        ...(guardado.reservas || []),
+        {
+          id: `voley-1__${dia}__16:00__999`,
+          codigo: 'SPF-OTRA16',
+          tipo: 'individual',
+          canchaId: 'voley-1',
+          fecha: dia,
+          hora: '16:00',
+          horas: ['16:00'],
+          nombre: 'Otra Pestaña',
+        },
+      ];
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(guardado));
+
+      await act(async () => {
+        await result.current.enviar('sí');
+      });
+
+      const msgActualizado = result.current.mensajes.find((m) => m.id === msgPendiente.id);
+      expect(msgActualizado.estado).toBe('fallida');
+
+      expect(result.current.reservasContext.reservas).toHaveLength(1);
+      expect(result.current.reservasContext.reservas[0].codigo).toBe('SPF-OTRA16');
+
+      const ultimo = result.current.mensajes[result.current.mensajes.length - 1];
+      expect(ultimo.texto).toContain('Esa franja ya no está libre, así que no hice la reserva.');
+      expect(ultimo.texto).not.toContain('4:00 p. m.');
+      expect(ultimo.texto).toContain('10:00 a. m.');
+      expect(ultimo.texto).toContain('5:00 p. m.');
+      expect(ultimo.texto).not.toContain('9:00 a. m.');
     });
   });
 });
