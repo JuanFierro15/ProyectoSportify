@@ -38,3 +38,15 @@ Fecha: 17-11-2026. Rama: `fix/issues-40-41-42` (desde `main`, `5d8064b`).
 ## Riesgo
 
 Toca concurrencia entre pestañas y persistencia en `localStorage` (`ReservasContext.jsx`), aunque mantiene intactos el esquema guardado en `STORAGE_KEY` y los contratos de retorno `{ ok, codigo }` / `{ ok: false, error }` de `reservar`, `reservarEvento` y `cancelar`. No toca despliegue, claves ni reglas de negocio de precios o torneos.
+
+## Correcciones de la revisión del PR #48 (19-11-2026)
+
+| Bloque | Correcciones | Resultado |
+| --- | --- | --- |
+| `r2-correcciones-revision` | 0 | `APROBADO`: 13/13 criterios, sin hallazgos ni detalles. `HEAD` sin cambios durante el ciclo |
+
+- El arreglo del listener (`ultimoRawStorageRef.current = raw !== undefined ? raw : leerRawStorage()`) se comprobó revirtiéndolo: las pruebas `rechaza reservar una hora que otra pestaña ya guardó en una segunda escritura` y `conserva las dos escrituras previas de otra pestaña al reservar una hora libre en ambas versiones` fallan con el código anterior (`{ ok: true }` y 2 reservas en vez de 3) y pasan con el arreglo.
+- Las pruebas del verificador (`reservarEvento` y `cancelar` con el mismo desfase, y `RENOVAR_VENTANA` por cancha y día) no se versionan: el arreglo está en el listener, compartido por las tres funciones, y lo cubren las pruebas del implementador.
+- Verificación sobre el resultado: `npm test` 38 archivos y 482/482 pruebas; `npm run lint` sin errores ni avisos; `npm run build` OK.
+- Riesgo: toca persistencia y concurrencia entre pestañas. No cambia el esquema de `STORAGE_KEY` ni los contratos de `reservar`, `reservarEvento` y `cancelar`.
+- Issues abiertas por lo que queda fuera: #50 y #51.

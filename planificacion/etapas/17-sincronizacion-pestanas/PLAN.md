@@ -39,3 +39,20 @@ Cerrar las tres issues abiertas (#40, #41 y #42), originadas en las limitaciones
 2. `fix: conserva las horas ocupadas fuera de la ventana y relee al renovarla` (`Closes #41`)
 3. `fix: actualiza las horas libres del mensaje de choque en el chat` (`Closes #42`)
 4. `docs: actualiza la guía de reservas y registra la etapa 17`
+
+## Correcciones de la revisión del PR #48 (19-11-2026)
+
+La revisión del PR #48 encontró una regresión bloqueante: el listener `storage` guardaba en `ultimoRawStorageRef` lo que había en ese momento en `localStorage`, no el `e.newValue` que parseaba. Con dos escrituras seguidas de otra pestaña, `reservar` aceptaba una hora ya ocupada y el efecto espejo borraba la reserva de la otra pestaña.
+
+| Bloque | Agente | Rutas permitidas |
+| --- | --- | --- |
+| `r2-correcciones-revision` | Ciclo verificado: Neon `high` implementa (alto riesgo: persistencia y concurrencia), Argon `high` verifica | `src/context/ReservasContext.jsx`, `src/context/ReservasContext.test.jsx`, `docs/agentes/reservas.md` |
+
+Alcance: arreglo de una línea en el listener, pruebas de regresión (dos escrituras seguidas, hora libre en las dos versiones, `newValue: null` con la clave presente, `getItem` que lanza en un borrado), `RENOVAR_VENTANA` sin leer `localStorage` dentro del `reducer`, reutilizar `combinarOcupadosPorCancha`, comentarios en `disponibilidad` (`?? state`) y en la rama de borrado (`getItem` directo), y la guía de reservas al día. Los criterios C1 a C13 están en `bloques/r2-correcciones-revision/criterios.md`.
+
+Sugerencias de la revisión que no se aplican tal cual:
+
+- Quitar `?? state` de `disponibilidad`: es lo que mantiene `state` como dependencia; sin él, `exhaustive-deps` avisa o los `useMemo` de `useReserva`, `VistaCanchas` y el chat quedan con datos viejos. Se documenta con un comentario.
+- Cambiar el `getItem` directo de la rama de borrado por `leerRawStorage()`: ese helper devuelve `null` también cuando `getItem` lanza, y la pestaña quedaría sin reservas. Se documenta y se protege con una prueba.
+
+Pendientes que pasan a issues: #50 (reservas solo en memoria que se pierden cuando otra pestaña guarda) y #51 (`estadoRef.current = state` en el render frente a transiciones).
