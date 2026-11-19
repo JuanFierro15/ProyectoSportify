@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { startTransition, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import {
   ReservasProvider,
   useReservas,
   reducer,
+  reducerVersionado,
   crearEstadoInicial,
   STORAGE_KEY,
   ERROR_EVENTO_NO_DISPONIBLE,
@@ -2031,5 +2033,214 @@ describe('ReservasContext — sincronización sin pérdida de estado ni ventana 
 
     expect(result.current.reservas).toHaveLength(1);
     expect(result.current.reservas[0].codigo).toBe(res.codigo);
+  });
+});
+
+describe('ReservasContext — render no pisa el avance de despachar (#51)', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it('#51: un render síncrono del padre tras startTransition no pisa estadoRef ni permite doble reserva de la misma hora', () => {
+    let setTickPadre;
+    function WrapperPadre({ children }) {
+      const [tick, setTick] = useState(0);
+      setTickPadre = setTick;
+      return (
+        <div data-tick={tick}>
+          <ReservasProvider>{children}</ReservasProvider>
+        </div>
+      );
+    }
+
+    const { result } = renderHook(() => useReservas(), { wrapper: WrapperPadre });
+    const dia3 = result.current.dias[3]; // padel-1 tiene 16:00 libre en semilla
+
+    let res1;
+    let res2;
+    act(() => {
+      startTransition(() => {
+        res1 = result.current.reservar({
+          canchaId: 'padel-1',
+          fecha: dia3,
+          horas: ['16:00'],
+          nombre: 'Ana Transición',
+        });
+      });
+      flushSync(() => {
+        setTickPadre((n) => n + 1);
+      });
+      res2 = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Luis Duplicado',
+      });
+    });
+
+    expect(res1.ok).toBe(true);
+    expect(res2).toEqual({
+      ok: false,
+      error: 'Ese horario ya está reservado. Elige otro.',
+    });
+    expect(result.current.reservas).toHaveLength(1);
+    expect(result.current.reservas[0].codigo).toBe(res1.codigo);
+  });
+
+  it('#51: con tres reservas (H en transición, render del padre, H+1 y H), la tercera se rechaza y quedan exactamente dos reservas', () => {
+    let setTickPadre;
+    function WrapperPadre({ children }) {
+      const [tick, setTick] = useState(0);
+      setTickPadre = setTick;
+      return (
+        <div data-tick={tick}>
+          <ReservasProvider>{children}</ReservasProvider>
+        </div>
+      );
+    }
+
+    const { result } = renderHook(() => useReservas(), { wrapper: WrapperPadre });
+    const dia3 = result.current.dias[3]; // padel-1 tiene 16:00 y 17:00 libres en semilla
+
+    let res1;
+    let res2;
+    let res3;
+    act(() => {
+      startTransition(() => {
+        res1 = result.current.reservar({
+          canchaId: 'padel-1',
+          fecha: dia3,
+          horas: ['16:00'],
+          nombre: 'Sofía Hora H',
+        });
+      });
+      flushSync(() => {
+        setTickPadre((n) => n + 1);
+      });
+      res2 = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['17:00'],
+        nombre: 'Mateo Hora H+1',
+      });
+      res3 = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Carlos Repetida',
+      });
+    });
+
+    expect(res1.ok).toBe(true);
+    expect(res2.ok).toBe(true);
+    expect(res3).toEqual({
+      ok: false,
+      error: 'Ese horario ya está reservado. Elige otro.',
+    });
+    expect(result.current.reservas).toHaveLength(2);
+    expect(result.current.reservas.map((r) => r.codigo)).toEqual(
+      expect.arrayContaining([res1.codigo, res2.codigo])
+    );
+  });
+
+  it('#51: tras un evento storage de otra pestaña que ocupa H, reservar(H) falla y disponibilidad marca H ocupada en el mismo tick', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3];
+
+    const guardadoInicial = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    const ocupadosOtraPestana = structuredClone(guardadoInicial.ocupados);
+    ocupadosOtraPestana['padel-1'][dia3].push('16:00');
+    const jsonOtraPestana = JSON.stringify({
+      ocupados: ocupadosOtraPestana,
+      reservas: [
+        {
+          id: `padel-1__${dia3}__16:00__510`,
+          codigo: 'SPF-TAB51A',
+          tipo: 'individual',
+          canchaId: 'padel-1',
+          fecha: dia3,
+          hora: '16:00',
+          horas: ['16:00'],
+          nombre: 'Otra Pestaña',
+        },
+      ],
+    });
+    window.localStorage.setItem(STORAGE_KEY, jsonOtraPestana);
+
+    let res;
+    let dispEnMismoTick;
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: STORAGE_KEY,
+          newValue: jsonOtraPestana,
+        })
+      );
+      dispEnMismoTick = result.current.disponibilidad('padel-1', dia3);
+      res = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Esta Pestaña',
+      });
+    });
+
+    expect(res).toEqual({
+      ok: false,
+      error: 'Ese horario ya está reservado. Elige otro.',
+    });
+    expect(dispEnMismoTick.find((h) => h.hora === '16:00').disponible).toBe(false);
+    expect(result.current.reservas).toHaveLength(1);
+    expect(result.current.reservas[0].codigo).toBe('SPF-TAB51A');
+  });
+
+  it('#51: reducerVersionado sube version solo cuando el estado cambia y deja la misma referencia y version ante acciones sin efecto', () => {
+    const inicial = crearEstadoInicial();
+    expect(inicial.version).toBe(0);
+    const dia3 = inicial.dias[3];
+
+    // CANCELAR de un id inexistente no cambia nada
+    const trasCancelarInexistente = reducerVersionado(inicial, {
+      type: 'CANCELAR',
+      payload: { reservaId: 'id-inexistente', ahora: Date.now() },
+    });
+    expect(trasCancelarInexistente).toBe(inicial);
+    expect(trasCancelarInexistente.version).toBe(0);
+
+    // RESERVAR válida sube la versión a 1
+    const trasReservar = reducerVersionado(inicial, {
+      type: 'RESERVAR',
+      payload: {
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Sofía Versión',
+        codigo: 'SPF-VER001',
+        ahora: Date.now(),
+      },
+    });
+    expect(trasReservar).not.toBe(inicial);
+    expect(trasReservar.version).toBe(1);
+
+    // RESERVAR sobre una hora ya ocupada devuelve exactamente la misma referencia y versión
+    const trasOcupada = reducerVersionado(trasReservar, {
+      type: 'RESERVAR',
+      payload: {
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Luis Ocupada',
+        codigo: 'SPF-VER002',
+        ahora: Date.now(),
+      },
+    });
+    expect(trasOcupada).toBe(trasReservar);
+    expect(trasOcupada.version).toBe(1);
   });
 });

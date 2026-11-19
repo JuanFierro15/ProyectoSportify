@@ -246,10 +246,10 @@ export function crearEstadoInicial() {
   const guardado = leerGuardado(canchas, dias, semillaOcup);
 
   if (guardado) {
-    return { dias, canchas, ...guardado };
+    return { dias, canchas, ...guardado, version: 0 };
   }
 
-  return { dias, canchas, ocupados: semillaOcup, reservas: [] };
+  return { dias, canchas, ocupados: semillaOcup, reservas: [], version: 0 };
 }
 
 // Horas de una cancha en una fecha, con su disponibilidad.
@@ -731,11 +731,30 @@ export function reducer(state, action) {
   }
 }
 
+export function reducerVersionado(state, action) {
+  const siguiente = reducer(state, action);
+  if (siguiente === state) {
+    return state;
+  }
+  return {
+    ...siguiente,
+    version: (state.version || 0) + 1,
+  };
+}
+
 export function ReservasProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, undefined, crearEstadoInicial);
+  const [state, dispatch] = useReducer(
+    reducerVersionado,
+    undefined,
+    crearEstadoInicial
+  );
   const syncDesdeStorageRef = useRef(null);
   const estadoRef = useRef(state);
-  estadoRef.current = state;
+  // El render puede traer un estado más viejo que el que adelantó `despachar`;
+  // solo se actualiza la ref si el render alcanza o supera su versión.
+  if ((state.version || 0) >= (estadoRef.current.version || 0)) {
+    estadoRef.current = state;
+  }
 
   const ultimoRawStorageRef = useRef(undefined);
   if (ultimoRawStorageRef.current === undefined) {
@@ -750,7 +769,7 @@ export function ReservasProvider({ children }) {
   // Aplica el reducer en memoria de forma síncrona además de encolarlo en React,
   // para que llamadas seguidas en el mismo tick no se pisen entre sí.
   const despachar = useCallback((action) => {
-    estadoRef.current = reducer(estadoRef.current, action);
+    estadoRef.current = reducerVersionado(estadoRef.current, action);
     dispatch(action);
   }, []);
 
