@@ -5,6 +5,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import DeporteHero from './DeporteHero';
 import { registrarHeroSnap } from './controladorSnapHero';
+import { MEDIA_VIDEO_GRANDE } from '../../lib/modoHero';
 
 vi.mock('./controladorSnapHero', async (importOriginal) => {
   const original = await importOriginal();
@@ -336,5 +337,46 @@ describe('DeporteHero - animación del bloque de texto', () => {
 
     expect(gsap.getTweensOf(bloque)).toHaveLength(0);
     expect(ScrollTrigger.getAll()).toHaveLength(0);
+  });
+});
+
+describe('DeporteHero - fuentes de video responsivas', () => {
+  it('usa src directo en <video> y no renderiza <source> cuando no se pasa videoSrcLg', () => {
+    const { container } = render(<DeporteHero {...PROPS_VALIDAS} />);
+
+    const video = container.querySelector('video');
+    expect(video).toHaveAttribute('src', '/media/hero_voleyplaya.mp4');
+    expect(video.querySelectorAll('source')).toHaveLength(0);
+  });
+
+  it('usa src directo en <video> cuando videoSrcLg es cadena vacía', () => {
+    const { container } = render(
+      <DeporteHero {...PROPS_VALIDAS} videoSrcLg="" />
+    );
+
+    const video = container.querySelector('video');
+    expect(video).toHaveAttribute('src', '/media/hero_voleyplaya.mp4');
+    expect(video.querySelectorAll('source')).toHaveLength(0);
+  });
+
+  it('renderiza dos <source> en orden (1080p con min-width: 64em y 720p de respaldo) y omite src en <video> cuando recibe videoSrcLg', () => {
+    const { container } = render(
+      <DeporteHero
+        {...PROPS_VALIDAS}
+        videoSrcLg="/media/hero_voleyplaya-lg.mp4"
+      />
+    );
+
+    const video = container.querySelector('video');
+    expect(video).not.toHaveAttribute('src');
+
+    const sources = video.querySelectorAll('source');
+    expect(sources).toHaveLength(2);
+    expect(sources[0]).toHaveAttribute('src', '/media/hero_voleyplaya-lg.mp4');
+    expect(sources[0]).toHaveAttribute('media', MEDIA_VIDEO_GRANDE);
+    expect(sources[0]).toHaveAttribute('type', 'video/mp4');
+    expect(sources[1]).toHaveAttribute('src', '/media/hero_voleyplaya.mp4');
+    expect(sources[1]).toHaveAttribute('type', 'video/mp4');
+    expect(sources[1]).not.toHaveAttribute('media');
   });
 });

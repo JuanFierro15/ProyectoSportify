@@ -5,6 +5,9 @@
 export const DURACION_FADE_CONTENIDO = 0.15;
 export const REPOSO_HERO = 0.15;
 export const TOLERANCIA_REPOSO = 0.01;
+// Breakpoint `large` de Foundation (1024 px), el mismo de las media queries de
+// CSS: desde ahí los heros piden el video 1080p (`hero_<deporte>-lg.mp4`).
+export const MEDIA_VIDEO_GRANDE = '(min-width: 64em)';
 
 /** Devuelve la posición `scrollY` de reposo para un tramo `{ start, end }`. */
 export function reposoDeTramo(tramo) {

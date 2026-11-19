@@ -29,4 +29,35 @@ describe('PaginaInicio', () => {
       expect(seccion).toHaveClass(`deporte-hero--texto-${posicion}`);
     }
   });
+
+  it('cablea las rutas 1080p (-lg.mp4) y 720p (.mp4) por deporte en los tres heros', () => {
+    const { container } = render(
+      <ReservasProvider>
+        <VistaCanchasProvider>
+          <PaginaInicio />
+        </VistaCanchasProvider>
+      </ReservasProvider>
+    );
+
+    const base = import.meta.env.BASE_URL;
+    const deportes = [
+      ['voley-playa', 'hero_voleyplaya'],
+      ['padel', 'hero_padel'],
+      ['futbol', 'hero_futbol'],
+    ];
+
+    for (const [slug, archivo] of deportes) {
+      const seccion = container.querySelector(
+        `section.deporte-hero[data-sport="${slug}"]`
+      );
+      expect(seccion).not.toBeNull();
+      const video = seccion.querySelector('video');
+      expect(video).not.toBeNull();
+
+      const sources = video.querySelectorAll('source');
+      expect(sources).toHaveLength(2);
+      expect(sources[0]).toHaveAttribute('src', `${base}media/${archivo}-lg.mp4`);
+      expect(sources[1]).toHaveAttribute('src', `${base}media/${archivo}.mp4`);
+    }
+  });
 });

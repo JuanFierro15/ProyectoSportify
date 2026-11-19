@@ -542,9 +542,14 @@ El sitio está en Vercel y **cada push a `main` despliega a producción**.
 - El asistente, el visor de fotos y el modal de **Mis reservas** se cierran con
   `Escape` y devuelven el foco al botón que los abrió. Los mensajes y avisos se
   anuncian con `aria-live`.
-- Los videos de los heros son *all-intra* (un keyframe por cuadro), 720p30,
-  sin audio y cuentan con imagen `poster` de respaldo, para que avanzar y
-  retroceder con el scroll sea inmediato y fluido.
+- Los videos de los heros son *all-intra* (un keyframe por cuadro), 30 fps,
+  sin audio y cuentan con imagen `poster` de respaldo, servidos en dos
+  calidades según la pantalla (`720p` en móvil y `1080p` desde `large` con
+  `<source media="(min-width: 64em)">`), para que avanzar y retroceder con el
+  scroll sea inmediato y fluido. La calidad se elige al cargar la página: el
+  navegador evalúa `media` en `<source>` solo cuando selecciona la fuente, así
+  que si después cambia el tamaño de la ventana el video sigue en la calidad
+  con la que cargó hasta recargar.
 - Las fotos de las canchas son WebP en dos tamaños (720 y 1440 px) con
   `srcSet`. El mapa y la galería de eventos cargan en diferido
   (`loading="lazy"`).

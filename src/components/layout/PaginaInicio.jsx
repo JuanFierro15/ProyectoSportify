@@ -10,9 +10,11 @@ import Ubicacion from '../ubicacion/Ubicacion';
 gsap.registerPlugin(ScrollTrigger);
 
 // Videos de fondo de los heros por deporte (en public/media/).
-// Son versiones web ligeras: 720p, keyframe por frame (para que el scrubbing
-// por scroll sea fluido) y +faststart. Los originales en alta calidad están
-// en public/media/fuente/ (fuera del repo).
+// Hay dos versiones all-intra a 30 fps (keyframe por frame para que el
+// scrubbing por scroll sea fluido) con +faststart: `hero_<deporte>.mp4` (720p
+// para celular y ventanas `< 64em`) y `hero_<deporte>-lg.mp4` (1080p escalado
+// con Lanczos desde `large`, `min-width: 64em`). Los originales en alta calidad
+// están en public/media/fuente/ (fuera del repo).
 // BASE_URL de Vite ya termina en '/': con otra barra quedaría `//media/...`,
 // que el navegador interpreta como otro dominio.
 const BASE = import.meta.env.BASE_URL;
@@ -20,6 +22,11 @@ const VIDEOS = {
   'voley-playa': `${BASE}media/hero_voleyplaya.mp4`,
   padel: `${BASE}media/hero_padel.mp4`,
   futbol: `${BASE}media/hero_futbol.mp4`,
+};
+const VIDEOS_LG = {
+  'voley-playa': `${BASE}media/hero_voleyplaya-lg.mp4`,
+  padel: `${BASE}media/hero_padel-lg.mp4`,
+  futbol: `${BASE}media/hero_futbol-lg.mp4`,
 };
 const POSTERS = {
   'voley-playa': `${BASE}media/hero_voleyplaya-poster.webp`,
@@ -106,6 +113,7 @@ function PaginaInicio() {
             slug={d.slug}
             nombre={d.nombre}
             videoSrc={VIDEOS[d.slug]}
+            videoSrcLg={VIDEOS_LG[d.slug]}
             posterSrc={POSTERS[d.slug]}
             tituloCTA={`Ver canchas de ${d.nombre.toLowerCase()}`}
             colorAcento={d.colorAcento}

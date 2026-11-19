@@ -50,6 +50,7 @@ odd/
 | `15-horas-torneo-por-cancha` | Horas por cancha y salteadas en las fases del torneo, y aviso con confirmación cuando sobran horas sin partido (rama `feat/horas-torneo-por-cancha`, implementada el 15-11, PR #29 fusionado) | Juan Fierro | sí | no | sí | l1, c1, u1, v1, f1 |
 | `16-descuento-torneo` | Descuento de $15.000 por hora en todas las canchas del torneo, desde 1 hora y aunque no sean seguidas (rama `feat/descuento-torneo`, PR #30 fusionado) | Juan Fierro | sí | no | sí | d1 |
 | `17-sincronizacion-pestanas` | Cierre de issues #40, #41 y #42: refs de estado y último `localStorage` para no pisar reservas en memoria, conservación de días futuros (`+6`) y relectura en `RENOVAR_VENTANA`, y `disponibilidad` fresca tras rechazo en el chat (rama `fix/issues-40-41-42`, 17-11) | Juan Fierro (revisa Miguel Medina) | sí | no | sí | r1, c1, v1, r2 |
+| `18-videos-hero-responsivos` | Videos del hero responsivos: 720p en celular/`< 64em` y 1080p Lanczos (`-lg.mp4` de `54d87138`) desde `large` (`>= 64em`) con `<source media>` en `DeporteHero` (rama `feat/videos-hero-responsivos`, 17-11) | Juan Fierro | sí | no | sí | v1, v2 |
 
 Antes del flujo por etapas (sin plan ni reporte, solo commits):
 
@@ -121,6 +122,8 @@ inicio).
 | Sincronización entre pestañas | `c1-prueba-chat-choque` | Prueba de regresión de la issue #42 en `useChatbot.test.jsx` | `f97fd00` | `c1.log` |
 | Sincronización entre pestañas | `v1-verificacion` | Verificación independiente de solo lectura sobre el diff, casos límite y calidad de pruebas (`APROBADO`) | (ver REPORTE de la etapa 17) | `v1.log` |
 | Sincronización entre pestañas | `r2-correcciones-revision` | Correcciones de la revisión del PR #48: `ultimoRawStorageRef` con el texto parseado del evento `storage` (doble reserva), `RENOVAR_VENTANA` puro, 5 pruebas de regresión y guía de reservas (ciclo verificado, `APROBADO` sin correcciones) | (ver REPORTE de la etapa 17) | `r2.log` |
+| Videos hero responsivos | `v1-videos-responsivos` | Prop `videoSrcLg` con `<source media="(min-width: 64em)">` en `DeporteHero`, mapa `VIDEOS_LG` en `PaginaInicio`, 4 pruebas nuevas y docs actualizadas | `b16bbdd` | `v1.log` |
+| Videos hero responsivos | `v2-correcciones-revision` | Correcciones de la revisión del PR #49: constante `MEDIA_VIDEO_GRANDE`, prueba de `PaginaInicio` sin repetir y con `BASE_URL`, comentario del respaldo de error y nota de que la calidad se elige al cargar (ciclo verificado, `APROBADO` sin correcciones) | (ver REPORTE de la etapa 18) | `v2.log` |
 
 ## Cómo trabajar en equipo
 

@@ -289,6 +289,11 @@ function reproducir(hero) {
     irAlSiguiente(hero);
   };
   video.addEventListener('ended', alAcabar, { once: true });
+  // Con hijos <source>, un fallo de carga dispara `error` en el <source>
+  // mientras el navegador elige la fuente, antes de tener metadatos; ese caso
+  // lo cubre la comprobación de `duration` al inicio de `reproducir` (sin
+  // duración finita mayor que 0 pasa a `irAlSiguiente` sin llamar a `play()`),
+  // y los errores posteriores (red o decodificación) llegan al <video>.
   video.addEventListener('error', alError, { once: true });
   limpiarListenersVideo = () => {
     video.removeEventListener('ended', alAcabar);
