@@ -31,8 +31,8 @@ issues; lo revisa y fusiona Juan Fierro.
   `storage`, `leerEstadoFresco` y `renovarSiCambioElDia`. Si tras el evento
   `storage` quedan pendientes, no se marca `syncDesdeStorageRef` y el espejo
   reintenta guardar.
-- El primer lanzamiento del ciclo de `e2` lo detuvo Claude Code por falta de
-  memoria antes de que el implementador tocara archivos. Se relanzó sin
+- El primer lanzamiento del ciclo de `e2` se detuvo por falta de memoria
+  antes de que el implementador tocara archivos. Se relanzó sin
   `retoma.md` porque el árbol estaba limpio.
 
 ## Revisión del coordinador
@@ -58,14 +58,20 @@ issues; lo revisa y fusiona Juan Fierro.
 - `npm test`: **38 archivos, 500/500 en verde**.
 - `npm run lint`: sin errores ni avisos.
 - `npm run build`: correcto (solo el aviso de tamaño de chunk que ya existía).
+- **Prueba manual con dos pestañas** (revisión del PR #52, `npm run preview`,
+  pádel, sábado 21-11):
+  1. En A, `setItem` forzado a lanzar `QuotaExceededError`; A reserva Pádel 1 a
+     las 10:00 (confirmada, no queda en `localStorage`).
+  2. B reserva las 14:00 y guarda sin la de A. A conserva la suya en "Mis
+     reservas", ve también la de B y el día pasa de 10 a 8 horas libres, con
+     10:00 y 14:00 deshabilitadas.
+  3. Con `setItem` restaurado, A reserva las 16:00: `localStorage` queda con
+     las tres reservas y B encuentra la de A en "Mis reservas".
+  4. B cancela la de las 10:00: sale de `localStorage` y A no la vuelve a
+     escribir.
 
 ## Pendientes
 
-- **Prueba manual con dos pestañas** (`npm run build` + `npm run preview`):
-  forzar el fallo de `setItem` en una pestaña desde la consola, reservar en las
-  dos y confirmar que "Mis reservas" de la primera conserva su reserva. Esta
-  sesión no tenía navegador. Las pruebas de integración simulan los dos
-  caminos de la issue con valores exactos.
 - Revisión del PR con `gemini-4-argon-high` antes de fusionar.
 
 **Riesgo:** ítem 4 (concurrencia, #51) e ítem 1 (estado de reservas que se
