@@ -1824,4 +1824,153 @@ describe('ReservasContext — sincronización sin pérdida de estado ni ventana 
     expect(result.current.reservas).toHaveLength(1);
     expect(result.current.reservas[0].codigo).toBe('SPF-CHOQ42');
   });
+
+  it('rechaza reservar una hora que otra pestaña ya guardó en una segunda escritura', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia = result.current.dias[3];
+
+    const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    const conHoras = (horas, nombres) => {
+      const d = JSON.parse(JSON.stringify(base));
+      d.ocupados['padel-1'][dia] = [...(d.ocupados['padel-1'][dia] || []), ...horas];
+      d.reservas = nombres.map((n, i) => ({
+        id: `padel-1__${dia}__${horas[i]}__${i}`,
+        tipo: 'individual', canchaId: 'padel-1', fecha: dia, horas: [horas[i]], nombre: n,
+      }));
+      return JSON.stringify(d);
+    };
+    const v1 = conHoras(['10:00'], ['Otra Uno']);
+    const v2 = conHoras(['10:00', '11:00'], ['Otra Uno', 'Otra Dos']);
+
+    // La otra pestaña escribe v1 y enseguida v2; aquí solo se procesó el evento de v1.
+    window.localStorage.setItem(STORAGE_KEY, v2);
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY, newValue: v1 }));
+    });
+
+    let res;
+    act(() => {
+      res = result.current.reservar({ canchaId: 'padel-1', fecha: dia, horas: ['11:00'], nombre: 'Esta Pestana' });
+    });
+
+    const guardado = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    expect(res).toEqual({ ok: false, error: 'Ese horario ya está reservado. Elige otro.' });
+    expect(guardado.reservas.map((r) => r.nombre)).toEqual(
+      expect.arrayContaining(['Otra Uno', 'Otra Dos'])
+    );
+  });
+
+  it('conserva las dos escrituras previas de otra pestaña al reservar una hora libre en ambas versiones', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia = result.current.dias[3];
+
+    const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    const conHoras = (horas, nombres) => {
+      const d = JSON.parse(JSON.stringify(base));
+      d.ocupados['padel-1'][dia] = [...(d.ocupados['padel-1'][dia] || []), ...horas];
+      d.reservas = nombres.map((n, i) => ({
+        id: `padel-1__${dia}__${horas[i]}__${i}`,
+        tipo: 'individual', canchaId: 'padel-1', fecha: dia, horas: [horas[i]], nombre: n,
+      }));
+      return JSON.stringify(d);
+    };
+    const v1 = conHoras(['10:00'], ['Otra Uno']);
+    const v2 = conHoras(['10:00', '11:00'], ['Otra Uno', 'Otra Dos']);
+
+    window.localStorage.setItem(STORAGE_KEY, v2);
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY, newValue: v1 }));
+    });
+
+    let res;
+    act(() => {
+      res = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia,
+        horas: ['14:00'],
+        nombre: 'Esta Pestana',
+      });
+    });
+
+    expect(res.ok).toBe(true);
+    expect(res.codigo).toMatch(/^SPF-[A-Z0-9]{6}$/);
+    const guardado = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    expect(guardado.reservas).toHaveLength(3);
+    expect(guardado.reservas.map((r) => r.nombre)).toEqual(
+      expect.arrayContaining(['Otra Uno', 'Otra Dos', 'Esta Pestana'])
+    );
+    expect(guardado.ocupados['padel-1'][dia]).toEqual(
+      expect.arrayContaining(['10:00', '11:00', '14:00'])
+    );
+  });
+
+  it('sincroniza desde localStorage si llega un evento storage con newValue null pero la clave sigue existiendo', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia = result.current.dias[3];
+
+    const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    const conHoras = (horas, nombres) => {
+      const d = JSON.parse(JSON.stringify(base));
+      d.ocupados['padel-1'][dia] = [...(d.ocupados['padel-1'][dia] || []), ...horas];
+      d.reservas = nombres.map((n, i) => ({
+        id: `padel-1__${dia}__${horas[i]}__${i}`,
+        tipo: 'individual', canchaId: 'padel-1', fecha: dia, horas: [horas[i]], nombre: n,
+      }));
+      return JSON.stringify(d);
+    };
+    const v2 = conHoras(['10:00', '11:00'], ['Otra Uno', 'Otra Dos']);
+
+    window.localStorage.setItem(STORAGE_KEY, v2);
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY, newValue: null }));
+    });
+
+    expect(result.current.reservas.map((r) => r.nombre)).toEqual(
+      expect.arrayContaining(['Otra Uno', 'Otra Dos'])
+    );
+
+    let res;
+    act(() => {
+      res = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia,
+        horas: ['11:00'],
+        nombre: 'Esta Pestana',
+      });
+    });
+
+    expect(res).toEqual({ ok: false, error: 'Ese horario ya está reservado. Elige otro.' });
+  });
+
+  it('conserva las reservas en memoria si getItem lanza durante un evento storage de borrado', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia = result.current.dias[3];
+
+    let res;
+    act(() => {
+      res = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia,
+        horas: ['14:00'],
+        nombre: 'Reserva En Memoria',
+      });
+    });
+    expect(res.ok).toBe(true);
+    expect(result.current.reservas).toHaveLength(1);
+
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('Storage bloqueado');
+    });
+
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: null, newValue: null }));
+    });
+
+    expect(result.current.reservas).toHaveLength(1);
+    expect(result.current.reservas[0].codigo).toBe(res.codigo);
+  });
 });

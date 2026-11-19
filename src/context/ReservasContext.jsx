@@ -841,7 +841,7 @@ export function ReservasProvider({ children }) {
       const raw = typeof e.newValue === 'string' ? e.newValue : undefined;
       const datos = parsearDatosGuardados(raw);
       if (datos) {
-        ultimoRawStorageRef.current = leerRawStorage();
+        ultimoRawStorageRef.current = raw !== undefined ? raw : leerRawStorage();
         ocupadosCrudosRef.current = datos.ocupadosCrudos;
         const guardado = {
           ocupados: fusionarConSemilla(
