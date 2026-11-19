@@ -8,6 +8,7 @@ import {
   reducer,
   reducerVersionado,
   crearEstadoInicial,
+  conservarReservasSinGuardar,
   STORAGE_KEY,
   ERROR_EVENTO_NO_DISPONIBLE,
   ERROR_EVENTO_HORAS_NO_SEGUIDAS,
@@ -2242,5 +2243,769 @@ describe('ReservasContext — render no pisa el avance de despachar (#51)', () =
     });
     expect(trasOcupada).toBe(trasReservar);
     expect(trasOcupada.version).toBe(1);
+  });
+});
+
+describe('ReservasContext — reservas sin guardar (#50)', () => {
+  const setItemOriginal = Storage.prototype.setItem;
+
+  function congelarProfundo(valor) {
+    if (!valor || typeof valor !== 'object') {
+      return valor;
+    }
+    Object.freeze(valor);
+    Object.keys(valor).forEach((clave) => {
+      congelarProfundo(valor[clave]);
+    });
+    return valor;
+  }
+
+  function crearReservaIndividual({
+    id,
+    codigo,
+    canchaId,
+    fecha,
+    hora,
+    horas,
+    nombre,
+  }) {
+    const listaHoras = horas || [hora];
+    return {
+      id,
+      codigo,
+      tipo: 'individual',
+      canchaId,
+      fecha,
+      hora: listaHoras[0],
+      horas: listaHoras,
+      nombre,
+    };
+  }
+
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it('C1 (#50): conserva reserva pendiente en memoria cuando otra pestaña escribe y dispara evento storage', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3];
+    const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+    });
+
+    let resA;
+    act(() => {
+      resA = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Ana Pendiente',
+      });
+    });
+    expect(resA.ok).toBe(true);
+    const idA = result.current.reservas[0].id;
+
+    const r2 = crearReservaIndividual({
+      id: `padel-1__${dia3}__17:00__200`,
+      codigo: 'SPF-OTRA02',
+      canchaId: 'padel-1',
+      fecha: dia3,
+      horas: ['17:00'],
+      nombre: 'Carlos Otra',
+    });
+    const ocupadosOtra = structuredClone(base.ocupados);
+    ocupadosOtra['padel-1'][dia3].push('17:00');
+    const jsonOtra = JSON.stringify({
+      ocupados: ocupadosOtra,
+      reservas: [r2],
+    });
+    setItemOriginal.call(window.localStorage, STORAGE_KEY, jsonOtra);
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: STORAGE_KEY,
+          newValue: jsonOtra,
+        })
+      );
+    });
+
+    expect(result.current.reservas).toHaveLength(2);
+    expect(result.current.reservas.map((r) => r.id)).toEqual(
+      expect.arrayContaining([idA, r2.id])
+    );
+
+    const disp = result.current.disponibilidad('padel-1', dia3);
+    expect(disp.find((h) => h.hora === '16:00').disponible).toBe(false);
+    expect(disp.find((h) => h.hora === '17:00').disponible).toBe(false);
+  });
+
+  it('C2 (#50): conserva reserva pendiente por el camino leerEstadoFresco sin evento storage y rechaza reservar la misma hora H', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3];
+    const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+    });
+
+    let resA;
+    act(() => {
+      resA = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Ana Pendiente',
+      });
+    });
+    expect(resA.ok).toBe(true);
+    const idA = result.current.reservas[0].id;
+
+    const r2 = crearReservaIndividual({
+      id: `padel-1__${dia3}__17:00__201`,
+      codigo: 'SPF-OTRA03',
+      canchaId: 'padel-1',
+      fecha: dia3,
+      horas: ['17:00'],
+      nombre: 'Luis Otra',
+    });
+    const ocupadosOtra = structuredClone(base.ocupados);
+    ocupadosOtra['padel-1'][dia3].push('17:00');
+    setItemOriginal.call(
+      window.localStorage,
+      STORAGE_KEY,
+      JSON.stringify({ ocupados: ocupadosOtra, reservas: [r2] })
+    );
+
+    let resNueva;
+    act(() => {
+      resNueva = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['18:00'],
+        nombre: 'Elena Nueva',
+      });
+    });
+    expect(resNueva.ok).toBe(true);
+    expect(result.current.reservas).toHaveLength(3);
+    expect(result.current.reservas.map((r) => r.id)).toEqual(
+      expect.arrayContaining([idA, r2.id])
+    );
+
+    let resChoqueH;
+    act(() => {
+      resChoqueH = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Intento Choque H',
+      });
+    });
+    expect(resChoqueH).toEqual({
+      ok: false,
+      error: 'Ese horario ya está reservado. Elige otro.',
+    });
+    expect(result.current.reservas).toHaveLength(3);
+  });
+
+  it('C3 (#50): conserva reserva pendiente para mañana y su hora ocupada en el nuevo día 0 tras cambio de día con escritura externa', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 16, 10, 0, 0));
+
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const manana = result.current.dias[1]; // 2026-11-17
+
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+    });
+
+    let resA;
+    act(() => {
+      resA = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: manana,
+        horas: ['16:00'],
+        nombre: 'Ana Mañana',
+      });
+    });
+    expect(resA.ok).toBe(true);
+    const idA = result.current.reservas[0].id;
+
+    vi.setSystemTime(new Date(2026, 10, 17, 10, 0, 0));
+    const estadoDiaNuevo = crearEstadoInicial();
+    const r2 = crearReservaIndividual({
+      id: 'padel-1__2026-11-23__18:00__300',
+      codigo: 'SPF-DIA6',
+      canchaId: 'padel-1',
+      fecha: '2026-11-23',
+      horas: ['18:00'],
+      nombre: 'Pedro Día Nuevo',
+    });
+    const ocupadosOtra = structuredClone(estadoDiaNuevo.ocupados);
+    ocupadosOtra['padel-1']['2026-11-23'].push('18:00');
+    setItemOriginal.call(
+      window.localStorage,
+      STORAGE_KEY,
+      JSON.stringify({ ocupados: ocupadosOtra, reservas: [r2] })
+    );
+
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+    });
+
+    expect(result.current.dias[0]).toBe('2026-11-17');
+    expect(result.current.reservas).toHaveLength(2);
+    expect(result.current.reservas.map((r) => r.id)).toEqual(
+      expect.arrayContaining([idA, r2.id])
+    );
+    expect(
+      result.current
+        .disponibilidad('padel-1', '2026-11-17')
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(false);
+    expect(
+      result.current
+        .disponibilidad('padel-1', '2026-11-23')
+        .find((h) => h.hora === '18:00').disponible
+    ).toBe(false);
+  });
+
+  it('C4 (#50): un torneo o cumpleaños pendiente sobrevive al evento storage con todas sus celdas ocupadas', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3];
+    const dia4 = result.current.dias[4];
+    const dia5 = result.current.dias[5];
+    const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+    });
+
+    let resTorneo;
+    let resCumple;
+    act(() => {
+      resTorneo = result.current.reservarEvento({
+        subtipo: 'torneo',
+        fecha: dia3,
+        bloques: [
+          {
+            ronda: 1,
+            nombreRonda: 'Semifinal',
+            fecha: dia3,
+            canchaIds: ['padel-1'],
+            horas: ['16:00', '18:00'],
+          },
+          {
+            ronda: 1,
+            nombreRonda: 'Semifinal',
+            fecha: dia3,
+            canchaIds: ['padel-2'],
+            horas: ['17:00'],
+          },
+          {
+            ronda: 2,
+            nombreRonda: 'Final',
+            fecha: dia5,
+            canchaIds: ['padel-1'],
+            horas: ['10:00'],
+          },
+        ],
+        nombre: 'Torneo Pendiente',
+      });
+      resCumple = result.current.reservarEvento({
+        subtipo: 'cumpleanos',
+        fecha: dia4,
+        canchaIds: ['voley-1', 'voley-2'],
+        horas: ['09:00', '10:00'],
+        invitados: 18,
+        nombre: 'Cumple Pendiente',
+      });
+    });
+    expect(resTorneo.ok).toBe(true);
+    expect(resCumple.ok).toBe(true);
+    const idTorneo = result.current.reservas[0].id;
+    const idCumple = result.current.reservas[1].id;
+
+    const r2 = crearReservaIndividual({
+      id: `voley-1__${dia4}__14:00__400`,
+      codigo: 'SPF-OTRA04',
+      canchaId: 'voley-1',
+      fecha: dia4,
+      horas: ['14:00'],
+      nombre: 'Marta Otra',
+    });
+    const ocupadosOtra = structuredClone(base.ocupados);
+    ocupadosOtra['voley-1'][dia4].push('14:00');
+    const jsonOtra = JSON.stringify({
+      ocupados: ocupadosOtra,
+      reservas: [r2],
+    });
+    setItemOriginal.call(window.localStorage, STORAGE_KEY, jsonOtra);
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: STORAGE_KEY,
+          newValue: jsonOtra,
+        })
+      );
+    });
+
+    expect(result.current.reservas).toHaveLength(3);
+    expect(result.current.reservas.map((r) => r.id)).toEqual(
+      expect.arrayContaining([idTorneo, idCumple, r2.id])
+    );
+
+    const ocupada = (canchaId, fecha, hora) =>
+      result.current
+        .disponibilidad(canchaId, fecha)
+        .find((h) => h.hora === hora).disponible;
+
+    expect(ocupada('padel-1', dia3, '16:00')).toBe(false);
+    expect(ocupada('padel-1', dia3, '18:00')).toBe(false);
+    expect(ocupada('padel-2', dia3, '17:00')).toBe(false);
+    expect(ocupada('padel-1', dia5, '10:00')).toBe(false);
+    expect(ocupada('voley-1', dia4, '09:00')).toBe(false);
+    expect(ocupada('voley-1', dia4, '10:00')).toBe(false);
+    expect(ocupada('voley-2', dia4, '09:00')).toBe(false);
+    expect(ocupada('voley-2', dia4, '10:00')).toBe(false);
+    expect(ocupada('voley-1', dia4, '14:00')).toBe(false);
+  });
+
+  it('C5 (#50): no duplica la reserva si la otra pestaña ya escribió el mismo id', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3];
+    const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+    });
+
+    act(() => {
+      result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Ana Mismo Id',
+      });
+    });
+    const reservaPendiente = result.current.reservas[0];
+
+    const ocupadosOtra = structuredClone(base.ocupados);
+    ocupadosOtra['padel-1'][dia3].push('16:00');
+    const jsonOtra = JSON.stringify({
+      ocupados: ocupadosOtra,
+      reservas: [reservaPendiente],
+    });
+    setItemOriginal.call(window.localStorage, STORAGE_KEY, jsonOtra);
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: STORAGE_KEY,
+          newValue: jsonOtra,
+        })
+      );
+    });
+
+    expect(result.current.reservas).toHaveLength(1);
+    expect(result.current.reservas[0].id).toBe(reservaPendiente.id);
+  });
+
+  it('C6 (#50): cuando setItem vuelve a funcionar, la siguiente escritura guarda la pendiente en localStorage y una escritura externa posterior sin ella la reemplaza', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3];
+    const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+
+    const setItemSpy = vi
+      .spyOn(Storage.prototype, 'setItem')
+      .mockImplementation(() => {
+        throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+      });
+
+    let resA;
+    act(() => {
+      resA = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Ana Recuperada',
+      });
+    });
+    expect(resA.ok).toBe(true);
+    const idA = result.current.reservas[0].id;
+    expect(JSON.parse(window.localStorage.getItem(STORAGE_KEY)).reservas).toEqual([]);
+
+    // Se restablece setItem y llega evento storage de otra pestaña con R2
+    setItemSpy.mockRestore();
+
+    const r2 = crearReservaIndividual({
+      id: `padel-1__${dia3}__17:00__500`,
+      codigo: 'SPF-REC002',
+      canchaId: 'padel-1',
+      fecha: dia3,
+      horas: ['17:00'],
+      nombre: 'Carlos Otra',
+    });
+    const ocupadosConR2 = structuredClone(base.ocupados);
+    ocupadosConR2['padel-1'][dia3].push('17:00');
+    const jsonR2 = JSON.stringify({
+      ocupados: ocupadosConR2,
+      reservas: [r2],
+    });
+    window.localStorage.setItem(STORAGE_KEY, jsonR2);
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: STORAGE_KEY,
+          newValue: jsonR2,
+        })
+      );
+    });
+
+    const persistidoTrasRecuperar = JSON.parse(
+      window.localStorage.getItem(STORAGE_KEY)
+    );
+    expect(persistidoTrasRecuperar.reservas).toHaveLength(2);
+    expect(persistidoTrasRecuperar.reservas.map((r) => r.id)).toEqual(
+      expect.arrayContaining([idA, r2.id])
+    );
+
+    // Escritura externa posterior sin idA reemplaza el estado normalmente
+    window.localStorage.setItem(STORAGE_KEY, jsonR2);
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: STORAGE_KEY,
+          newValue: jsonR2,
+        })
+      );
+    });
+
+    expect(result.current.reservas).toHaveLength(1);
+    expect(result.current.reservas[0].id).toBe(r2.id);
+    expect(
+      result.current
+        .disponibilidad('padel-1', dia3)
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(true);
+  });
+
+  it('C7 (#50): si A cancela una reserva pendiente, no reaparece tras un evento storage ni tras un cambio de día', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 16, 10, 0, 0));
+
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3]; // 2026-11-19
+    const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+    });
+
+    let resA;
+    act(() => {
+      resA = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Ana Cancelada',
+      });
+    });
+    expect(resA.ok).toBe(true);
+    const idA = result.current.reservas[0].id;
+
+    let resCancel;
+    act(() => {
+      resCancel = result.current.cancelar(idA);
+    });
+    expect(resCancel).toEqual({ ok: true });
+    expect(result.current.reservas).toEqual([]);
+
+    const r2 = crearReservaIndividual({
+      id: `padel-1__${dia3}__17:00__600`,
+      codigo: 'SPF-OTRA06',
+      canchaId: 'padel-1',
+      fecha: dia3,
+      horas: ['17:00'],
+      nombre: 'Luis Otra',
+    });
+    const ocupadosOtra = structuredClone(base.ocupados);
+    ocupadosOtra['padel-1'][dia3].push('17:00');
+    const jsonOtra = JSON.stringify({
+      ocupados: ocupadosOtra,
+      reservas: [r2],
+    });
+    setItemOriginal.call(window.localStorage, STORAGE_KEY, jsonOtra);
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: STORAGE_KEY,
+          newValue: jsonOtra,
+        })
+      );
+    });
+
+    expect(result.current.reservas).toHaveLength(1);
+    expect(result.current.reservas[0].id).toBe(r2.id);
+    expect(
+      result.current
+        .disponibilidad('padel-1', dia3)
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(true);
+
+    vi.setSystemTime(new Date(2026, 10, 17, 10, 0, 0));
+    const estadoDiaNuevo = crearEstadoInicial();
+    const ocupadosDiaNuevo = structuredClone(estadoDiaNuevo.ocupados);
+    ocupadosDiaNuevo['padel-1'][dia3].push('17:00');
+    setItemOriginal.call(
+      window.localStorage,
+      STORAGE_KEY,
+      JSON.stringify({ ocupados: ocupadosDiaNuevo, reservas: [r2] })
+    );
+
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+    });
+
+    expect(result.current.reservas).toHaveLength(1);
+    expect(result.current.reservas[0].id).toBe(r2.id);
+    expect(
+      result.current
+        .disponibilidad('padel-1', dia3)
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(true);
+  });
+
+  it('C8 (#50): con setItem funcionando siempre, una reserva cancelada en otra pestaña desaparece de A tras el evento storage', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3];
+    const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+
+    let resA;
+    act(() => {
+      resA = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Sofía Normal',
+      });
+    });
+    expect(resA.ok).toBe(true);
+    expect(result.current.reservas).toHaveLength(1);
+
+    const jsonSinReserva = JSON.stringify({
+      ocupados: base.ocupados,
+      reservas: [],
+    });
+    window.localStorage.setItem(STORAGE_KEY, jsonSinReserva);
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: STORAGE_KEY,
+          newValue: jsonSinReserva,
+        })
+      );
+    });
+
+    expect(result.current.reservas).toEqual([]);
+    expect(
+      result.current
+        .disponibilidad('padel-1', dia3)
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(true);
+  });
+
+  it('C9 (#50): si otra pestaña borra la clave (removeItem o clear), A vuelve a la semilla con reservas [] aunque tuviera reservas sin guardar', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3];
+
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+    });
+
+    act(() => {
+      result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Ana Borrado',
+      });
+    });
+    expect(result.current.reservas).toHaveLength(1);
+
+    act(() => {
+      window.localStorage.removeItem(STORAGE_KEY);
+      window.dispatchEvent(
+        new StorageEvent('storage', { key: STORAGE_KEY, newValue: null })
+      );
+    });
+
+    expect(result.current.reservas).toEqual([]);
+    expect(
+      result.current
+        .disponibilidad('padel-1', dia3)
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(true);
+
+    act(() => {
+      result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['18:00'],
+        nombre: 'Ana Clear',
+      });
+    });
+    expect(result.current.reservas).toHaveLength(1);
+
+    act(() => {
+      window.localStorage.clear();
+      window.dispatchEvent(new StorageEvent('storage', { key: null }));
+    });
+
+    expect(result.current.reservas).toEqual([]);
+    expect(
+      result.current
+        .disponibilidad('padel-1', dia3)
+        .find((h) => h.hora === '18:00').disponible
+    ).toBe(true);
+  });
+
+  it('C10 (#50): conservarReservasSinGuardar no muta sus argumentos y con el registro vacío devuelve el mismo objeto guardado', () => {
+    expect(typeof conservarReservasSinGuardar).toBe('function');
+
+    const estadoBase = crearEstadoInicial();
+    const dia3 = estadoBase.dias[3];
+    const dia5 = estadoBase.dias[5];
+
+    const rGuardada = crearReservaIndividual({
+      id: `padel-1__${dia3}__10:00__1`,
+      codigo: 'SPF-G001',
+      canchaId: 'padel-1',
+      fecha: dia3,
+      horas: ['10:00'],
+      nombre: 'Guardada',
+    });
+    const ocupadosGuardado = structuredClone(estadoBase.ocupados);
+    ocupadosGuardado['padel-1'][dia3].push('10:00');
+    const guardado = congelarProfundo({
+      ocupados: ocupadosGuardado,
+      reservas: [rGuardada],
+    });
+
+    const vacio = conservarReservasSinGuardar(guardado, [rGuardada], new Set());
+    expect(vacio).toBe(guardado);
+
+    const rIndividual = crearReservaIndividual({
+      id: `padel-1__${dia3}__16:00__2`,
+      codigo: 'SPF-P002',
+      canchaId: 'padel-1',
+      fecha: dia3,
+      horas: ['16:00', '17:00'],
+      nombre: 'Individual Pendiente',
+    });
+    const rTorneo = {
+      id: `evento__${dia3}__3`,
+      codigo: 'SPF-P003',
+      tipo: 'evento',
+      subtipo: 'torneo',
+      fecha: dia3,
+      canchaIds: ['padel-1', 'padel-2'],
+      horas: ['14:00'],
+      bloques: [
+        {
+          ronda: 1,
+          fecha: dia3,
+          canchaIds: ['padel-2'],
+          horas: ['18:00', '15:00'],
+        },
+        {
+          ronda: 2,
+          fecha: dia5,
+          canchaIds: ['padel-1'],
+          horas: ['09:00'],
+        },
+        {
+          ronda: 3,
+          fecha: '2020-01-01', // fuera de ventana
+          canchaIds: ['padel-1'],
+          horas: ['12:00'],
+        },
+      ],
+      nombre: 'Torneo Pendiente',
+    };
+    const rCumple = {
+      id: `evento__${dia5}__4`,
+      codigo: 'SPF-P004',
+      tipo: 'evento',
+      subtipo: 'cumpleanos',
+      fecha: dia5,
+      canchaIds: ['voley-1', 'voley-2'],
+      horas: ['11:00', '12:00'],
+      nombre: 'Cumple Pendiente',
+    };
+
+    const reservasMemoria = congelarProfundo([
+      rGuardada,
+      rIndividual,
+      rTorneo,
+      rCumple,
+    ]);
+    const idsSinGuardar = new Set([
+      rGuardada.id,
+      rIndividual.id,
+      rTorneo.id,
+      rCumple.id,
+    ]);
+
+    const resultado = conservarReservasSinGuardar(
+      guardado,
+      reservasMemoria,
+      idsSinGuardar
+    );
+
+    expect(resultado).not.toBe(guardado);
+    expect(resultado.reservas.map((r) => r.id)).toEqual([
+      rGuardada.id,
+      rIndividual.id,
+      rTorneo.id,
+      rCumple.id,
+    ]);
+    expect(resultado.ocupados['padel-1'][dia3]).toEqual(
+      expect.arrayContaining(['10:00', '16:00', '17:00'])
+    );
+    expect(resultado.ocupados['padel-2'][dia3]).toEqual(
+      expect.arrayContaining(['15:00', '18:00'])
+    );
+    // Verifica orden y sin duplicados en padel-2 dia3
+    const horasPadel2Dia3 = resultado.ocupados['padel-2'][dia3];
+    expect(horasPadel2Dia3).toEqual([...new Set(horasPadel2Dia3)].sort());
+    expect(resultado.ocupados['padel-1'][dia5]).toContain('09:00');
+    expect(resultado.ocupados['voley-1'][dia5]).toEqual(
+      expect.arrayContaining(['11:00', '12:00'])
+    );
+    expect(resultado.ocupados['voley-2'][dia5]).toEqual(
+      expect.arrayContaining(['11:00', '12:00'])
+    );
+    expect(resultado.ocupados['padel-1']['2020-01-01']).toBeUndefined();
   });
 });

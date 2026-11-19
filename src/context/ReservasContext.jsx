@@ -17,7 +17,11 @@ import {
 } from '../lib/precios';
 import { esHoraPasada } from '../lib/fechas';
 import { generarCodigo } from '../lib/codigoReserva';
-import { aplicarCancelacion, verificarCancelable } from '../lib/cancelacion';
+import {
+  aplicarCancelacion,
+  horasDeReserva,
+  verificarCancelable,
+} from '../lib/cancelacion';
 import { validarJornadas } from '../lib/torneo';
 
 /**
@@ -234,6 +238,148 @@ function armarOcupadosParaGuardar(ocupadosActuales, diasActuales, ocupadosPrevio
     };
   });
   return resultado;
+}
+
+function celdasDeReserva(reserva) {
+  if (!reserva) {
+    return [];
+  }
+  if (reserva.tipo === 'evento') {
+    if (Array.isArray(reserva.bloques) && reserva.bloques.length > 0) {
+      const celdas = [];
+      reserva.bloques.forEach((b) => {
+        if (
+          b &&
+          b.fecha &&
+          Array.isArray(b.canchaIds) &&
+          Array.isArray(b.horas)
+        ) {
+          b.canchaIds.forEach((cid) => {
+            celdas.push({ canchaId: cid, fecha: b.fecha, horas: b.horas });
+          });
+        }
+      });
+      return celdas;
+    }
+    if (reserva.fecha && Array.isArray(reserva.canchaIds)) {
+      const horas = horasDeReserva(reserva);
+      return reserva.canchaIds.map((cid) => ({
+        canchaId: cid,
+        fecha: reserva.fecha,
+        horas,
+      }));
+    }
+    return [];
+  }
+  if (reserva.canchaId && reserva.fecha) {
+    return [
+      {
+        canchaId: reserva.canchaId,
+        fecha: reserva.fecha,
+        horas: horasDeReserva(reserva),
+      },
+    ];
+  }
+  return [];
+}
+
+/**
+ * conservarReservasSinGuardar — conserva en `guardado` ({ ocupados, reservas })
+ * las reservas en memoria cuyos ids siguen pendientes de persistirse en
+ * localStorage (`idsSinGuardar`), sin duplicar por `id` ni mutar sus argumentos.
+ */
+export function conservarReservasSinGuardar(
+  guardado,
+  reservasMemoria,
+  idsSinGuardar
+) {
+  const conjuntoIds =
+    idsSinGuardar instanceof Set
+      ? idsSinGuardar
+      : new Set(Array.isArray(idsSinGuardar) ? idsSinGuardar : []);
+  if (conjuntoIds.size === 0 || !guardado) {
+    return guardado;
+  }
+
+  const reservasGuardadas = Array.isArray(guardado.reservas)
+    ? guardado.reservas
+    : [];
+  const idsVistos = new Set(
+    reservasGuardadas.map((r) => r && r.id).filter(Boolean)
+  );
+  const pendientes = [];
+  if (Array.isArray(reservasMemoria)) {
+    reservasMemoria.forEach((r) => {
+      if (r && r.id && conjuntoIds.has(r.id) && !idsVistos.has(r.id)) {
+        idsVistos.add(r.id);
+        pendientes.push(r);
+      }
+    });
+  }
+
+  if (pendientes.length === 0) {
+    return guardado;
+  }
+
+  let ocupados = guardado.ocupados;
+  const canchasClonadas = new Set();
+
+  pendientes.forEach((reserva) => {
+    celdasDeReserva(reserva).forEach(({ canchaId, fecha, horas }) => {
+      if (
+        !ocupados ||
+        !ocupados[canchaId] ||
+        !Array.isArray(ocupados[canchaId][fecha]) ||
+        !Array.isArray(horas) ||
+        horas.length === 0
+      ) {
+        return;
+      }
+      if (ocupados === guardado.ocupados) {
+        ocupados = { ...guardado.ocupados };
+      }
+      if (!canchasClonadas.has(canchaId)) {
+        ocupados[canchaId] = { ...ocupados[canchaId] };
+        canchasClonadas.add(canchaId);
+      }
+      ocupados[canchaId][fecha] = Array.from(
+        new Set([...ocupados[canchaId][fecha], ...horas])
+      ).sort();
+    });
+  });
+
+  return {
+    ocupados,
+    reservas: [...reservasGuardadas, ...pendientes],
+  };
+}
+
+function quitarIdsPresentes(idsSinGuardar, reservas) {
+  if (!idsSinGuardar || idsSinGuardar.size === 0 || !Array.isArray(reservas)) {
+    return;
+  }
+  const presentes = new Set(reservas.map((r) => r && r.id).filter(Boolean));
+  for (const id of idsSinGuardar) {
+    if (presentes.has(id)) {
+      idsSinGuardar.delete(id);
+    }
+  }
+}
+
+function filtrarIdsEnMemoria(idsSinGuardar, reservas) {
+  if (!idsSinGuardar || idsSinGuardar.size === 0) {
+    return;
+  }
+  const enMemoria = new Set(
+    (Array.isArray(reservas) ? reservas : [])
+      .map((r) => r && r.id)
+      .filter(Boolean)
+  );
+  for (const id of idsSinGuardar) {
+    if (!enMemoria.has(id)) {
+      idsSinGuardar.delete(id);
+    }
+  }
 }
 
 // Estado inicial: si hay datos guardados válidos se reconcilian con la ventana
@@ -765,6 +911,10 @@ export function ReservasProvider({ children }) {
     ocupadosCrudosRef.current =
       parsearDatosGuardados(ultimoRawStorageRef.current)?.ocupadosCrudos || null;
   }
+  const idsSinGuardarRef = useRef(null);
+  if (idsSinGuardarRef.current === null) {
+    idsSinGuardarRef.current = new Set();
+  }
 
   // Aplica el reducer en memoria de forma síncrona además de encolarlo en React,
   // para que llamadas seguidas en el mismo tick no se pisen entre sí.
@@ -776,6 +926,7 @@ export function ReservasProvider({ children }) {
   // Espejo al almacenamiento local en cada cambio (salvo si el estado coincide
   // exactamente con el payload despachado por el evento storage).
   useEffect(() => {
+    filtrarIdsEnMemoria(idsSinGuardarRef.current, state.reservas);
     const syncPayload = syncDesdeStorageRef.current;
     syncDesdeStorageRef.current = null;
     if (
@@ -803,8 +954,18 @@ export function ReservasProvider({ children }) {
       window.localStorage.setItem(STORAGE_KEY, serializado);
       ultimoRawStorageRef.current = serializado;
       ocupadosCrudosRef.current = ocupadosParaGuardar;
+      idsSinGuardarRef.current.clear();
     } catch (e) {
       // Sin persistencia (modo privado, cuota llena...): sigue en memoria.
+      const guardado = parsearDatosGuardados(ultimoRawStorageRef.current);
+      const idsGuardados = new Set(
+        guardado ? guardado.reservas.map((r) => r && r.id).filter(Boolean) : []
+      );
+      state.reservas.forEach((r) => {
+        if (r && r.id && !idsGuardados.has(r.id)) {
+          idsSinGuardarRef.current.add(r.id);
+        }
+      });
     }
   }, [state.ocupados, state.reservas, state.dias]);
 
@@ -828,7 +989,7 @@ export function ReservasProvider({ children }) {
       if (desdeStorage) {
         ocupadosCrudosRef.current = desdeStorage.ocupadosCrudos;
       }
-      const datosStorage =
+      let datosStorage =
         desdeStorage ||
         (ocupadosCrudosRef.current
           ? {
@@ -836,6 +997,21 @@ export function ReservasProvider({ children }) {
               reservas: estadoRef.current.reservas,
             }
           : null);
+      if (cambioExterno && desdeStorage) {
+        quitarIdsPresentes(idsSinGuardarRef.current, desdeStorage.reservas);
+        const fusionado = conservarReservasSinGuardar(
+          {
+            ocupados: desdeStorage.ocupadosCrudos,
+            reservas: desdeStorage.reservas,
+          },
+          estadoRef.current.reservas,
+          idsSinGuardarRef.current
+        );
+        datosStorage = {
+          ocupadosCrudos: fusionado.ocupados,
+          reservas: fusionado.reservas,
+        };
+      }
       despachar({
         type: 'RENOVAR_VENTANA',
         payload: {
@@ -864,7 +1040,8 @@ export function ReservasProvider({ children }) {
       if (datos) {
         ultimoRawStorageRef.current = raw !== undefined ? raw : leerRawStorage();
         ocupadosCrudosRef.current = datos.ocupadosCrudos;
-        const guardado = {
+        quitarIdsPresentes(idsSinGuardarRef.current, datos.reservas);
+        const guardadoBase = {
           ocupados: fusionarConSemilla(
             actual.canchas,
             actual.dias,
@@ -873,7 +1050,18 @@ export function ReservasProvider({ children }) {
           ),
           reservas: datos.reservas,
         };
-        syncDesdeStorageRef.current = guardado;
+        const guardado = conservarReservasSinGuardar(
+          guardadoBase,
+          actual.reservas,
+          idsSinGuardarRef.current
+        );
+        const quedanPendientes = guardado.reservas.some((r) =>
+          idsSinGuardarRef.current.has(r.id)
+        );
+        if (!quedanPendientes) {
+          idsSinGuardarRef.current.clear();
+          syncDesdeStorageRef.current = guardado;
+        }
         despachar({ type: 'SINCRONIZAR', payload: guardado });
         return;
       }
@@ -884,6 +1072,7 @@ export function ReservasProvider({ children }) {
           if (window.localStorage.getItem(STORAGE_KEY) === null) {
             ultimoRawStorageRef.current = null;
             ocupadosCrudosRef.current = null;
+            idsSinGuardarRef.current.clear();
             const payload = { ocupados: semillaOcup, reservas: [] };
             syncDesdeStorageRef.current = payload;
             despachar({
@@ -908,7 +1097,8 @@ export function ReservasProvider({ children }) {
       if (datos) {
         ultimoRawStorageRef.current = rawActual;
         ocupadosCrudosRef.current = datos.ocupadosCrudos;
-        const guardado = {
+        quitarIdsPresentes(idsSinGuardarRef.current, datos.reservas);
+        const guardadoBase = {
           ocupados: fusionarConSemilla(
             actual.canchas,
             actual.dias,
@@ -917,6 +1107,11 @@ export function ReservasProvider({ children }) {
           ),
           reservas: datos.reservas,
         };
+        const guardado = conservarReservasSinGuardar(
+          guardadoBase,
+          actual.reservas,
+          idsSinGuardarRef.current
+        );
         return {
           guardado,
           estado: { ...actual, ...guardado },
