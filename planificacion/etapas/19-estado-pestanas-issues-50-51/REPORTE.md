@@ -70,9 +70,26 @@ issues; lo revisa y fusiona Juan Fierro.
   4. B cancela la de las 10:00: sale de `localStorage` y A no la vuelve a
      escribir.
 
+## Revisión del PR #52
+
+- Revisión de Juan Fierro: sin bloqueantes. Los archivos generados del ciclo
+  (`ciclo.json`, `resultado.json`, `verificacion.md`) quedan fuera del
+  repositorio, como en las etapas 17 y 18.
+- Revisión independiente con `gemini-4-argon-high`: `APROBADO`, sin
+  bloqueantes; `npm test` 500/500 y lint limpio.
+
 ## Pendientes
 
-- Revisión del PR con `gemini-4-argon-high` antes de fusionar.
+Cada uno tiene su issue:
+
+- #53: una cancelación que no se pudo guardar reaparece cuando otra pestaña
+  escribe.
+- #54: si otra pestaña borra la clave, se pierden las reservas que no se
+  pudieron guardar.
+- #55: una reserva sin guardar que choca con otra pestaña deja dos reservas en
+  la misma hora, y cancelar una libera la hora de la otra.
+- #56: una reserva despachada en una transición puede perderse si llega un
+  evento `storage` antes del render (hoy no pasa: no hay transiciones).
 
 **Riesgo:** ítem 4 (concurrencia, #51) e ítem 1 (estado de reservas que se
 persiste, #50).
