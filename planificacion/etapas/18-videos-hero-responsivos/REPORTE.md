@@ -48,3 +48,14 @@ Nota sobre `v1.log`: `agy` entregó todos los cambios solicitados y las pruebas 
 
 - El tamaño total de `public/media/` en despliegue pasa de ~18 MB a ~48 MB (sumando ambos juegos de 720p y 1080p), pero cada navegador descarga solo la variante que coincide con su `media` query (`720p` en celular/`< 64em`, `1080p` en `>= 64em`).
 - No modifica estado persistido, seguridad ni reglas de negocio.
+
+## Correcciones de la revisión del PR #49 (19-11-2026)
+
+| Bloque | Correcciones | Resultado |
+| --- | --- | --- |
+| `v2-correcciones-revision` | 0 | `APROBADO`: 8/8 criterios, sin hallazgos ni detalles. `HEAD` sin cambios durante el ciclo |
+
+- Decisión de Juan: se conservan los videos 1080p reescalados.
+- Las pruebas del verificador no se versionan; los criterios los cubren `DeporteHero.test.jsx`, `PaginaInicio.test.jsx` y `modoHero.test.js`.
+- Verificación sobre el resultado: `npm test` 38 archivos y 473/473 pruebas; `npm run lint` sin errores ni avisos; `npm run build` OK.
+- Riesgo: bajo. No cambia la lógica del controlador ni los videos; solo mueve la media query a una constante, ajusta pruebas y documenta.

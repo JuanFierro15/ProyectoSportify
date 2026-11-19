@@ -52,3 +52,15 @@ El coordinador realiza previamente la extracción de los `-lg.mp4` desde `54d871
 
 1. `feat: carga videos 1080p en pantallas grandes y 720p en móvil`
 2. `docs: documenta las dos calidades de video del hero y registra etapa 18`
+
+## Correcciones de la revisión del PR #49 (19-11-2026)
+
+La revisión no encontró bloqueantes. Advirtió que los `-lg.mp4` salen de reescalar clips de 720p (~30 MB sin detalle nuevo); Juan decidió conservar el 1080p. Se atienden las sugerencias:
+
+| Bloque | Agente | Rutas permitidas |
+| --- | --- | --- |
+| `v2-correcciones-revision` | Ciclo verificado: Hydrogen `high` implementa, Argon `high` verifica | `src/lib/modoHero.js` y su prueba, `DeporteHero.jsx` y su prueba, `controladorSnapHero.js` (solo comentarios), `PaginaInicio.test.jsx`, `README.md`, `docs/agentes/pagina-reserva.md` |
+
+Alcance: constante `MEDIA_VIDEO_GRANDE` en `src/lib/modoHero.js` (el CSS sigue con `64em` escrito porque las media queries no aceptan variables), `PaginaInicio.test.jsx` limitado a comprobar qué ruta recibe cada hero (con `BASE_URL`), y en README y guía que la calidad se elige al cargar la página. Los criterios C1 a C8 están en `bloques/v2-correcciones-revision/criterios.md`.
+
+Sugerencia que no cambia código: el `error` de un `<source>` solo se dispara mientras el navegador elige la fuente, antes de tener metadatos; si ninguna carga, `duration` queda en `NaN` y `reproducir` ya pasa a `irAlSiguiente` sin `play()`. Los errores posteriores llegan al `<video>`. Se documenta con un comentario junto al listener.
