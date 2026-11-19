@@ -5,6 +5,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import DeporteHero from './DeporteHero';
 import { registrarHeroSnap } from './controladorSnapHero';
+import { MEDIA_VIDEO_GRANDE } from '../../lib/modoHero';
 
 vi.mock('./controladorSnapHero', async (importOriginal) => {
   const original = await importOriginal();
@@ -372,7 +373,7 @@ describe('DeporteHero - fuentes de video responsivas', () => {
     const sources = video.querySelectorAll('source');
     expect(sources).toHaveLength(2);
     expect(sources[0]).toHaveAttribute('src', '/media/hero_voleyplaya-lg.mp4');
-    expect(sources[0]).toHaveAttribute('media', '(min-width: 64em)');
+    expect(sources[0]).toHaveAttribute('media', MEDIA_VIDEO_GRANDE);
     expect(sources[0]).toHaveAttribute('type', 'video/mp4');
     expect(sources[1]).toHaveAttribute('src', '/media/hero_voleyplaya.mp4');
     expect(sources[1]).toHaveAttribute('type', 'video/mp4');

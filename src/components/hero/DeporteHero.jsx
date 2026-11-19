@@ -2,7 +2,10 @@ import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { esClicNormal, rutaReserva } from '../../lib/rutas';
-import { DURACION_FADE_CONTENIDO } from '../../lib/modoHero';
+import {
+  DURACION_FADE_CONTENIDO,
+  MEDIA_VIDEO_GRANDE,
+} from '../../lib/modoHero';
 import { POSICIONES_TEXTO_HERO } from '../../data/deportes';
 import {
   heroEstaReproduciendo,
@@ -37,7 +40,7 @@ const MARGEN_PRECARGA_VISIBLE = '0px';
  *  - nombre        {string}  nombre del deporte (ej. "Voley Playa")
  *  - slug          {string}  slug del deporte; va en data-sport para que el chat sepa qué deporte se está viendo
  *  - videoSrc      {string}  ruta del video de fondo (720p para móvil y respaldo)
- *  - videoSrcLg    {string}  [opcional] ruta del video en 1080p para pantallas grandes (min-width: 64em)
+ *  - videoSrcLg    {string}  [opcional] ruta del video en 1080p para pantallas grandes (`MEDIA_VIDEO_GRANDE`, 64em)
  *  - posterSrc     {string}  ruta de la imagen de respaldo (poster) del video
  *  - tituloCTA     {string}  texto del botón
  *  - colorAcento   {string}  color de acento (hex) para el CTA y el "eyebrow"
@@ -238,7 +241,7 @@ function DeporteHero({
             <>
               <source
                 src={videoSrcLg}
-                media="(min-width: 64em)"
+                media={MEDIA_VIDEO_GRANDE}
                 type="video/mp4"
               />
               <source src={videoSrc} type="video/mp4" />
