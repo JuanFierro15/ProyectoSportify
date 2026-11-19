@@ -860,6 +860,8 @@ export function ReservasProvider({ children }) {
       }
       if (e.key === null || e.newValue === null) {
         try {
+          // Lectura directa (no leerRawStorage()): ese helper devuelve null también
+          // cuando getItem lanza, y aquí eso borraría las reservas en memoria.
           if (window.localStorage.getItem(STORAGE_KEY) === null) {
             ultimoRawStorageRef.current = null;
             ocupadosCrudosRef.current = null;
@@ -908,6 +910,10 @@ export function ReservasProvider({ children }) {
     };
   }, []);
 
+  // `?? state` mantiene a `state` como dependencia válida para `exhaustive-deps`:
+  // `disponibilidad` debe cambiar de identidad en cada estado nuevo porque
+  // `useReserva`, `VistaCanchas` y el chat (`useAccionesReserva`) la usan en
+  // `useMemo`/`useCallback` (quitarla dejaría cálculos viejos o un aviso de lint).
   const disponibilidad = useCallback(
     (canchaId, fecha) =>
       calcularDisponibilidad(estadoRef.current ?? state, canchaId, fecha),
