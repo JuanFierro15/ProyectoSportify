@@ -14,7 +14,7 @@ function AvisoConflictoReserva() {
   }
 
   return (
-    <div className="avisos-conflicto" aria-live="assertive">
+    <div className="avisos-conflicto">
       {avisosConflicto.map((aviso) => (
         <div
           key={aviso.id}
