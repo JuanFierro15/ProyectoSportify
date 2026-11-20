@@ -7,6 +7,12 @@
   max-width: 100%;
 }
 
+@media screen and (max-width: 359px) {
+  .selector-dia {
+    gap: 2px;
+  }
+}
+
 @media screen and (min-width: 40em) {
   .selector-dia {
     gap: 0.5rem;
@@ -14,6 +20,8 @@
 }
 
 .selector-dia__opcion {
+  container-type: inline-size;
+  container-name: pastilla;
   min-height: 44px;
   min-width: 0;
   display: flex;
@@ -21,7 +29,7 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  padding: 0.45rem 2px;
+  padding: 0.45rem 1px;
   border-radius: 12px;
   background: var(--reserva-control, #1f1f1f);
   border: 1px solid var(--reserva-control-borde, #4a4a4a);
@@ -94,8 +102,10 @@
   display: none;
 }
 
+/* La letra del estado escala con el ancho útil real de cada pastilla (cqi)
+   para que "bloqueado" quepa completo sin depender del ancho de la ventana. */
 .selector-dia__libres {
-  font-size: clamp(9px, 2.2vw, 12px);
+  font-size: clamp(8px, 20cqi, 12px);
   color: var(--reserva-texto-tenue, #a8a8a8);
   max-width: 100%;
   overflow: hidden;
@@ -103,20 +113,24 @@
   white-space: nowrap;
 }
 
-/* En móviles angostos (< 400 px), reduce relleno lateral y tracking del estado
-   para que "bloqueado" (9 px mínimo) quepa completo en pastillas de ~41 px */
-@media screen and (max-width: 399px) {
-  .selector-dia__opcion {
-    padding-left: 1px;
-    padding-right: 1px;
-  }
-
-  /* Con el tracking negativo, la tinta de la última letra queda fuera de la
-     caja: con overflow oculto se cortaba ("libre" en vez de "libres"). */
+/* En pastillas angostas (hasta 45 px útiles), donde "bloqueado" a 9 px no
+   cabe con tracking normal, el tracking negativo lo encaja con letra de 8 a
+   9 px (9 px desde unos 37 px útiles); así la letra no baja de 9 px al pasar a
+   la regla general. Con overflow visible la tinta de la última letra no se
+   recorta contra la caja del span. */
+@container pastilla (max-width: 45px) {
   .selector-dia__libres {
-    font-size: 9px;
+    font-size: clamp(8px, 24cqi, 9px);
     letter-spacing: -0.7px;
     overflow: visible;
+  }
+}
+
+/* Respaldo para navegadores sin unidades de contenedor: descartarían la
+   declaración con cqi y el estado heredaría la letra del botón. */
+@supports not (font-size: 1cqi) {
+  .selector-dia__libres {
+    font-size: clamp(9px, 2.2vw, 12px);
   }
 }
 
