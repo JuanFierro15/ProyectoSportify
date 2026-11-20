@@ -9,6 +9,7 @@ import {
   buscarReservaPorCodigo,
   buscarReservasDePersona,
 } from './cancelacion';
+import semilla from '../data/canchas.json';
 
 describe('lógica de cancelación de reservas', () => {
   const ahoraBase = new Date(2026, 9, 12, 10, 0);
@@ -112,6 +113,41 @@ describe('lógica de cancelación de reservas', () => {
     ]);
   });
 
+  test('quitarReservasDeEstado descarta entradas null o sin id al quitar y devuelve la misma referencia si no quita nada (H6)', () => {
+    const original = {
+      ocupados: {
+        'voley-1': { '2026-10-13': ['08:00', '09:00', '10:00'] },
+      },
+      reservas: [null, r1, { sinId: true }, r2],
+    };
+    const copiaAntes = structuredClone(original);
+
+    const sinCambio = quitarReservasDeEstado(original, ['inexistente']);
+    expect(sinCambio).toBe(original);
+    expect(original).toEqual(copiaAntes);
+
+    const resultado = quitarReservasDeEstado(original, [r1.id]);
+    expect(resultado.reservas).toEqual([r2]);
+    expect(resultado.ocupados['voley-1']['2026-10-13']).toEqual(['08:00']);
+    expect(original).toEqual(copiaAntes);
+  });
+
+  test('aplicarCancelacion sobre un estado con null y entradas sin id cancela bien y no los deja en reservas (H6)', () => {
+    const estado = {
+      ocupados: {
+        'voley-1': { '2026-10-13': ['08:00', '09:00', '10:00'] },
+      },
+      reservas: [null, r1, { sinId: true }, r2],
+    };
+    const copiaAntes = structuredClone(estado);
+
+    const res = aplicarCancelacion(estado, r1.id, ahoraBase);
+    expect(res.error).toBeNull();
+    expect(res.state.reservas).toEqual([r2]);
+    expect(res.state.ocupados['voley-1']['2026-10-13']).toEqual(['08:00']);
+    expect(estado).toEqual(copiaAntes);
+  });
+
   test('aplicarCancelacion no libera una hora que otra reserva activa (individual o evento) sigue usando (#55)', () => {
     const rDuplicada = {
       id: 'r1-dup',
@@ -153,6 +189,103 @@ describe('lógica de cancelación de reservas', () => {
       '09:00',
       '10:00',
     ]);
+  });
+
+  test('#66 (S5): horas compartidas al cancelar con aplicarCancelacion y quitarReservasDeEstado, incluida la última hora del día y un evento con bloques', () => {
+    const fecha = '2026-11-25';
+    const ahora = new Date(2026, 10, 20, 10, 0);
+    const ultimaHora = semilla.horas[semilla.horas.length - 1];
+
+    const probarPar = (hora) => {
+      const rX = {
+        id: `padel-1__${fecha}__${hora}__1`,
+        codigo: 'SPF-S5X',
+        tipo: 'individual',
+        canchaId: 'padel-1',
+        fecha,
+        hora,
+        horas: [hora],
+        nombre: 'Persona X',
+      };
+      const rY = {
+        id: `padel-1__${fecha}__${hora}__2`,
+        codigo: 'SPF-S5Y',
+        tipo: 'individual',
+        canchaId: 'padel-1',
+        fecha,
+        hora,
+        horas: [hora],
+        nombre: 'Persona Y',
+      };
+      const estado = {
+        ocupados: { 'padel-1': { [fecha]: ['12:00', hora] } },
+        reservas: [rX, rY],
+      };
+
+      const trasX = aplicarCancelacion(estado, rX.id, ahora);
+      expect(trasX.error).toBeNull();
+      expect(trasX.state.reservas.map((r) => r.codigo)).toEqual(['SPF-S5Y']);
+      expect(trasX.state.ocupados['padel-1'][fecha]).toEqual(['12:00', hora]);
+
+      const trasY = aplicarCancelacion(trasX.state, rY.id, ahora);
+      expect(trasY.error).toBeNull();
+      expect(trasY.state.reservas).toEqual([]);
+      expect(trasY.state.ocupados['padel-1'][fecha]).toEqual(['12:00']);
+
+      const trasSoloX = quitarReservasDeEstado(estado, [rX.id]);
+      expect(trasSoloX.reservas.map((r) => r.codigo)).toEqual(['SPF-S5Y']);
+      expect(trasSoloX.ocupados['padel-1'][fecha]).toEqual(['12:00', hora]);
+
+      const trasAmbos = quitarReservasDeEstado(estado, [rX.id, rY.id]);
+      expect(trasAmbos.reservas).toEqual([]);
+      expect(trasAmbos.ocupados['padel-1'][fecha]).toEqual(['12:00']);
+    };
+
+    probarPar('14:00');
+    probarPar(ultimaHora);
+
+    const rXEv = {
+      id: `padel-1__${fecha}__14:00__3`,
+      codigo: 'SPF-S5XEV',
+      tipo: 'individual',
+      canchaId: 'padel-1',
+      fecha,
+      hora: '14:00',
+      horas: ['14:00'],
+      nombre: 'Persona X',
+    };
+    const rEv = {
+      id: `evento__${fecha}__4`,
+      codigo: 'SPF-S5EV',
+      tipo: 'evento',
+      subtipo: 'torneo',
+      fecha,
+      canchaIds: ['padel-1'],
+      horas: ['14:00'],
+      bloques: [
+        {
+          ronda: 1,
+          nombreRonda: 'Final',
+          fecha,
+          canchaIds: ['padel-1'],
+          horas: ['14:00'],
+        },
+      ],
+      nombre: 'Torneo Compartido',
+    };
+    const estadoConEvento = {
+      ocupados: { 'padel-1': { [fecha]: ['14:00'] } },
+      reservas: [rXEv, rEv],
+    };
+
+    const trasXEv = aplicarCancelacion(estadoConEvento, rXEv.id, ahora);
+    expect(trasXEv.error).toBeNull();
+    expect(trasXEv.state.reservas.map((r) => r.codigo)).toEqual(['SPF-S5EV']);
+    expect(trasXEv.state.ocupados['padel-1'][fecha]).toEqual(['14:00']);
+
+    const trasQuitarXEv = quitarReservasDeEstado(estadoConEvento, [rXEv.id]);
+    expect(trasQuitarXEv.reservas.map((r) => r.codigo)).toEqual(['SPF-S5EV']);
+    expect(trasQuitarXEv.ocupados['padel-1'][fecha]).toEqual(['14:00']);
   });
 
   test('aplicarCancelacion con id inexistente devuelve error noEncontrada y el mismo objeto state', () => {

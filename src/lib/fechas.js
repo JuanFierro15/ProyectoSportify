@@ -40,6 +40,12 @@ export function fechaCompleta(iso) {
   return `${dia[0].toUpperCase()}${dia.slice(1)} ${d.getDate()} de ${MES_LARGO[d.getMonth()]}`;
 }
 
+// Rango legible de fechas ISO: si ambas son iguales, evita repetir el día.
+export function textoRangoFechas(desde, hasta) {
+  if (!hasta || desde === hasta) return fechaCompleta(desde);
+  return `${fechaCompleta(desde)} a ${fechaCompleta(hasta)}`;
+}
+
 // Fecha en minúscula inicial para incluir a mitad de frase.
 export function fechaEnFrase(fecha) {
   if (!fecha) {
