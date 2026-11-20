@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useReservas } from '../../context/ReservasContext';
-import { fechaCompleta } from '../../lib/fechas';
+import { fechaCompleta, textoRangoFechas } from '../../lib/fechas';
 import { alternarHoraIndividual, seleccionarRango } from '../../lib/horarios';
 import {
   calcularPrecioEvento,
@@ -1268,7 +1268,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
 
     const fechaTexto =
       modo === 'torneo' && torneoPlan.bloques?.length > 1
-        ? `${fechaCompleta(primerBloque.fecha)} a ${fechaCompleta(ultimoBloque.fecha)}`
+        ? textoRangoFechas(primerBloque.fecha, ultimoBloque.fecha)
         : fechaCompleta((primerBloque && primerBloque.fecha) || fecha);
 
     const canchasParaComprobante =
