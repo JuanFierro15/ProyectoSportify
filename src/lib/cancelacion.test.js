@@ -4,6 +4,7 @@ import {
   normalizarCodigo,
   verificarCancelable,
   aplicarCancelacion,
+  quitarReservasDeEstado,
   buscarReservasCancelables,
   buscarReservaPorCodigo,
   buscarReservasDePersona,
@@ -73,6 +74,42 @@ describe('lógica de cancelación de reservas', () => {
     ]);
     expect(estadoOriginal.reservas).toHaveLength(3);
     expect(resultado.state).not.toBe(estadoOriginal);
+  });
+
+  test('quitarReservasDeEstado conserva horas compartidas con reservas activas o bloques de torneo sin mutar la entrada (#53)', () => {
+    const torneoMulti = {
+      id: 'e-multi',
+      codigo: 'SPF-EVTMUL',
+      tipo: 'evento',
+      bloques: [
+        { fecha: '2026-10-13', canchaIds: ['voley-1'], horas: ['09:00'] },
+      ],
+    };
+    const rSolapada = {
+      id: 'r-sol',
+      tipo: 'individual',
+      canchaId: 'voley-1',
+      fecha: '2026-10-13',
+      horas: ['09:00', '11:00'],
+    };
+    const original = {
+      ocupados: {
+        'voley-1': { '2026-10-13': ['08:00', '09:00', '11:00'] },
+      },
+      reservas: [rSolapada, torneoMulti],
+    };
+
+    const sinCambio = quitarReservasDeEstado(original, new Set(['inexistente']));
+    expect(sinCambio).toBe(original);
+
+    const resultado = quitarReservasDeEstado(original, new Set(['r-sol']));
+    expect(resultado.reservas).toEqual([torneoMulti]);
+    expect(resultado.ocupados['voley-1']['2026-10-13']).toEqual(['08:00', '09:00']);
+    expect(original.ocupados['voley-1']['2026-10-13']).toEqual([
+      '08:00',
+      '09:00',
+      '11:00',
+    ]);
   });
 
   test('aplicarCancelacion con id inexistente devuelve error noEncontrada y el mismo objeto state', () => {

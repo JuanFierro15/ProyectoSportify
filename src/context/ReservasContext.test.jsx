@@ -3157,6 +3157,7 @@ describe('ReservasContext — cancelaciones sin guardar (#53)', () => {
         nombre: 'Ana Cancelar',
       });
     });
+    expect(resA.ok).toBe(true);
     const idA = result.current.reservas[0].id;
     const guardadoConA = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
 

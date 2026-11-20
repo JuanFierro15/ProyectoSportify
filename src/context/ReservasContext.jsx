@@ -20,7 +20,6 @@ import { generarCodigo } from '../lib/codigoReserva';
 import {
   aplicarCancelacion,
   celdasDeReserva,
-  horasDeReserva,
   quitarReservasDeEstado,
   verificarCancelable,
 } from '../lib/cancelacion';
