@@ -157,12 +157,46 @@ El coordinador revisó las capturas de R5 a R8 una por una: son reales. Están e
 
 Ninguna PR toca esos archivos. Se pueden abrir como issues aparte.
 
+## Cierre (20-11-2026)
+
+- **Fusión:** Miguel Medina pidió fusionar después de la revisión. Las PR se
+  fusionaron en orden con commit de fusión, cambiando antes la base de cada una
+  a `main` (el repositorio no borra la rama al fusionar, así que GitHub no
+  cambia la base sola): #57 `a0b03dd`, #58 `e9634ee`, #59 `979ff7d` y #60
+  `22efa01`. Antes de cada fusión se comprobó que la PR mostrara solo sus 2
+  commits y los archivos revisados.
+- **Comprobación:** `git diff cffe519 origin/main` sale vacío (`main` tiene
+  exactamente lo revisado); las issues #53 a #56 se cerraron solas; el
+  despliegue de Vercel de `22efa01` terminó bien; producción responde 200 en
+  `/` y `/reservar/padel` y su bundle trae el texto del aviso nuevo.
+- **Issues de trabajo futuro**, a partir de los hallazgos y los problemas que
+  ya existían:
+
+  | Issue | Origen |
+  | --- | --- |
+  | #61 | H1 |
+  | #62 | H2 |
+  | #63 | H3 |
+  | #64 | H4 y H5 |
+  | #65 | H6 |
+  | #66 | H7 |
+  | #67 | H8 |
+  | #68 | D1 y D2 |
+  | #69 | Torneo de un solo día |
+  | #70 | Asistente móvil |
+  | #71 | Primer hero sin texto |
+
+- **Ramas borradas** del remoto, ya fusionadas en `main`: `fix/issue-53`,
+  `fix/issue-54`, `fix/issue-55`, `fix/issue-56`, `fix/issues-40-41-42`,
+  `fix/issues-50-51` y `feat/videos-hero-responsivos`.
+- La revisión nativa de Gentle AI sobre los documentos de esta etapa se omitió
+  por decisión de Miguel (`declined_this_candidate`).
+
 ## Pendientes
 
-- Confirmar D1 y D2 con el equipo.
-- Decidir si H1 y H2 se corrigen en la #59 o en una issue nueva.
-- Prueba manual del chat (reservar y cancelar) en producción después de
-  fusionar.
+- Confirmar D1 y D2 con el equipo (#68).
+- Corregir H1 y H2 (#61 y #62).
+- Prueba manual del chat en producción: reservar y cancelar una reserva.
 
 **Riesgo:** ítem 1 (estado de reservas que se persiste) e ítem 4
 (concurrencia entre pestañas) de las PR revisadas; esta etapa no cambió código.
