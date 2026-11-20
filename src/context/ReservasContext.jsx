@@ -181,13 +181,12 @@ function leerGuardado(canchas, dias, semillaOcup, raw) {
   if (!datos) {
     return null;
   }
+  const ocupados = aplicarHorasDeReservas(
+    fusionarConSemilla(canchas, dias, datos.ocupadosCrudos, semillaOcup),
+    datos.reservas
+  );
   return {
-    ocupados: fusionarConSemilla(
-      canchas,
-      dias,
-      datos.ocupadosCrudos,
-      semillaOcup
-    ),
+    ocupados,
     reservas: datos.reservas,
   };
 }
@@ -1126,13 +1125,18 @@ export function ReservasProvider({ children }) {
       ultimoRawStorageRef.current = raw;
       ultimoDatosStorageRef.current = datos;
       ocupadosCrudosRef.current = datos ? datos.ocupadosCrudos : null;
+      const ocupadosBase = aplicarHorasDeReservas(base.ocupados, base.reservas);
+      const baseReparada =
+        ocupadosBase === base.ocupados
+          ? base
+          : { ...base, ocupados: ocupadosBase };
       const {
         guardado,
         idsPendientesCreacion,
         idsPendientesCancelacion,
         conflictos,
       } = conciliarLecturaExterna({
-        base,
+        base: baseReparada,
         reservasMemoria: actual.reservas,
         datosReservas: datos ? datos.reservas : [],
         pendientesCreacion,
@@ -1267,12 +1271,9 @@ export function ReservasProvider({ children }) {
           desdeStorage.ocupadosCrudos,
           ocupadosSemilla(diasNuevos)
         );
-        const ocupadosBase = aplicarHorasDeReservas(
-          combinarOcupadosPorCancha(
-            desdeStorage.ocupadosCrudos,
-            ocupadosConSemilla
-          ),
-          desdeStorage.reservas
+        const ocupadosBase = combinarOcupadosPorCancha(
+          desdeStorage.ocupadosCrudos,
+          ocupadosConSemilla
         );
         const guardado = sincronizarConLeido({
           raw: rawActual,
