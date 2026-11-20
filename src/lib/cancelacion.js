@@ -127,7 +127,10 @@ export function quitarReservasDeEstado(guardado, idsAQuitar) {
   const eliminadas = [];
   const reservas = [];
   reservasOriginales.forEach((r) => {
-    if (r && r.id && conjuntoIds.has(r.id)) {
+    if (!r || typeof r !== 'object' || Array.isArray(r) || !r.id) {
+      return;
+    }
+    if (conjuntoIds.has(r.id)) {
       eliminadas.push(r);
     } else {
       reservas.push(r);
