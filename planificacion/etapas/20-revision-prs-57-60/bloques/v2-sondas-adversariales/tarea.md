@@ -8,7 +8,7 @@ resultado que buscamos.
 
 ## Dónde trabajas
 
-- **Directorio de trabajo:** `C:/Users/MIGUEL ANGEL/.claude/jobs/73d64523/tmp/rev`
+- **Directorio de trabajo:** `<carpeta temporal del job>/rev`
   (worktree de git descartable con `node_modules` ya instalado). Debe estar en
   `origin/fix/issue-54` (punta de la cadena) y limpio; si no, `git checkout
   --detach origin/fix/issue-54` y `git checkout HEAD -- .`.
@@ -18,7 +18,7 @@ resultado que buscamos.
   `main`, y `git checkout HEAD -- .` para volver. Nada de commits, push, `stash` ni
   ramas.
 - **Archivos que escribes fuera:**
-  `C:/Users/MIGUEL ANGEL/Documents/UNIVERSIDAD/VI SEMESTRE/Lenguajes para la Web/ProyectoSportify/.claude/worktrees/plan-pestanas-fases-torneo/planificacion/etapas/20-revision-prs-57-60/revision/v2-sondas.md`
+  `<raíz del worktree>/planificacion/etapas/20-revision-prs-57-60/revision/v2-sondas.md`
   (informe) y una copia de las sondas en la misma carpeta con el nombre
   `v2-sondas.test.jsx.txt` (con `.txt` al final para que Vitest no la corra).
 - No ejecutes `npm run dev`, `npm run preview` ni `vercel dev`.
@@ -39,7 +39,7 @@ resultado que buscamos.
 - Usa fechas `dias[3]` o más adelante (nunca horas pasadas) y canchas y horas
   reales de `src/data/canchas.json`. Para "otra pestaña" arma el JSON a partir
   de `JSON.parse(localStorage.getItem(STORAGE_KEY))` y modifícalo.
-- Cada caso tiene un id `S1`…`S12` en su nombre y comprueba **todos** los
+- Cada caso tiene un id `S1`…`S14` en su nombre y comprueba **todos** los
   valores esperados que se listan (reservas por `codigo`, `disponibilidad` de
   la hora, contenido de `localStorage`, `avisosConflicto`).
 - `avisosConflicto` y `descartarAvisoConflicto` no existen en `main`: en esos
@@ -163,7 +163,7 @@ No inventes resultados: pega la salida real.
 
 ## Criterios de aceptación
 
-- Los 12 casos escritos y corridos en los dos lados, con resultado anotado.
+- Los 14 casos escritos y corridos en los dos lados, con resultado anotado.
 - Ninguna sonda se ajustó para pasar después de ver un fallo en la punta.
 - Copia de las sondas en `v2-sondas.test.jsx.txt`; `src/verificacion/`
   borrada; worktree limpio.

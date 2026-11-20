@@ -64,7 +64,7 @@ AssertionError: expected [ 'SPF-S13B02', 'SPF-V38KYV' ] to deeply equal [ 'SPF-S
 ### Corrida en la punta (`origin/fix/issue-54`)
 
 ```text
- RUN  v5.0.4 C:/Users/MIGUEL ANGEL/.claude/jobs/73d64523/tmp/rev
+ RUN  v5.0.4 <carpeta temporal del job>/rev
 
  ✓ src/verificacion/sondas.test.jsx > Sondas adversariales v2 (#57-#60) > S1: alta y cancelación sin guardar, luego storage con Rb 27ms
  ✓ src/verificacion/sondas.test.jsx > Sondas adversariales v2 (#57-#60) > S2: orden inverso (cancelar R1 y luego reservar R2 en 14:00) sin guardar, luego storage con R1 y Rb 10ms
@@ -89,7 +89,7 @@ AssertionError: expected [ 'SPF-S13B02', 'SPF-V38KYV' ] to deeply equal [ 'SPF-S
 ### Corrida en `origin/main`
 
 ```text
- RUN  v5.0.4 C:/Users/MIGUEL ANGEL/.claude/jobs/73d64523/tmp/rev
+ RUN  v5.0.4 <carpeta temporal del job>/rev
 
  × src/verificacion/sondas.test.jsx > Sondas adversariales v2 (#57-#60) > S1: alta y cancelación sin guardar, luego storage con Rb 33ms
    → expected [ { tipo: 'individual', …(15) }, …(2) ] to have a length of 2 but got 3

@@ -1,6 +1,6 @@
 # Informe v1 — Línea base y verificación RED de las PR #57 a #60
 
-Ejecutado sobre el worktree `C:/Users/MIGUEL ANGEL/.claude/jobs/73d64523/tmp/rev` tras `npm ci` (sin modificar código de producción ni pruebas).
+Ejecutado sobre el worktree `<carpeta temporal del job>/rev` tras `npm ci` (sin modificar código de producción ni pruebas).
 
 ## 1. Línea base
 

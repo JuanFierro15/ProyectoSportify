@@ -39,7 +39,7 @@ Hay cuatro PR encadenadas que se van a fusionar en este orden:
 
 ## Dónde trabajas
 
-- **Directorio de trabajo:** `C:/Users/MIGUEL ANGEL/.claude/jobs/73d64523/tmp/rev`
+- **Directorio de trabajo:** `<carpeta temporal del job>/rev`
   (un worktree de git descartable, ahora en `origin/main` con HEAD separado).
   Todos los comandos se corren ahí.
 - En ese worktree, y **solo ahí**, tienes permiso para `git checkout --detach
@@ -48,7 +48,7 @@ Hay cuatro PR encadenadas que se van a fusionar en este orden:
   ramas. Antes de pasar a otro eslabón, deja el árbol limpio con
   `git checkout -- .` (solo dentro de ese worktree).
 - **El único archivo que escribes** es el informe:
-  `C:/Users/MIGUEL ANGEL/Documents/UNIVERSIDAD/VI SEMESTRE/Lenguajes para la Web/ProyectoSportify/.claude/worktrees/plan-pestanas-fases-torneo/planificacion/etapas/20-revision-prs-57-60/revision/v1-pruebas.md`
+  `<raíz del worktree>/planificacion/etapas/20-revision-prs-57-60/revision/v1-pruebas.md`
 - No ejecutes `npm run dev`, `npm run preview` ni `vercel dev`. Un comando
   pesado a la vez (la PC tiene 8 GB).
 

@@ -7,7 +7,7 @@ informe con capturas.
 
 ## Dónde trabajas
 
-- **Directorio:** `C:/Users/MIGUEL ANGEL/.claude/jobs/73d64523/tmp/rev`
+- **Directorio:** `<carpeta temporal del job>/rev`
   (worktree descartable con `node_modules`). Comprueba que está en
   `origin/fix/issue-54` y limpio (`git status`); si no, `git checkout --detach
   origin/fix/issue-54` y `git checkout -- .`. No hagas commits, push, `stash`
@@ -23,7 +23,7 @@ informe con capturas.
   **mismo** contexto de navegador, para que compartan `localStorage` y se
   disparen los eventos `storage` reales.
 - **Archivos que escribes**, todos en
-  `C:/Users/MIGUEL ANGEL/Documents/UNIVERSIDAD/VI SEMESTRE/Lenguajes para la Web/ProyectoSportify/.claude/worktrees/plan-pestanas-fases-torneo/planificacion/etapas/20-revision-prs-57-60/revision/v3/`:
+  `<raíz del worktree>/planificacion/etapas/20-revision-prs-57-60/revision/v3/`:
   `informe.md` y capturas `R<n>-<descripcion>-<ancho>.png` con el nombre
   exacto que se indica abajo. Cada captura debe ser de la página real en ese
   momento: nunca generes ni edites imágenes.
