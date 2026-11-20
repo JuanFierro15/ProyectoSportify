@@ -1,0 +1,11 @@
+ 360 px torneo FALLA bloqueadas=2 desbordePagina=0 peor="bloqueado" util=39 texto=43 margenes=2/-6 font=9px ls=normal overflow=hidden | fallan: bloqueado, bloqueado, 10 libres
+ 360 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=39 texto=33.5 margenes=2.7/2.8 font=9px ls=normal overflow=hidden
+ 390 px torneo FALLA bloqueadas=2 desbordePagina=0 peor="bloqueado" util=43.3 texto=43 margenes=2/-1.8 font=9px ls=normal overflow=hidden | fallan: bloqueado, bloqueado
+ 390 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=43.3 texto=33.5 margenes=4.9/4.9 font=9px ls=normal overflow=hidden
+ 412 px torneo FALLA bloqueadas=2 desbordePagina=0 peor="bloqueado" util=46.4 texto=43.3 margenes=2/1.1 font=9.064px ls=normal overflow=hidden | fallan: bloqueado, bloqueado
+ 412 px cancha OK    bloqueadas=0 desbordePagina=0 peor="11 libres" util=46.4 texto=33.7 margenes=6.3/6.3 font=9.064px ls=normal overflow=hidden
+ 768 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=89.4 texto=57.3 margenes=16/16 font=12px ls=normal overflow=hidden
+ 768 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=89.4 texto=44.6 margenes=22.4/22.4 font=12px ls=normal overflow=hidden
+1440 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=98 texto=57.3 margenes=20.3/20.3 font=12px ls=normal overflow=hidden
+1440 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=98 texto=44.6 margenes=26.7/26.7 font=12px ls=normal overflow=hidden
+RESULTADO: 7 fallos
