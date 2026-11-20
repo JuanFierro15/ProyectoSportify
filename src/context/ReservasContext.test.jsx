@@ -3009,3 +3009,124 @@ describe('ReservasContext — reservas sin guardar (#50)', () => {
     expect(resultado.ocupados['padel-1']['2020-01-01']).toBeUndefined();
   });
 });
+
+describe('ReservasContext — transición antes del render y storage (#56)', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('#56: reserva despachada dentro de startTransition no se pierde si llega un evento storage antes de que confirme el render', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3];
+    const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+
+    const ocupadosOtra = structuredClone(base.ocupados);
+    ocupadosOtra['padel-1'][dia3].push('14:00');
+    const jsonOtra = JSON.stringify({
+      ocupados: ocupadosOtra,
+      reservas: [
+        {
+          id: `padel-1__${dia3}__14:00__5601`,
+          codigo: 'SPF-56OTRA',
+          tipo: 'individual',
+          canchaId: 'padel-1',
+          fecha: dia3,
+          hora: '14:00',
+          horas: ['14:00'],
+          nombre: 'Otra Pestaña',
+        },
+      ],
+    });
+
+    let resTransicion;
+    act(() => {
+      startTransition(() => {
+        resTransicion = result.current.reservar({
+          canchaId: 'padel-1',
+          fecha: dia3,
+          horas: ['16:00'],
+          nombre: 'Ana Transición',
+        });
+      });
+
+      // Mismo tick, antes de confirmar el render/efecto espejo: otra pestaña escribe y dispara storage.
+      window.localStorage.setItem(STORAGE_KEY, jsonOtra);
+      window.dispatchEvent(
+        new StorageEvent('storage', { key: STORAGE_KEY, newValue: jsonOtra })
+      );
+    });
+
+    expect(resTransicion.ok).toBe(true);
+    expect(result.current.reservas).toHaveLength(2);
+    expect(result.current.reservas.map((r) => r.codigo)).toEqual(
+      expect.arrayContaining(['SPF-56OTRA', resTransicion.codigo])
+    );
+
+    const guardadoFinal = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    expect(guardadoFinal.reservas.map((r) => r.codigo)).toEqual(
+      expect.arrayContaining(['SPF-56OTRA', resTransicion.codigo])
+    );
+    const dispDia3 = result.current.disponibilidad('padel-1', dia3);
+    expect(dispDia3.find((h) => h.hora === '14:00').disponible).toBe(false);
+    expect(dispDia3.find((h) => h.hora === '16:00').disponible).toBe(false);
+  });
+
+  it('#56: reserva despachada dentro de startTransition no se pierde si leerEstadoFresco sincroniza otra escritura en el mismo tick', () => {
+    const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3];
+    const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+
+    const ocupadosOtra = structuredClone(base.ocupados);
+    ocupadosOtra['padel-1'][dia3].push('14:00');
+    const jsonOtra = JSON.stringify({
+      ocupados: ocupadosOtra,
+      reservas: [
+        {
+          id: `padel-1__${dia3}__14:00__5602`,
+          codigo: 'SPF-56OTRA2',
+          tipo: 'individual',
+          canchaId: 'padel-1',
+          fecha: dia3,
+          hora: '14:00',
+          horas: ['14:00'],
+          nombre: 'Otra Pestaña 2',
+        },
+      ],
+    });
+
+    let res1;
+    let res2;
+    act(() => {
+      startTransition(() => {
+        res1 = result.current.reservar({
+          canchaId: 'padel-1',
+          fecha: dia3,
+          horas: ['16:00'],
+          nombre: 'Ana Transición 1',
+        });
+      });
+
+      // Otra pestaña escribe sin que todavía llegue storage; una segunda reserva local ejecuta leerEstadoFresco.
+      window.localStorage.setItem(STORAGE_KEY, jsonOtra);
+      res2 = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['17:00'],
+        nombre: 'Luis Segunda',
+      });
+    });
+
+    expect(res1.ok).toBe(true);
+    expect(res2.ok).toBe(true);
+    expect(result.current.reservas).toHaveLength(3);
+    expect(result.current.reservas.map((r) => r.codigo)).toEqual(
+      expect.arrayContaining(['SPF-56OTRA2', res1.codigo, res2.codigo])
+    );
+  });
+});
