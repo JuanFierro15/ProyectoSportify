@@ -52,6 +52,127 @@ export function horasDeReserva(reserva) {
   return [];
 }
 
+export function celdasDeReserva(reserva) {
+  if (!reserva) {
+    return [];
+  }
+  if (reserva.tipo === 'evento') {
+    if (Array.isArray(reserva.bloques) && reserva.bloques.length > 0) {
+      const celdas = [];
+      reserva.bloques.forEach((b) => {
+        if (
+          b &&
+          b.fecha &&
+          Array.isArray(b.canchaIds) &&
+          Array.isArray(b.horas)
+        ) {
+          b.canchaIds.forEach((cid) => {
+            celdas.push({ canchaId: cid, fecha: b.fecha, horas: b.horas });
+          });
+        }
+      });
+      return celdas;
+    }
+    if (reserva.fecha && Array.isArray(reserva.canchaIds)) {
+      const horas = horasDeReserva(reserva);
+      return reserva.canchaIds.map((cid) => ({
+        canchaId: cid,
+        fecha: reserva.fecha,
+        horas,
+      }));
+    }
+    return [];
+  }
+  if (reserva.canchaId && reserva.fecha) {
+    return [
+      {
+        canchaId: reserva.canchaId,
+        fecha: reserva.fecha,
+        horas: horasDeReserva(reserva),
+      },
+    ];
+  }
+  return [];
+}
+
+export function horasUsadasEnCelda(reservas, canchaId, fecha) {
+  const usadas = new Set();
+  if (!Array.isArray(reservas)) {
+    return usadas;
+  }
+  reservas.forEach((r) => {
+    celdasDeReserva(r).forEach((celda) => {
+      if (celda.canchaId === canchaId && celda.fecha === fecha) {
+        celda.horas.forEach((h) => usadas.add(h));
+      }
+    });
+  });
+  return usadas;
+}
+
+// Quita de `guardado` ({ ocupados, reservas }) las reservas cuyos ids estén
+// en `idsAQuitar` y libera sus horas salvo que otra reserva restante las use.
+export function quitarReservasDeEstado(guardado, idsAQuitar) {
+  const conjuntoIds =
+    idsAQuitar instanceof Set
+      ? idsAQuitar
+      : new Set(Array.isArray(idsAQuitar) ? idsAQuitar : []);
+  if (conjuntoIds.size === 0 || !guardado) {
+    return guardado;
+  }
+
+  const reservasOriginales = Array.isArray(guardado.reservas)
+    ? guardado.reservas
+    : [];
+  const eliminadas = [];
+  const reservas = [];
+  reservasOriginales.forEach((r) => {
+    if (r && r.id && conjuntoIds.has(r.id)) {
+      eliminadas.push(r);
+    } else {
+      reservas.push(r);
+    }
+  });
+
+  if (eliminadas.length === 0) {
+    return guardado;
+  }
+
+  let ocupados = guardado.ocupados;
+  const canchasClonadas = new Set();
+
+  eliminadas.forEach((reserva) => {
+    celdasDeReserva(reserva).forEach(({ canchaId, fecha, horas }) => {
+      if (
+        !ocupados ||
+        !ocupados[canchaId] ||
+        !Array.isArray(ocupados[canchaId][fecha]) ||
+        !Array.isArray(horas) ||
+        horas.length === 0
+      ) {
+        return;
+      }
+      const usadas = horasUsadasEnCelda(reservas, canchaId, fecha);
+      const horasRestantes = ocupados[canchaId][fecha].filter(
+        (h) => !horas.includes(h) || usadas.has(h)
+      );
+      if (horasRestantes.length === ocupados[canchaId][fecha].length) {
+        return;
+      }
+      if (ocupados === guardado.ocupados) {
+        ocupados = { ...guardado.ocupados };
+      }
+      if (!canchasClonadas.has(canchaId)) {
+        ocupados[canchaId] = { ...ocupados[canchaId] };
+        canchasClonadas.add(canchaId);
+      }
+      ocupados[canchaId][fecha] = horasRestantes;
+    });
+  });
+
+  return { ocupados, reservas };
+}
+
 export function inicioReserva(reserva) {
   if (!reserva || typeof reserva.fecha !== 'string') {
     return null;
