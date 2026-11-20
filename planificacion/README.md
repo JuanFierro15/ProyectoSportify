@@ -23,7 +23,7 @@ planificacion/
 │       ├── revision/       capturas, antes/después, mediciones y verificaciones (si los hubo)
 │       ├── bloques/        una carpeta por bloque delegado a agy
 │       └── logs/           salida de agy (no se versiona)
-└── herramientas/           scripts de apoyo (capturas del README en capturas/)
+└── herramientas/           scripts de apoyo (capturas del README en capturas/, logo en logo/)
 
 odd/
 └── tasks/                  especificaciones y seguimiento de tareas ODD (p. ej. asistente-torneo-movil.md)
@@ -57,6 +57,7 @@ odd/
 | `22-revision-prs-74-81` | Revisión de las PR #74 a #81 de la etapa 21 (issues #61 a #71): diffs, RED, impacto, 24 sondas, `judgment-day` y app real. Veredicto: ninguna bloquea; orden probado #74-#77, #79, #80 (trae #78), #81 (#78 y #79 chocan entre sí). Hallazgos H1 a H6 (rama `chore/revision-prs-74-81`, 20-11) | Miguel Medina | sí | no | sí | v1, v2, v3 |
 | `23-hallazgos-revision-74-81` | Corrección de los hallazgos de la revisión de la etapa 22 en sus PR: pastillas por ancho real con `cqi` (#76, H1), horas de reservas guardadas en todos los caminos de lectura y `null` en reservas (#80, H2 y H6), `.gitattributes` de snapshots (#83, H3), orden de fusión (#81, H4) y doc ODD (#74, H5); además, "Elegir otro horario" en torneo conserva las horas que no chocaron (#80, #61). Ensayo de fusión: 560 pruebas (20-11) | Juan Fierro | sí | no | sí | p1, n1, n2 (ciclo verificado) |
 | `24-revision-correcciones-74-84` | Revisión de las correcciones de Juan (etapa 23) a los hallazgos H1 a H6 de la etapa 22 en las PR #74 a #84: por diferencia, con foco en #80 (H2, H6 y n2) y #76 (H1). Veredicto: todas fusionables en el orden de Juan (560 pruebas); hallazgos K1 (rutas locales en #84 y #82, la nuestra ya corregida), K2 (`null` en `reservas` descarta todo lo guardado, ya existía en `main`) y J1/J2 (detalles) (rama `chore/revision-prs-74-84`, 20-11) | Miguel Medina | sí | no | sí | v1, v2, v3, jd-80 |
+| `25-logo-sportify` | Logo de Sportify vectorizado (potrace) en el navbar con `LogoSportify` (palabra en `currentColor` por estado), favicon SVG con respaldo `.ico` y PNG del manifest; foco del logo por estado (rama `feat/logo-sportify`) | Juan Fierro | sí | no | sí | l1 |
 
 Antes del flujo por etapas (sin plan ni reporte, solo commits):
 
@@ -167,6 +168,7 @@ instrucción y daña las tildes en PowerShell 5.1. Nunca Flash Lite.
 
 ## Herramientas
 
+- `herramientas/logo/`: scripts que vectorizaron el logo (`trazar.py` y `armar.py`, ver su README).
 - `herramientas/capturas/capturas.mjs`: capturas de la página de reserva para
   el README (Chrome headless por CDP, sin dependencias). Desde la raíz:
   `npm run build`, `npm run preview` y luego
