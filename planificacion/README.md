@@ -52,6 +52,7 @@ odd/
 | `17-sincronizacion-pestanas` | Cierre de issues #40, #41 y #42: refs de estado y último `localStorage` para no pisar reservas en memoria, conservación de días futuros (`+6`) y relectura en `RENOVAR_VENTANA`, y `disponibilidad` fresca tras rechazo en el chat (rama `fix/issues-40-41-42`, 17-11) | Juan Fierro (revisa Miguel Medina) | sí | no | sí | r1, c1, v1, r2 |
 | `18-videos-hero-responsivos` | Videos del hero responsivos: 720p en celular/`< 64em` y 1080p Lanczos (`-lg.mp4` de `54d87138`) desde `large` (`>= 64em`) con `<source media>` en `DeporteHero` (rama `feat/videos-hero-responsivos`, 17-11) | Juan Fierro | sí | no | sí | v1, v2 |
 | `19-estado-pestanas-issues-50-51` | Issues #51 (`reducerVersionado`: el render ya no pisa el avance de `despachar` en `estadoRef`) y #50 (`conservarReservasSinGuardar`: una pestaña que no pudo guardar conserva sus reservas al sincronizar) (rama `fix/issues-50-51`, 19-11, PR #52 fusionado; pendientes en #53 a #56) | Miguel Medina (revisa Juan Fierro) | sí | no | sí | e1, e2 (ciclo verificado) |
+| `20-revision-prs-57-60` | **En curso, plan por aprobar.** Revisión de las PR encadenadas #57 a #60 (issues #53 a #56) antes de fusionarlas: diffs, RED, impacto, sondas adversariales y app real (rama `chore/revision-prs-57-60`, 19-11) | Miguel Medina | sí | no | no | (por definir) |
 
 Antes del flujo por etapas (sin plan ni reporte, solo commits):
 
