@@ -208,3 +208,7 @@ positivo: ellos no veían esos archivos, y #80 sí los actualiza. Detalle:
   - el chat en producción después de fusionar.
 - **Sigue abierta la #73** (comprobante del chat con la misma contradicción
   que la #61).
+
+## Comentarios en las PR (20-11-2026)
+
+A pedido de Miguel (cambio respecto del plan, que dejaba los hallazgos solo en este reporte), se publicó un comentario por PR con su veredicto y sus hallazgos, y el orden de fusión en #81, para que Juan corrija y fusione: #74 `7044243385`, #75 `7044243973`, #76 `7044244603`, #77 `7044245127`, #78 `7044245781`, #79 `7044246488`, #80 `7044247083` y #81 `7044247928`.
