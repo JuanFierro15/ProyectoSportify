@@ -52,6 +52,7 @@ odd/
 | `17-sincronizacion-pestanas` | Cierre de issues #40, #41 y #42: refs de estado y último `localStorage` para no pisar reservas en memoria, conservación de días futuros (`+6`) y relectura en `RENOVAR_VENTANA`, y `disponibilidad` fresca tras rechazo en el chat (rama `fix/issues-40-41-42`, 17-11) | Juan Fierro (revisa Miguel Medina) | sí | no | sí | r1, c1, v1, r2 |
 | `18-videos-hero-responsivos` | Videos del hero responsivos: 720p en celular/`< 64em` y 1080p Lanczos (`-lg.mp4` de `54d87138`) desde `large` (`>= 64em`) con `<source media>` en `DeporteHero` (rama `feat/videos-hero-responsivos`, 17-11) | Juan Fierro | sí | no | sí | v1, v2 |
 | `19-estado-pestanas-issues-50-51` | Issues #51 (`reducerVersionado`: el render ya no pisa el avance de `despachar` en `estadoRef`) y #50 (`conservarReservasSinGuardar`: una pestaña que no pudo guardar conserva sus reservas al sincronizar) (rama `fix/issues-50-51`, 19-11, PR #52 fusionado; pendientes en #53 a #56) | Miguel Medina (revisa Juan Fierro) | sí | no | sí | e1, e2 (ciclo verificado) |
+| `20-revision-prs-57-60` | Revisión de las PR encadenadas #57 a #60 (issues #53 a #56) antes de fusionarlas: diffs, RED, impacto, 14 sondas adversariales, `judgment-day` y app real. Veredicto: ninguna bloquea. Fusionadas en orden el 20-11 (`main` en `22efa01`); hallazgos en las issues #61 a #71 (rama `chore/revision-prs-57-60`, 19/20-11) | Miguel Medina | sí | no | sí | v1, v2, v3 |
 
 Antes del flujo por etapas (sin plan ni reporte, solo commits):
 
@@ -125,6 +126,9 @@ inicio).
 | Sincronización entre pestañas | `r2-correcciones-revision` | Correcciones de la revisión del PR #48: `ultimoRawStorageRef` con el texto parseado del evento `storage` (doble reserva), `RENOVAR_VENTANA` puro, 5 pruebas de regresión y guía de reservas (ciclo verificado, `APROBADO` sin correcciones) | (ver REPORTE de la etapa 17) | `r2.log` |
 | Videos hero responsivos | `v1-videos-responsivos` | Prop `videoSrcLg` con `<source media="(min-width: 64em)">` en `DeporteHero`, mapa `VIDEOS_LG` en `PaginaInicio`, 4 pruebas nuevas y docs actualizadas | `b16bbdd` | `v1.log` |
 | Videos hero responsivos | `v2-correcciones-revision` | Correcciones de la revisión del PR #49: constante `MEDIA_VIDEO_GRANDE`, prueba de `PaginaInicio` sin repetir y con `BASE_URL`, comentario del respaldo de error y nota de que la calidad se elige al cargar (ciclo verificado, `APROBADO` sin correcciones) | (ver REPORTE de la etapa 18) | `v2.log` |
+| Revisión PR #57 a #60 | `v1-linea-base-y-red` | Test, lint y build de `main` y de los 4 eslabones, y RED de las 12 pruebas nuevas (`revision/v1-pruebas.md`) | (en `REPORTE.md`) | `v1.log` |
+| Revisión PR #57 a #60 | `v2-sondas-adversariales` | 14 sondas contra la punta y `main` (13/14 en la punta; `revision/v2-sondas.md`) | (en `REPORTE.md`) | `v2.log` |
+| Revisión PR #57 a #60 | `v3-app-real` | 8 recorridos con dos pestañas en `npm run preview` de la punta, con capturas (`revision/v3/`) | (en `REPORTE.md`) | `v3.log` |
 
 ## Cómo trabajar en equipo
 
