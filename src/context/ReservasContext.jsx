@@ -208,6 +208,46 @@ function combinarOcupadosPorCancha(a, b) {
   return resultado;
 }
 
+// Asegura que las horas de `reservas` figuren en `ocupados` para las fechas ya
+// presentes en `ocupados` (p. ej. si lo leído omitía una fecha pero conservaba
+// una reserva para ella). No muta sus argumentos.
+function aplicarHorasDeReservas(ocupados, reservas) {
+  if (!ocupados || !Array.isArray(reservas) || reservas.length === 0) {
+    return ocupados;
+  }
+  let resultado = ocupados;
+  const canchasClonadas = new Set();
+
+  reservas.forEach((reserva) => {
+    celdasDeReserva(reserva).forEach(({ canchaId, fecha, horas }) => {
+      if (
+        !resultado[canchaId] ||
+        !Array.isArray(resultado[canchaId][fecha]) ||
+        !Array.isArray(horas) ||
+        horas.length === 0
+      ) {
+        return;
+      }
+      const actuales = resultado[canchaId][fecha];
+      if (horas.every((h) => actuales.includes(h))) {
+        return;
+      }
+      if (resultado === ocupados) {
+        resultado = { ...ocupados };
+      }
+      if (!canchasClonadas.has(canchaId)) {
+        resultado[canchaId] = { ...resultado[canchaId] };
+        canchasClonadas.add(canchaId);
+      }
+      resultado[canchaId][fecha] = Array.from(
+        new Set([...actuales, ...horas])
+      ).sort();
+    });
+  });
+
+  return resultado;
+}
+
 // Conserva fechas futuras posteriores a la ventana actual de ocupados previos
 // (p. ej. otra pestaña en un día más reciente ya reservó su nuevo día +6) y
 // descarta las fechas pasadas.
@@ -246,7 +286,8 @@ function armarOcupadosParaGuardar(ocupadosActuales, diasActuales, ocupadosPrevio
 /**
  * conciliarReservasSinGuardar — intenta fusionar en `guardado` las reservas en
  * memoria cuyos ids están pendientes de persistirse, descartando las que chocan
- * con celdas ya ocupadas para no dejar reservas duplicadas sobre la misma hora.
+ * con celdas ya ocupadas en `ocupados`, en `guardado.reservas` o en candidatas
+ * ya aceptadas, para no dejar reservas duplicadas sobre la misma hora.
  * Devuelve `{ guardado, conflictos }` sin mutar sus argumentos.
  */
 export function conciliarReservasSinGuardar(
@@ -282,6 +323,21 @@ export function conciliarReservasSinGuardar(
     return { guardado, conflictos: [] };
   }
 
+  const celdasReservadas = new Set();
+  const registrarCeldasReservadas = (celdas) => {
+    celdas.forEach(({ canchaId, fecha, horas }) => {
+      if (!canchaId || !fecha || !Array.isArray(horas)) {
+        return;
+      }
+      horas.forEach((h) => {
+        celdasReservadas.add(`${canchaId}__${fecha}__${h}`);
+      });
+    });
+  };
+  reservasGuardadas.forEach((r) =>
+    registrarCeldasReservadas(celdasDeReserva(r))
+  );
+
   let ocupados = guardado.ocupados;
   const canchasClonadas = new Set();
   const aceptadas = [];
@@ -290,12 +346,15 @@ export function conciliarReservasSinGuardar(
   candidatas.forEach((reserva) => {
     const celdas = celdasDeReserva(reserva);
     const choca = celdas.some(({ canchaId, fecha, horas }) => {
+      if (!Array.isArray(horas) || horas.length === 0) {
+        return false;
+      }
       const ocupadasDia =
         ocupados && ocupados[canchaId] && ocupados[canchaId][fecha];
-      return (
-        Array.isArray(ocupadasDia) &&
-        Array.isArray(horas) &&
-        horas.some((h) => ocupadasDia.includes(h))
+      return horas.some(
+        (h) =>
+          (Array.isArray(ocupadasDia) && ocupadasDia.includes(h)) ||
+          celdasReservadas.has(`${canchaId}__${fecha}__${h}`)
       );
     });
     if (choca) {
@@ -304,6 +363,7 @@ export function conciliarReservasSinGuardar(
     }
 
     aceptadas.push(reserva);
+    registrarCeldasReservadas(celdas);
     celdas.forEach(({ canchaId, fecha, horas }) => {
       if (
         !ocupados ||
@@ -378,16 +438,24 @@ function formatearAvisoConflicto(reserva, canchas = []) {
   return `Tu reserva${codigoTxt}${detalle} no pudo completarse porque ese horario ya fue ocupado.`;
 }
 
+// Devuelve un Set con los ids guardados cuando `raw` es un JSON válido o `null`
+// (no hay nada guardado), y `null` cuando `raw` es un texto ilegible que
+// `parsearDatosGuardados` rechaza.
 function idsDeRawStorage(raw) {
+  if (raw === null || raw === undefined) {
+    return new Set();
+  }
   const datos = parsearDatosGuardados(raw);
-  return new Set(
-    datos ? datos.reservas.map((r) => r && r.id).filter(Boolean) : []
-  );
+  if (!datos) {
+    return null;
+  }
+  return new Set(datos.reservas.map((r) => r && r.id).filter(Boolean));
 }
 
 // Incluye tanto ids ya registrados en idsSinGuardar como reservas en memoria
 // que todavía no figuran en el último JSON sincronizado con localStorage
 // (p. ej. despachadas dentro de startTransition antes del efecto espejo).
+// Si `ultimoRaw` es un texto ilegible, solo cuentan los ids de `idsSinGuardar`.
 function obtenerIdsPendientesSinGuardar(
   idsSinGuardar,
   reservasMemoria,
@@ -398,6 +466,9 @@ function obtenerIdsPendientesSinGuardar(
     return ids;
   }
   const idsGuardados = idsDeRawStorage(ultimoRaw);
+  if (idsGuardados === null) {
+    return ids;
+  }
   reservasMemoria.forEach((r) => {
     if (r && r.id && !idsGuardados.has(r.id)) {
       ids.add(r.id);
@@ -441,7 +512,7 @@ function obtenerIdsCanceladosSinGuardar(
 ) {
   const ids = new Set(idsCancelados);
   const idsGuardados = idsDeRawStorage(ultimoRaw);
-  if (idsGuardados.size === 0) {
+  if (!idsGuardados || idsGuardados.size === 0) {
     return ids;
   }
   const idsEnMemoria = new Set(
@@ -1073,15 +1144,38 @@ export function ReservasProvider({ children }) {
   // Aplica el reducer en memoria de forma síncrona además de encolarlo en React,
   // para que llamadas seguidas en el mismo tick no se pisen entre sí.
   const despachar = useCallback((action) => {
-    estadoRef.current = reducerVersionado(estadoRef.current, action);
+    const previo = estadoRef.current;
+    const siguiente = reducerVersionado(previo, action);
+    estadoRef.current = siguiente;
+    if (siguiente !== previo) {
+      if (action.type === 'RESERVAR' || action.type === 'RESERVAR_EVENTO') {
+        const nueva = siguiente.reservas[siguiente.reservas.length - 1];
+        if (nueva && nueva.id) {
+          idsSinGuardarRef.current.add(nueva.id);
+          idsCanceladosSinGuardarRef.current.delete(nueva.id);
+        }
+      } else if (action.type === 'CANCELAR') {
+        const idCancelado = action.payload?.reservaId;
+        if (idCancelado) {
+          if (idsSinGuardarRef.current.has(idCancelado)) {
+            idsSinGuardarRef.current.delete(idCancelado);
+          } else {
+            idsCanceladosSinGuardarRef.current.add(idCancelado);
+          }
+        }
+      }
+    }
     dispatch(action);
   }, []);
 
   // Espejo al almacenamiento local en cada cambio (salvo si el estado coincide
   // exactamente con el payload despachado por el evento storage).
   useEffect(() => {
-    filtrarIdsEnMemoria(idsSinGuardarRef.current, state.reservas);
-    quitarIdsPresentes(idsCanceladosSinGuardarRef.current, state.reservas);
+    filtrarIdsEnMemoria(idsSinGuardarRef.current, estadoRef.current.reservas);
+    quitarIdsPresentes(
+      idsCanceladosSinGuardarRef.current,
+      estadoRef.current.reservas
+    );
     const syncPayload = syncDesdeStorageRef.current;
     syncDesdeStorageRef.current = null;
     if (
@@ -1114,19 +1208,21 @@ export function ReservasProvider({ children }) {
     } catch (e) {
       // Sin persistencia (modo privado, cuota llena...): sigue en memoria.
       const idsGuardados = idsDeRawStorage(ultimoRawStorageRef.current);
-      const idsEnMemoria = new Set(
-        state.reservas.map((r) => r && r.id).filter(Boolean)
-      );
-      idsEnMemoria.forEach((id) => {
-        if (!idsGuardados.has(id)) {
-          idsSinGuardarRef.current.add(id);
-        }
-      });
-      idsGuardados.forEach((id) => {
-        if (!idsEnMemoria.has(id)) {
-          idsCanceladosSinGuardarRef.current.add(id);
-        }
-      });
+      if (idsGuardados !== null) {
+        const idsEnMemoria = new Set(
+          state.reservas.map((r) => r && r.id).filter(Boolean)
+        );
+        idsEnMemoria.forEach((id) => {
+          if (!idsGuardados.has(id)) {
+            idsSinGuardarRef.current.add(id);
+          }
+        });
+        idsGuardados.forEach((id) => {
+          if (!idsEnMemoria.has(id)) {
+            idsCanceladosSinGuardarRef.current.add(id);
+          }
+        });
+      }
     }
   }, [state.ocupados, state.reservas, state.dias]);
 
@@ -1135,32 +1231,33 @@ export function ReservasProvider({ children }) {
       if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
         return;
       }
-      if (estadoRef.current.dias[0] === ventanaDias()[0]) {
+      const diasNuevos = ventanaDias();
+      if (estadoRef.current.dias[0] === diasNuevos[0]) {
         return;
       }
       const rawActual = leerRawStorage();
       const cambioExterno =
         rawActual !== null && rawActual !== ultimoRawStorageRef.current;
-      const pendientesCreacion = cambioExterno
+      const desdeStorage =
+        rawActual !== null ? parsearDatosGuardados(rawActual) : null;
+      const cambioExternoValido = cambioExterno && Boolean(desdeStorage);
+      const pendientesCreacion = cambioExternoValido
         ? obtenerIdsPendientesSinGuardar(
             idsSinGuardarRef.current,
             estadoRef.current.reservas,
             ultimoRawStorageRef.current
           )
         : null;
-      const pendientesCancelacion = cambioExterno
+      const pendientesCancelacion = cambioExternoValido
         ? obtenerIdsCanceladosSinGuardar(
             idsCanceladosSinGuardarRef.current,
             estadoRef.current.reservas,
             ultimoRawStorageRef.current
           )
         : null;
-      if (cambioExterno) {
+      if (cambioExternoValido) {
         ultimoRawStorageRef.current = rawActual;
       }
-      const desdeStorage = parsearDatosGuardados(
-        rawActual !== null ? rawActual : undefined
-      );
       if (desdeStorage) {
         ocupadosCrudosRef.current = desdeStorage.ocupadosCrudos;
       }
@@ -1172,7 +1269,20 @@ export function ReservasProvider({ children }) {
               reservas: estadoRef.current.reservas,
             }
           : null);
-      if (cambioExterno && desdeStorage) {
+      if (cambioExternoValido) {
+        const ocupadosConSemilla = fusionarConSemilla(
+          estadoRef.current.canchas,
+          diasNuevos,
+          desdeStorage.ocupadosCrudos,
+          ocupadosSemilla(diasNuevos)
+        );
+        const ocupadosBase = aplicarHorasDeReservas(
+          combinarOcupadosPorCancha(
+            desdeStorage.ocupadosCrudos,
+            ocupadosConSemilla
+          ),
+          desdeStorage.reservas
+        );
         const {
           guardado,
           idsPendientesCreacion,
@@ -1180,7 +1290,7 @@ export function ReservasProvider({ children }) {
           conflictos,
         } = conciliarLecturaExterna({
           base: {
-            ocupados: desdeStorage.ocupadosCrudos,
+            ocupados: ocupadosBase,
             reservas: desdeStorage.reservas,
           },
           reservasMemoria: estadoRef.current.reservas,
@@ -1190,6 +1300,7 @@ export function ReservasProvider({ children }) {
         });
         idsSinGuardarRef.current = idsPendientesCreacion;
         idsCanceladosSinGuardarRef.current = idsPendientesCancelacion;
+        ocupadosCrudosRef.current = guardado.ocupados;
         registrarConflictos(conflictos, estadoRef.current.canchas);
         datosStorage = {
           ocupadosCrudos: guardado.ocupados,
@@ -1200,7 +1311,7 @@ export function ReservasProvider({ children }) {
         type: 'RENOVAR_VENTANA',
         payload: {
           datosStorage,
-          conservarMemoriaEnVentanaPrevia: !cambioExterno,
+          conservarMemoriaEnVentanaPrevia: !cambioExternoValido,
         },
       });
     };
