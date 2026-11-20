@@ -111,9 +111,12 @@
     padding-right: 1px;
   }
 
+  /* Con el tracking negativo, la tinta de la última letra queda fuera de la
+     caja: con overflow oculto se cortaba ("libre" en vez de "libres"). */
   .selector-dia__libres {
     font-size: 9px;
     letter-spacing: -0.7px;
+    overflow: visible;
   }
 }
 
