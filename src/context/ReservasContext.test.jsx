@@ -4576,3 +4576,370 @@ describe('ReservasContext — choque al sincronizar contra reservas guardadas (#
     assertUnAvisoConCodigo(result, resChoque.codigo);
   });
 });
+
+describe('ReservasContext — ultimoRaw ilegible o nulo (#63)', () => {
+  const setItemOriginal = Storage.prototype.setItem;
+  const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
+
+  function mockearSetItemFalla() {
+    return vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+    });
+  }
+
+  function leerGuardado() {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    return raw === null ? null : JSON.parse(raw);
+  }
+
+  function crearReservaExterna({
+    id,
+    codigo,
+    canchaId = 'padel-1',
+    fecha,
+    horas,
+    nombre = 'Otra Pestaña',
+  }) {
+    return {
+      id,
+      codigo,
+      tipo: 'individual',
+      canchaId,
+      canchaNombre: 'Cancha Pádel 1',
+      deporte: 'padel',
+      fecha,
+      hora: horas[0],
+      horas: [...horas],
+      nombre,
+    };
+  }
+
+  function escribirYDespacharStorage(datos) {
+    const json = JSON.stringify(datos);
+    setItemOriginal.call(window.localStorage, STORAGE_KEY, json);
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', { key: STORAGE_KEY, newValue: json })
+      );
+    });
+    return json;
+  }
+
+  function horaDisponible(result, canchaId, fecha, hora) {
+    return result.current
+      .disponibilidad(canchaId, fecha)
+      .find((h) => h.hora === hora)?.disponible;
+  }
+
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it('#63: con JSON ilegible en el cambio de día y setItem fallando, R1 cancelada por otra pestaña no revive al llegar storage', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 10, 16, 10, 0, 0));
+
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3]; // 2026-11-19
+    const baseSinR1 = leerGuardado();
+
+    // 1. A tiene una reserva guardada R1.
+    let resR1;
+    act(() => {
+      resR1 = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['14:00'],
+        nombre: 'Ana R1 #63',
+      });
+    });
+    expect(resR1.ok).toBe(true);
+    expect(result.current.reservas.map((r) => r.codigo)).toEqual([resR1.codigo]);
+
+    // 2. Se escribe '{no es json' sin evento, falla setItem en A, avanza un día y se despacha focus.
+    setItemOriginal.call(window.localStorage, STORAGE_KEY, '{no es json');
+    mockearSetItemFalla();
+
+    vi.setSystemTime(new Date(2026, 10, 17, 10, 0, 0));
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+    });
+    expect(result.current.dias[0]).toBe('2026-11-17');
+
+    // 3. Otra pestaña escribe un estado válido sin R1 (la canceló) y llega su evento storage.
+    const rb = crearReservaExterna({
+      id: `padel-1__${dia3}__18:00__6301`,
+      codigo: 'SPF-63B001',
+      fecha: dia3,
+      horas: ['18:00'],
+    });
+    const validoSinR1 = structuredClone(baseSinR1);
+    validoSinR1.ocupados['padel-1'][dia3].push('18:00');
+    validoSinR1.reservas = [rb];
+    escribirYDespacharStorage(validoSinR1);
+
+    // 4. R1 no debe volver a reservas y su hora queda libre en disponibilidad.
+    expect(result.current.reservas.map((r) => r.codigo)).toEqual(['SPF-63B001']);
+    expect(horaDisponible(result, 'padel-1', dia3, '14:00')).toBe(true);
+    expect(horaDisponible(result, 'padel-1', dia3, '18:00')).toBe(false);
+    expect(result.current.avisosConflicto).toEqual([]);
+  });
+
+  it('#63: tras cambio de día con texto ilegible, ultimoRaw conserva lo último legible (una pendiente nueva sobrevive y R1 cancelada por otra pestaña no revive)', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 10, 16, 10, 0, 0));
+
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3];
+    const baseSinR1 = leerGuardado();
+
+    let resR1;
+    act(() => {
+      resR1 = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['14:00'],
+        nombre: 'Ana Guardada #63',
+      });
+    });
+    expect(resR1.ok).toBe(true);
+
+    mockearSetItemFalla();
+
+    let resPendiente;
+    act(() => {
+      resPendiente = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Luis Pendiente #63',
+      });
+    });
+    expect(resPendiente.ok).toBe(true);
+
+    setItemOriginal.call(window.localStorage, STORAGE_KEY, '{no es json');
+
+    vi.setSystemTime(new Date(2026, 10, 17, 10, 0, 0));
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+    });
+
+    const rb = crearReservaExterna({
+      id: `padel-1__${dia3}__18:00__6302`,
+      codigo: 'SPF-63B002',
+      fecha: dia3,
+      horas: ['18:00'],
+    });
+    const validoSinR1 = structuredClone(baseSinR1);
+    validoSinR1.ocupados['padel-1'][dia3].push('18:00');
+    validoSinR1.reservas = [rb];
+    escribirYDespacharStorage(validoSinR1);
+
+    expect(result.current.reservas.map((r) => r.codigo)).toEqual([
+      'SPF-63B002',
+      resPendiente.codigo,
+    ]);
+    expect(horaDisponible(result, 'padel-1', dia3, '14:00')).toBe(true);
+    expect(horaDisponible(result, 'padel-1', dia3, '16:00')).toBe(false);
+    expect(horaDisponible(result, 'padel-1', dia3, '18:00')).toBe(false);
+    expect(result.current.avisosConflicto).toEqual([]);
+  });
+
+  it('#63: con ultimoRaw ilegible desde el montaje y setItem fallando, una reserva nueva se conserva al llegar storage y se guarda una sola vez al restaurar setItem', () => {
+    setItemOriginal.call(window.localStorage, STORAGE_KEY, '{no es json');
+    const spyFalla = mockearSetItemFalla();
+
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3];
+
+    let resNueva;
+    act(() => {
+      resNueva = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Sofía Nueva #63',
+      });
+    });
+    expect(resNueva.ok).toBe(true);
+    expect(result.current.reservas.map((r) => r.codigo)).toEqual([
+      resNueva.codigo,
+    ]);
+
+    // Se restaura setItem y se cuenta cuántas veces escribe el efecto espejo al conciliar.
+    spyFalla.mockRestore();
+    const estadoSemilla = crearEstadoInicial();
+    const rb = crearReservaExterna({
+      id: `padel-1__${dia3}__14:00__6303`,
+      codigo: 'SPF-63C3B1',
+      fecha: dia3,
+      horas: ['14:00'],
+    });
+    const validoOtra = {
+      ocupados: structuredClone(estadoSemilla.ocupados),
+      reservas: [rb],
+    };
+    validoOtra.ocupados['padel-1'][dia3].push('14:00');
+
+    const jsonOtra = JSON.stringify(validoOtra);
+    setItemOriginal.call(window.localStorage, STORAGE_KEY, jsonOtra);
+    const spyGuardar = vi.spyOn(Storage.prototype, 'setItem');
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', { key: STORAGE_KEY, newValue: jsonOtra })
+      );
+    });
+
+    expect(result.current.reservas.map((r) => r.codigo)).toEqual([
+      'SPF-63C3B1',
+      resNueva.codigo,
+    ]);
+    expect(horaDisponible(result, 'padel-1', dia3, '14:00')).toBe(false);
+    expect(horaDisponible(result, 'padel-1', dia3, '16:00')).toBe(false);
+    expect(result.current.avisosConflicto).toEqual([]);
+    expect(spyGuardar).toHaveBeenCalledTimes(1);
+
+    const persistido = leerGuardado();
+    expect(persistido.reservas.map((r) => r.codigo)).toEqual([
+      'SPF-63C3B1',
+      resNueva.codigo,
+    ]);
+  });
+
+  it('#63: con ultimoRaw en null, una reserva hecha dentro de startTransition se conserva al llegar storage en el mismo act', () => {
+    const spyFalla = mockearSetItemFalla();
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3];
+    expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
+
+    // Se restaura setItem antes de la transición: ultimoRawStorageRef sigue siendo null.
+    spyFalla.mockRestore();
+    const estadoSemilla = crearEstadoInicial();
+    const rb = crearReservaExterna({
+      id: `padel-1__${dia3}__14:00__6304`,
+      codigo: 'SPF-63C4B1',
+      fecha: dia3,
+      horas: ['14:00'],
+    });
+    const validoOtra = {
+      ocupados: structuredClone(estadoSemilla.ocupados),
+      reservas: [rb],
+    };
+    validoOtra.ocupados['padel-1'][dia3].push('14:00');
+    const jsonOtra = JSON.stringify(validoOtra);
+
+    let resTransicion;
+    act(() => {
+      startTransition(() => {
+        resTransicion = result.current.reservar({
+          canchaId: 'padel-1',
+          fecha: dia3,
+          horas: ['16:00'],
+          nombre: 'Ana Transición Null #63',
+        });
+      });
+
+      setItemOriginal.call(window.localStorage, STORAGE_KEY, jsonOtra);
+      window.dispatchEvent(
+        new StorageEvent('storage', { key: STORAGE_KEY, newValue: jsonOtra })
+      );
+    });
+
+    expect(resTransicion.ok).toBe(true);
+    expect(result.current.reservas.map((r) => r.codigo)).toEqual([
+      'SPF-63C4B1',
+      resTransicion.codigo,
+    ]);
+    expect(leerGuardado().reservas.map((r) => r.codigo)).toEqual([
+      'SPF-63C4B1',
+      resTransicion.codigo,
+    ]);
+    expect(horaDisponible(result, 'padel-1', dia3, '14:00')).toBe(false);
+    expect(horaDisponible(result, 'padel-1', dia3, '16:00')).toBe(false);
+    expect(result.current.avisosConflicto).toEqual([]);
+  });
+
+  it('#63: repetir focus y repetir el mismo storage tras texto ilegible no duplica reservas ni avisos', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 10, 16, 10, 0, 0));
+
+    const { result } = renderHook(() => useReservas(), { wrapper });
+    const dia3 = result.current.dias[3];
+    const baseSinR1 = leerGuardado();
+
+    let resR1;
+    act(() => {
+      resR1 = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['14:00'],
+        nombre: 'Ana R1 Repetido #63',
+      });
+    });
+    expect(resR1.ok).toBe(true);
+
+    mockearSetItemFalla();
+
+    let resChoque;
+    let resLibre;
+    act(() => {
+      resChoque = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['18:00'],
+        nombre: 'Carlos Choque #63',
+      });
+      resLibre = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Laura Libre #63',
+      });
+    });
+    expect(resChoque.ok).toBe(true);
+    expect(resLibre.ok).toBe(true);
+
+    setItemOriginal.call(window.localStorage, STORAGE_KEY, '{no es json');
+
+    vi.setSystemTime(new Date(2026, 10, 17, 10, 0, 0));
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+      window.dispatchEvent(new Event('focus'));
+    });
+
+    const rb = crearReservaExterna({
+      id: `padel-1__${dia3}__18:00__6305`,
+      codigo: 'SPF-63C5B1',
+      fecha: dia3,
+      horas: ['18:00'],
+    });
+    const validoSinR1 = structuredClone(baseSinR1);
+    validoSinR1.ocupados['padel-1'][dia3].push('18:00');
+    validoSinR1.reservas = [rb];
+    const jsonOtra = escribirYDespacharStorage(validoSinR1);
+
+    // Repetir el mismo storage y volver a disparar focus.
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', { key: STORAGE_KEY, newValue: jsonOtra })
+      );
+      window.dispatchEvent(new Event('focus'));
+    });
+
+    expect(result.current.reservas.map((r) => r.codigo)).toEqual([
+      'SPF-63C5B1',
+      resLibre.codigo,
+    ]);
+    expect(horaDisponible(result, 'padel-1', dia3, '14:00')).toBe(true);
+    expect(horaDisponible(result, 'padel-1', dia3, '16:00')).toBe(false);
+    expect(horaDisponible(result, 'padel-1', dia3, '18:00')).toBe(false);
+    expect(result.current.avisosConflicto).toHaveLength(1);
+    expect(result.current.avisosConflicto[0].mensaje).toContain(resChoque.codigo);
+  });
+});
