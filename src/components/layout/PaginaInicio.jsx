@@ -122,6 +122,7 @@ function PaginaInicio() {
             posicionTexto={d.posicionTexto}
             onVerCanchas={() => abrirVista(d.slug)}
             ultimoDeporte={i === DEPORTES.length - 1}
+            textoVisibleAlInicio={i === 0}
           />
         ))}
       </div>

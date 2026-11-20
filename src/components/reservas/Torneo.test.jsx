@@ -2266,4 +2266,102 @@ describe('Modo Torneo - Pruebas de integración', { timeout: 15000 }, () => {
       within(voucher).getByText('Descuento por horas seguidas')
     ).toBeInTheDocument();
   });
+
+  it('24. Torneo de 4 equipos con todas las fases el mismo día no repite la fecha en confirmación ni QR', () => {
+    let diasCapturados = [];
+    let confirmadoCapturado = null;
+    function FlujoMismoDia() {
+      const { dias, canchas } = useReservas();
+      diasCapturados = dias;
+      const reserva = useReserva({
+        activo: true,
+        modoInicial: 'torneo',
+      });
+
+      const initRef = useRef(false);
+      useEffect(() => {
+        if (!initRef.current) {
+          initRef.current = true;
+          reserva.alternarCancha('futbol-1');
+          reserva.alternarCancha('futbol-2');
+        }
+      }, [reserva]);
+
+      confirmadoCapturado = reserva.confirmado;
+
+      if (reserva.confirmado) {
+        return (
+          <ConfirmacionReserva
+            codigo={reserva.confirmado.codigo}
+            textoQr={reserva.confirmado.textoQr}
+            resumen={reserva.confirmado.resumen}
+            onListo={reserva.reiniciar}
+          />
+        );
+      }
+
+      return (
+        <div>
+          <FormularioReserva reserva={reserva} dias={dias} />
+          <VoucherReserva
+            tipoEtiqueta={reserva.modoInfo.tipoEtiqueta}
+            fechaTexto={fechaCompleta(reserva.fecha)}
+            horas={reserva.horasSel}
+            precio={reserva.precio}
+            puedeConfirmar={reserva.puedeConfirmar}
+            motivoBloqueo={reserva.motivoBloqueo}
+            onConfirmar={reserva.confirmar}
+            onCancelar={reserva.reiniciar}
+            torneo={reserva.torneoPlan}
+            canchas={canchas}
+          />
+        </div>
+      );
+    }
+
+    const { container } = render(
+      <ReservasProvider>
+        <FlujoMismoDia />
+      </ReservasProvider>
+    );
+
+    // Elegir 4 equipos (Semifinal y Final)
+    fireEvent.click(screen.getByRole('button', { name: /4 equipos \(3 partidos\)/i }));
+
+    // Programar Semifinal en dias[1] a las 14:00 en Cancha 1 (cubre los 2 partidos de 20 min)
+    const seccionSemi = screen.getByLabelText('Fase 1: Semifinal');
+    fireEvent.click(within(seccionSemi).getAllByRole('button')[1]);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Semifinal, Cancha 1, 14:00' })
+    );
+
+    // Programar Final el mismo día (dias[1]) a las 15:00 en Cancha 1
+    fireEvent.click(screen.getByRole('tab', { name: /^Final\b/i }));
+    const seccionFinal = screen.getByLabelText('Fase 2: Final');
+    fireEvent.click(within(seccionFinal).getAllByRole('button')[1]);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Final, Cancha 1, 15:00' })
+    );
+
+    fireEvent.change(screen.getByLabelText(/Nombre/i), {
+      target: { value: 'Laura Gómez' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar reserva/i }));
+
+    expect(screen.getByText('Reserva confirmada')).toBeInTheDocument();
+
+    const fechaEsperada = fechaCompleta(diasCapturados[1]);
+    expect(confirmadoCapturado).not.toBeNull();
+    expect(confirmadoCapturado.resumen.fechaTexto).toBe(fechaEsperada);
+
+    const meta = container.querySelector('.confirmacion-reserva__meta');
+    expect(meta).toHaveTextContent(`Torneo · ${fechaEsperada} · 2 jornadas`);
+    expect(container.textContent).not.toContain(`${fechaEsperada} a ${fechaEsperada}`);
+
+    expect(confirmadoCapturado.textoQr).toContain(`Fecha: ${fechaEsperada}`);
+    expect(confirmadoCapturado.textoQr).not.toContain(
+      `${fechaEsperada} a ${fechaEsperada}`
+    );
+  });
 });

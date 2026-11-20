@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { ArrowLeft, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, X } from 'lucide-react';
 import { useVistaCanchas } from '../../context/VistaCanchasContext';
 import { useReservas } from '../../context/ReservasContext';
 import { DEPORTES, deportePorSlug } from '../../data/deportes';
@@ -208,6 +208,7 @@ function VistaCanchas() {
 
   const rootRef = useRef(null);
   const tituloRef = useRef(null);
+  const tituloDescartadaRef = useRef(null);
   const tabsRef = useRef([]);
 
   const activarPestanaDeporte = (slug, enfocar = false) => {
@@ -357,6 +358,14 @@ function VistaCanchas() {
       window.scrollTo({ top: 0 });
     }
   }, [reserva.confirmado]);
+
+  const confirmacionDescartada = Boolean(reserva.confirmado?.descartada);
+
+  useEffect(() => {
+    if (confirmacionDescartada) {
+      tituloDescartadaRef.current?.focus({ preventScroll: true });
+    }
+  }, [confirmacionDescartada]);
 
   // Con el visor (<dialog> modal) abierto se bloquea el scroll del documento
   // compensando el ancho de la barra con padding-right para que no haya salto.
@@ -592,14 +601,44 @@ function VistaCanchas() {
 
       <div className="vista-canchas__marco grid-container">
         {reserva.confirmado ? (
-          <div className={'vista-canchas__confirmacion' + (reserva.confirmado?.resumen?.torneo ? ' vista-canchas__confirmacion--torneo' : '')}>
-            <ConfirmacionReserva
-              codigo={reserva.confirmado.codigo}
-              textoQr={reserva.confirmado.textoQr}
-              resumen={reserva.confirmado.resumen}
-              onListo={cerrarVista}
-            />
-          </div>
+          reserva.confirmado.descartada ? (
+            <div className="vista-canchas__confirmacion vista-canchas__descartada">
+              <AlertTriangle
+                size={48}
+                color="currentColor"
+                className="vista-canchas__descartada-icono"
+                aria-hidden="true"
+              />
+              <h2
+                ref={tituloDescartadaRef}
+                tabIndex={-1}
+                className="vista-canchas__descartada-titulo"
+              >
+                Tu reserva no pudo completarse
+              </h2>
+              <p className="vista-canchas__descartada-texto">
+                Otra persona ocupó ese horario antes de que tu reserva quedara registrada.
+              </p>
+              <div className="vista-canchas__descartada-acciones">
+                <button
+                  type="button"
+                  className="button vista-canchas__descartada-boton"
+                  onClick={reserva.elegirOtroHorario}
+                >
+                  Elegir otro horario
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className={'vista-canchas__confirmacion' + (reserva.confirmado?.resumen?.torneo ? ' vista-canchas__confirmacion--torneo' : '')}>
+              <ConfirmacionReserva
+                codigo={reserva.confirmado.codigo}
+                textoQr={reserva.confirmado.textoQr}
+                resumen={reserva.confirmado.resumen}
+                onListo={cerrarVista}
+              />
+            </div>
+          )
         ) : (
           <>
             {(!esAsistenteMovil || asistente.pasoActual === 'canchas') && (

@@ -49,6 +49,10 @@ const MARGEN_PRECARGA_VISIBLE = '0px';
  *  - ultimoDeporte {bool}    true solo en el último hero del listado: agrega
  *    un degradado de salida (transparente -> --eventos-fondo) para que no
  *    quede un corte abrupto contra la sección de eventos que sigue.
+ *  - textoVisibleAlInicio {bool} [opcional, false] si es true, el bloque de
+ *    texto arranca visible (autoAlpha: 1, scale: 1, y: 0) en el progreso 0
+ *    sin tramo de entrada y conserva solo la salida con el scroll. Usado en
+ *    el primer hero para que el texto y el CTA se vean al cargar la página.
  *
  * Comportamiento:
  *  - Ocupa 100vh con el video cubriendo la sección (object-fit: cover) + overlay.
@@ -92,6 +96,7 @@ function DeporteHero({
   preload = 'metadata',
   onVerCanchas,
   ultimoDeporte = false,
+  textoVisibleAlInicio = false,
 }) {
   const rootRef = useRef(null);
   const bloqueRef = useRef(null);
@@ -139,19 +144,27 @@ function DeporteHero({
       });
       const st = tl.scrollTrigger;
 
-      // Bloque de texto: entra en el primer tramo del pin y se va en el último.
-      tl.fromTo(
-        bloque,
-        { autoAlpha: 0, scale: 0.92, y: 20 },
-        {
-          autoAlpha: 1,
-          scale: 1,
-          y: 0,
-          ease: 'power2.out',
-          duration: DURACION_FADE_CONTENIDO,
-        },
-        0
-      ).to(
+      // Bloque de texto: si arranca visible (primer hero), omite la entrada y
+      // solo hace la salida en el último tramo; en los siguientes entra al
+      // inicio del pin y se va al final.
+      if (textoVisibleAlInicio) {
+        gsap.set(bloque, { autoAlpha: 1, scale: 1, y: 0 });
+      } else {
+        tl.fromTo(
+          bloque,
+          { autoAlpha: 0, scale: 0.92, y: 20 },
+          {
+            autoAlpha: 1,
+            scale: 1,
+            y: 0,
+            ease: 'power2.out',
+            duration: DURACION_FADE_CONTENIDO,
+          },
+          0
+        );
+      }
+
+      tl.to(
         bloque,
         {
           autoAlpha: 0,
@@ -216,7 +229,7 @@ function DeporteHero({
       mm.revert();
       video?.pause();
     };
-  }, []);
+  }, [textoVisibleAlInicio]);
 
   return (
     <section

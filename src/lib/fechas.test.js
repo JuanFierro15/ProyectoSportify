@@ -1,10 +1,34 @@
 import { vi } from 'vitest';
-import { esHoraPasada, fechaCompleta, fechaEnFrase, horaAmPm } from './fechas';
+import {
+  esHoraPasada,
+  fechaCompleta,
+  fechaEnFrase,
+  horaAmPm,
+  textoRangoFechas,
+} from './fechas';
 
 describe('fechaCompleta', () => {
   test('día de la semana, número y mes, sin fechas relativas', () => {
     expect(fechaCompleta('2026-10-13')).toBe('Martes 13 de octubre');
     expect(fechaCompleta('2026-10-14')).toBe('Miércoles 14 de octubre');
+  });
+});
+
+describe('textoRangoFechas', () => {
+  test('misma fecha devuelve una sola fecha sin rango', () => {
+    expect(textoRangoFechas('2026-11-20', '2026-11-20')).toBe('Viernes 20 de noviembre');
+  });
+
+  test('fechas distintas del mismo mes devuelve el rango', () => {
+    expect(textoRangoFechas('2026-10-13', '2026-10-15')).toBe(
+      'Martes 13 de octubre a Jueves 15 de octubre'
+    );
+  });
+
+  test('fechas de meses distintos devuelve el rango con los dos meses', () => {
+    expect(textoRangoFechas('2026-11-30', '2026-12-01')).toBe(
+      'Lunes 30 de noviembre a Martes 1 de diciembre'
+    );
   });
 });
 

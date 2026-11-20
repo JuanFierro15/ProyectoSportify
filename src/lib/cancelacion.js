@@ -95,7 +95,7 @@ export function celdasDeReserva(reserva) {
   return [];
 }
 
-export function horasUsadasEnCelda(reservas, canchaId, fecha) {
+function horasUsadasEnCelda(reservas, canchaId, fecha) {
   const usadas = new Set();
   if (!Array.isArray(reservas)) {
     return usadas;
@@ -127,7 +127,10 @@ export function quitarReservasDeEstado(guardado, idsAQuitar) {
   const eliminadas = [];
   const reservas = [];
   reservasOriginales.forEach((r) => {
-    if (r && r.id && conjuntoIds.has(r.id)) {
+    if (!r || typeof r !== 'object' || Array.isArray(r) || !r.id) {
+      return;
+    }
+    if (conjuntoIds.has(r.id)) {
       eliminadas.push(r);
     } else {
       reservas.push(r);
@@ -255,28 +258,10 @@ export function aplicarCancelacion(
     return { state, error: verificacion.error };
   }
 
-  const nuevasReservas = reservas.filter((r) => r && r.id !== reservaId);
-  const { canchaId, fecha } = reserva;
-  const horasAQuitar = horasDeReserva(reserva);
-  const usadas = horasUsadasEnCelda(nuevasReservas, canchaId, fecha);
-
-  let ocupados = state.ocupados;
-  if (
-    state.ocupados &&
-    state.ocupados[canchaId] &&
-    Array.isArray(state.ocupados[canchaId][fecha])
-  ) {
-    const horasRestantes = state.ocupados[canchaId][fecha].filter(
-      (h) => !horasAQuitar.includes(h) || usadas.has(h)
-    );
-    ocupados = {
-      ...state.ocupados,
-      [canchaId]: {
-        ...state.ocupados[canchaId],
-        [fecha]: horasRestantes,
-      },
-    };
-  }
+  const { ocupados, reservas: nuevasReservas } = quitarReservasDeEstado(
+    state,
+    [reservaId]
+  );
 
   return {
     state: {
