@@ -103,6 +103,20 @@
   white-space: nowrap;
 }
 
+/* En móviles angostos (< 400 px), reduce relleno lateral y tracking del estado
+   para que "bloqueado" (9 px mínimo) quepa completo en pastillas de ~41 px */
+@media screen and (max-width: 399px) {
+  .selector-dia__opcion {
+    padding-left: 1px;
+    padding-right: 1px;
+  }
+
+  .selector-dia__libres {
+    font-size: 9px;
+    letter-spacing: -0.7px;
+  }
+}
+
 .selector-dia__opcion--sel .selector-dia__libres {
   color: var(--reserva-texto-2, #b3b3b3);
 }
