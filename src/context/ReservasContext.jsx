@@ -1273,15 +1273,33 @@ export function ReservasProvider({ children }) {
           // Lectura directa (no leerRawStorage()): ese helper devuelve null también
           // cuando getItem lanza, y aquí eso borraría las reservas en memoria.
           if (window.localStorage.getItem(STORAGE_KEY) === null) {
+            const pendientesCreacion = obtenerIdsPendientesSinGuardar(
+              idsSinGuardarRef.current,
+              actual.reservas,
+              ultimoRawStorageRef.current
+            );
             ultimoRawStorageRef.current = null;
             ocupadosCrudosRef.current = null;
-            idsSinGuardarRef.current.clear();
             idsCanceladosSinGuardarRef.current.clear();
-            const payload = { ocupados: semillaOcup, reservas: [] };
-            syncDesdeStorageRef.current = payload;
+            const { guardado, conflictos } = conciliarReservasSinGuardar(
+              { ocupados: semillaOcup, reservas: [] },
+              actual.reservas,
+              pendientesCreacion
+            );
+            idsSinGuardarRef.current = new Set(
+              guardado.reservas
+                .map((r) => r.id)
+                .filter((id) => pendientesCreacion.has(id))
+            );
+            registrarConflictos(conflictos, actual.canchas);
+            if (idsSinGuardarRef.current.size === 0) {
+              syncDesdeStorageRef.current = guardado;
+            } else {
+              syncDesdeStorageRef.current = null;
+            }
             despachar({
               type: 'SINCRONIZAR',
-              payload,
+              payload: guardado,
             });
           }
         } catch (err) {

@@ -2834,24 +2834,37 @@ describe('ReservasContext — reservas sin guardar (#50)', () => {
     ).toBe(true);
   });
 
-  it('C9 (#50): si otra pestaña borra la clave (removeItem o clear), A vuelve a la semilla con reservas [] aunque tuviera reservas sin guardar', () => {
+  it('C9 (#54): si otra pestaña borra la clave (removeItem o clear), A conserva las reservas sin guardar sobre la semilla y el espejo reintenta guardar', () => {
     const wrapper = ({ children }) => <ReservasProvider>{children}</ReservasProvider>;
     const { result } = renderHook(() => useReservas(), { wrapper });
     const dia3 = result.current.dias[3];
 
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+    // Reserva ya guardada (debe desaparecer si otra pestaña limpia el almacenamiento).
+    let rGuardada;
+    act(() => {
+      rGuardada = result.current.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['14:00'],
+        nombre: 'Ana Guardada',
+      });
+    });
+    expect(rGuardada.ok).toBe(true);
+
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('QuotaExceededError', 'QuotaExceededError');
     });
 
+    let rPendiente1;
     act(() => {
-      result.current.reservar({
+      rPendiente1 = result.current.reservar({
         canchaId: 'padel-1',
         fecha: dia3,
         horas: ['16:00'],
         nombre: 'Ana Borrado',
       });
     });
-    expect(result.current.reservas).toHaveLength(1);
+    expect(result.current.reservas).toHaveLength(2);
 
     act(() => {
       window.localStorage.removeItem(STORAGE_KEY);
@@ -2860,34 +2873,35 @@ describe('ReservasContext — reservas sin guardar (#50)', () => {
       );
     });
 
-    expect(result.current.reservas).toEqual([]);
+    expect(result.current.reservas.map((r) => r.codigo)).toEqual([rPendiente1.codigo]);
+    expect(
+      result.current
+        .disponibilidad('padel-1', dia3)
+        .find((h) => h.hora === '14:00').disponible
+    ).toBe(true);
     expect(
       result.current
         .disponibilidad('padel-1', dia3)
         .find((h) => h.hora === '16:00').disponible
-    ).toBe(true);
+    ).toBe(false);
 
-    act(() => {
-      result.current.reservar({
-        canchaId: 'padel-1',
-        fecha: dia3,
-        horas: ['18:00'],
-        nombre: 'Ana Clear',
-      });
-    });
-    expect(result.current.reservas).toHaveLength(1);
-
+    // También ante localStorage.clear() (key: null) conserva las pendientes y reintenta al recuperar setItem.
+    setItemSpy.mockRestore();
     act(() => {
       window.localStorage.clear();
       window.dispatchEvent(new StorageEvent('storage', { key: null }));
     });
 
-    expect(result.current.reservas).toEqual([]);
+    expect(result.current.reservas.map((r) => r.codigo)).toEqual([rPendiente1.codigo]);
     expect(
       result.current
         .disponibilidad('padel-1', dia3)
-        .find((h) => h.hora === '18:00').disponible
-    ).toBe(true);
+        .find((h) => h.hora === '16:00').disponible
+    ).toBe(false);
+    const guardadoReintento = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    expect(guardadoReintento.reservas.map((r) => r.codigo)).toEqual([
+      rPendiente1.codigo,
+    ]);
   });
 
   it('C10 (#50): conservarReservasSinGuardar no muta sus argumentos y con el registro vacío devuelve el mismo objeto guardado', () => {
