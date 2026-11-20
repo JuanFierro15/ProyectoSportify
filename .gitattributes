@@ -1,0 +1,3 @@
+# Vitest escribe los snapshots con LF: sin esto, core.autocrlf=true los deja
+# como modificados en Windows después de cada npm test.
+*.snap text eol=lf
