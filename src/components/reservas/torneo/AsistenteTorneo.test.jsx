@@ -1,10 +1,11 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, within, act } from '@testing-library/react';
 import AsistenteTorneo from './AsistenteTorneo';
 import VistaCanchas from '../../canchas/VistaCanchas';
+import AvisoConflictoReserva from '../../shared/AvisoConflictoReserva';
 import { VistaCanchasProvider } from '../../../context/VistaCanchasContext';
-import { ReservasProvider } from '../../../context/ReservasContext';
+import { ReservasProvider, STORAGE_KEY } from '../../../context/ReservasContext';
 
 // Helper para mockear matchMedia
 function mockMatchMedia(isMobile) {
@@ -256,6 +257,15 @@ describe('AsistenteTorneo y VistaCanchas (frente A)', () => {
   });
 
   describe('Integración con VistaCanchas (escritorio vs móvil y preservación de estado)', () => {
+    const setItemOriginal = Storage.prototype.setItem;
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      vi.useRealTimers();
+      window.localStorage.clear();
+      window.history.pushState({}, '', '/');
+    });
+
     it('en escritorio (>= 64em) renderiza el layout tradicional con IndicadorPasos de 5 pasos', () => {
       mockMatchMedia(false); // escritorio
 
@@ -347,6 +357,165 @@ describe('AsistenteTorneo y VistaCanchas (frente A)', () => {
       expect(screen.getByRole('tablist', { name: /deporte/i })).toBeInTheDocument();
       expect(screen.getAllByRole('button', { name: /quitar del evento/i }).length).toBeGreaterThan(0);
       expect(screen.getByRole('button', { name: /^Siguiente$/i })).not.toBeDisabled();
+    });
+
+    it('en móvil (< 64em) al descartar un torneo por choque en Cuartos, "Elegir otro horario" lleva a "Fechas por fase" y conserva las horas no chocadas', () => {
+      window.localStorage.clear();
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-11-09T07:00:00'));
+      mockMatchMedia(true);
+
+      window.history.pushState({}, '', '/reservar/padel?modo=torneo');
+
+      render(
+        <ReservasProvider>
+          <VistaCanchasProvider>
+            <AvisoConflictoReserva />
+            <VistaCanchas />
+          </VistaCanchasProvider>
+        </ReservasProvider>
+      );
+
+      const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+
+      // Paso 1: Canchas (agregar Cancha Pádel 1)
+      fireEvent.click(screen.getByRole('button', { name: 'Agregar al evento' }));
+      fireEvent.click(screen.getByRole('button', { name: /^Siguiente$/i }));
+
+      // Paso 2: Formato -> Siguiente
+      expect(screen.getByRole('heading', { level: 2, name: 'Formato' })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /^Siguiente$/i }));
+
+      // Paso 3: Fechas por fase
+      expect(screen.getByRole('heading', { level: 2, name: 'Fechas por fase' })).toBeInTheDocument();
+      const seccionCuartos = screen.getByLabelText('Fase 1: Cuartos de final');
+      const diasCuartos = within(seccionCuartos)
+        .getByRole('group', { name: 'Elige el día' })
+        .querySelectorAll('button');
+      fireEvent.click(diasCuartos[1]);
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Cuartos de final, Cancha 1, 11:00' })
+      );
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Cuartos de final, Cancha 1, 12:00' })
+      );
+
+      fireEvent.click(screen.getByRole('tab', { name: /Semifinal/i }));
+      const seccionSemi = screen.getByLabelText('Fase 2: Semifinal');
+      const diasSemi = within(seccionSemi)
+        .getByRole('group', { name: 'Elige el día' })
+        .querySelectorAll('button');
+      fireEvent.click(diasSemi[2]);
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Semifinal, Cancha 1, 11:00' })
+      );
+
+      fireEvent.click(screen.getByRole('tab', { name: /^Final\b/i }));
+      const seccionFinal = screen.getByLabelText('Fase 3: Final');
+      const diasFinal = within(seccionFinal)
+        .getByRole('group', { name: 'Elige el día' })
+        .querySelectorAll('button');
+      fireEvent.click(diasFinal[3]);
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Final, Cancha 1, 11:00' })
+      );
+      fireEvent.click(screen.getByRole('button', { name: /^Siguiente$/i }));
+
+      // Paso 4: Llaves -> Siguiente
+      expect(screen.getByRole('heading', { level: 2, name: 'Llaves' })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /^Siguiente$/i }));
+
+      // Paso 5: Tus datos -> Siguiente
+      expect(screen.getByRole('heading', { level: 2, name: 'Tus datos' })).toBeInTheDocument();
+      fireEvent.change(screen.getByLabelText('Nombre'), {
+        target: { value: 'Laura Gómez' },
+      });
+      fireEvent.change(screen.getByLabelText('Teléfono (opcional)'), {
+        target: { value: '3105551234' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /^Siguiente$/i }));
+
+      // Paso 6: Resumen -> confirmar con setItem fallando
+      expect(screen.getByRole('heading', { level: 2, name: 'Resumen' })).toBeInTheDocument();
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Confirmar reserva' }));
+      expect(
+        screen.getByRole('heading', { name: 'Reserva confirmada' })
+      ).toBeInTheDocument();
+
+      // Otra pestaña ocupa Pádel 1, 2.º día (2026-11-10), 11:00
+      const fechaChoque = '2026-11-10';
+      const otroEstado = structuredClone(base);
+      otroEstado.ocupados['padel-1'][fechaChoque].push('11:00');
+      otroEstado.reservas.push({
+        id: `padel-1__${fechaChoque}__11:00__9999`,
+        codigo: 'SPF-MOV99',
+        tipo: 'individual',
+        canchaId: 'padel-1',
+        fecha: fechaChoque,
+        hora: '11:00',
+        horas: ['11:00'],
+        nombre: 'Otra Persona',
+      });
+      const jsonOtro = JSON.stringify(otroEstado);
+      setItemOriginal.call(window.localStorage, STORAGE_KEY, jsonOtro);
+      act(() => {
+        window.dispatchEvent(
+          new StorageEvent('storage', { key: STORAGE_KEY, newValue: jsonOtro })
+        );
+      });
+
+      expect(
+        screen.getByRole('heading', { name: 'Tu reserva no pudo completarse' })
+      ).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Elegir otro horario' }));
+
+      // Vuelve al paso "Fechas por fase"
+      expect(
+        screen.getByRole('heading', { level: 2, name: 'Fechas por fase' })
+      ).toBeInTheDocument();
+
+      // Cuartos conserva 12:00 y deshabilita 11:00
+      fireEvent.click(screen.getByRole('tab', { name: /Cuartos de final/i }));
+      const cuartosTrasVolver = screen.getByLabelText('Fase 1: Cuartos de final');
+      const diasCuartosVolver = within(cuartosTrasVolver)
+        .getByRole('group', { name: 'Elige el día' })
+        .querySelectorAll('button');
+      expect(diasCuartosVolver[1]).toHaveAttribute('aria-pressed', 'true');
+      const btn11 = screen.getByRole('button', {
+        name: 'Cuartos de final, Cancha 1, 11:00, reservada',
+      });
+      expect(btn11).toBeDisabled();
+      expect(btn11).toHaveAttribute('aria-pressed', 'false');
+      expect(
+        screen.getByRole('button', { name: 'Cuartos de final, Cancha 1, 12:00' })
+      ).toHaveAttribute('aria-pressed', 'true');
+
+      // Semifinal conserva 3.er día y 11:00
+      fireEvent.click(screen.getByRole('tab', { name: /Semifinal/i }));
+      const semiTrasVolver = screen.getByLabelText('Fase 2: Semifinal');
+      const diasSemiVolver = within(semiTrasVolver)
+        .getByRole('group', { name: 'Elige el día' })
+        .querySelectorAll('button');
+      expect(diasSemiVolver[2]).toHaveAttribute('aria-pressed', 'true');
+      expect(
+        screen.getByRole('button', { name: 'Semifinal, Cancha 1, 11:00' })
+      ).toHaveAttribute('aria-pressed', 'true');
+
+      // Final conserva 4.º día y 11:00
+      fireEvent.click(screen.getByRole('tab', { name: /^Final\b/i }));
+      const finalTrasVolver = screen.getByLabelText('Fase 3: Final');
+      const diasFinalVolver = within(finalTrasVolver)
+        .getByRole('group', { name: 'Elige el día' })
+        .querySelectorAll('button');
+      expect(diasFinalVolver[3]).toHaveAttribute('aria-pressed', 'true');
+      expect(
+        screen.getByRole('button', { name: 'Final, Cancha 1, 11:00' })
+      ).toHaveAttribute('aria-pressed', 'true');
     });
   });
 });

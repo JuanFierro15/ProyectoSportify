@@ -113,6 +113,41 @@ describe('lógica de cancelación de reservas', () => {
     ]);
   });
 
+  test('quitarReservasDeEstado descarta entradas null o sin id al quitar y devuelve la misma referencia si no quita nada (H6)', () => {
+    const original = {
+      ocupados: {
+        'voley-1': { '2026-10-13': ['08:00', '09:00', '10:00'] },
+      },
+      reservas: [null, r1, { sinId: true }, r2],
+    };
+    const copiaAntes = structuredClone(original);
+
+    const sinCambio = quitarReservasDeEstado(original, ['inexistente']);
+    expect(sinCambio).toBe(original);
+    expect(original).toEqual(copiaAntes);
+
+    const resultado = quitarReservasDeEstado(original, [r1.id]);
+    expect(resultado.reservas).toEqual([r2]);
+    expect(resultado.ocupados['voley-1']['2026-10-13']).toEqual(['08:00']);
+    expect(original).toEqual(copiaAntes);
+  });
+
+  test('aplicarCancelacion sobre un estado con null y entradas sin id cancela bien y no los deja en reservas (H6)', () => {
+    const estado = {
+      ocupados: {
+        'voley-1': { '2026-10-13': ['08:00', '09:00', '10:00'] },
+      },
+      reservas: [null, r1, { sinId: true }, r2],
+    };
+    const copiaAntes = structuredClone(estado);
+
+    const res = aplicarCancelacion(estado, r1.id, ahoraBase);
+    expect(res.error).toBeNull();
+    expect(res.state.reservas).toEqual([r2]);
+    expect(res.state.ocupados['voley-1']['2026-10-13']).toEqual(['08:00']);
+    expect(estado).toEqual(copiaAntes);
+  });
+
   test('aplicarCancelacion no libera una hora que otra reserva activa (individual o evento) sigue usando (#55)', () => {
     const rDuplicada = {
       id: 'r1-dup',
