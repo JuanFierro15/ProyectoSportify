@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useReservas } from '../../context/ReservasContext';
-import { fechaCompleta } from '../../lib/fechas';
+import { fechaCompleta, textoRangoFechas } from '../../lib/fechas';
 import { alternarHoraIndividual, seleccionarRango } from '../../lib/horarios';
 import {
   calcularPrecioEvento,
@@ -272,7 +272,14 @@ function calcularMotivoNoAgregable(id, modoActual, idsActuales, todasLasCanchas,
  * @returns {Object} Estado, datos derivados y acciones de la reserva
  */
 export default function useReserva({ activo, modoInicial = 'cancha', canchaInicial = null } = {}) {
-  const { dias, canchas, disponibilidad, reservar, reservarEvento } = useReservas();
+  const {
+    dias,
+    canchas,
+    disponibilidad,
+    reservar,
+    reservarEvento,
+    avisosConflicto,
+  } = useReservas();
 
   const [modo, setModo] = useState(modoInicial);
   const [fecha, setFecha] = useState(dias[0]);
@@ -907,7 +914,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
   }, [horasSel, esLibre, esEvento, canchaIds.length]);
 
   useEffect(() => {
-    if (modo !== 'torneo') return;
+    if (modo !== 'torneo' || confirmado) return;
 
     const tieneHorasFase = Object.values(jornadas).some(
       (j) => horasDeJornada(j).length > 0
@@ -928,7 +935,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
       setJornadas(normalizarJornadasCascada(siguiente, fases, dias, horasBase));
       setError(formatearAvisoChoqueJornadas(quitadas, canchas, fases));
     }
-  }, [modo, jornadas, esLibreFase, canchaIds.length, fases, dias, horasBase, canchas]);
+  }, [modo, confirmado, jornadas, esLibreFase, canchaIds.length, fases, dias, horasBase, canchas]);
 
   const cambiarModo = useCallback(
     (nuevo) => {
@@ -1268,7 +1275,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
 
     const fechaTexto =
       modo === 'torneo' && torneoPlan.bloques?.length > 1
-        ? `${fechaCompleta(primerBloque.fecha)} a ${fechaCompleta(ultimoBloque.fecha)}`
+        ? textoRangoFechas(primerBloque.fecha, ultimoBloque.fecha)
         : fechaCompleta((primerBloque && primerBloque.fecha) || fecha);
 
     const canchasParaComprobante =
@@ -1360,6 +1367,40 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     }
   }, [torneoPlan]);
 
+  useEffect(() => {
+    if (!confirmado || confirmado.descartada || !confirmado.codigo) return;
+    if (!Array.isArray(avisosConflicto) || avisosConflicto.length === 0) return;
+    const fueDescartada = avisosConflicto.some(
+      (aviso) => aviso && aviso.codigo && aviso.codigo === confirmado.codigo
+    );
+    if (fueDescartada) {
+      setConfirmado((prev) =>
+        prev && prev.codigo === confirmado.codigo && !prev.descartada
+          ? { ...prev, descartada: true }
+          : prev
+      );
+    }
+  }, [avisosConflicto, confirmado]);
+
+  const elegirOtroHorario = useCallback(() => {
+    confirmandoRef.current = false;
+    setConfirmado(null);
+    setError(null);
+    setAvisoHorasDeMas(false);
+    if (modo === 'torneo') {
+      setJornadas((prev) => {
+        const { jornadas: siguiente, huboChoque } = limpiarJornadasConChoque(
+          prev,
+          (r, cid, h) => esLibreFase(r, cid, h, prev)
+        );
+        if (!huboChoque) return prev;
+        return normalizarJornadasCascada(siguiente, fases, dias, horasBase);
+      });
+    } else {
+      setHorasSel((prev) => (prev.some((h) => !esLibre(h)) ? [] : prev));
+    }
+  }, [modo, esLibre, esLibreFase, fases, dias, horasBase]);
+
   return {
     modo,
     modoInfo,
@@ -1405,6 +1446,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
     avisoHorasDeMas,
     faseARevisar,
     marcaFaseARevisar,
+    elegirOtroHorario,
     reiniciar,
     duracionPartido,
     setDuracionPartido,
