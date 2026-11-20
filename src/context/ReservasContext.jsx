@@ -400,24 +400,6 @@ export function conciliarReservasSinGuardar(
   };
 }
 
-/**
- * conservarReservasSinGuardar — conserva en `guardado` ({ ocupados, reservas })
- * las reservas en memoria cuyos ids siguen pendientes de persistirse en
- * localStorage (`idsSinGuardar`) y no chocan con horarios ya ocupados, sin
- * duplicar por `id` ni mutar sus argumentos.
- */
-export function conservarReservasSinGuardar(
-  guardado,
-  reservasMemoria,
-  idsSinGuardar
-) {
-  return conciliarReservasSinGuardar(
-    guardado,
-    reservasMemoria,
-    idsSinGuardar
-  ).guardado;
-}
-
 function formatearAvisoConflicto(reserva, canchas = []) {
   if (reserva?.tipo === 'evento') {
     const codigoTxt = reserva.codigo ? ` (${reserva.codigo})` : '';
@@ -438,35 +420,37 @@ function formatearAvisoConflicto(reserva, canchas = []) {
   return `Tu reserva${codigoTxt}${detalle} no pudo completarse porque ese horario ya fue ocupado.`;
 }
 
-// Devuelve un Set con los ids guardados cuando `raw` es un JSON válido o `null`
-// (no hay nada guardado), y `null` cuando `raw` es un texto ilegible que
-// `parsearDatosGuardados` rechaza.
-function idsDeRawStorage(raw) {
+// Devuelve un Set con los ids guardados cuando `raw` es `null`/`undefined` (no
+// hay nada guardado -> Set vacío) o cuando `datos` (ya parseados) es válido;
+// devuelve `null` cuando `raw` es un texto ilegible que `parsearDatosGuardados`
+// rechazó. No vuelve a parsear el JSON cuando recibe `datos`.
+function idsDeRawStorage(raw, datos) {
   if (raw === null || raw === undefined) {
     return new Set();
   }
-  const datos = parsearDatosGuardados(raw);
-  if (!datos) {
+  const parseado = datos !== undefined ? datos : parsearDatosGuardados(raw);
+  if (!parseado) {
     return null;
   }
-  return new Set(datos.reservas.map((r) => r && r.id).filter(Boolean));
+  return new Set(parseado.reservas.map((r) => r && r.id).filter(Boolean));
 }
 
 // Incluye tanto ids ya registrados en idsSinGuardar como reservas en memoria
 // que todavía no figuran en el último JSON sincronizado con localStorage
 // (p. ej. despachadas dentro de startTransition antes del efecto espejo).
-// Si `ultimoRaw` es un texto ilegible, solo cuentan los ids de `idsSinGuardar`.
+// Si `idsGuardados` es `null` (último raw ilegible), solo cuentan los ids de
+// `idsSinGuardar`.
 function obtenerIdsPendientesSinGuardar(
   idsSinGuardar,
   reservasMemoria,
-  ultimoRaw
+  idsGuardados
 ) {
   const ids = new Set(idsSinGuardar);
-  if (!Array.isArray(reservasMemoria) || reservasMemoria.length === 0) {
-    return ids;
-  }
-  const idsGuardados = idsDeRawStorage(ultimoRaw);
-  if (idsGuardados === null) {
+  if (
+    !Array.isArray(reservasMemoria) ||
+    reservasMemoria.length === 0 ||
+    idsGuardados === null
+  ) {
     return ids;
   }
   reservasMemoria.forEach((r) => {
@@ -477,41 +461,12 @@ function obtenerIdsPendientesSinGuardar(
   return ids;
 }
 
-function quitarIdsPresentes(idsSinGuardar, reservas) {
-  if (!idsSinGuardar || idsSinGuardar.size === 0 || !Array.isArray(reservas)) {
-    return;
-  }
-  const presentes = new Set(reservas.map((r) => r && r.id).filter(Boolean));
-  for (const id of idsSinGuardar) {
-    if (presentes.has(id)) {
-      idsSinGuardar.delete(id);
-    }
-  }
-}
-
-function filtrarIdsEnMemoria(idsSinGuardar, reservas) {
-  if (!idsSinGuardar || idsSinGuardar.size === 0) {
-    return;
-  }
-  const enMemoria = new Set(
-    (Array.isArray(reservas) ? reservas : [])
-      .map((r) => r && r.id)
-      .filter(Boolean)
-  );
-  for (const id of idsSinGuardar) {
-    if (!enMemoria.has(id)) {
-      idsSinGuardar.delete(id);
-    }
-  }
-}
-
 function obtenerIdsCanceladosSinGuardar(
   idsCancelados,
   reservasMemoria,
-  ultimoRaw
+  idsGuardados
 ) {
   const ids = new Set(idsCancelados);
-  const idsGuardados = idsDeRawStorage(ultimoRaw);
   if (!idsGuardados || idsGuardados.size === 0) {
     return ids;
   }
@@ -528,8 +483,11 @@ function obtenerIdsCanceladosSinGuardar(
   return ids;
 }
 
-function filtrarCanceladosPresentes(idsCancelados, reservas) {
-  if (!idsCancelados || idsCancelados.size === 0) {
+// Filtra los ids de `ids` según si aparecen o no en `reservas`
+// (`conservarPresentes`: true deja los que están en `reservas`; false deja los
+// que no están). No muta sus argumentos y devuelve siempre un Set nuevo.
+function filtrarRegistroIds(ids, reservas, { conservarPresentes = true } = {}) {
+  if (!ids || ids.size === 0) {
     return new Set();
   }
   const presentes = new Set(
@@ -538,8 +496,8 @@ function filtrarCanceladosPresentes(idsCancelados, reservas) {
       .filter(Boolean)
   );
   const resultado = new Set();
-  for (const id of idsCancelados) {
-    if (presentes.has(id)) {
+  for (const id of ids) {
+    if (presentes.has(id) === conservarPresentes) {
       resultado.add(id);
     }
   }
@@ -553,21 +511,24 @@ function conciliarLecturaExterna({
   pendientesCreacion,
   pendientesCancelacion,
 }) {
-  quitarIdsPresentes(pendientesCreacion, datosReservas);
-  const idsPendientesCancelacion = filtrarCanceladosPresentes(
+  const idsCreacion = filtrarRegistroIds(pendientesCreacion, datosReservas, {
+    conservarPresentes: false,
+  });
+  const idsPendientesCancelacion = filtrarRegistroIds(
     pendientesCancelacion,
-    datosReservas
+    datosReservas,
+    { conservarPresentes: true }
   );
   const sinCanceladas = quitarReservasDeEstado(base, idsPendientesCancelacion);
   const { guardado, conflictos } = conciliarReservasSinGuardar(
     sinCanceladas,
     reservasMemoria,
-    pendientesCreacion
+    idsCreacion
   );
-  const idsPendientesCreacion = new Set(
-    guardado.reservas
-      .map((r) => r.id)
-      .filter((id) => pendientesCreacion.has(id))
+  const idsPendientesCreacion = filtrarRegistroIds(
+    idsCreacion,
+    guardado.reservas,
+    { conservarPresentes: true }
   );
   return {
     guardado,
@@ -1098,13 +1059,15 @@ export function ReservasProvider({ children }) {
   }
 
   const ultimoRawStorageRef = useRef(undefined);
-  if (ultimoRawStorageRef.current === undefined) {
-    ultimoRawStorageRef.current = leerRawStorage();
-  }
+  const ultimoDatosStorageRef = useRef(undefined);
   const ocupadosCrudosRef = useRef(undefined);
-  if (ocupadosCrudosRef.current === undefined) {
-    ocupadosCrudosRef.current =
-      parsearDatosGuardados(ultimoRawStorageRef.current)?.ocupadosCrudos || null;
+  if (ultimoRawStorageRef.current === undefined) {
+    const rawInicial = leerRawStorage();
+    const datosIniciales =
+      rawInicial !== null ? parsearDatosGuardados(rawInicial) : null;
+    ultimoRawStorageRef.current = rawInicial;
+    ultimoDatosStorageRef.current = datosIniciales;
+    ocupadosCrudosRef.current = datosIniciales?.ocupadosCrudos || null;
   }
   const idsSinGuardarRef = useRef(null);
   if (idsSinGuardarRef.current === null) {
@@ -1123,13 +1086,13 @@ export function ReservasProvider({ children }) {
     setAvisosConflicto((prev) => {
       const vistos = new Set(prev.map((a) => a.id));
       const nuevos = [];
-      conflictos.forEach((reserva, idx) => {
-        const id = reserva?.id || `conflicto-${Date.now()}-${idx}`;
+      conflictos.forEach((reserva) => {
+        const { id } = reserva;
         if (!vistos.has(id)) {
           vistos.add(id);
           nuevos.push({
             id,
-            codigo: reserva?.codigo ?? null,
+            codigo: reserva.codigo ?? null,
             mensaje: formatearAvisoConflicto(reserva, canchas),
           });
         }
@@ -1141,6 +1104,47 @@ export function ReservasProvider({ children }) {
   const descartarAvisoConflicto = useCallback((id) => {
     setAvisosConflicto((prev) => prev.filter((a) => a.id !== id));
   }, []);
+
+  const sincronizarConLeido = useCallback(
+    ({ raw, datos, base, actual, conservarCancelacionesPendientes = true }) => {
+      const idsGuardados = idsDeRawStorage(
+        ultimoRawStorageRef.current,
+        ultimoDatosStorageRef.current
+      );
+      const pendientesCreacion = obtenerIdsPendientesSinGuardar(
+        idsSinGuardarRef.current,
+        actual.reservas,
+        idsGuardados
+      );
+      const pendientesCancelacion = conservarCancelacionesPendientes
+        ? obtenerIdsCanceladosSinGuardar(
+            idsCanceladosSinGuardarRef.current,
+            actual.reservas,
+            idsGuardados
+          )
+        : new Set();
+      ultimoRawStorageRef.current = raw;
+      ultimoDatosStorageRef.current = datos;
+      ocupadosCrudosRef.current = datos ? datos.ocupadosCrudos : null;
+      const {
+        guardado,
+        idsPendientesCreacion,
+        idsPendientesCancelacion,
+        conflictos,
+      } = conciliarLecturaExterna({
+        base,
+        reservasMemoria: actual.reservas,
+        datosReservas: datos ? datos.reservas : [],
+        pendientesCreacion,
+        pendientesCancelacion,
+      });
+      idsSinGuardarRef.current = idsPendientesCreacion;
+      idsCanceladosSinGuardarRef.current = idsPendientesCancelacion;
+      registrarConflictos(conflictos, actual.canchas);
+      return guardado;
+    },
+    [registrarConflictos]
+  );
 
   // Aplica el reducer en memoria de forma síncrona además de encolarlo en React,
   // para que llamadas seguidas en el mismo tick no se pisen entre sí.
@@ -1172,10 +1176,15 @@ export function ReservasProvider({ children }) {
   // Espejo al almacenamiento local en cada cambio (salvo si el estado coincide
   // exactamente con el payload despachado por el evento storage).
   useEffect(() => {
-    filtrarIdsEnMemoria(idsSinGuardarRef.current, estadoRef.current.reservas);
-    quitarIdsPresentes(
+    idsSinGuardarRef.current = filtrarRegistroIds(
+      idsSinGuardarRef.current,
+      estadoRef.current.reservas,
+      { conservarPresentes: true }
+    );
+    idsCanceladosSinGuardarRef.current = filtrarRegistroIds(
       idsCanceladosSinGuardarRef.current,
-      estadoRef.current.reservas
+      estadoRef.current.reservas,
+      { conservarPresentes: false }
     );
     const syncPayload = syncDesdeStorageRef.current;
     syncDesdeStorageRef.current = null;
@@ -1203,12 +1212,19 @@ export function ReservasProvider({ children }) {
       });
       window.localStorage.setItem(STORAGE_KEY, serializado);
       ultimoRawStorageRef.current = serializado;
+      ultimoDatosStorageRef.current = {
+        ocupadosCrudos: ocupadosParaGuardar,
+        reservas: state.reservas,
+      };
       ocupadosCrudosRef.current = ocupadosParaGuardar;
       idsSinGuardarRef.current.clear();
       idsCanceladosSinGuardarRef.current.clear();
     } catch (e) {
       // Sin persistencia (modo privado, cuota llena...): sigue en memoria.
-      const idsGuardados = idsDeRawStorage(ultimoRawStorageRef.current);
+      const idsGuardados = idsDeRawStorage(
+        ultimoRawStorageRef.current,
+        ultimoDatosStorageRef.current
+      );
       if (idsGuardados !== null) {
         const idsEnMemoria = new Set(
           state.reservas.map((r) => r && r.id).filter(Boolean)
@@ -1233,7 +1249,8 @@ export function ReservasProvider({ children }) {
         return;
       }
       const diasNuevos = ventanaDias();
-      if (estadoRef.current.dias[0] === diasNuevos[0]) {
+      const actual = estadoRef.current;
+      if (actual.dias[0] === diasNuevos[0]) {
         return;
       }
       const rawActual = leerRawStorage();
@@ -1242,37 +1259,10 @@ export function ReservasProvider({ children }) {
       const desdeStorage =
         rawActual !== null ? parsearDatosGuardados(rawActual) : null;
       const cambioExternoValido = cambioExterno && Boolean(desdeStorage);
-      const pendientesCreacion = cambioExternoValido
-        ? obtenerIdsPendientesSinGuardar(
-            idsSinGuardarRef.current,
-            estadoRef.current.reservas,
-            ultimoRawStorageRef.current
-          )
-        : null;
-      const pendientesCancelacion = cambioExternoValido
-        ? obtenerIdsCanceladosSinGuardar(
-            idsCanceladosSinGuardarRef.current,
-            estadoRef.current.reservas,
-            ultimoRawStorageRef.current
-          )
-        : null;
-      if (cambioExternoValido) {
-        ultimoRawStorageRef.current = rawActual;
-      }
-      if (desdeStorage) {
-        ocupadosCrudosRef.current = desdeStorage.ocupadosCrudos;
-      }
-      let datosStorage =
-        desdeStorage ||
-        (ocupadosCrudosRef.current
-          ? {
-              ocupadosCrudos: ocupadosCrudosRef.current,
-              reservas: estadoRef.current.reservas,
-            }
-          : null);
+      let datosStorage;
       if (cambioExternoValido) {
         const ocupadosConSemilla = fusionarConSemilla(
-          estadoRef.current.canchas,
+          actual.canchas,
           diasNuevos,
           desdeStorage.ocupadosCrudos,
           ocupadosSemilla(diasNuevos)
@@ -1284,29 +1274,32 @@ export function ReservasProvider({ children }) {
           ),
           desdeStorage.reservas
         );
-        const {
-          guardado,
-          idsPendientesCreacion,
-          idsPendientesCancelacion,
-          conflictos,
-        } = conciliarLecturaExterna({
+        const guardado = sincronizarConLeido({
+          raw: rawActual,
+          datos: desdeStorage,
           base: {
             ocupados: ocupadosBase,
             reservas: desdeStorage.reservas,
           },
-          reservasMemoria: estadoRef.current.reservas,
-          datosReservas: desdeStorage.reservas,
-          pendientesCreacion,
-          pendientesCancelacion,
+          actual,
         });
-        idsSinGuardarRef.current = idsPendientesCreacion;
-        idsCanceladosSinGuardarRef.current = idsPendientesCancelacion;
         ocupadosCrudosRef.current = guardado.ocupados;
-        registrarConflictos(conflictos, estadoRef.current.canchas);
         datosStorage = {
           ocupadosCrudos: guardado.ocupados,
           reservas: guardado.reservas,
         };
+      } else {
+        if (desdeStorage) {
+          ocupadosCrudosRef.current = desdeStorage.ocupadosCrudos;
+        }
+        datosStorage =
+          desdeStorage ||
+          (ocupadosCrudosRef.current
+            ? {
+                ocupadosCrudos: ocupadosCrudosRef.current,
+                reservas: actual.reservas,
+              }
+            : null);
       }
       despachar({
         type: 'RENOVAR_VENTANA',
@@ -1322,7 +1315,7 @@ export function ReservasProvider({ children }) {
       window.removeEventListener('focus', renovarSiCambioElDia);
       document.removeEventListener('visibilitychange', renovarSiCambioElDia);
     };
-  }, [despachar, registrarConflictos]);
+  }, [despachar, sincronizarConLeido]);
 
   useEffect(() => {
     const alCambiarStorage = (e) => {
@@ -1331,27 +1324,12 @@ export function ReservasProvider({ children }) {
       }
       const actual = estadoRef.current;
       const semillaOcup = ocupadosSemilla(actual.dias);
-      const raw = typeof e.newValue === 'string' ? e.newValue : undefined;
-      const datos = parsearDatosGuardados(raw);
+      const raw = typeof e.newValue === 'string' ? e.newValue : leerRawStorage();
+      const datos = raw !== null ? parsearDatosGuardados(raw) : null;
       if (datos) {
-        const pendientesCreacion = obtenerIdsPendientesSinGuardar(
-          idsSinGuardarRef.current,
-          actual.reservas,
-          ultimoRawStorageRef.current
-        );
-        const pendientesCancelacion = obtenerIdsCanceladosSinGuardar(
-          idsCanceladosSinGuardarRef.current,
-          actual.reservas,
-          ultimoRawStorageRef.current
-        );
-        ultimoRawStorageRef.current = raw !== undefined ? raw : leerRawStorage();
-        ocupadosCrudosRef.current = datos.ocupadosCrudos;
-        const {
-          guardado,
-          idsPendientesCreacion,
-          idsPendientesCancelacion,
-          conflictos,
-        } = conciliarLecturaExterna({
+        const guardado = sincronizarConLeido({
+          raw,
+          datos,
           base: {
             ocupados: fusionarConSemilla(
               actual.canchas,
@@ -1361,22 +1339,13 @@ export function ReservasProvider({ children }) {
             ),
             reservas: datos.reservas,
           },
-          reservasMemoria: actual.reservas,
-          datosReservas: datos.reservas,
-          pendientesCreacion,
-          pendientesCancelacion,
+          actual,
         });
-        idsSinGuardarRef.current = idsPendientesCreacion;
-        idsCanceladosSinGuardarRef.current = idsPendientesCancelacion;
-        registrarConflictos(conflictos, actual.canchas);
-        if (
+        syncDesdeStorageRef.current =
           idsSinGuardarRef.current.size === 0 &&
           idsCanceladosSinGuardarRef.current.size === 0
-        ) {
-          syncDesdeStorageRef.current = guardado;
-        } else {
-          syncDesdeStorageRef.current = null;
-        }
+            ? guardado
+            : null;
         despachar({ type: 'SINCRONIZAR', payload: guardado });
         return;
       }
@@ -1385,30 +1354,15 @@ export function ReservasProvider({ children }) {
           // Lectura directa (no leerRawStorage()): ese helper devuelve null también
           // cuando getItem lanza, y aquí eso borraría las reservas en memoria.
           if (window.localStorage.getItem(STORAGE_KEY) === null) {
-            const pendientesCreacion = obtenerIdsPendientesSinGuardar(
-              idsSinGuardarRef.current,
-              actual.reservas,
-              ultimoRawStorageRef.current
-            );
-            ultimoRawStorageRef.current = null;
-            ocupadosCrudosRef.current = null;
-            idsCanceladosSinGuardarRef.current.clear();
-            const { guardado, conflictos } = conciliarReservasSinGuardar(
-              { ocupados: semillaOcup, reservas: [] },
-              actual.reservas,
-              pendientesCreacion
-            );
-            idsSinGuardarRef.current = new Set(
-              guardado.reservas
-                .map((r) => r.id)
-                .filter((id) => pendientesCreacion.has(id))
-            );
-            registrarConflictos(conflictos, actual.canchas);
-            if (idsSinGuardarRef.current.size === 0) {
-              syncDesdeStorageRef.current = guardado;
-            } else {
-              syncDesdeStorageRef.current = null;
-            }
+            const guardado = sincronizarConLeido({
+              raw: null,
+              datos: null,
+              base: { ocupados: semillaOcup, reservas: [] },
+              actual,
+              conservarCancelacionesPendientes: false,
+            });
+            syncDesdeStorageRef.current =
+              idsSinGuardarRef.current.size === 0 ? guardado : null;
             despachar({
               type: 'SINCRONIZAR',
               payload: guardado,
@@ -1421,7 +1375,7 @@ export function ReservasProvider({ children }) {
     };
     window.addEventListener('storage', alCambiarStorage);
     return () => window.removeEventListener('storage', alCambiarStorage);
-  }, [despachar, registrarConflictos]);
+  }, [despachar, sincronizarConLeido]);
 
   const leerEstadoFresco = useCallback(() => {
     const actual = estadoRef.current;
@@ -1429,24 +1383,9 @@ export function ReservasProvider({ children }) {
     if (rawActual !== null && rawActual !== ultimoRawStorageRef.current) {
       const datos = parsearDatosGuardados(rawActual);
       if (datos) {
-        const pendientesCreacion = obtenerIdsPendientesSinGuardar(
-          idsSinGuardarRef.current,
-          actual.reservas,
-          ultimoRawStorageRef.current
-        );
-        const pendientesCancelacion = obtenerIdsCanceladosSinGuardar(
-          idsCanceladosSinGuardarRef.current,
-          actual.reservas,
-          ultimoRawStorageRef.current
-        );
-        ultimoRawStorageRef.current = rawActual;
-        ocupadosCrudosRef.current = datos.ocupadosCrudos;
-        const {
-          guardado,
-          idsPendientesCreacion,
-          idsPendientesCancelacion,
-          conflictos,
-        } = conciliarLecturaExterna({
+        const guardado = sincronizarConLeido({
+          raw: rawActual,
+          datos,
           base: {
             ocupados: fusionarConSemilla(
               actual.canchas,
@@ -1456,14 +1395,8 @@ export function ReservasProvider({ children }) {
             ),
             reservas: datos.reservas,
           },
-          reservasMemoria: actual.reservas,
-          datosReservas: datos.reservas,
-          pendientesCreacion,
-          pendientesCancelacion,
+          actual,
         });
-        idsSinGuardarRef.current = idsPendientesCreacion;
-        idsCanceladosSinGuardarRef.current = idsPendientesCancelacion;
-        registrarConflictos(conflictos, actual.canchas);
         return {
           guardado,
           estado: { ...actual, ...guardado },
@@ -1474,7 +1407,7 @@ export function ReservasProvider({ children }) {
       guardado: null,
       estado: actual,
     };
-  }, [registrarConflictos]);
+  }, [sincronizarConLeido]);
 
   // `?? state` mantiene a `state` como dependencia válida para `exhaustive-deps`:
   // `disponibilidad` debe cambiar de identidad en cada estado nuevo porque

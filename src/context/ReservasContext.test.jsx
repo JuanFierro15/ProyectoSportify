@@ -9,7 +9,6 @@ import {
   reducerVersionado,
   crearEstadoInicial,
   conciliarReservasSinGuardar,
-  conservarReservasSinGuardar,
   STORAGE_KEY,
   ERROR_EVENTO_NO_DISPONIBLE,
   ERROR_EVENTO_HORAS_NO_SEGUIDAS,
@@ -2906,8 +2905,8 @@ describe('ReservasContext — reservas sin guardar (#50)', () => {
     ]);
   });
 
-  it('C10 (#50): conservarReservasSinGuardar no muta sus argumentos y con el registro vacío devuelve el mismo objeto guardado', () => {
-    expect(typeof conservarReservasSinGuardar).toBe('function');
+  it('C10 (#50): conciliarReservasSinGuardar no muta sus argumentos y con el registro vacío devuelve el mismo objeto guardado', () => {
+    expect(typeof conciliarReservasSinGuardar).toBe('function');
 
     const estadoBase = crearEstadoInicial();
     const dia3 = estadoBase.dias[3];
@@ -2928,7 +2927,11 @@ describe('ReservasContext — reservas sin guardar (#50)', () => {
       reservas: [rGuardada],
     });
 
-    const vacio = conservarReservasSinGuardar(guardado, [rGuardada], new Set());
+    const vacio = conciliarReservasSinGuardar(
+      guardado,
+      [rGuardada],
+      new Set()
+    ).guardado;
     expect(vacio).toBe(guardado);
 
     const rIndividual = crearReservaIndividual({
@@ -2993,11 +2996,11 @@ describe('ReservasContext — reservas sin guardar (#50)', () => {
       rCumple.id,
     ]);
 
-    const resultado = conservarReservasSinGuardar(
+    const resultado = conciliarReservasSinGuardar(
       guardado,
       reservasMemoria,
       idsSinGuardar
-    );
+    ).guardado;
 
     expect(resultado).not.toBe(guardado);
     expect(resultado.reservas.map((r) => r.id)).toEqual([
