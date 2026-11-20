@@ -62,7 +62,8 @@ node scripts/probar-chat.mjs [url] [ids...]  # casos de prueba de /api/chat
   horas sin partido en `DialogoHorasSinPartido.test.jsx`, la pausa del
   video en `src/components/hero/DeporteHero.test.jsx`, el avance por gestos del
   hero en `src/components/hero/controladorSnapHero.test.js`,
-  `src/components/layout/MisReservas.test.jsx` y
+  `src/components/layout/MisReservas.test.jsx`,
+  `src/components/shared/SelectorDia.test.jsx` y
   `src/components/chatbot/Chatbot.test.jsx` (widget: portal, Escape,
   comprobante, nueva conversación). `api/_lib/funciones.test.js` cubre las
   funciones del chat, `api/_lib/chat.test.js` cubre el handler de `/api/chat`
