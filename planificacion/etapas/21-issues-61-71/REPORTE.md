@@ -67,6 +67,10 @@ decisión de Juan: D1 y D2 se quedan como están.
   ids registrados) sin perder una reserva hecha dentro de `startTransition`.
 - El ajuste de `overflow: visible` de la #70 lo hizo el coordinador (una
   línea), tras verlo en el navegador.
+- El orden de fusión del plan (el aviso antes que el núcleo) no sirve: las PR
+  del aviso (#78) y del núcleo (#79) chocan en `docs/agentes/reservas.md` y
+  `AvisoConflictoReserva.test.jsx`. El choque se resolvió dentro de la PR del
+  refactor (#80, merge `498785b`), así que el aviso entra con ella.
 
 ## Pendientes
 
@@ -75,6 +79,12 @@ decisión de Juan: D1 y D2 se quedan como están.
 - Prueba manual de Juan con NVDA o Narrador: que el aviso de conflicto se lea
   una sola vez (#65).
 - Revisión de cada PR por otro modelo antes de fusionar, cuando Juan lo pida.
-  Orden de fusión: #67, #69, #70 y #71 en cualquier orden; después el aviso
-  (#65 y #61) y el núcleo (#66, #62 y #63) en cualquier orden; al final el
-  refactor (#64).
+  Orden de fusión, siempre con commit de fusión (un squash de #79 dejaría a
+  #80 con commits que ya no están en `main`):
+  1. #74, #75, #76 y #77, en cualquier orden.
+  2. #79 (núcleo: #66, #62 y #63).
+  3. #80 (refactor #64). Trae el aviso (#78, #65 y #61) con el choque ya
+     resuelto, así que al entrar GitHub marca #78 como fusionada; #78 no se
+     fusiona sola. Si la rama de #79 no se borra al fusionarla, hay que cambiar
+     antes la base de #80 a `main`.
+  4. #81 (este plan y reporte).
