@@ -112,6 +112,49 @@ describe('lógica de cancelación de reservas', () => {
     ]);
   });
 
+  test('aplicarCancelacion no libera una hora que otra reserva activa (individual o evento) sigue usando (#55)', () => {
+    const rDuplicada = {
+      id: 'r1-dup',
+      codigo: 'SPF-DUP001',
+      tipo: 'individual',
+      canchaId: 'voley-1',
+      fecha: '2026-10-13',
+      hora: '10:00',
+      horas: ['10:00'],
+      nombre: 'Otra Persona',
+    };
+    const eSolapado = {
+      id: 'e-solapado',
+      codigo: 'SPF-EVTSOL',
+      tipo: 'evento',
+      canchaIds: ['voley-1'],
+      fecha: '2026-10-13',
+      horas: ['09:00'],
+      nombre: 'Torneo Solapado',
+    };
+    const estado = {
+      ocupados: {
+        'voley-1': { '2026-10-13': ['08:00', '09:00', '10:00', '11:00'] },
+      },
+      reservas: [
+        { ...r1, horas: ['09:00', '10:00', '11:00'] },
+        rDuplicada,
+        eSolapado,
+      ],
+    };
+
+    const res = aplicarCancelacion(estado, 'r1', ahoraBase);
+
+    expect(res.error).toBeNull();
+    expect(res.state.reservas.map((r) => r.id)).toEqual(['r1-dup', 'e-solapado']);
+    // 09:00 la usa e-solapado, 10:00 la usa r1-dup, 08:00 es semilla; solo se libera 11:00.
+    expect(res.state.ocupados['voley-1']['2026-10-13']).toEqual([
+      '08:00',
+      '09:00',
+      '10:00',
+    ]);
+  });
+
   test('aplicarCancelacion con id inexistente devuelve error noEncontrada y el mismo objeto state', () => {
     const estadoOriginal = crearEstado();
     const resultado = aplicarCancelacion(estadoOriginal, 'nada', ahoraBase);

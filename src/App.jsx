@@ -6,6 +6,7 @@ import PaginaInicio from './components/layout/PaginaInicio';
 import VistaCanchas from './components/canchas/VistaCanchas';
 import Chatbot from './components/chatbot/Chatbot';
 import Footer from './components/layout/Footer';
+import AvisoConflictoReserva from './components/shared/AvisoConflictoReserva';
 import { esClicNormal } from './lib/rutas';
 import './App.css';
 
@@ -60,6 +61,8 @@ function AppContenido() {
       </a>
 
       <Navbar />
+
+      <AvisoConflictoReserva />
 
       {deporteAbierto ? <VistaCanchas key={apertura} /> : <PaginaInicio />}
 
