@@ -53,6 +53,7 @@ odd/
 | `18-videos-hero-responsivos` | Videos del hero responsivos: 720p en celular/`< 64em` y 1080p Lanczos (`-lg.mp4` de `54d87138`) desde `large` (`>= 64em`) con `<source media>` en `DeporteHero` (rama `feat/videos-hero-responsivos`, 17-11) | Juan Fierro | sí | no | sí | v1, v2 |
 | `19-estado-pestanas-issues-50-51` | Issues #51 (`reducerVersionado`: el render ya no pisa el avance de `despachar` en `estadoRef`) y #50 (`conservarReservasSinGuardar`: una pestaña que no pudo guardar conserva sus reservas al sincronizar) (rama `fix/issues-50-51`, 19-11, PR #52 fusionado; pendientes en #53 a #56) | Miguel Medina (revisa Juan Fierro) | sí | no | sí | e1, e2 (ciclo verificado) |
 | `20-revision-prs-57-60` | Revisión de las PR encadenadas #57 a #60 (issues #53 a #56) antes de fusionarlas: diffs, RED, impacto, 14 sondas adversariales, `judgment-day` y app real. Veredicto: ninguna bloquea. Fusionadas en orden el 20-11 (`main` en `22efa01`); hallazgos en las issues #61 a #71 (rama `chore/revision-prs-57-60`, 19/20-11) | Miguel Medina | sí | no | sí | v1, v2, v3 |
+| `22-revision-prs-74-81` | Revisión de las PR #74 a #81 de la etapa 21 (issues #61 a #71) antes de fusionarlas: diffs, RED, impacto, sondas, `judgment-day`, app real y orden de fusión probado (#78 y #79 chocan entre sí). **En curso** (rama `chore/revision-prs-74-81`, 20-11) | Miguel Medina | sí (por aprobar) | no | no | — |
 
 Antes del flujo por etapas (sin plan ni reporte, solo commits):
 
