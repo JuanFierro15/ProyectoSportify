@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/marca/logo-sportify-claro.svg">
+    <img src="docs/marca/logo-sportify-oscuro.svg" alt="Sportify" width="360">
+  </picture>
+</p>
+
 # Sportify · Reservas Deportivas
 
 Sitio web de un local deportivo en Neiva para reservar canchas de **voley
@@ -11,7 +18,7 @@ conversacional** que también reserva y cancela.
 ![Foundation](https://img.shields.io/badge/Foundation-6.8-1779BA)
 ![GSAP](https://img.shields.io/badge/GSAP-3.13-88CE02)
 ![Gemini](https://img.shields.io/badge/Gemini-function%20calling-8E75B2?logo=googlegemini&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-283%20en%20verde-2EA44F)
+![Tests](https://img.shields.io/badge/tests-561%20en%20verde-2EA44F)
 
 ![Hero de voley playa con el video de fondo y el botón del asistente](docs/capturas/inicio.webp)
 
@@ -57,9 +64,14 @@ Surcolombiana, sexto semestre). El enunciado fija estas restricciones:
 ### Un hero por deporte
 
 Cada deporte tiene su sección a pantalla completa con un video de fondo: el
-hero se asienta con el título visible, un gesto hacia abajo reproduce el video
-y pasa solo al siguiente, y hacia arriba el video sigue al scroll. Cada una
-tiene su color de acento, que después usan la página de reserva y el asistente.
+primer hero muestra su texto desde que carga la página; un gesto hacia abajo
+reproduce el video y pasa solo al siguiente, y hacia arriba el video sigue al
+scroll. En pantallas grandes cada deporte ubica su texto según la escena (en
+voley playa va arriba a la izquierda para no tapar a la jugadora, en pádel a la
+izquierda y en fútbol abajo a la derecha). Cada sección tiene su color de
+acento, que después usan la página de reserva y el asistente, y la barra de
+navegación adapta el color del logo de Sportify sobre el video, sobre fondo
+claro o en la página de reserva.
 
 | Voley playa | Pádel | Fútbol |
 |:---:|:---:|:---:|
@@ -93,8 +105,9 @@ de…" en cada hero o desde "Canchas" en el menú. Cuenta con:
 
 ### Reserva de una cancha
 
-Se elige el día (hoy y los 6 siguientes, cada uno con su número de horarios
-libres) y de **1 a 3 horas seguidas**. Las franjas horarias se organizan en
+Se elige el día (hoy y los 6 siguientes, cada uno con su estado: *N libres*,
+*completo* o *bloqueado*, adaptado al ancho de la pastilla en cualquier
+pantalla) y de **1 a 3 horas seguidas**. Las franjas horarias se organizan en
 tres grupos: **Mañana, Tarde y Noche**, acompañadas por una **leyenda** que
 identifica los estados de cada botón (**Libre, Elegida y Reservada**). Desde 2
 horas cada hora cuesta $5.000 menos y se regala un pack de agua. A la derecha,
@@ -112,6 +125,14 @@ de las condiciones de abono y cancelación (que recuerda que se puede consultar 
 cancelar en **Mis reservas** con el código).
 
 ![Pantalla de confirmación en tema oscuro con código de reserva SPF y código QR sobre fondo blanco](docs/capturas/confirmacion-qr.webp)
+
+Si dos pestañas reservan la misma hora, la segunda reserva se descarta para
+evitar duplicados y aparece un aviso global de conflicto. Si ya se estaba
+viendo la pantalla de confirmación, cambia a **"Tu reserva no pudo
+completarse"** con el botón **"Elegir otro horario"**, que vuelve al formulario
+conservando modalidad, cancha, fecha y datos (en torneo conserva las horas de
+cada fase que no chocaron). Las cancelaciones y reservas sin guardar no se
+pierden ni reaparecen al sincronizar.
 
 ### Mis reservas
 
@@ -150,7 +171,8 @@ cada tipo de reserva:
   - cada fase se programa desde su propia **pestaña** (mostrando una fase a la
     vez con el resumen del horario elegido o aviso si hay alertas) en su propio
     día y con las horas que elijas en cada cancha (pueden ir salteadas) dentro de la ventana de 7 días (en fechas crecientes o
-    el mismo día después de cerrar la fase previa), con alertas si el tiempo
+    el mismo día después de cerrar la fase previa; si todas las fases caen el
+    mismo día se muestra una sola fecha), con alertas si el tiempo
     elegido no alcanza y acción rápida para bajar a partidos de 15 min;
   - incluye **llaves interactivas (bracket)** a ancho completo con los partidos
     numerados como **"Partido N"** en orden de juego y la indicación de ganador
@@ -163,8 +185,8 @@ cada tipo de reserva:
   - se elige un **rango de horas** consecutivas (inicio y fin) y la cantidad de
     **invitados** (hasta 100), que se muestra en el comprobante y en la confirmación.
 - En ambos modos el bloqueo es **todo o nada** (si una sola celda cancha × hora
-  está ocupada, no se reserva nada) y el precio suma cada cancha y jornada: en torneo, 
-5.000 menos por hora
+  está ocupada, no se reserva nada) y el precio suma cada cancha y jornada: en torneo,
+  $15.000 menos por hora
   desde 1 hora; en cumpleaños, $5.000 menos por hora desde 2 horas seguidas.
 
 | Programación por fases del torneo | Bracket interactivo del torneo |
@@ -299,6 +321,20 @@ iniciar fusiona lo guardado con la ocupación semilla de `canchas.json`, y
 descarta las fechas que salieron de la ventana. Cada reserva se valida dos
 veces: antes de despachar la acción y otra vez dentro del reducer.
 
+**Sincronización entre pestañas y choques.** `ReservasProvider` escucha el
+evento `storage` de `window`, relee `localStorage` si otra pestaña lo modificó
+antes de ejecutar `reservar`, `reservarEvento` o `cancelar`, y conserva las
+fechas futuras fuera de la ventana propia al persistir. Para evitar bucles de
+escritura y no perder cambios hechos en memoria (o en una transición pendiente),
+mantiene las altas y cancelaciones aún sin guardar: al conciliar una lectura
+externa (incluido el borrado de la clave o la llegada de datos corruptos),
+reaplica las cancelaciones pendientes y fusiona las reservas pendientes sobre lo
+guardado. Si una reserva pendiente choca contra `ocupados` o contra otra
+reserva guardada, se descarta, se emite un aviso global en
+`AvisoConflictoReserva` con su código y `useReserva` sustituye la confirmación
+visible por la pantalla de reserva no completada para volver al formulario sin
+las horas en conflicto.
+
 **El asistente nunca escribe reservas.** En cada mensaje el navegador envía a
 `/api/chat` el historial reciente y una foto de la disponibilidad. La función
 hace **una llamada** a Gemini, con los datos del negocio, los precios y
@@ -375,7 +411,9 @@ api/
     ├── peticion.js      Validación de la petición y del contexto (el catálogo sale de canchas.json)
     ├── instrucciones.js Instrucciones del asistente, armadas con los datos del sitio
     └── funciones.js     Declaración de las 4 funciones y validación de sus argumentos
-docs/capturas/           Capturas y GIF de este README
+docs/
+├── capturas/            Capturas y GIF de este README
+└── marca/               Versiones del logo de Sportify para documentación (claro, oscuro y símbolo)
 scripts/
 └── probar-chat.mjs      Casos de prueba de /api/chat (local o producción)
 src/
@@ -387,18 +425,20 @@ src/
 │   │   └── torneo/      Bracket, SeccionLlaves, IndicadorPasos, CalendarioTorneo, AlertaTiempo, asistente móvil y bloques Paso*
 │   ├── eventos/         EventoCTA: sección de eventos y torneos
 │   ├── ubicacion/       Ubicacion: dirección, teléfono, horario y mapa
-│   ├── shared/          SelectorDia: tira de 7 días con horarios libres
+│   ├── shared/          SelectorDia (tira de 7 días), LogoSportify (SVG con currentColor según el navbar)
+│   │                    y AvisoConflictoReserva (alertas globales de choque)
 │   ├── reactbits/       DepthCarousel y AccordionGallery (React Bits)
 │   └── chatbot/         Widget del asistente: panel, mensajes, tarjetas de reserva y
 │                        cancelación, y los hooks useChatbot, useAccionesReserva,
 │                        useAccionesChat y useDeporteActivo
 ├── context/
-│   ├── ReservasContext.jsx      Estado de reservas (RESERVAR, RESERVAR_EVENTO, CANCELAR)
+│   ├── ReservasContext.jsx      Estado de reservas, sincronización entre pestañas y avisos de choque
 │   └── VistaCanchasContext.jsx  Navegación entre el inicio y la página de reserva, sincronizada con la URL
 ├── data/
 │   ├── canchas.json     Semilla: horas, ocupación por día y catálogo de cada cancha
 │   ├── negocio.json     Datos del local: contacto, mapa, pagos, cancelación, servicios
-│   └── deportes.js      Nombre y color de acento de cada deporte
+│   ├── deportes.js      Nombre, posición del texto en el hero y color de acento de cada deporte
+│   └── logoSportify.js  Trazos y colores del logo de Sportify (generado)
 ├── lib/                 Lógica pura, con sus tests al lado (*.test.js)
 │   ├── precios.js       Reglas de precio y descuento
 │   ├── torneo.js        Fases de eliminación directa, bracket, validación de jornadas y precios de torneo
@@ -411,11 +451,12 @@ src/
 │   ├── codigoReserva.js Código de reserva y texto del QR
 │   ├── fechas.js        Etiquetas de fecha, horas a. m./p. m. y horas pasadas
 │   ├── canchas.js       Agrupación por deporte, imágenes y estilo de acento
+│   ├── modoHero.js      Constantes y cálculos puros del comportamiento y video del hero
 │   ├── rutas.js         Construcción y lectura de las rutas del sitio (/ y /reservar/<deporte>)
 │   └── negocio.js       Teléfono del local y horario a partir de las franjas
-├── App.jsx              Providers + Navbar + página activa (inicio o reserva) + Footer + asistente
+├── App.jsx              Providers + Navbar + AvisoConflictoReserva + página activa + Footer + asistente
 └── main.jsx             Punto de entrada: CSS de Foundation, estilos globales y montaje de <App />
-index.html               Página base; carga src/main.jsx como módulo
+index.html               Página base; carga src/main.jsx como módulo y el favicon SVG con respaldo .ico
 vite.config.mjs          Plugin de React, polling opcional del watcher y configuración de Vitest
 eslint.config.mjs        ESLint 10 en configuración plana
 vercel.json              Preset de Vite, rewrite de /reservar/* e includeFiles de la función /api/chat
@@ -466,7 +507,7 @@ probarlo en local:
 ## Pruebas
 
 ```bash
-npm test                          # 283 tests en 29 archivos (Vitest)
+npm test                          # 561 tests en 40 archivos (Vitest)
 npm run lint                      # ESLint sobre src, api y scripts
 npm run build                     # build de producción en /dist
 ```
@@ -474,17 +515,30 @@ npm run build                     # build de producción en /dist
 El lint se corre aparte: ya no forma parte del build ni del servidor de
 desarrollo. `npm run test:watch` deja Vitest observando los cambios.
 
-Las pruebas unitarias y de componentes cubren la lógica pura de `src/lib/`
-(precios y descuentos, fases y bracket de torneos, selección de horas,
-validación de nombre, teléfono y reservas propuestas, fechas, código y texto
-del QR, datos del negocio, rutas del sitio, plazo y búsqueda de cancelaciones,
-contexto e historial del chat y respaldo de modelo) además de las pruebas de
-interfaz para torneos y cumpleaños (`src/components/reservas/Torneo.test.jsx`,
-que cubren las llaves simétricas, la denominación "Ganador del partido N", la
-final con el trofeo y el indicador de pasos), el asistente de un paso a la vez
-del torneo en el celular y las secciones del formulario que muestra cada paso,
-consulta en **Mis reservas** y
-montaje general en `src/App.test.jsx`.
+Las pruebas unitarias y de componentes (561 pruebas en 40 archivos) cubren:
+
+- **Lógica pura y datos (`src/lib/` y `src/data/`):** precios y descuentos, fases
+  y bracket de torneos, pasos del torneo, selección de horas, validación de
+  nombre, teléfono y reservas propuestas, fechas, código y texto del QR,
+  agrupación de canchas, datos del negocio, rutas del sitio, plazo y búsqueda
+  de cancelaciones, reglas del hero (`modoHero.js`), posición y metadatos por
+  deporte, contexto e historial del chat y respaldo de modelo.
+- **Estado y sincronización (`ReservasContext`):** reservas, cancelaciones,
+  renovación de ventana, sincronización entre pestañas y detección o resolución
+  de conflictos.
+- **Interfaz y componentes:** barra de navegación (`Navbar` y logo), página de
+  inicio (`PaginaInicio`), heros por deporte y su controlador por gestos
+  (`DeporteHero` y `controladorSnapHero`), página de reserva (`VistaCanchas` y
+  recuperación tras choque), carrusel `DepthCarousel`, selector de día
+  (`SelectorDia`), aviso global de conflicto (`AvisoConflictoReserva`),
+  formulario de reserva, torneos y cumpleaños (`Torneo.test.jsx` con llaves
+  simétricas, trofeo y paso de fechas, calendario por fases, diálogo de horas
+  sin partido, resumen de torneos guardados y asistente móvil del torneo),
+  consulta en **Mis reservas** y montaje general en `src/App.test.jsx`.
+- **Asistente y servidor (`api/_lib/` y `src/components/chatbot/`):** widget y
+  hook del chat (`Chatbot` y `useChatbot`), además de las pruebas del handler
+  de `/api/chat` (respaldo de modelos y respuestas HTTP), validación de
+  peticiones, instrucciones y funciones del asistente.
 
 El asistente tiene además un script con 12 casos contra la función real:
 disponibilidad, "resérvalo" con una y con varias franjas, datos válidos e
@@ -525,9 +579,10 @@ El sitio está en Vercel y **cada push a `main` despliega a producción**.
   `#f6a94b`), incluyendo las horas reservadas deshabilitadas (4,58:1), textos
   secundarios y comprobante.
 - **Navegación por teclado y foco visible:** contorno `:focus-visible` de alto
-  contraste en todos los controles interactivos, supresión del anillo
-  programático en el `<h1>` al abrir la página de reserva y soporte de flechas
-  (`ArrowLeft`, `ArrowRight`, `Home`, `End` con `tabIndex` móvil) en las
+  contraste en todos los controles interactivos (incluido el enlace del logo de
+  Sportify en la barra de navegación, ajustado a cada estado), supresión del
+  anillo programático en el `<h1>` al abrir la página de reserva y soporte de
+  flechas (`ArrowLeft`, `ArrowRight`, `Home`, `End` con `tabIndex` móvil) en las
   pestañas de deporte, con áreas táctiles mínimas de 44 px.
 - **Movimiento reducido:** respeto estricto de `prefers-reduced-motion`:
   desactiva las animaciones GSAP de entrada, las transiciones de la
@@ -540,8 +595,9 @@ El sitio está en Vercel y **cada push a `main` despliega a producción**.
   cumple el contraste WCAG (`--accent-contrast` y `--accent-text` en
   `estiloAcento`, `src/lib/canchas.js`).
 - El asistente, el visor de fotos y el modal de **Mis reservas** se cierran con
-  `Escape` y devuelven el foco al botón que los abrió. Los mensajes y avisos se
-  anuncian con `aria-live`.
+  `Escape` y devuelven el foco al botón que los abrió. Los mensajes del chat se
+  anuncian con `aria-live`, y cada aviso global de conflicto de reserva usa una
+  sola región viva (`role="alert"`).
 - Los videos de los heros son *all-intra* (un keyframe por cuadro), 30 fps,
   sin audio y cuentan con imagen `poster` de respaldo, servidos en dos
   calidades según la pantalla (`720p` en móvil y `1080p` desde `large` con
