@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 import semilla from '../data/canchas.json';
 import negocio from '../data/negocio.json';
@@ -15,11 +16,12 @@ import {
   calcularPrecioJornadas,
   MAX_HORAS_SEGUIDAS,
 } from '../lib/precios';
-import { esHoraPasada } from '../lib/fechas';
+import { esHoraPasada, fechaEnFrase, horaAmPm } from '../lib/fechas';
 import { generarCodigo } from '../lib/codigoReserva';
 import {
   aplicarCancelacion,
   celdasDeReserva,
+  horasDeReserva,
   quitarReservasDeEstado,
   verificarCancelable,
 } from '../lib/cancelacion';
@@ -242,11 +244,12 @@ function armarOcupadosParaGuardar(ocupadosActuales, diasActuales, ocupadosPrevio
 }
 
 /**
- * conservarReservasSinGuardar — conserva en `guardado` ({ ocupados, reservas })
- * las reservas en memoria cuyos ids siguen pendientes de persistirse en
- * localStorage (`idsSinGuardar`), sin duplicar por `id` ni mutar sus argumentos.
+ * conciliarReservasSinGuardar — intenta fusionar en `guardado` las reservas en
+ * memoria cuyos ids están pendientes de persistirse, descartando las que chocan
+ * con celdas ya ocupadas para no dejar reservas duplicadas sobre la misma hora.
+ * Devuelve `{ guardado, conflictos }` sin mutar sus argumentos.
  */
-export function conservarReservasSinGuardar(
+export function conciliarReservasSinGuardar(
   guardado,
   reservasMemoria,
   idsSinGuardar
@@ -256,7 +259,7 @@ export function conservarReservasSinGuardar(
       ? idsSinGuardar
       : new Set(Array.isArray(idsSinGuardar) ? idsSinGuardar : []);
   if (conjuntoIds.size === 0 || !guardado) {
-    return guardado;
+    return { guardado, conflictos: [] };
   }
 
   const reservasGuardadas = Array.isArray(guardado.reservas)
@@ -265,25 +268,43 @@ export function conservarReservasSinGuardar(
   const idsVistos = new Set(
     reservasGuardadas.map((r) => r && r.id).filter(Boolean)
   );
-  const pendientes = [];
+  const candidatas = [];
   if (Array.isArray(reservasMemoria)) {
     reservasMemoria.forEach((r) => {
       if (r && r.id && conjuntoIds.has(r.id) && !idsVistos.has(r.id)) {
         idsVistos.add(r.id);
-        pendientes.push(r);
+        candidatas.push(r);
       }
     });
   }
 
-  if (pendientes.length === 0) {
-    return guardado;
+  if (candidatas.length === 0) {
+    return { guardado, conflictos: [] };
   }
 
   let ocupados = guardado.ocupados;
   const canchasClonadas = new Set();
+  const aceptadas = [];
+  const conflictos = [];
 
-  pendientes.forEach((reserva) => {
-    celdasDeReserva(reserva).forEach(({ canchaId, fecha, horas }) => {
+  candidatas.forEach((reserva) => {
+    const celdas = celdasDeReserva(reserva);
+    const choca = celdas.some(({ canchaId, fecha, horas }) => {
+      const ocupadasDia =
+        ocupados && ocupados[canchaId] && ocupados[canchaId][fecha];
+      return (
+        Array.isArray(ocupadasDia) &&
+        Array.isArray(horas) &&
+        horas.some((h) => ocupadasDia.includes(h))
+      );
+    });
+    if (choca) {
+      conflictos.push(reserva);
+      return;
+    }
+
+    aceptadas.push(reserva);
+    celdas.forEach(({ canchaId, fecha, horas }) => {
       if (
         !ocupados ||
         !ocupados[canchaId] ||
@@ -306,10 +327,55 @@ export function conservarReservasSinGuardar(
     });
   });
 
+  if (aceptadas.length === 0) {
+    return { guardado, conflictos };
+  }
+
   return {
-    ocupados,
-    reservas: [...reservasGuardadas, ...pendientes],
+    guardado: {
+      ocupados,
+      reservas: [...reservasGuardadas, ...aceptadas],
+    },
+    conflictos,
   };
+}
+
+/**
+ * conservarReservasSinGuardar — conserva en `guardado` ({ ocupados, reservas })
+ * las reservas en memoria cuyos ids siguen pendientes de persistirse en
+ * localStorage (`idsSinGuardar`) y no chocan con horarios ya ocupados, sin
+ * duplicar por `id` ni mutar sus argumentos.
+ */
+export function conservarReservasSinGuardar(
+  guardado,
+  reservasMemoria,
+  idsSinGuardar
+) {
+  return conciliarReservasSinGuardar(
+    guardado,
+    reservasMemoria,
+    idsSinGuardar
+  ).guardado;
+}
+
+function formatearAvisoConflicto(reserva, canchas = []) {
+  if (reserva?.tipo === 'evento') {
+    const codigoTxt = reserva.codigo ? ` (${reserva.codigo})` : '';
+    return `Tu reserva de evento${codigoTxt} no pudo completarse porque uno de los horarios ya fue ocupado.`;
+  }
+  const canchaNombre =
+    reserva?.canchaNombre ||
+    canchas.find((c) => c.id === reserva?.canchaId)?.nombre ||
+    '';
+  const horas = horasDeReserva(reserva);
+  const detallePartes = [
+    canchaNombre,
+    reserva?.fecha ? fechaEnFrase(reserva.fecha) : '',
+    horas.length > 0 ? horaAmPm(horas[0]) : '',
+  ].filter(Boolean);
+  const detalle = detallePartes.length > 0 ? ` (${detallePartes.join(', ')})` : '';
+  const codigoTxt = reserva?.codigo ? ` ${reserva.codigo}` : '';
+  return `Tu reserva${codigoTxt}${detalle} no pudo completarse porque ese horario ya fue ocupado.`;
 }
 
 function idsDeRawStorage(raw) {
@@ -422,20 +488,21 @@ function conciliarLecturaExterna({
     datosReservas
   );
   const sinCanceladas = quitarReservasDeEstado(base, idsPendientesCancelacion);
-  const fusionado = conservarReservasSinGuardar(
+  const { guardado, conflictos } = conciliarReservasSinGuardar(
     sinCanceladas,
     reservasMemoria,
     pendientesCreacion
   );
   const idsPendientesCreacion = new Set(
-    fusionado.reservas
+    guardado.reservas
       .map((r) => r.id)
       .filter((id) => pendientesCreacion.has(id))
   );
   return {
-    guardado: fusionado,
+    guardado,
     idsPendientesCreacion,
     idsPendientesCancelacion,
+    conflictos,
   };
 }
 
@@ -976,6 +1043,32 @@ export function ReservasProvider({ children }) {
   if (idsCanceladosSinGuardarRef.current === null) {
     idsCanceladosSinGuardarRef.current = new Set();
   }
+  const [avisosConflicto, setAvisosConflicto] = useState([]);
+
+  const registrarConflictos = useCallback((conflictos, canchas) => {
+    if (!Array.isArray(conflictos) || conflictos.length === 0) {
+      return;
+    }
+    setAvisosConflicto((prev) => {
+      const vistos = new Set(prev.map((a) => a.id));
+      const nuevos = [];
+      conflictos.forEach((reserva, idx) => {
+        const id = reserva?.id || `conflicto-${Date.now()}-${idx}`;
+        if (!vistos.has(id)) {
+          vistos.add(id);
+          nuevos.push({
+            id,
+            mensaje: formatearAvisoConflicto(reserva, canchas),
+          });
+        }
+      });
+      return nuevos.length > 0 ? [...prev, ...nuevos] : prev;
+    });
+  }, []);
+
+  const descartarAvisoConflicto = useCallback((id) => {
+    setAvisosConflicto((prev) => prev.filter((a) => a.id !== id));
+  }, []);
 
   // Aplica el reducer en memoria de forma síncrona además de encolarlo en React,
   // para que llamadas seguidas en el mismo tick no se pisen entre sí.
@@ -1084,6 +1177,7 @@ export function ReservasProvider({ children }) {
           guardado,
           idsPendientesCreacion,
           idsPendientesCancelacion,
+          conflictos,
         } = conciliarLecturaExterna({
           base: {
             ocupados: desdeStorage.ocupadosCrudos,
@@ -1096,6 +1190,7 @@ export function ReservasProvider({ children }) {
         });
         idsSinGuardarRef.current = idsPendientesCreacion;
         idsCanceladosSinGuardarRef.current = idsPendientesCancelacion;
+        registrarConflictos(conflictos, estadoRef.current.canchas);
         datosStorage = {
           ocupadosCrudos: guardado.ocupados,
           reservas: guardado.reservas,
@@ -1115,7 +1210,7 @@ export function ReservasProvider({ children }) {
       window.removeEventListener('focus', renovarSiCambioElDia);
       document.removeEventListener('visibilitychange', renovarSiCambioElDia);
     };
-  }, [despachar]);
+  }, [despachar, registrarConflictos]);
 
   useEffect(() => {
     const alCambiarStorage = (e) => {
@@ -1143,6 +1238,7 @@ export function ReservasProvider({ children }) {
           guardado,
           idsPendientesCreacion,
           idsPendientesCancelacion,
+          conflictos,
         } = conciliarLecturaExterna({
           base: {
             ocupados: fusionarConSemilla(
@@ -1160,6 +1256,7 @@ export function ReservasProvider({ children }) {
         });
         idsSinGuardarRef.current = idsPendientesCreacion;
         idsCanceladosSinGuardarRef.current = idsPendientesCancelacion;
+        registrarConflictos(conflictos, actual.canchas);
         if (
           idsSinGuardarRef.current.size === 0 &&
           idsCanceladosSinGuardarRef.current.size === 0
@@ -1194,7 +1291,7 @@ export function ReservasProvider({ children }) {
     };
     window.addEventListener('storage', alCambiarStorage);
     return () => window.removeEventListener('storage', alCambiarStorage);
-  }, [despachar]);
+  }, [despachar, registrarConflictos]);
 
   const leerEstadoFresco = useCallback(() => {
     const actual = estadoRef.current;
@@ -1218,6 +1315,7 @@ export function ReservasProvider({ children }) {
           guardado,
           idsPendientesCreacion,
           idsPendientesCancelacion,
+          conflictos,
         } = conciliarLecturaExterna({
           base: {
             ocupados: fusionarConSemilla(
@@ -1235,6 +1333,7 @@ export function ReservasProvider({ children }) {
         });
         idsSinGuardarRef.current = idsPendientesCreacion;
         idsCanceladosSinGuardarRef.current = idsPendientesCancelacion;
+        registrarConflictos(conflictos, actual.canchas);
         return {
           guardado,
           estado: { ...actual, ...guardado },
@@ -1245,7 +1344,7 @@ export function ReservasProvider({ children }) {
       guardado: null,
       estado: actual,
     };
-  }, []);
+  }, [registrarConflictos]);
 
   // `?? state` mantiene a `state` como dependencia válida para `exhaustive-deps`:
   // `disponibilidad` debe cambiar de identidad en cada estado nuevo porque
@@ -1338,19 +1437,23 @@ export function ReservasProvider({ children }) {
       dias: state.dias,
       canchas: state.canchas,
       reservas: state.reservas,
+      avisosConflicto,
       disponibilidad,
       reservar,
       reservarEvento,
       cancelar,
+      descartarAvisoConflicto,
     }),
     [
       state.dias,
       state.canchas,
       state.reservas,
+      avisosConflicto,
       disponibilidad,
       reservar,
       reservarEvento,
       cancelar,
+      descartarAvisoConflicto,
     ]
   );
 

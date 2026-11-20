@@ -255,8 +255,10 @@ export function aplicarCancelacion(
     return { state, error: verificacion.error };
   }
 
+  const nuevasReservas = reservas.filter((r) => r && r.id !== reservaId);
   const { canchaId, fecha } = reserva;
   const horasAQuitar = horasDeReserva(reserva);
+  const usadas = horasUsadasEnCelda(nuevasReservas, canchaId, fecha);
 
   let ocupados = state.ocupados;
   if (
@@ -265,7 +267,7 @@ export function aplicarCancelacion(
     Array.isArray(state.ocupados[canchaId][fecha])
   ) {
     const horasRestantes = state.ocupados[canchaId][fecha].filter(
-      (h) => !horasAQuitar.includes(h)
+      (h) => !horasAQuitar.includes(h) || usadas.has(h)
     );
     ocupados = {
       ...state.ocupados,
@@ -275,8 +277,6 @@ export function aplicarCancelacion(
       },
     };
   }
-
-  const nuevasReservas = reservas.filter((r) => r.id !== reservaId);
 
   return {
     state: {
