@@ -1,0 +1,52 @@
+{
+  "canchaTorneo": "Cancha 1",
+  "pasoAntesDeConfirmar": {
+    "indicador": "Resumen",
+    "cabecera": "ResumenPaso 6 de 6"
+  },
+  "codigoA": "SPF-84EB5B",
+  "canchaB": "Cancha 1",
+  "codigoB": "SPF-KNQTLP",
+  "aviso": {
+    "titulo": "Tu reserva no pudo completarse",
+    "focoEnTitulo": true,
+    "alertas": 1,
+    "ariaLive": 0,
+    "hayCodigo": false,
+    "hayQr": false
+  },
+  "trasElegirOtro": {
+    "indicador": "3Fechas por fase",
+    "cabecera": "Fechas por fasePaso 3 de 6"
+  },
+  "irAFechas": true,
+  "fase1": {
+    "dia": "Mañana 21 de nov, 9 libres",
+    "horasElegidas": [
+      "12:00"
+    ],
+    "once": {
+      "deshabilitada": true,
+      "texto": "11:00"
+    }
+  },
+  "fase2": {
+    "dia": "dom 22 de nov, 10 libres",
+    "horasElegidas": [
+      "11:00"
+    ],
+    "once": {
+      "deshabilitada": false,
+      "texto": "11:00"
+    }
+  },
+  "pasoTrasIrAFechas": {
+    "indicador": "3Fechas por fase",
+    "cabecera": "Fechas por fasePaso 3 de 6"
+  },
+  "datosConservados": {
+    "nombre": "(campo no visible en este paso)",
+    "telefono": "(campo no visible en este paso)"
+  },
+  "reservasGuardadasTrasConfirmarA": 0
+}
