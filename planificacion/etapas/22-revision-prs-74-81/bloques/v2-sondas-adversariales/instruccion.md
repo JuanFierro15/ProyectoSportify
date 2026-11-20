@@ -41,7 +41,7 @@ resultado que buscamos.
   para probar otra versión, y `git checkout HEAD -- src/context/ReservasContext.jsx src/lib/cancelacion.js`
   para volver. Nada de commits, push, `stash`, `reset` ni ramas.
 - **Archivos que escribes fuera** (carpeta
-  `C:\Users\MIGUEL ANGEL\Documents\UNIVERSIDAD\VI SEMESTRE\Lenguajes para la Web\ProyectoSportify\.claude\worktrees\plan-pestanas-fases-torneo\.claude\worktrees\revision-prs-74-81\planificacion\etapas\22-revision-prs-74-81\revision\`):
+  `<raíz del repositorio>\planificacion\etapas\22-revision-prs-74-81\revision\`):
   `v2-sondas.md` (informe) y una copia de `sondas-e22.test.jsx` con el nombre
   `v2-sondas-e22.test.jsx.txt`.
 - No ejecutes `npm run dev`, `npm run preview` ni `vercel dev`. Un comando

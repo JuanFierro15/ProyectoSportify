@@ -43,7 +43,7 @@ informe con capturas.
   usuario. Dos pestañas = dos páginas del **mismo** contexto, para que
   compartan `localStorage` y se disparen los eventos `storage` reales.
 - **Archivos que escribes**, todos en
-  `C:\Users\MIGUEL ANGEL\Documents\UNIVERSIDAD\VI SEMESTRE\Lenguajes para la Web\ProyectoSportify\.claude\worktrees\plan-pestanas-fases-torneo\.claude\worktrees\revision-prs-74-81\planificacion\etapas\22-revision-prs-74-81\revision\v3\`:
+  `<raíz del repositorio>\planificacion\etapas\22-revision-prs-74-81\revision\v3\`:
   `informe.md` y capturas `R<n>-<descripcion>-<ancho>.png` con el nombre que
   se indica. Cada captura debe ser de la página real en ese momento: nunca
   generes ni edites imágenes. Si una captura no se pudo tomar, dilo en el

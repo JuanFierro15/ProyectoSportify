@@ -30,7 +30,7 @@ Ocho PR abiertas que se van a fusionar en `main`:
   `git reset` ni `git fetch`. Antes de cambiar de ref deja el árbol limpio con
   `git checkout -- .`.
 - **El único archivo que escribes** es el informe (ruta absoluta):
-  `C:\Users\MIGUEL ANGEL\Documents\UNIVERSIDAD\VI SEMESTRE\Lenguajes para la Web\ProyectoSportify\.claude\worktrees\plan-pestanas-fases-torneo\.claude\worktrees\revision-prs-74-81\planificacion\etapas\22-revision-prs-74-81\revision\v1-pruebas.md`
+  `<raíz del repositorio>\planificacion\etapas\22-revision-prs-74-81\revision\v1-pruebas.md`
 - No ejecutes `npm run dev`, `npm run preview` ni `vercel dev`. Un comando
   pesado a la vez (la PC tiene 8 GB).
 
