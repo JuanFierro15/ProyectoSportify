@@ -5,7 +5,10 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import DeporteHero from './DeporteHero';
 import { registrarHeroSnap } from './controladorSnapHero';
-import { MEDIA_VIDEO_GRANDE } from '../../lib/modoHero';
+import {
+  DURACION_FADE_CONTENIDO,
+  MEDIA_VIDEO_GRANDE,
+} from '../../lib/modoHero';
 
 vi.mock('./controladorSnapHero', async (importOriginal) => {
   const original = await importOriginal();
@@ -337,6 +340,72 @@ describe('DeporteHero - animación del bloque de texto', () => {
 
     expect(gsap.getTweensOf(bloque)).toHaveLength(0);
     expect(ScrollTrigger.getAll()).toHaveLength(0);
+  });
+
+  it('con textoVisibleAlInicio arranca visible en progreso 0, mantiene el tween de salida, vuelve a ser visible al regresar a 0 y limpia al desmontar', () => {
+    simularMatchMedia('(prefers-reduced-motion: no-preference)');
+
+    const { container, unmount } = render(
+      <div>
+        <DeporteHero {...PROPS_VALIDAS} textoVisibleAlInicio />
+      </div>
+    );
+
+    const bloque = container.querySelector('.deporte-hero__bloque');
+    const tweensBloque = gsap.getTweensOf(bloque);
+
+    expect(tweensBloque).toHaveLength(1);
+    const tweenSalida = tweensBloque[0];
+    expect(tweenSalida.vars.autoAlpha).toBe(0);
+    expect(tweenSalida.vars.scale).toBe(1.06);
+    expect(tweenSalida.vars.y).toBe(-14);
+    expect(tweenSalida.startTime()).toBeCloseTo(1 - DURACION_FADE_CONTENIDO, 5);
+
+    const tl = ScrollTrigger.getAll()[0].animation;
+    expect(tweenSalida.parent).toBe(tl);
+    tl.progress(0);
+    expect(getComputedStyle(bloque).opacity).toBe('1');
+    expect(getComputedStyle(bloque).visibility).not.toBe('hidden');
+    expect(gsap.getProperty(bloque, 'scale')).toBe(1);
+    expect(gsap.getProperty(bloque, 'y')).toBe(0);
+
+    tl.progress(1);
+    expect(getComputedStyle(bloque).opacity).toBe('0');
+    expect(getComputedStyle(bloque).visibility).toBe('hidden');
+    expect(gsap.getProperty(bloque, 'scale')).toBe(1.06);
+    expect(gsap.getProperty(bloque, 'y')).toBe(-14);
+
+    tl.progress(0);
+    expect(getComputedStyle(bloque).opacity).toBe('1');
+    expect(getComputedStyle(bloque).visibility).not.toBe('hidden');
+    expect(gsap.getProperty(bloque, 'scale')).toBe(1);
+    expect(gsap.getProperty(bloque, 'y')).toBe(0);
+
+    unmount();
+
+    expect(gsap.getTweensOf(bloque)).toHaveLength(0);
+    expect(ScrollTrigger.getAll()).toHaveLength(0);
+  });
+
+  it('con prefers-reduced-motion: reduce no crea tweens sobre el bloque con ni sin textoVisibleAlInicio', () => {
+    simularMatchMedia('(prefers-reduced-motion: reduce)');
+
+    for (const textoVisibleAlInicio of [false, true]) {
+      const { container, unmount } = render(
+        <div>
+          <DeporteHero
+            {...PROPS_VALIDAS}
+            textoVisibleAlInicio={textoVisibleAlInicio}
+          />
+        </div>
+      );
+
+      const bloque = container.querySelector('.deporte-hero__bloque');
+      expect(gsap.getTweensOf(bloque)).toHaveLength(0);
+      expect(ScrollTrigger.getAll()).toHaveLength(0);
+
+      unmount();
+    }
   });
 });
 
