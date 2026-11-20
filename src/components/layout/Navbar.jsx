@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Ticket, Trophy } from 'lucide-react';
+import { Ticket } from 'lucide-react';
 import { useVistaCanchas } from '../../context/VistaCanchasContext';
 import { DEPORTES } from '../../data/deportes';
 import { esClicNormal, rutaReserva } from '../../lib/rutas';
+import LogoSportify from '../shared/LogoSportify';
 import MisReservas from './MisReservas';
 import useIrACanchas from './useIrACanchas';
 import './Navbar.css';
@@ -125,10 +126,8 @@ function Navbar() {
             className="site-header__brand"
             onClick={irAInicio}
           >
-            <span className="site-header__brand-icon" aria-hidden="true">
-              <Trophy size={22} />
-            </span>
-            <span className="site-header__brand-text">Sportify</span>
+            <LogoSportify className="site-header__logo" />
+            <span className="show-for-sr">Sportify</span>
           </a>
         </div>
         <div className="top-bar-right">

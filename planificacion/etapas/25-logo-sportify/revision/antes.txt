@@ -1,0 +1,44 @@
+favicon FALLA index.html sin <link rel="icon"> a favicon.svg | <link rel="icon" href="/favicon.ico" />
+ 320 px tope    FALLA altoHeader=123 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--transparent" | sigue el trofeo; sin svg.logo-sportify
+ 320 px bajado  FALLA altoHeader=124 desborde=0 logo=no nombre="Sportify" top=0 scrollY=4622 clases="site-header site-header--visible site-header--scrolled" | sigue el trofeo; sin svg.logo-sportify
+ 320 px reserva FALLA altoHeader=78.9 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--scrolled site-header--reserva" | sigue el trofeo; sin svg.logo-sportify
+ 360 px tope    FALLA altoHeader=123 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--transparent" | sigue el trofeo; sin svg.logo-sportify
+ 360 px bajado  FALLA altoHeader=124 desborde=0 logo=no nombre="Sportify" top=0 scrollY=4622 clases="site-header site-header--visible site-header--scrolled" | sigue el trofeo; sin svg.logo-sportify
+ 360 px reserva FALLA altoHeader=78.9 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--scrolled site-header--reserva" | sigue el trofeo; sin svg.logo-sportify
+ 375 px tope    FALLA altoHeader=123 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--transparent" | sigue el trofeo; sin svg.logo-sportify
+ 375 px bajado  FALLA altoHeader=124 desborde=0 logo=no nombre="Sportify" top=0 scrollY=4622 clases="site-header site-header--visible site-header--scrolled" | sigue el trofeo; sin svg.logo-sportify
+ 375 px reserva FALLA altoHeader=78.9 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--scrolled site-header--reserva" | sigue el trofeo; sin svg.logo-sportify
+ 390 px tope    FALLA altoHeader=123 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--transparent" | sigue el trofeo; sin svg.logo-sportify
+ 390 px bajado  FALLA altoHeader=124 desborde=0 logo=no nombre="Sportify" top=0 scrollY=4622 clases="site-header site-header--visible site-header--scrolled" | sigue el trofeo; sin svg.logo-sportify
+ 390 px reserva FALLA altoHeader=78.9 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--scrolled site-header--reserva" | sigue el trofeo; sin svg.logo-sportify
+ 414 px tope    FALLA altoHeader=86 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--transparent" | sigue el trofeo; sin svg.logo-sportify
+ 414 px bajado  FALLA altoHeader=87 desborde=0 logo=no nombre="Sportify" top=0 scrollY=4622 clases="site-header site-header--visible site-header--scrolled" | sigue el trofeo; sin svg.logo-sportify
+ 414 px reserva FALLA altoHeader=78.9 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--scrolled site-header--reserva" | sigue el trofeo; sin svg.logo-sportify
+ 480 px tope    FALLA altoHeader=86 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--transparent" | sigue el trofeo; sin svg.logo-sportify
+ 480 px bajado  FALLA altoHeader=87 desborde=0 logo=no nombre="Sportify" top=0 scrollY=4622 clases="site-header site-header--visible site-header--scrolled" | sigue el trofeo; sin svg.logo-sportify
+ 480 px reserva FALLA altoHeader=78.9 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--scrolled site-header--reserva" | sigue el trofeo; sin svg.logo-sportify
+ 600 px tope    FALLA altoHeader=86 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--transparent" | sigue el trofeo; sin svg.logo-sportify
+ 600 px bajado  FALLA altoHeader=87 desborde=0 logo=no nombre="Sportify" top=0 scrollY=4622 clases="site-header site-header--visible site-header--scrolled" | sigue el trofeo; sin svg.logo-sportify
+ 600 px reserva FALLA altoHeader=78.9 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--scrolled site-header--reserva" | sigue el trofeo; sin svg.logo-sportify
+ 639 px tope    FALLA altoHeader=86 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--transparent" | sigue el trofeo; sin svg.logo-sportify
+ 639 px bajado  FALLA altoHeader=87 desborde=0 logo=no nombre="Sportify" top=0 scrollY=4622 clases="site-header site-header--visible site-header--scrolled" | sigue el trofeo; sin svg.logo-sportify
+ 639 px reserva FALLA altoHeader=78.9 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--scrolled site-header--reserva" | sigue el trofeo; sin svg.logo-sportify
+ 640 px tope    FALLA altoHeader=91 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--transparent" | sigue el trofeo; sin svg.logo-sportify
+ 640 px bajado  FALLA altoHeader=92 desborde=0 logo=no nombre="Sportify" top=0 scrollY=4622 clases="site-header site-header--visible site-header--scrolled" | sigue el trofeo; sin svg.logo-sportify
+ 640 px reserva FALLA altoHeader=82.7 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--scrolled site-header--reserva" | sigue el trofeo; sin svg.logo-sportify
+ 768 px tope    FALLA altoHeader=108.9 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--transparent" | sigue el trofeo; sin svg.logo-sportify
+ 768 px bajado  FALLA altoHeader=108.6 desborde=0 logo=no nombre="Sportify" top=0 scrollY=4622 clases="site-header site-header--visible site-header--scrolled" | sigue el trofeo; sin svg.logo-sportify
+ 768 px reserva FALLA altoHeader=109 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--scrolled site-header--reserva" | sigue el trofeo; sin svg.logo-sportify
+1023 px tope    FALLA altoHeader=66 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--transparent" | sigue el trofeo; sin svg.logo-sportify
+1023 px bajado  FALLA altoHeader=66.3 desborde=0 logo=no nombre="Sportify" top=0 scrollY=4622 clases="site-header site-header--visible site-header--scrolled" | sigue el trofeo; sin svg.logo-sportify
+1023 px reserva FALLA altoHeader=66.7 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--scrolled site-header--reserva" | sigue el trofeo; sin svg.logo-sportify
+1024 px tope    FALLA altoHeader=66 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--transparent" | sigue el trofeo; sin svg.logo-sportify
+1024 px bajado  FALLA altoHeader=66.3 desborde=0 logo=no nombre="Sportify" top=0 scrollY=4790 clases="site-header site-header--visible site-header--scrolled" | sigue el trofeo; sin svg.logo-sportify
+1024 px reserva FALLA altoHeader=66.7 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--scrolled site-header--reserva" | sigue el trofeo; sin svg.logo-sportify
+1280 px tope    FALLA altoHeader=66 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--transparent" | sigue el trofeo; sin svg.logo-sportify
+1280 px bajado  FALLA altoHeader=66.3 desborde=0 logo=no nombre="Sportify" top=0 scrollY=4790 clases="site-header site-header--visible site-header--scrolled" | sigue el trofeo; sin svg.logo-sportify
+1280 px reserva FALLA altoHeader=66.7 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--scrolled site-header--reserva" | sigue el trofeo; sin svg.logo-sportify
+1440 px tope    FALLA altoHeader=66 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--transparent" | sigue el trofeo; sin svg.logo-sportify
+1440 px bajado  FALLA altoHeader=66.3 desborde=0 logo=no nombre="Sportify" top=0 scrollY=4790 clases="site-header site-header--visible site-header--scrolled" | sigue el trofeo; sin svg.logo-sportify
+1440 px reserva FALLA altoHeader=66.7 desborde=0 logo=no nombre="Sportify" top=0 scrollY=0 clases="site-header site-header--visible site-header--scrolled site-header--reserva" | sigue el trofeo; sin svg.logo-sportify
+RESULTADO: 85 fallos

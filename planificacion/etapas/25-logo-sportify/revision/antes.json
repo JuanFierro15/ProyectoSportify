@@ -1,0 +1,800 @@
+[
+  {
+    "ancho": 320,
+    "escena": "tope",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--transparent",
+      "altoHeader": 123,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 320,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 320,
+    "escena": "bajado",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled",
+      "altoHeader": 124,
+      "topHeader": 0,
+      "scrollY": 4622,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 320,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 320,
+    "escena": "reserva",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled site-header--reserva",
+      "altoHeader": 78.9,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 320,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 360,
+    "escena": "tope",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--transparent",
+      "altoHeader": 123,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 360,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 360,
+    "escena": "bajado",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled",
+      "altoHeader": 124,
+      "topHeader": 0,
+      "scrollY": 4622,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 360,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 360,
+    "escena": "reserva",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled site-header--reserva",
+      "altoHeader": 78.9,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 360,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 375,
+    "escena": "tope",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--transparent",
+      "altoHeader": 123,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 375,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 375,
+    "escena": "bajado",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled",
+      "altoHeader": 124,
+      "topHeader": 0,
+      "scrollY": 4622,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 375,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 375,
+    "escena": "reserva",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled site-header--reserva",
+      "altoHeader": 78.9,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 375,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 390,
+    "escena": "tope",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--transparent",
+      "altoHeader": 123,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 390,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 390,
+    "escena": "bajado",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled",
+      "altoHeader": 124,
+      "topHeader": 0,
+      "scrollY": 4622,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 390,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 390,
+    "escena": "reserva",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled site-header--reserva",
+      "altoHeader": 78.9,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 390,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 414,
+    "escena": "tope",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--transparent",
+      "altoHeader": 86,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 414,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 414,
+    "escena": "bajado",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled",
+      "altoHeader": 87,
+      "topHeader": 0,
+      "scrollY": 4622,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 414,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 414,
+    "escena": "reserva",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled site-header--reserva",
+      "altoHeader": 78.9,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 414,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 480,
+    "escena": "tope",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--transparent",
+      "altoHeader": 86,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 480,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 480,
+    "escena": "bajado",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled",
+      "altoHeader": 87,
+      "topHeader": 0,
+      "scrollY": 4622,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 480,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 480,
+    "escena": "reserva",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled site-header--reserva",
+      "altoHeader": 78.9,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 480,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 600,
+    "escena": "tope",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--transparent",
+      "altoHeader": 86,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 600,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 600,
+    "escena": "bajado",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled",
+      "altoHeader": 87,
+      "topHeader": 0,
+      "scrollY": 4622,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 600,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 600,
+    "escena": "reserva",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled site-header--reserva",
+      "altoHeader": 78.9,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 600,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 639,
+    "escena": "tope",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--transparent",
+      "altoHeader": 86,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 639,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 639,
+    "escena": "bajado",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled",
+      "altoHeader": 87,
+      "topHeader": 0,
+      "scrollY": 4622,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 639,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 639,
+    "escena": "reserva",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled site-header--reserva",
+      "altoHeader": 78.9,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 639,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 640,
+    "escena": "tope",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--transparent",
+      "altoHeader": 91,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 640,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 640,
+    "escena": "bajado",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled",
+      "altoHeader": 92,
+      "topHeader": 0,
+      "scrollY": 4622,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 640,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 640,
+    "escena": "reserva",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled site-header--reserva",
+      "altoHeader": 82.7,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 640,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 768,
+    "escena": "tope",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--transparent",
+      "altoHeader": 108.9,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 768,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 768,
+    "escena": "bajado",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled",
+      "altoHeader": 108.6,
+      "topHeader": 0,
+      "scrollY": 4622,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 768,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 768,
+    "escena": "reserva",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled site-header--reserva",
+      "altoHeader": 109,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 768,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 1023,
+    "escena": "tope",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--transparent",
+      "altoHeader": 66,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 1023,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 1023,
+    "escena": "bajado",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled",
+      "altoHeader": 66.3,
+      "topHeader": 0,
+      "scrollY": 4622,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 1023,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 1023,
+    "escena": "reserva",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled site-header--reserva",
+      "altoHeader": 66.7,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 1023,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 1024,
+    "escena": "tope",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--transparent",
+      "altoHeader": 66,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 1024,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 1024,
+    "escena": "bajado",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled",
+      "altoHeader": 66.3,
+      "topHeader": 0,
+      "scrollY": 4790,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 1024,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 1024,
+    "escena": "reserva",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled site-header--reserva",
+      "altoHeader": 66.7,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 1024,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 1280,
+    "escena": "tope",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--transparent",
+      "altoHeader": 66,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 1280,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 1280,
+    "escena": "bajado",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled",
+      "altoHeader": 66.3,
+      "topHeader": 0,
+      "scrollY": 4790,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 1280,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 1280,
+    "escena": "reserva",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled site-header--reserva",
+      "altoHeader": 66.7,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 1280,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 1440,
+    "escena": "tope",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--transparent",
+      "altoHeader": 66,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 1440,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 1440,
+    "escena": "bajado",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled",
+      "altoHeader": 66.3,
+      "topHeader": 0,
+      "scrollY": 4790,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 1440,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  },
+  {
+    "ancho": 1440,
+    "escena": "reserva",
+    "medida": {
+      "clases": "site-header site-header--visible site-header--scrolled site-header--reserva",
+      "altoHeader": 66.7,
+      "topHeader": 0,
+      "scrollY": 0,
+      "nombre": "Sportify",
+      "trofeo": true,
+      "desborde": 0,
+      "anchoVentana": 1440,
+      "logo": null
+    },
+    "fallas": [
+      "sigue el trofeo",
+      "sin svg.logo-sportify"
+    ]
+  }
+]

@@ -211,4 +211,30 @@ describe('Navbar y useIrACanchas (S9)', () => {
       spyScroll.mockRestore();
     }
   });
+
+  test('muestra el logo SVG de Sportify en el enlace de la marca y no el trofeo', () => {
+    const { container } = render(
+      <ReservasProvider>
+        <VistaCanchasProvider>
+          <Navbar />
+        </VistaCanchasProvider>
+      </ReservasProvider>
+    );
+
+    const enlaceMarca = screen.getByRole('link', { name: 'Sportify' });
+    const svgLogo = enlaceMarca.querySelector('svg.logo-sportify');
+    expect(svgLogo).toBeInTheDocument();
+    expect(svgLogo).toHaveAttribute('aria-hidden', 'true');
+    expect(svgLogo).toHaveAttribute('focusable', 'false');
+
+    const trazos = svgLogo.querySelectorAll('path');
+    expect(trazos).toHaveLength(3);
+
+    const rellenos = Array.from(trazos).map((p) => p.getAttribute('fill'));
+    expect(rellenos).toContain('currentColor');
+    expect(rellenos).toContain('#f16c13');
+    expect(rellenos).toContain('#2f995c');
+
+    expect(container.querySelector('.lucide-trophy')).toBeNull();
+  });
 });

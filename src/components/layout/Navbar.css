@@ -58,13 +58,8 @@
   box-shadow: none !important;
 }
 
-.site-header--transparent .site-header__brand-text {
-  color: #ffffff !important;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75);
-}
-
-.site-header--transparent .site-header__brand-icon {
-  color: #f6a94b !important;
+.site-header--transparent .site-header__logo {
+  color: #ffffff;
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7));
 }
 
@@ -112,13 +107,8 @@
   background: transparent !important;
 }
 
-.site-header--scrolled .site-header__brand-text {
-  color: #0f172a !important;
-  text-shadow: none;
-}
-
-.site-header--scrolled .site-header__brand-icon {
-  color: #1779ba !important;
+.site-header--scrolled .site-header__logo {
+  color: #0f172a;
   filter: none;
 }
 
@@ -163,14 +153,9 @@
   background: transparent !important;
 }
 
-.site-header.site-header--reserva .site-header__brand-text {
-  color: #f2f2f2 !important;
-  text-shadow: none !important;
-}
-
-.site-header.site-header--reserva .site-header__brand-icon {
-  color: var(--color-marca, #f6a94b) !important;
-  filter: none !important;
+.site-header.site-header--reserva .site-header__logo {
+  color: #f2f2f2;
+  filter: none;
 }
 
 .site-header.site-header--reserva .menu a {
@@ -224,18 +209,37 @@
 
 .site-header__brand {
   display: flex;
+  /* Del ancho del logo: el contorno de foco y la zona de clic no se estiran
+     por toda la columna. */
+  width: fit-content;
   align-items: center;
-  gap: 0.65rem;
-  font-weight: 800;
-  font-size: 1.28rem;
   text-decoration: none;
-  letter-spacing: -0.015em;
   padding: 0.35rem 0;
 }
 
-.site-header__brand-icon {
-  display: inline-flex;
-  align-items: center;
+.site-header__logo {
+  display: block;
+  height: 2.25rem;
+  width: auto;
+}
+
+/* Foco del logo con el mismo contorno que los enlaces del menú en cada estado
+   (el nativo del navegador casi no se ve sobre el video). */
+.site-header__brand:focus-visible {
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+.site-header--transparent .site-header__brand:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.site-header--scrolled .site-header__brand:focus-visible {
+  outline: 2px solid #0c5484;
+}
+
+.site-header.site-header--reserva .site-header__brand:focus-visible {
+  outline: 2px solid #f2f2f2;
 }
 
 .site-header .menu {
@@ -272,8 +276,12 @@
     padding: 0.5rem 1rem;
   }
 
-  .site-header__brand-text {
-    font-size: 1.1rem;
+  .site-header__brand {
+    padding: 0.15rem 0;
+  }
+
+  .site-header__logo {
+    height: 2rem;
   }
 
   .site-header--transparent .menu a,
@@ -300,12 +308,8 @@
     margin: 0;
   }
 
-  .site-header.site-header--reserva .site-header__brand {
-    padding: 0.15rem 0;
-  }
-
-  .site-header.site-header--reserva .site-header__brand-text {
-    font-size: 1.05rem;
+  .site-header.site-header--reserva .site-header__logo {
+    height: 1.75rem;
   }
 
   .site-header.site-header--reserva .menu {
