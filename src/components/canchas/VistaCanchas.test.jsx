@@ -539,4 +539,221 @@ describe('VistaCanchas — Confirmación descartada por choque (#61)', () => {
       container.querySelector(`.formulario-reserva__hora[data-hora="${horaEvento}"]`)
     ).toBeDisabled();
   });
+
+  function programarTorneoPadel1({ container, nombre = 'Laura Gómez', telefono = '3105551234' }) {
+    // Agregar Cancha Pádel 1 (tarjeta activa inicial)
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar al evento' }));
+
+    // Cuartos: 2.º día a las 11:00 y 12:00
+    const seccionCuartos = screen.getByLabelText('Fase 1: Cuartos de final');
+    const diasCuartos = within(seccionCuartos)
+      .getByRole('group', { name: 'Elige el día' })
+      .querySelectorAll('button');
+    fireEvent.click(diasCuartos[1]);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 1, 11:00' })
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 1, 12:00' })
+    );
+
+    // Semifinal: 3.er día a las 11:00
+    fireEvent.click(screen.getByRole('tab', { name: /Semifinal/i }));
+    const seccionSemi = screen.getByLabelText('Fase 2: Semifinal');
+    const diasSemi = within(seccionSemi)
+      .getByRole('group', { name: 'Elige el día' })
+      .querySelectorAll('button');
+    fireEvent.click(diasSemi[2]);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Semifinal, Cancha 1, 11:00' })
+    );
+
+    // Final: 4.º día a las 11:00
+    fireEvent.click(screen.getByRole('tab', { name: /^Final\b/i }));
+    const seccionFinal = screen.getByLabelText('Fase 3: Final');
+    const diasFinal = within(seccionFinal)
+      .getByRole('group', { name: 'Elige el día' })
+      .querySelectorAll('button');
+    fireEvent.click(diasFinal[3]);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Final, Cancha 1, 11:00' })
+    );
+
+    fireEvent.change(screen.getByLabelText('Nombre'), {
+      target: { value: nombre },
+    });
+    fireEvent.change(screen.getByLabelText('Teléfono (opcional)'), {
+      target: { value: telefono },
+    });
+
+    expect(container.querySelector('.formulario-reserva__error')).toBeNull();
+  }
+
+  it('torneo descartado por choque en Cuartos: "Elegir otro horario" quita solo la hora chocada y conserva las demás horas de Cuartos, Semifinal, Final y contacto', () => {
+    let api;
+    const { container } = renderVistaConAviso('/reservar/padel?modo=torneo', (ctx) => {
+      api = ctx;
+    });
+
+    const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    programarTorneoPadel1({ container });
+
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar reserva' }));
+    expect(
+      screen.getByRole('heading', { name: 'Reserva confirmada' })
+    ).toBeInTheDocument();
+
+    // Otra pestaña ocupa Pádel 1, 2.º día, 11:00
+    despacharChoqueStorage({
+      setItemOriginal,
+      base,
+      canchaId: 'padel-1',
+      fecha: api.dias[1],
+      hora: '11:00',
+    });
+
+    expect(
+      screen.getByRole('heading', { name: 'Tu reserva no pudo completarse' })
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Elegir otro horario' }));
+
+    // Cuartos (1.ª fase visible por defecto): 11:00 deshabilitada y sin elegir, 12:00 sigue elegida
+    fireEvent.click(screen.getByRole('tab', { name: /Cuartos de final/i }));
+    const seccionCuartos = screen.getByLabelText('Fase 1: Cuartos de final');
+    const diasCuartos = within(seccionCuartos)
+      .getByRole('group', { name: 'Elige el día' })
+      .querySelectorAll('button');
+    expect(diasCuartos[1]).toHaveAttribute('aria-pressed', 'true');
+    const btnCuartos11 = screen.getByRole('button', {
+      name: 'Cuartos de final, Cancha 1, 11:00, reservada',
+    });
+    expect(btnCuartos11).toBeDisabled();
+    expect(btnCuartos11).toHaveAttribute('aria-pressed', 'false');
+    const btnCuartos12 = screen.getByRole('button', {
+      name: 'Cuartos de final, Cancha 1, 12:00',
+    });
+    expect(btnCuartos12).not.toBeDisabled();
+    expect(btnCuartos12).toHaveAttribute('aria-pressed', 'true');
+
+    // Semifinal conserva 3.er día y 11:00
+    fireEvent.click(screen.getByRole('tab', { name: /Semifinal/i }));
+    const seccionSemi = screen.getByLabelText('Fase 2: Semifinal');
+    const diasSemi = within(seccionSemi)
+      .getByRole('group', { name: 'Elige el día' })
+      .querySelectorAll('button');
+    expect(diasSemi[2]).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      screen.getByRole('button', { name: 'Semifinal, Cancha 1, 11:00' })
+    ).toHaveAttribute('aria-pressed', 'true');
+
+    // Final conserva 4.º día y 11:00
+    fireEvent.click(screen.getByRole('tab', { name: /^Final\b/i }));
+    const seccionFinal = screen.getByLabelText('Fase 3: Final');
+    const diasFinal = within(seccionFinal)
+      .getByRole('group', { name: 'Elige el día' })
+      .querySelectorAll('button');
+    expect(diasFinal[3]).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      screen.getByRole('button', { name: 'Final, Cancha 1, 11:00' })
+    ).toHaveAttribute('aria-pressed', 'true');
+
+    // Nombre y teléfono conservados
+    expect(screen.getByLabelText('Nombre')).toHaveValue('Laura Gómez');
+    expect(screen.getByLabelText('Teléfono (opcional)')).toHaveValue('3105551234');
+  });
+
+  it('torneo descartado por choque en la última fase (Final): Cuartos y Semifinal conservan todas sus horas y Final queda sin la hora que chocó', () => {
+    let api;
+    const { container } = renderVistaConAviso('/reservar/padel?modo=torneo', (ctx) => {
+      api = ctx;
+    });
+
+    const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+    programarTorneoPadel1({ container });
+
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar reserva' }));
+    expect(
+      screen.getByRole('heading', { name: 'Reserva confirmada' })
+    ).toBeInTheDocument();
+
+    // Otra pestaña ocupa Pádel 1, 4.º día, 11:00 (Final)
+    despacharChoqueStorage({
+      setItemOriginal,
+      base,
+      canchaId: 'padel-1',
+      fecha: api.dias[3],
+      hora: '11:00',
+      codigoExterno: 'SPF-FIN99',
+    });
+
+    expect(
+      screen.getByRole('heading', { name: 'Tu reserva no pudo completarse' })
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Elegir otro horario' }));
+
+    // Cuartos conserva 11:00 y 12:00 del 2.º día
+    fireEvent.click(screen.getByRole('tab', { name: /Cuartos de final/i }));
+    const seccionCuartos = screen.getByLabelText('Fase 1: Cuartos de final');
+    const diasCuartos = within(seccionCuartos)
+      .getByRole('group', { name: 'Elige el día' })
+      .querySelectorAll('button');
+    expect(diasCuartos[1]).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 1, 11:00' })
+    ).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      screen.getByRole('button', { name: 'Cuartos de final, Cancha 1, 12:00' })
+    ).toHaveAttribute('aria-pressed', 'true');
+
+    // Semifinal conserva 11:00 del 3.er día
+    fireEvent.click(screen.getByRole('tab', { name: /Semifinal/i }));
+    const seccionSemi = screen.getByLabelText('Fase 2: Semifinal');
+    const diasSemi = within(seccionSemi)
+      .getByRole('group', { name: 'Elige el día' })
+      .querySelectorAll('button');
+    expect(diasSemi[2]).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      screen.getByRole('button', { name: 'Semifinal, Cancha 1, 11:00' })
+    ).toHaveAttribute('aria-pressed', 'true');
+
+    // Final queda sin 11:00 (deshabilitada y sin elegir)
+    fireEvent.click(screen.getByRole('tab', { name: /^Final\b/i }));
+    const seccionFinal = screen.getByLabelText('Fase 3: Final');
+    const diasFinal = within(seccionFinal)
+      .getByRole('group', { name: 'Elige el día' })
+      .querySelectorAll('button');
+    expect(diasFinal[3]).toHaveAttribute('aria-pressed', 'true');
+    const btnFinal11 = screen.getByRole('button', {
+      name: 'Final, Cancha 1, 11:00, reservada',
+    });
+    expect(btnFinal11).toBeDisabled();
+    expect(btnFinal11).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('camino exitoso de torneo: confirma con código y QR sin mostrar mensajes de error', () => {
+    const { container } = renderVistaConAviso('/reservar/padel?modo=torneo');
+    programarTorneoPadel1({ container });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar reserva' }));
+
+    expect(
+      screen.getByRole('heading', { name: 'Reserva confirmada' })
+    ).toBeInTheDocument();
+    const codigoEl = container.querySelector('.confirmacion-reserva__codigo');
+    expect(codigoEl).not.toBeNull();
+    expect(codigoEl.textContent.trim()).toMatch(/^SPF-/);
+    expect(container.querySelector('.confirmacion-reserva__qr canvas')).not.toBeNull();
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByText(/ya no está libre/i)).toBeNull();
+  });
 });

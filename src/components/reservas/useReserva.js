@@ -914,7 +914,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
   }, [horasSel, esLibre, esEvento, canchaIds.length]);
 
   useEffect(() => {
-    if (modo !== 'torneo') return;
+    if (modo !== 'torneo' || confirmado) return;
 
     const tieneHorasFase = Object.values(jornadas).some(
       (j) => horasDeJornada(j).length > 0
@@ -935,7 +935,7 @@ export default function useReserva({ activo, modoInicial = 'cancha', canchaInici
       setJornadas(normalizarJornadasCascada(siguiente, fases, dias, horasBase));
       setError(formatearAvisoChoqueJornadas(quitadas, canchas, fases));
     }
-  }, [modo, jornadas, esLibreFase, canchaIds.length, fases, dias, horasBase, canchas]);
+  }, [modo, confirmado, jornadas, esLibreFase, canchaIds.length, fases, dias, horasBase, canchas]);
 
   const cambiarModo = useCallback(
     (nuevo) => {
