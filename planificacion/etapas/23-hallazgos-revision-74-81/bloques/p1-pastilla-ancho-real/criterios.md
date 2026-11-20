@@ -1,4 +1,4 @@
-- C1: Con un build nuevo (`npm run build`), `node "C:/Users/juand/Desktop/Universidad Surcolombiana/Sexto Semestre/Lenguajes para la Web/ProyectoSportify/planificacion/etapas/23-hallazgos-revision-74-81/revision/medir-pastillas.mjs" --preview .` termina con código 0 y "RESULTADO: todas las pastillas caben" en los 21 anchos por defecto (320 a 1440 px), en las escenas torneo (Semifinal con 2 días "bloqueado") y cancha.
+- C1: Con un build nuevo (`npm run build`), `node "planificacion/etapas/23-hallazgos-revision-74-81/revision/medir-pastillas.mjs" --preview .` termina con código 0 y "RESULTADO: todas las pastillas caben" en los 21 anchos por defecto (320 a 1440 px), en las escenas torneo (Semifinal con 2 días "bloqueado") y cancha.
   Cómo comprobarlo: correr el comando y leer la salida completa, no solo la última línea.
 - C2: El mismo script termina con código 0 con `--anchos 330,345,405,420,445,460,500,560`.
   Cómo comprobarlo: correrlo. Prueba también otros anchos tuyos entre 320 y 640 px (por ejemplo 352, 395, 437, 470, 520, 610) e informa el resultado.

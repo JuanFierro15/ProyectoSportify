@@ -69,8 +69,8 @@ lo cierra al terminar. No levantes otro servidor ni dejes uno abierto:
 
 ```
 npm run build
-node "C:/Users/juand/Desktop/Universidad Surcolombiana/Sexto Semestre/Lenguajes para la Web/ProyectoSportify/planificacion/etapas/23-hallazgos-revision-74-81/revision/medir-pastillas.mjs" --preview .
-node "C:/Users/juand/Desktop/Universidad Surcolombiana/Sexto Semestre/Lenguajes para la Web/ProyectoSportify/planificacion/etapas/23-hallazgos-revision-74-81/revision/medir-pastillas.mjs" --preview . --anchos 330,345,405,420,445,460,500,560
+node "planificacion/etapas/23-hallazgos-revision-74-81/revision/medir-pastillas.mjs" --preview .
+node "planificacion/etapas/23-hallazgos-revision-74-81/revision/medir-pastillas.mjs" --preview . --anchos 330,345,405,420,445,460,500,560
 ```
 
 Por cada ancho imprime una línea por escena (torneo: Semifinal con 2 días
