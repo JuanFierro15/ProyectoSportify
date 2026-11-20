@@ -1,6 +1,8 @@
 # Plan de la etapa 22: revisión de las PR #74 a #81 (issues #61 a #71)
 
-**Estado: pendiente de aprobación de Miguel Medina.**
+**Estado: aprobado por Miguel Medina el 20-11-2026**, con el orden de fusión
+de F8, los hallazgos solo en el reporte (no como comentarios en las PR) y F7
+incluida.
 
 Rama de la etapa: `chore/revision-prs-74-81`, creada desde `origin/main` en
 `39d64c7` (20-11-2026). Solo lleva este plan y el reporte: la revisión no
