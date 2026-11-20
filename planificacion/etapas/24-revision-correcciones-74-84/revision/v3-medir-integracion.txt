@@ -1,0 +1,43 @@
+ 320 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=35 texto=31.9 margenes=1.5/1.5 font=8px ls=-0.7px overflow=visible
+ 320 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=35 texto=23.5 margenes=5.8/5.8 font=8px ls=-0.7px overflow=visible
+ 360 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=39 texto=36.1 margenes=1.4/1.5 font=8.8725px ls=-0.7px overflow=visible
+ 360 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=39 texto=26.7 margenes=6.1/6.1 font=8.8725px ls=-0.7px overflow=visible
+ 375 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=41.1 texto=36.7 margenes=2.2/2.2 font=9px ls=-0.7px overflow=visible
+ 375 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=41.1 texto=27.2 margenes=7/7 font=9px ls=-0.7px overflow=visible
+ 390 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=43.3 texto=36.7 margenes=3.3/3.3 font=9px ls=-0.7px overflow=visible
+ 390 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=43.3 texto=27.2 margenes=8/8 font=9px ls=-0.7px overflow=visible
+ 400 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=44.7 texto=36.7 margenes=4/4 font=9px ls=-0.7px overflow=visible
+ 400 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=44.7 texto=27.2 margenes=8.8/8.8 font=9px ls=-0.7px overflow=visible
+ 412 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=46.4 texto=36.7 margenes=4.8/4.8 font=9px ls=-0.7px overflow=visible
+ 412 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=46.4 texto=27.2 margenes=9.6/9.6 font=9px ls=-0.7px overflow=visible
+ 414 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=46.7 texto=36.7 margenes=5/5 font=9px ls=-0.7px overflow=visible
+ 414 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=46.7 texto=27.2 margenes=9.8/9.8 font=9px ls=-0.7px overflow=visible
+ 430 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=49 texto=44.9 margenes=2/2.1 font=9.39375px ls=normal overflow=hidden
+ 430 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=49 texto=34.9 margenes=7/7 font=9.39375px ls=normal overflow=hidden
+ 480 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=56.1 texto=51.7 margenes=2.2/2.2 font=10.8219px ls=normal overflow=hidden
+ 480 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=56.1 texto=40.3 margenes=7.9/7.9 font=10.8219px ls=normal overflow=hidden
+ 540 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=64.7 texto=57.3 margenes=3.7/3.7 font=12px ls=normal overflow=hidden
+ 540 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=64.7 texto=44.6 margenes=10/10 font=12px ls=normal overflow=hidden
+ 600 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=73.3 texto=57.3 margenes=8/8 font=12px ls=normal overflow=hidden
+ 600 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=73.3 texto=44.6 margenes=14.3/14.3 font=12px ls=normal overflow=hidden
+ 639 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=78.8 texto=57.3 margenes=10.8/10.8 font=12px ls=normal overflow=hidden
+ 639 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=78.8 texto=44.6 margenes=17.1/17.1 font=12px ls=normal overflow=hidden
+ 640 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=71.1 texto=57.3 margenes=6.9/6.9 font=12px ls=normal overflow=hidden
+ 640 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=71.1 texto=44.6 margenes=13.3/13.3 font=12px ls=normal overflow=hidden
+ 700 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=79.7 texto=57.3 margenes=11.2/11.2 font=12px ls=normal overflow=hidden
+ 700 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=79.7 texto=44.6 margenes=17.5/17.5 font=12px ls=normal overflow=hidden
+ 768 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=89.4 texto=57.3 margenes=16/16 font=12px ls=normal overflow=hidden
+ 768 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=89.4 texto=44.6 margenes=22.4/22.4 font=12px ls=normal overflow=hidden
+ 820 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=96.8 texto=57.3 margenes=19.8/19.8 font=12px ls=normal overflow=hidden
+ 820 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=96.9 texto=44.6 margenes=26.1/26.1 font=12px ls=normal overflow=hidden
+ 900 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=108.3 texto=57.3 margenes=25.5/25.5 font=12px ls=normal overflow=hidden
+ 900 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=108.3 texto=44.6 margenes=31.8/31.8 font=12px ls=normal overflow=hidden
+1023 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=125.8 texto=57.3 margenes=34.3/34.3 font=12px ls=normal overflow=hidden
+1023 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=125.9 texto=44.6 margenes=40.6/40.6 font=12px ls=normal overflow=hidden
+1024 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=72.8 texto=57.3 margenes=7.8/7.8 font=12px ls=normal overflow=hidden
+1024 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=72.9 texto=44.6 margenes=14.1/14.1 font=12px ls=normal overflow=hidden
+1280 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=98 texto=57.3 margenes=20.3/20.3 font=12px ls=normal overflow=hidden
+1280 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=98 texto=44.6 margenes=26.7/26.7 font=12px ls=normal overflow=hidden
+1440 px torneo OK    bloqueadas=2 desbordePagina=0 peor="bloqueado" util=98 texto=57.3 margenes=20.3/20.3 font=12px ls=normal overflow=hidden
+1440 px cancha OK    bloqueadas=0 desbordePagina=0 peor="10 libres" util=98 texto=44.6 margenes=26.7/26.7 font=12px ls=normal overflow=hidden
+RESULTADO: todas las pastillas caben
