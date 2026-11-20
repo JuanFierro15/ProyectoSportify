@@ -182,4 +182,100 @@ describe('AvisoConflictoReserva (#55)', () => {
     expect(screen.queryByRole('alert')).toBeNull();
     expect(container.querySelector('.avisos-conflicto')).toBeNull();
   });
+
+  it('incluye codigo igual al de la reserva descartada en avisosConflicto conservando id y mensaje', () => {
+    let api;
+    let avisosActuales = [];
+    function Inspector() {
+      const ctx = useReservas();
+      avisosActuales = ctx.avisosConflicto;
+      const ejecutado = useRef(false);
+      useEffect(() => {
+        if (!ejecutado.current) {
+          ejecutado.current = true;
+          api = {
+            dias: ctx.dias,
+            reservar: ctx.reservar,
+            reservarEvento: ctx.reservarEvento,
+          };
+        }
+      }, [ctx.dias, ctx.reservar, ctx.reservarEvento]);
+      return null;
+    }
+
+    render(
+      <ReservasProvider>
+        <AvisoConflictoReserva />
+        <Inspector />
+      </ReservasProvider>
+    );
+
+    const dia3 = api.dias[3];
+    const base = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+    });
+
+    let resInd;
+    let resEv;
+    act(() => {
+      resInd = api.reservar({
+        canchaId: 'padel-1',
+        fecha: dia3,
+        horas: ['16:00'],
+        nombre: 'Ana Banner',
+      });
+      resEv = api.reservarEvento({
+        subtipo: 'cumpleanos',
+        fecha: dia3,
+        canchaIds: ['padel-2'],
+        horas: ['17:00'],
+        invitados: 15,
+        nombre: 'Beto Evento',
+      });
+    });
+
+    const otroEstado = structuredClone(base);
+    otroEstado.ocupados['padel-1'][dia3].push('16:00');
+    otroEstado.ocupados['padel-2'][dia3].push('17:00');
+    otroEstado.reservas.push(
+      {
+        id: `padel-1__${dia3}__16:00__6101`,
+        codigo: 'SPF-61IND',
+        tipo: 'individual',
+        canchaId: 'padel-1',
+        fecha: dia3,
+        hora: '16:00',
+        horas: ['16:00'],
+        nombre: 'Otra Pestaña 1',
+      },
+      {
+        id: `padel-2__${dia3}__17:00__6102`,
+        codigo: 'SPF-61EVE',
+        tipo: 'individual',
+        canchaId: 'padel-2',
+        fecha: dia3,
+        hora: '17:00',
+        horas: ['17:00'],
+        nombre: 'Otra Pestaña 2',
+      }
+    );
+    const jsonOtro = JSON.stringify(otroEstado);
+
+    setItemOriginal.call(window.localStorage, STORAGE_KEY, jsonOtro);
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', { key: STORAGE_KEY, newValue: jsonOtro })
+      );
+    });
+
+    expect(avisosActuales).toHaveLength(2);
+    expect(avisosActuales[0].codigo).toBe(resInd.codigo);
+    expect(avisosActuales[0].id).toMatch(/^padel-1__/);
+    expect(avisosActuales[0].mensaje).toContain(resInd.codigo);
+    expect(avisosActuales[1].codigo).toBe(resEv.codigo);
+    expect(avisosActuales[1].id).toMatch(/^evento__/);
+    expect(avisosActuales[1].mensaje).toContain(resEv.codigo);
+  });
 });

@@ -1058,6 +1058,7 @@ export function ReservasProvider({ children }) {
           vistos.add(id);
           nuevos.push({
             id,
+            codigo: reserva?.codigo ?? null,
             mensaje: formatearAvisoConflicto(reserva, canchas),
           });
         }
